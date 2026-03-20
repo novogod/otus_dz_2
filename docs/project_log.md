@@ -40,6 +40,19 @@
 | Структурный объект + изменение свойств при взаимодействии | 2 | ✅ |
 | Форматирование кода по правилам Dart | 1 | ✅ |
 
+### Изменения (2026-03-20, update 2)
+
+- **Рефакторинг `main()`**: вся логика привязки к `dart:ui` перенесена
+  непосредственно в функцию `main()` — `WidgetsFlutterBinding.ensureInitialized()`,
+  получение `platformDispatcher.views.first`, создание объектов, подключение
+  коллбеков (`onMetricsChanged`, `onPointerDataPacket`), запуск первого кадра.
+  Класс `Application` теперь принимает `view` и `manager` как параметры.
+- **Android-эмулятор**: установлен ARM64 system image
+  (`system-images;android-34;google_apis_playstore;arm64-v8a`), создан AVD
+  `Pixel_8_API_34_arm64`, обновлён эмулятор до v36.4.10 с нативными
+  `darwin-aarch64` бинарниками — приложение успешно запущено на эмуляторе.
+- **Git remote**: обновлён URL на `https://github.com/novogod/otus_dz_2.git`.
+
 ### Структура
 
 ```

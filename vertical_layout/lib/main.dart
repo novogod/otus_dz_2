@@ -265,50 +265,12 @@ class VerticalLayoutManager {
 // Application — ties dart:ui rendering loop to the VerticalLayoutManager.
 // ---------------------------------------------------------------------------
 class Application {
-  late final ui.FlutterView _view;
-  late final VerticalLayoutManager _manager;
+  final ui.FlutterView view;
+  final VerticalLayoutManager manager;
 
-  Application() {
-    final binding = WidgetsFlutterBinding.ensureInitialized();
-    _view = binding.platformDispatcher.views.first;
+  Application({required this.view, required this.manager});
 
-    // Create at least 3 objects (here 4 for variety).
-    _manager = VerticalLayoutManager(
-      children: [
-        ColoredRectangle(
-          preferredWidth: 200,
-          preferredHeight: 80,
-          color: const ui.Color(0xFFE53935),
-        ),
-        ColoredRectangle(
-          preferredWidth: 260,
-          preferredHeight: 100,
-          color: const ui.Color(0xFF1E88E5),
-        ),
-        GradientEllipse(
-          preferredWidth: 220,
-          preferredHeight: 70,
-          colorA: const ui.Color(0xFFFF6F00),
-          colorB: const ui.Color(0xFFFDD835),
-        ),
-        ColoredRectangle(
-          preferredWidth: 180,
-          preferredHeight: 60,
-          color: const ui.Color(0xFF43A047),
-        ),
-      ],
-    );
-
-    // Redraw on window resize / rotation.
-    binding.platformDispatcher.onMetricsChanged = _scheduleFrame;
-
-    // Handle tap events.
-    binding.platformDispatcher.onPointerDataPacket = _onPointerData;
-
-    _scheduleFrame();
-  }
-
-  void _scheduleFrame() {
+  void scheduleFrame() {
     ui.PlatformDispatcher.instance.scheduleFrame();
     ui.PlatformDispatcher.instance.onBeginFrame = _onBeginFrame;
     ui.PlatformDispatcher.instance.onDrawFrame = _onDrawFrame;
@@ -319,8 +281,8 @@ class Application {
   }
 
   void _onDrawFrame() {
-    final physicalSize = _view.physicalSize;
-    final dpr = _view.devicePixelRatio;
+    final physicalSize = view.physicalSize;
+    final dpr = view.devicePixelRatio;
     final logicalWidth = physicalSize.width / dpr;
     final logicalHeight = physicalSize.height / dpr;
 
@@ -333,7 +295,7 @@ class Application {
     );
 
     // Layout pass — positions are recalculated every frame.
-    _manager.layout(constraints);
+    manager.layout(constraints);
 
     // Paint pass.
     final recorder = ui.PictureRecorder();
@@ -356,29 +318,29 @@ class Application {
       ..layout(ui.ParagraphConstraints(width: logicalWidth));
     canvas.drawParagraph(infoParagraph, const ui.Offset(4, 2));
 
-    _manager.paint(canvas);
+    manager.paint(canvas);
 
     final picture = recorder.endRecording();
 
-    // Build and render scene with device‑pixel‑ratio scaling.
+    // Build and render scene with device-pixel-ratio scaling.
     final sceneBuilder = ui.SceneBuilder()
       ..pushTransform(_scaleMatrix(dpr))
       ..addPicture(ui.Offset.zero, picture)
       ..pop();
 
-    _view.render(sceneBuilder.build());
+    view.render(sceneBuilder.build());
   }
 
-  void _onPointerData(ui.PointerDataPacket packet) {
+  void handlePointerData(ui.PointerDataPacket packet) {
     for (final data in packet.data) {
       if (data.change == ui.PointerChange.up) {
-        final dpr = _view.devicePixelRatio;
+        final dpr = view.devicePixelRatio;
         final logicalPos = ui.Offset(
           data.physicalX / dpr,
           data.physicalY / dpr,
         );
-        if (_manager.handleTap(logicalPos)) {
-          _scheduleFrame(); // sizes changed → relayout + repaint
+        if (manager.handleTap(logicalPos)) {
+          scheduleFrame(); // sizes changed → relayout + repaint
         }
       }
     }
@@ -396,8 +358,50 @@ class Application {
 }
 
 // ---------------------------------------------------------------------------
-// Entry point
+// Entry point — binding to platformDispatcher.views.first, creating objects.
 // ---------------------------------------------------------------------------
 void main() {
-  Application();
+  // 1. Initialise the binding and obtain the primary FlutterView.
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  final ui.FlutterView view = binding.platformDispatcher.views.first;
+
+  // 2. Create at least 3 layout objects (4 here for variety).
+  final children = <LayoutObject>[
+    ColoredRectangle(
+      preferredWidth: 200,
+      preferredHeight: 80,
+      color: const ui.Color(0xFFE53935),
+    ),
+    ColoredRectangle(
+      preferredWidth: 260,
+      preferredHeight: 100,
+      color: const ui.Color(0xFF1E88E5),
+    ),
+    GradientEllipse(
+      preferredWidth: 220,
+      preferredHeight: 70,
+      colorA: const ui.Color(0xFFFF6F00),
+      colorB: const ui.Color(0xFFFDD835),
+    ),
+    ColoredRectangle(
+      preferredWidth: 180,
+      preferredHeight: 60,
+      color: const ui.Color(0xFF43A047),
+    ),
+  ];
+
+  // 3. Create the vertical layout manager.
+  final manager = VerticalLayoutManager(children: children);
+
+  // 4. Create the application (rendering + hit-testing logic).
+  final app = Application(view: view, manager: manager);
+
+  // 5. Wire up platform callbacks.
+  //    - Redraw on window resize / device rotation.
+  binding.platformDispatcher.onMetricsChanged = app.scheduleFrame;
+  //    - Handle pointer (tap) events.
+  binding.platformDispatcher.onPointerDataPacket = app.handlePointerData;
+
+  // 6. Schedule the first frame.
+  app.scheduleFrame();
 }
