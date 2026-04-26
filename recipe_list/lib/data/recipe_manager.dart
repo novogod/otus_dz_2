@@ -33,7 +33,8 @@ class RecipeManager {
       id: 3,
       name: 'Пирог с сезонными фруктами',
       duration: 90,
-      photo: 'https://images.unsplash.com/photo-1464195244916-405fa0a82545?w=600',
+      photo:
+          'https://images.unsplash.com/photo-1464195244916-405fa0a82545?w=600',
       description:
           'Воздушный песочный пирог с яблоками, грушами и корицей. '
           'Идеальный десерт к чаю.',

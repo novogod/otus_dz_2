@@ -173,8 +173,10 @@ vertical_layout/
 
 ```
 recipe_list/
+├── pubspec.yaml               # зависимости и метаданные пакета
+├── analysis_options.yaml      # правила линтера (flutter_lints)
 ├── lib/
-│   ├── main.dart              # точка входа, MaterialApp + тема
+│   ├── main.dart              # точка входа, MaterialApp + тема (Чанк 5)
 │   ├── models/
 │   │   └── recipe.dart        # модель Recipe (Чанк 1)
 │   ├── data/
@@ -182,9 +184,31 @@ recipe_list/
 │   └── ui/
 │       ├── recipe_card.dart   # карточка одного рецепта (Чанк 3)
 │       └── recipe_list_page.dart # страница со списком (Чанк 4)
-└── test/
-    ├── recipe_test.dart
-    ├── recipe_manager_test.dart
-    ├── recipe_card_test.dart
-    └── recipe_list_page_test.dart
+├── test/
+│   ├── recipe_test.dart       # тесты модели Recipe (3 теста)
+│   ├── recipe_manager_test.dart # тесты RecipeManager (4 теста)
+│   ├── recipe_card_test.dart  # widget-тесты RecipeCard (3 теста)
+│   └── recipe_list_page_test.dart # widget-тесты RecipeListPage (4 теста)
+├── android/                   # сгенерировано flutter create
+├── ios/                       # сгенерировано flutter create
+└── web/                       # сгенерировано flutter create
 ```
+
+### Запуск
+
+```bash
+cd recipe_list
+flutter pub get
+flutter analyze            # 0 issues
+flutter test               # 14/14 passed
+flutter run -d emulator-5554   # Android
+flutter run -d chrome          # web
+```
+
+### Изменения (2026-04-26, update 1)
+
+- **Прокрутка мышью на iOS-превью / desktop**: в `MaterialApp` добавлен
+  кастомный `ScrollBehavior` (`_AppScrollBehavior`), расширяющий
+  `MaterialScrollBehavior` и регистрирующий `mouse`, `trackpad`, `stylus` как
+  drag-устройства. Без этого Flutter по умолчанию игнорирует драг мышью на
+  iOS и список не прокручивался колёсиком / перетаскиванием.
