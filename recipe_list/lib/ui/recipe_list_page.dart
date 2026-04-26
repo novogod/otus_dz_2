@@ -16,10 +16,7 @@ class RecipeListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Рецепты'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Рецепты'), centerTitle: true),
       body: recipes.isEmpty
           ? const _EmptyState()
           : ListView.builder(

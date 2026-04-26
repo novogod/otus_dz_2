@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'data/recipe_manager.dart';
@@ -7,23 +6,6 @@ import 'ui/recipe_list_page.dart';
 
 void main() {
   runApp(const RecipeApp());
-}
-
-/// Позволяет прокручивать списки мышью / трекпадом / колёсиком в дополнение
-/// к стандартным touch / stylus. Без этого на iOS-превью (и на десктопе)
-/// драг мышью игнорируется.
-class _AppScrollBehavior extends MaterialScrollBehavior {
-  const _AppScrollBehavior();
-
-  @override
-  Set<PointerDeviceKind> get dragDevices => const {
-    PointerDeviceKind.touch,
-    PointerDeviceKind.mouse,
-    PointerDeviceKind.trackpad,
-    PointerDeviceKind.stylus,
-    PointerDeviceKind.invertedStylus,
-    PointerDeviceKind.unknown,
-  };
 }
 
 /// Корневой виджет приложения.
@@ -46,7 +28,6 @@ class RecipeApp extends StatelessWidget {
     return MaterialApp(
       title: 'Otus Food',
       debugShowCheckedModeBanner: false,
-      scrollBehavior: const _AppScrollBehavior(),
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

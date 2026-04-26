@@ -204,11 +204,3 @@ flutter test               # 14/14 passed
 flutter run -d emulator-5554   # Android
 flutter run -d chrome          # web
 ```
-
-### Изменения (2026-04-26, update 1)
-
-- **Прокрутка мышью на iOS-превью / desktop**: в `MaterialApp` добавлен
-  кастомный `ScrollBehavior` (`_AppScrollBehavior`), расширяющий
-  `MaterialScrollBehavior` и регистрирующий `mouse`, `trackpad`, `stylus` как
-  drag-устройства. Без этого Flutter по умолчанию игнорирует драг мышью на
-  iOS и список не прокручивался колёсиком / перетаскиванием.
