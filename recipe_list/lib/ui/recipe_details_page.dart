@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/api/recipe_api.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
@@ -11,14 +12,57 @@ import 'source_page.dart';
 /// §9l: белый фон, hero-фото 396×220, заголовок страницы 24/#000,
 /// секционные подзаголовки 16/#165932, белый блок ингредиентов с
 /// обводкой `#797676` и колонками qty/name.
-class RecipeDetailsPage extends StatelessWidget {
+///
+/// Лист подписан на [appLang] и при смене языка перезапрашивает
+/// рецепт через [RecipeApi.lookup] — иначе на детали остаётся
+/// «замороженный» рецепт того языка, который был активен в момент
+/// перехода со списка, и кнопка флага кажется «неработающей».
+class RecipeDetailsPage extends StatefulWidget {
   final Recipe recipe;
+  final RecipeApi? api;
 
-  const RecipeDetailsPage({super.key, required this.recipe});
+  const RecipeDetailsPage({super.key, required this.recipe, this.api});
+
+  @override
+  State<RecipeDetailsPage> createState() => _RecipeDetailsPageState();
+}
+
+class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
+  late Recipe _recipe;
+  AppLang _renderedLang = appLang.value;
+
+  @override
+  void initState() {
+    super.initState();
+    _recipe = widget.recipe;
+    appLang.addListener(_onLangChanged);
+  }
+
+  @override
+  void dispose() {
+    appLang.removeListener(_onLangChanged);
+    super.dispose();
+  }
+
+  Future<void> _onLangChanged() async {
+    final lang = appLang.value;
+    if (lang == _renderedLang) return;
+    _renderedLang = lang;
+    final api = widget.api;
+    if (api == null) return; // тесты без сети
+    try {
+      final fetched = await api.lookup(_recipe.id, lang: lang);
+      if (!mounted) return;
+      if (fetched != null) setState(() => _recipe = fetched);
+    } on Object {
+      // оставляем старый язык, если сеть упала
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final recipe = _recipe;
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(

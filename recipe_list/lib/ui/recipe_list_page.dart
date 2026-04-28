@@ -306,7 +306,9 @@ class _RecipeListPageState extends State<RecipeListPage> {
     }
     if (!context.mounted) return;
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => RecipeDetailsPage(recipe: full)),
+      MaterialPageRoute<void>(
+        builder: (_) => RecipeDetailsPage(recipe: full, api: widget.api),
+      ),
     );
   }
 
