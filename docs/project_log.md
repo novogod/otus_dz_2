@@ -1,5 +1,51 @@
 # Project Log
 
+## recipe_list — Splash 1:1 с Figma-прототипом
+
+**Date:** 2026-04-28
+
+### Описание
+
+Точная подгонка splash-экрана и перехода в список рецептов под прототип Figma
+(frame `135:691` → `102:3`).
+
+### Что исправлено
+
+- **Градиент**: был `top → bottom` сплошной — заменён на точные значения
+  `GRADIENT_LINEAR` из Figma. Handle-точки `(0.7266, 0.2068) → (0.5643, 1.0)`,
+  стопы `[0.188, 1.0]`, цвета `#2ECC71 → #165932`. В Flutter переведено в
+  `Alignment(0.4533, -0.5864) → Alignment(0.1285, 1.0)` —
+  яркий верхне-правый угол, тёмный низ.
+- **Логотип «OTUS / FOOD»**: был сплошной чёрный текст. По макету `TEXT`
+  имеет `isMask=true, maskType=ALPHA` поверх 283×283 `IMAGE`-прямоугольника.
+  Скачана исходная фотография по `imageRef` из Figma, уменьшена до 800px
+  (`assets/images/splash_food.jpg`, 127 КБ) и применена через
+  `ShaderMask` + `BlendMode.srcIn` + `ImageShader` — буквы стали «окнами»
+  в фотографию поверх градиента.
+- **Переход splash → список**: был `AnimatedSwitcher` + `FadeTransition` 600 мс.
+  В Figma interaction: `AFTER_TIMEOUT 1.5с → MOVE_IN / TOP, 0.7с,
+  EASE_IN_AND_OUT`. Реализовано как `Stack` со splash-фоном и
+  `SlideTransition` (`Offset(0, -1) → Offset.zero`, `Curves.easeInOut`,
+  700 мс), запускаемый по `Future.delayed(1500ms)`.
+
+### Файлы
+
+- `recipe_list/lib/ui/app_theme.dart` — точные значения `kSplashGradient`,
+  `AppDurations.splash = 1500ms`, новая `AppDurations.splashTransition = 700ms`.
+- `recipe_list/lib/ui/splash_page.dart` — `StatefulWidget`, загрузка
+  `AssetImage` в `ui.Image`, `ShaderMask` с `ImageShader` (cover-матрица).
+- `recipe_list/lib/main.dart` — `_AppRoot` на `AnimationController` +
+  `SlideTransition`, splash остаётся под списком во время переезда.
+- `recipe_list/assets/images/splash_food.jpg` — фото-подложка для маски.
+- `recipe_list/pubspec.yaml` — регистрация ассета.
+
+### Проверка
+
+- `flutter analyze` — 0 issues.
+- `flutter test` — 14/14 passed.
+
+---
+
 ## vertical_layout — Размещение объектов по вертикали
 
 **Date:** 2026-03-20

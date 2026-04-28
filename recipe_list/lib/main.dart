@@ -22,8 +22,12 @@ class RecipeApp extends StatelessWidget {
   }
 }
 
-/// Показывает splash на `AppDurations.splash`, затем плавно
-/// (`AppDurations.fade`) сменяет его на список рецептов.
+/// Показывает splash на `AppDurations.splash` (Figma `AFTER_TIMEOUT` 1.5с),
+/// затем выполняет переход на список рецептов с `MOVE_IN`/`TOP`,
+/// `EASE_IN_AND_OUT`, `0.7с` (Figma frame `135:691` → `102:3`).
+///
+/// MOVE_IN / TOP в Figma — это «новый экран въезжает сверху, наплывая
+/// поверх предыдущего». Splash при этом остаётся на месте.
 class _AppRoot extends StatefulWidget {
   const _AppRoot();
 
@@ -31,28 +35,51 @@ class _AppRoot extends StatefulWidget {
   State<_AppRoot> createState() => _AppRootState();
 }
 
-class _AppRootState extends State<_AppRoot> {
-  bool _splashDone = false;
+class _AppRootState extends State<_AppRoot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<Offset> _slide;
 
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: AppDurations.splashTransition,
+    );
+    _slide = Tween<Offset>(
+      begin: const Offset(0, -1), // въезд сверху
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
     Future<void>.delayed(AppDurations.splash, () {
-      if (mounted) setState(() => _splashDone = true);
+      if (mounted) _controller.forward();
     });
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: AppDurations.fade,
-      switchInCurve: Curves.easeIn,
-      switchOutCurve: Curves.easeOut,
-      transitionBuilder: (child, animation) =>
-          FadeTransition(opacity: animation, child: child),
-      child: _splashDone
-          ? const RecipeListLoader(key: ValueKey('home'))
-          : const SplashPage(key: ValueKey('splash')),
+    return Stack(
+      children: [
+        // Сплеш всегда внизу стека — он не двигается во время
+        // перехода MOVE_IN, его лишь перекрывает сверху список.
+        const Positioned.fill(child: SplashPage()),
+        // Список «въезжает» сверху, заслоняя splash.
+        Positioned.fill(
+          child: SlideTransition(
+            position: _slide,
+            child: const RecipeListLoader(),
+          ),
+        ),
+      ],
     );
   }
 }

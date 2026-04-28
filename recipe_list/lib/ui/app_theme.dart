@@ -180,16 +180,34 @@ class AppTextStyles {
 class AppDurations {
   AppDurations._();
 
-  static const Duration splash = Duration(seconds: 2);
+  /// Время показа splash до начала перехода. Из Figma
+  /// (frame `135:691`, interaction `AFTER_TIMEOUT` = 1.5с).
+  static const Duration splash = Duration(milliseconds: 1500);
+
+  /// Длительность перехода splash → список (Figma transition
+  /// `MOVE_IN`/`TOP`, duration `0.7с`, easing `EASE_IN_AND_OUT`).
+  static const Duration splashTransition = Duration(milliseconds: 700);
+
+  /// Общий fade для Material-переходов.
   static const Duration fade = Duration(milliseconds: 600);
+
   static const Duration short = Duration(milliseconds: 200);
 }
 
-/// Градиент splash-экрана (top → bottom).
+/// Градиент splash-экрана. Выгружен из Figma (frame `135:691`,
+/// fill `GRADIENT_LINEAR`).
+///
+/// Направление: верх-правый угол → низ (со смещением влево).
+/// Цвета: `#2ECC71` (stop на 0.188) → `#165932` (stop на 1.0).
 const Gradient kSplashGradient = LinearGradient(
-  begin: Alignment.topCenter,
-  end: Alignment.bottomCenter,
+  // Figma gradientHandlePositions[0] = (0.7266, 0.2068)
+  // -> Alignment(2*x-1, 2*y-1) = (0.4533, -0.5864)
+  begin: Alignment(0.4533, -0.5864),
+  // Figma gradientHandlePositions[1] = (0.5643, 1.0000)
+  // -> Alignment(0.1285, 1.0)
+  end: Alignment(0.1285, 1.0),
   colors: [AppColors.primary, AppColors.primaryDark],
+  stops: [0.188, 1.0],
 );
 
 /// Тема приложения.
