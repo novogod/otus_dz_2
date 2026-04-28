@@ -35,6 +35,12 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done.
         back to network and upserts results.
 - [ ] Wire the repository into `RecipeListLoader` and
       `RecipeListPage._runPredictionQuery`.
+- [ ] Re-typed prefix must be served from the Drift cache without
+      a network round-trip: `searchByName(prefix, lang)` first runs
+      a local `startsWith` query against the persisted rows and
+      only calls `RecipeApi` if the cached hit count is below a
+      small threshold (e.g. < 5). Update `popularity` / `lastUsed`
+      on every cache hit so the LRU eviction is meaningful.
 - [ ] Pass current `AppLang` into the repo / API call so the server
       returns the correct translation.
 - [ ] Show an offline banner when both local cache misses and the
@@ -131,6 +137,9 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done.
 - [ ] Backend unit tests: search, on-miss fetch, eviction, cap.
 - [ ] Backend integration test against a Mongo testcontainer.
 - [ ] Frontend repository tests (Drift cache hit / miss / eviction).
+- [ ] Repository test: typing a prefix twice in a row issues exactly
+      **one** `RecipeApi.searchByName` call — the second lookup is
+      satisfied from the Drift cache.
 - [ ] Widget test that mocks the `RecipeApi` to return fixed hits and
       asserts the dropdown is scrollable and that submitting replaces
       the list.
