@@ -41,9 +41,13 @@ void main() {
     final enLeaves = _flatten(base);
     for (final lang in AppLang.values) {
       if (lang == AppLang.en) continue;
-      final json = jsonDecode(
-        File('${repo.path}/lib/i18n/${lang.name}.i18n.json').readAsStringSync(),
-      ) as Map<String, dynamic>;
+      final json =
+          jsonDecode(
+                File(
+                  '${repo.path}/lib/i18n/${lang.name}.i18n.json',
+                ).readAsStringSync(),
+              )
+              as Map<String, dynamic>;
       final leaves = _flatten(json);
       // Brand strings allowed to match.
       const brand = {'appTitle', 'youtube'};
@@ -94,7 +98,9 @@ void _walk(
       } else if (av.trim().isEmpty) {
         problems.add('empty value at $path');
       } else {
-        for (final m in RegExp(r'\$\{[a-zA-Z_][a-zA-Z0-9_]*\}').allMatches(ev)) {
+        for (final m in RegExp(
+          r'\$\{[a-zA-Z_][a-zA-Z0-9_]*\}',
+        ).allMatches(ev)) {
           if (!av.contains(m.group(0)!)) {
             problems.add('lost placeholder ${m.group(0)} at $path');
           }

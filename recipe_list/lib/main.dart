@@ -34,16 +34,55 @@ class RecipeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
+    // slang знает все 10 локалей, но GlobalMaterialLocalizations
+    // покрывает только те, что есть во flutter_localizations.
+    // Курдский (`ku`) там не поддерживается — без подмены
+    // MaterialApp выбрасывает «No MaterialLocalizations found»
+    // при показе любого AppBar. Подменяем такие локали на
+    // ближайшую Material-совместимую (Translations всё равно
+    // отдельно ведутся через TranslationProvider).
+    final flutterLocale = TranslationProvider.of(context).flutterLocale;
+    final materialLocale = _materialLocaleFor(flutterLocale);
     return MaterialApp(
       title: t.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      locale: TranslationProvider.of(context).flutterLocale,
-      supportedLocales: AppLocaleUtils.supportedLocales,
+      locale: materialLocale,
+      supportedLocales: const <Locale>[
+        Locale('en'),
+        Locale('ru'),
+        Locale('es'),
+        Locale('fr'),
+        Locale('de'),
+        Locale('it'),
+        Locale('tr'),
+        Locale('ar'),
+        Locale('fa'),
+      ],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       home: AppLangScope(child: _AppRoot(key: _appRootKey)),
     );
   }
+}
+
+/// Маппинг локалей slang → ближайшая локаль, которую умеет
+/// `GlobalMaterialLocalizations`. Для всего, чего там нет
+/// (например, `ku`), отдаём `en` — это влияет только на
+/// служебные Material-строки (tooltip Back, semantics scrollbar
+/// и т.п.); содержимое UI всё равно идёт из slang.
+Locale _materialLocaleFor(Locale loc) {
+  const supported = <String>{
+    'en',
+    'ru',
+    'es',
+    'fr',
+    'de',
+    'it',
+    'tr',
+    'ar',
+    'fa',
+  };
+  return supported.contains(loc.languageCode) ? loc : const Locale('en');
 }
 
 /// Показывает splash на `AppDurations.splash` (Figma `AFTER_TIMEOUT` 1.5с),
