@@ -69,10 +69,8 @@ class S {
   );
 
   // Preload / loading screen.
-  String get loadingTitle => _t(
-    'Готовим коллекцию рецептов',
-    'Preparing recipe collection',
-  );
+  String get loadingTitle =>
+      _t('Готовим коллекцию рецептов', 'Preparing recipe collection');
   String loadingStage(String category, int done, int total) => _t(
     'Загружаем «$category» ($done/$total категорий)…',
     'Loading "$category" ($done/$total categories)…',
@@ -81,10 +79,8 @@ class S {
     'Получено $loaded из $target рецептов',
     'Loaded $loaded of $target recipes',
   );
-  String get loadingFromCache => _t(
-    'Открываем сохранённые рецепты…',
-    'Opening cached recipes…',
-  );
+  String get loadingFromCache =>
+      _t('Открываем сохранённые рецепты…', 'Opening cached recipes…');
   String get emptyHint => _t(
     'Сервер не вернул рецептов. Проверьте подключение и нажмите «Повторить».',
     'The server returned no recipes. Check your connection and tap "Retry".',

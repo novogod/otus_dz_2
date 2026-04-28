@@ -299,8 +299,8 @@ class _LoadingScreen extends StatelessWidget {
                     st.kind == _LoadStageKind.openingCache
                         ? s.loadingFromCache
                         : st.kind == _LoadStageKind.fetching
-                              ? s.loadingStage(st.category, st.done, st.total)
-                              : '',
+                        ? s.loadingStage(st.category, st.done, st.total)
+                        : '',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.inputHint,
                   ),

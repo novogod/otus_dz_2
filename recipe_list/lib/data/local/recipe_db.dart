@@ -11,7 +11,11 @@ const String kRecipeDbFileName = 'recipes.db';
 
 /// Версия схемы. Любое изменение `_kSchema` требует bump-а и
 /// миграции в `_onUpgrade`.
-const int kRecipeDbSchemaVersion = 1;
+///
+/// v2: invalidate cached recipes after switching to MyMemory-first
+/// translation pipeline (oil → масло, etc.). Schema unchanged; the
+/// upgrade simply DROPs and recreates the table to evict stale RU rows.
+const int kRecipeDbSchemaVersion = 2;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -60,6 +64,12 @@ Future<Database> openRecipeDatabase() async {
     path,
     version: kRecipeDbSchemaVersion,
     onCreate: (db, _) => applyRecipeSchema(db),
+    onUpgrade: (db, oldVersion, newVersion) async {
+      // No additive migrations: drop everything and let the loader
+      // re-fetch with the new translation pipeline.
+      await db.execute('DROP TABLE IF EXISTS recipes');
+      await applyRecipeSchema(db);
+    },
   );
 }
 

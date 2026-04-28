@@ -38,9 +38,11 @@ class RecipeDetailsPage extends StatelessWidget {
         centerTitle: true,
         actions: const [LangIconButton()],
       ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-        children: [
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+          children: [
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.pagePadding,
@@ -168,6 +170,7 @@ class RecipeDetailsPage extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }
