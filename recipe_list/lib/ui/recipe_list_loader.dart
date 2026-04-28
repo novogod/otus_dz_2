@@ -45,10 +45,18 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     const _LoadStage.initial(),
   );
 
+  /// Последний успешно загруженный результат — нужен, чтобы на
+  /// смене языка переводить ровно те же рецепты в том же порядке
+  /// (никакого re-seed + shuffle).
+  _LoadResult? _lastResult;
+
   @override
   void initState() {
     super.initState();
-    _future = _runLoad();
+    _future = _runLoad().then((r) {
+      _lastResult = r;
+      return r;
+    });
     appLang.addListener(_onLangChanged);
   }
 
@@ -59,12 +67,65 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     super.dispose();
   }
 
+  /// На смене языка НЕ перезапускаем seed (это бы переcлучайно
+  /// перетасовало карточки и подменило ленту). Берём текущий
+  /// `_lastResult` и переводим каждый рецепт по id через
+  /// repo/api lookup в новом языке, сохраняя порядок. Если
+  /// текущего результата ещё нет (первый load не успел) —
+  /// падаем в обычный `_runLoad`.
   void _onLangChanged() {
     if (!mounted) return;
+    final last = _lastResult;
     setState(() {
       _stage.value = const _LoadStage.initial();
-      _future = _runLoad();
+      if (last == null || last.recipes.isEmpty) {
+        _future = _runLoad().then((r) {
+          _lastResult = r;
+          return r;
+        });
+      } else {
+        _future = _retranslate(last, appLang.value).then((r) {
+          _lastResult = r;
+          return r;
+        });
+      }
     });
+  }
+
+  Future<_LoadResult> _retranslate(_LoadResult prev, AppLang lang) async {
+    _stage.value = _LoadStage.fetching(
+      category: 'recipes',
+      done: 0,
+      total: prev.recipes.length,
+      loaded: 0,
+      target: prev.recipes.length,
+    );
+    final repo = prev.repository;
+    final translated = <Recipe>[];
+    for (var i = 0; i < prev.recipes.length; i++) {
+      final original = prev.recipes[i];
+      Recipe next = original;
+      try {
+        if (repo != null) {
+          final got = await repo.lookup(original.id, lang);
+          if (got != null) next = got;
+        } else {
+          final got = await widget.api.lookup(original.id, lang: lang);
+          if (got != null) next = got;
+        }
+      } on Object {
+        // одна карточка не приехала — оставляем как есть
+      }
+      translated.add(next);
+      _stage.value = _LoadStage.fetching(
+        category: 'recipes',
+        done: i + 1,
+        total: prev.recipes.length,
+        loaded: i + 1,
+        target: prev.recipes.length,
+      );
+    }
+    return _LoadResult(recipes: translated, repository: repo);
   }
 
   /// Полный список категорий TheMealDB. При каждом открытии
@@ -248,7 +309,10 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   void _retry() {
     setState(() {
       _stage.value = const _LoadStage.initial();
-      _future = _runLoad();
+      _future = _runLoad().then((r) {
+        _lastResult = r;
+        return r;
+      });
     });
   }
 
