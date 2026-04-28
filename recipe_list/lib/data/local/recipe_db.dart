@@ -15,7 +15,10 @@ const String kRecipeDbFileName = 'recipes.db';
 /// v2: invalidate cached recipes after switching to MyMemory-first
 /// translation pipeline (oil → масло, etc.). Schema unchanged; the
 /// upgrade simply DROPs and recreates the table to evict stale RU rows.
-const int kRecipeDbSchemaVersion = 2;
+/// v3: add `byte_size` column so the cache can enforce a byte budget
+/// (≈5 MB) instead of a fixed row count, evicting the least-recently
+/// used heaviest cards first.
+const int kRecipeDbSchemaVersion = 3;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -38,6 +41,7 @@ CREATE TABLE recipes (
   source_url TEXT,
   ingredients_json TEXT,
   last_used_at INTEGER NOT NULL,
+  byte_size INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (id, lang)
 );
 ''';
@@ -121,18 +125,35 @@ Map<String, Object?> writeRecipe(
   Recipe r, {
   required String lang,
   required int lastUsedAt,
-}) => {
-  'id': r.id,
-  'lang': lang,
-  'name': r.name,
-  'name_lower': r.name.toLowerCase(),
-  'photo': r.photo,
-  'category': r.category,
-  'area': r.area,
-  'tags': r.tags.join('\u0001'),
-  'instructions': r.instructions,
-  'youtube_url': r.youtubeUrl,
-  'source_url': r.sourceUrl,
-  'ingredients_json': encodeIngredients(r.ingredients),
-  'last_used_at': lastUsedAt,
-};
+}) {
+  final tagsJoined = r.tags.join('\u0001');
+  final ingredientsJson = encodeIngredients(r.ingredients);
+  // UTF-16 length is a cheap, deterministic proxy for stored byte size.
+  // Photos/URLs dominate; we don't fetch the image bytes themselves.
+  final byteSize =
+      r.name.length +
+      r.photo.length +
+      (r.category?.length ?? 0) +
+      (r.area?.length ?? 0) +
+      tagsJoined.length +
+      (r.instructions?.length ?? 0) +
+      (r.youtubeUrl?.length ?? 0) +
+      (r.sourceUrl?.length ?? 0) +
+      ingredientsJson.length;
+  return {
+    'id': r.id,
+    'lang': lang,
+    'name': r.name,
+    'name_lower': r.name.toLowerCase(),
+    'photo': r.photo,
+    'category': r.category,
+    'area': r.area,
+    'tags': tagsJoined,
+    'instructions': r.instructions,
+    'youtube_url': r.youtubeUrl,
+    'source_url': r.sourceUrl,
+    'ingredients_json': ingredientsJson,
+    'last_used_at': lastUsedAt,
+    'byte_size': byteSize,
+  };
+}

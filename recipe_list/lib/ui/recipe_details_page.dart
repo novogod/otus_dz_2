@@ -43,133 +43,140 @@ class RecipeDetailsPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.only(bottom: AppSpacing.xl),
           children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.pagePadding,
-            ),
-            child: ClipRRect(
-              borderRadius: AppRadii.cardAll,
-              child: AspectRatio(
-                aspectRatio: 396 / 220,
-                child: Image.network(
-                  recipe.photo,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    color: AppColors.surfaceMuted,
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.restaurant,
-                      size: 48,
-                      color: AppColors.textSecondary,
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.pagePadding,
+              ),
+              child: ClipRRect(
+                borderRadius: AppRadii.cardAll,
+                child: AspectRatio(
+                  aspectRatio: 396 / 220,
+                  child: Image.network(
+                    recipe.photo,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      color: AppColors.surfaceMuted,
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.restaurant,
+                        size: 48,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.lg,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(recipe.name, style: AppTextStyles.pageTitle),
-                if (recipe.category != null || recipe.area != null) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.xs,
-                    children: [
-                      if (recipe.category != null) _Badge(recipe.category!),
-                      if (recipe.area != null) _Badge(recipe.area!),
-                    ],
-                  ),
-                ],
-                if (recipe.tags.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    recipe.tags.map((t) => '#$t').join('  '),
-                    style: const TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14,
-                      height: 23 / 14,
-                      color: AppColors.textSecondary,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.lg,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(recipe.name, style: AppTextStyles.pageTitle),
+                  if (recipe.category != null || recipe.area != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        if (recipe.category != null) _Badge(recipe.category!),
+                        if (recipe.area != null) _Badge(recipe.area!),
+                      ],
                     ),
-                  ),
-                ],
-                if (recipe.ingredients.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(s.ingredientsHeader, style: AppTextStyles.sectionTitle),
-                  const SizedBox(height: AppSpacing.md),
-                  _IngredientsBlock(items: recipe.ingredients),
-                ],
-                if (recipe.instructions != null) ...[
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(s.instructionsHeader, style: AppTextStyles.sectionTitle),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    recipe.instructions!,
-                    style: const TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 16,
-                      height: 23 / 16,
-                      color: AppColors.textPrimary,
+                  ],
+                  if (recipe.tags.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      recipe.tags.map((t) => '#$t').join('  '),
+                      style: const TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 14,
+                        height: 23 / 14,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
-                if (recipe.youtubeUrl != null || recipe.sourceUrl != null) ...[
-                  const SizedBox(height: AppSpacing.xl),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: [
-                      if (recipe.youtubeUrl != null)
-                        FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primaryDark,
-                            foregroundColor: AppColors.surface,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppRadii.button,
+                  ],
+                  if (recipe.ingredients.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(
+                      s.ingredientsHeader,
+                      style: AppTextStyles.sectionTitle,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _IngredientsBlock(items: recipe.ingredients),
+                  ],
+                  if (recipe.instructions != null) ...[
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(
+                      s.instructionsHeader,
+                      style: AppTextStyles.sectionTitle,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      recipe.instructions!,
+                      style: const TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16,
+                        height: 23 / 16,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                  if (recipe.youtubeUrl != null ||
+                      recipe.sourceUrl != null) ...[
+                    const SizedBox(height: AppSpacing.xl),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: [
+                        if (recipe.youtubeUrl != null)
+                          FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primaryDark,
+                              foregroundColor: AppColors.surface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppRadii.button,
+                                ),
                               ),
                             ),
+                            onPressed: () => _open(recipe.youtubeUrl!),
+                            icon: const Icon(Icons.play_arrow),
+                            label: Text(s.youtube),
                           ),
-                          onPressed: () => _open(recipe.youtubeUrl!),
-                          icon: const Icon(Icons.play_arrow),
-                          label: Text(s.youtube),
-                        ),
-                      if (recipe.sourceUrl != null)
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primaryDark,
-                            side: const BorderSide(
-                              color: AppColors.primaryDark,
-                              width: 3,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppRadii.button,
+                        if (recipe.sourceUrl != null)
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primaryDark,
+                              side: const BorderSide(
+                                color: AppColors.primaryDark,
+                                width: 3,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppRadii.button,
+                                ),
                               ),
                             ),
+                            onPressed: () =>
+                                _openSource(context, recipe.sourceUrl!),
+                            icon: const Icon(Icons.link),
+                            label: Text(s.source),
                           ),
-                          onPressed: () =>
-                              _openSource(context, recipe.sourceUrl!),
-                          icon: const Icon(Icons.link),
-                          label: Text(s.source),
-                        ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );

@@ -67,19 +67,36 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     });
   }
 
-  /// Категории-сидеры для mahallem-бэкенда. Берём 8 самых
-  /// крупных — суммарно даёт >250 уникальных рецептов TheMealDB,
-  /// что покрывает кэш-кэп 200.
-  static const _seedCategories = <String>[
-    'Chicken',
+  /// Полный список категорий TheMealDB. При каждом открытии
+  /// экрана берём случайные 10 (`_seedPickCount`) — это даёт
+  /// ротацию ленты вместо вечного Сикен.
+  static const _allCategories = <String>[
     'Beef',
-    'Seafood',
+    'Breakfast',
+    'Chicken',
     'Dessert',
-    'Vegetarian',
+    'Goat',
+    'Lamb',
+    'Miscellaneous',
     'Pasta',
     'Pork',
-    'Lamb',
+    'Seafood',
+    'Side',
+    'Starter',
+    'Vegan',
+    'Vegetarian',
   ];
+
+  static const int _seedPickCount = 10;
+  static const int _categoryCacheThreshold = 10;
+
+  /// Берём [_seedPickCount] случайных категорий из [_allCategories],
+  /// сохраняя порядок рандома вызова. Разные открытия экрана
+  /// дают разные ленты.
+  static List<String> _pickCategories() {
+    final pool = [..._allCategories]..shuffle();
+    return pool.take(_seedPickCount).toList(growable: false);
+  }
 
   static const int _seedTarget = 200;
 
@@ -89,12 +106,21 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     );
     final lang = appLang.value;
 
-    // Cache-first: если в локальной БД уже есть >=50 рецептов под
-    // текущий язык — показываем их сразу. Это и есть "preloaded
-    // mongo db" из ТЗ: при повторном открытии приложение работает
-    // мгновенно и без сети.
     if (repo != null) {
       _stage.value = const _LoadStage.openingCache();
+    }
+
+    // mahallem: всегда идём через категории (DB-first, со случайной
+    // ротацией набора на каждом открытии). Сеть подключается только
+    // если для какой-то категории локально мало рецептов.
+    if (widget.api.backend == RecipeBackend.mahallem) {
+      final recipes = await _seedFromCategories(repo, lang);
+      return _LoadResult(recipes: recipes, repository: repo);
+    }
+
+    // Cache-first для не-mahallem бэкендов: если в локальной БД уже
+    // есть >=50 рецептов под текущий язык — показываем их сразу.
+    if (repo != null) {
       final cachedCount = await repo.countFor(lang);
       if (cachedCount >= 50) {
         final cached = await repo.listCached(lang, limit: _seedTarget);
@@ -107,11 +133,6 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     if (loader != null) {
       final recipes = await loader(widget.api);
       await _persist(repo, recipes, lang);
-      return _LoadResult(recipes: recipes, repository: repo);
-    }
-
-    if (widget.api.backend == RecipeBackend.mahallem) {
-      final recipes = await _seedFromCategories(repo, lang);
       return _LoadResult(recipes: recipes, repository: repo);
     }
 
@@ -132,23 +153,43 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     RecipeRepository? repo,
     AppLang lang,
   ) async {
+    final categories = _pickCategories();
     final accumulator = <int, Recipe>{};
-    for (var i = 0; i < _seedCategories.length; i++) {
-      final cat = _seedCategories[i];
+
+    // 1) Первый проход — всё из локальной БД. UI оживает
+    //    без сети, если кэш хотя бы частично покрывает выбранные категории.
+    if (repo != null) {
+      for (final cat in categories) {
+        final cached = await repo.listCachedByCategory(cat, lang, limit: 50);
+        for (final r in cached) {
+          accumulator[r.id] = r;
+        }
+      }
+    }
+
+    // 2) Второй проход — добираем недобранные категории из сети.
+    //    Категорию с >= [_categoryCacheThreshold] локальных рецептов
+    //    в сеть не трогаем — это явный cache-hit в духе TЗ.
+    for (var i = 0; i < categories.length; i++) {
+      final cat = categories[i];
       _stage.value = _LoadStage.fetching(
         category: cat,
         done: i,
-        total: _seedCategories.length,
+        total: categories.length,
         loaded: accumulator.length,
         target: _seedTarget,
       );
+
+      if (repo != null) {
+        final localCount = await repo.countForCategory(cat, lang);
+        if (localCount >= _categoryCacheThreshold) continue;
+      }
+
       try {
         final batch = await widget.api.filterByCategory(cat);
         for (final r in batch) {
           accumulator[r.id] = r;
         }
-        // Пишем порционно, чтобы при сбое следующей категории
-        // уже накопленное было в кэше для следующего запуска.
         if (repo != null && batch.isNotEmpty) {
           try {
             await repo.upsertAll(batch, lang);

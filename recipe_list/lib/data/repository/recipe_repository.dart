@@ -40,17 +40,39 @@ class RecipeSearchResult {
 ///   найденные рецепты upsert-ятся в кэш, лишнее вытесняется.
 /// * Если сеть упала и в кэше нашлось `0` — возвращаем пустой
 ///   список и `offline=true`.
+/// Фасад между UI и слоями данных:
+///
+/// 1. Локальный sqflite-кэш с LRU-вытеснением по двум лимитам:
+///    количество строк `cap` и суммарный размер `byteCap` (≈5 MB).
+/// 2. [RecipeApi] поверх TheMealDB / mahallem.
+///
+/// Логика поиска:
+/// * Сперва `name_lower LIKE 'prefix%'` по таблице `recipes`
+///   с фильтром `lang = ?`. Если нашлось `>= cacheHitThreshold`
+///   совпадений — возвращаем их и обновляем `last_used_at` (LRU
+///   touch). Сеть не трогаем.
+/// * Иначе — `RecipeApi.searchByName(query: prefix, lang: lang)`,
+///   найденные рецепты upsert-ятся в кэш, лишнее вытесняется.
+/// * Если сеть упала и в кэше нашлось `0` — возвращаем пустой
+///   список и `offline=true`.
 class RecipeRepository {
+  /// 5 MB — бюджет локального кэша по дефолту. При превышении
+  /// вытесняем LRU-редко используемые карточки, пока сумма
+  /// `byte_size` не вернётся под лимит.
+  static const int kDefaultByteCap = 5 * 1024 * 1024;
+
   final Database _db;
   final RecipeApi _api;
   final int cap;
+  final int byteCap;
   final int cacheHitThreshold;
   final DateTime Function() _now;
 
   RecipeRepository({
     required Database db,
     required RecipeApi api,
-    this.cap = 200,
+    this.cap = 2000,
+    this.byteCap = kDefaultByteCap,
     this.cacheHitThreshold = 5,
     DateTime Function()? now,
   }) : _db = db,
@@ -138,6 +160,47 @@ class RecipeRepository {
     return (rows.first['c'] as int?) ?? 0;
   }
 
+  /// Сколько рецептов в кэше под язык `lang` в категории `category`.
+  /// Используется лоадером, чтобы понять, пора ли идти в сеть за
+  /// свежими рецептами данной категории.
+  Future<int> countForCategory(String category, AppLang lang) async {
+    final rows = await _db.rawQuery(
+      'SELECT COUNT(*) AS c FROM recipes '
+      'WHERE lang = ? AND category = ? COLLATE NOCASE;',
+      [lang.name, category],
+    );
+    return (rows.first['c'] as int?) ?? 0;
+  }
+
+  /// Рецепты одной категории из локальной БД, отсортированные
+  /// по LRU-свежести. Сеть не трогается.
+  Future<List<Recipe>> listCachedByCategory(
+    String category,
+    AppLang lang, {
+    int limit = 50,
+  }) async {
+    final rows = await _db.query(
+      'recipes',
+      where: 'lang = ? AND category = ? COLLATE NOCASE',
+      whereArgs: [lang.name, category],
+      orderBy: 'last_used_at DESC',
+      limit: limit,
+    );
+    return rows.map(readRecipe).toList(growable: false);
+  }
+
+  /// Сумма `byte_size` по всем языкам. Используется для
+  /// бюджетного LRU-вытеснения.
+  Future<int> totalBytes() async {
+    final rows = await _db.rawQuery(
+      'SELECT COALESCE(SUM(byte_size), 0) AS b FROM recipes;',
+    );
+    final v = rows.first['b'];
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return 0;
+  }
+
   /// Топ-N рецептов из кэша для языка [lang], отсортированных
   /// LRU-новизной (свежие — первыми). Используется как мгновенный
   /// preload на старте: UI показывает 200 локальных карточек ещё
@@ -196,14 +259,30 @@ class RecipeRepository {
   }
 
   Future<void> _evictIfOverCap() async {
+    // 1) Сначала жёсткий байт-бюджет: вытесняем LRU-строки
+    //    пачками по 32, пока суммарный размер не вернётся под порог.
+    var bytes = await totalBytes();
+    while (bytes > byteCap) {
+      final removed = await _db.rawDelete(
+        'DELETE FROM recipes WHERE rowid IN ('
+        'SELECT rowid FROM recipes ORDER BY last_used_at ASC LIMIT 32'
+        ');',
+      );
+      if (removed == 0) break;
+      bytes = await totalBytes();
+    }
+
+    // 2) Страховочный лимит по числу строк (защита от
+    //    бесконечного роста индексов, если byte_size окажется занижен).
     final total = await count();
-    if (total <= cap) return;
-    final overflow = total - cap;
-    await _db.rawDelete(
-      'DELETE FROM recipes WHERE rowid IN ('
-      'SELECT rowid FROM recipes ORDER BY last_used_at ASC LIMIT ?'
-      ');',
-      [overflow],
-    );
+    if (total > cap) {
+      final overflow = total - cap;
+      await _db.rawDelete(
+        'DELETE FROM recipes WHERE rowid IN ('
+        'SELECT rowid FROM recipes ORDER BY last_used_at ASC LIMIT ?'
+        ');',
+        [overflow],
+      );
+    }
   }
 }
