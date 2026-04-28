@@ -61,8 +61,13 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     return _LoadResult(recipes: recipes, repository: repo);
   }
 
-  static Future<List<Recipe>> _defaultLoader(RecipeApi api) =>
-      api.searchByName(query: 'a', lang: appLang.value);
+  static Future<List<Recipe>> _defaultLoader(RecipeApi api) {
+    // Используем фильтр по категории «Chicken»: оба бэкенда
+    // (TheMealDB / mahallem) возвращают ~30 рецептов вне зависимости
+    // от языка интерфейса (mahallem-search ищет по префиксу в текущей
+    // локали, что для RU с «ch» даёт пусто — поэтому именно filter).
+    return api.filterByCategory('Chicken');
+  }
 
   static Future<RecipeRepository?> _defaultRepoBuilder(RecipeApi api) async {
     try {
