@@ -5,6 +5,7 @@ import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
 import 'lang_icon_button.dart';
+import 'source_page.dart';
 
 /// Экран деталей рецепта. Реализует разметку из `docs/design_system.md`
 /// §9l: белый фон, hero-фото 396×220, заголовок страницы 24/#000,
@@ -155,7 +156,7 @@ class RecipeDetailsPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                          onPressed: () => _open(recipe.sourceUrl!),
+                          onPressed: () => _openSource(context, recipe.sourceUrl!),
                           icon: const Icon(Icons.link),
                           label: Text(s.source),
                         ),
@@ -174,6 +175,12 @@ class RecipeDetailsPage extends StatelessWidget {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  static void _openSource(BuildContext context, String url) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => SourcePage(url: url)),
+    );
   }
 }
 
