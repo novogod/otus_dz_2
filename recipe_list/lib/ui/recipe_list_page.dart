@@ -14,15 +14,21 @@ import 'search_app_bar.dart';
 /// Страница со списком рецептов. Принимает готовый список через конструктор —
 /// загрузка данных вынесена выше (см. `RecipeListLoader`).
 ///
-/// Сама страница теперь владеет:
+/// Сама страница владеет:
 /// * полем поиска в `AppBar` (см. [SearchAppBar]);
-/// * локальным фильтром списка по подстроке имени;
-/// * выпадающим списком подсказок (см. [SearchPredictions]) — top-5
-///   совпадений локального списка, тап открывает экран деталей.
+/// * выпадающим списком подсказок (см. [SearchPredictions]),
+///   который при наличии [api] дёргает TheMealDB
+///   `search.php?s=<prefix>` и показывает рецепты, имена которых
+///   начинаются с этого префикса. Без [api] (в тестах) фолбэком
+///   идёт префикс-фильтр по [recipes].
 ///
-/// При тапе на карточку (как и на подсказку) открывает экран деталей.
-/// Если карточка lite (поля категории/инструкций пустые), сначала вызывает
-/// [RecipeApi.lookup], чтобы догрузить полную версию рецепта.
+/// При submit / тапе по подсказке результаты замещают базовый
+/// список (`recipes`), т.е. выбор подсказки = фильтр списка с
+/// догрузкой с API. Сброс поля (клавиша ✕ внутри [SearchAppBar])
+/// возвращает базовый список, который передал `RecipeListLoader`.
+///
+/// При тапе на карточку или на подсказку с полными данными открывает
+/// экран деталей. Если карточка lite, сначала [RecipeApi.lookup].
 class RecipeListPage extends StatefulWidget {
   final List<Recipe> recipes;
   final RecipeApi? api;
@@ -34,23 +40,36 @@ class RecipeListPage extends StatefulWidget {
 }
 
 class _RecipeListPageState extends State<RecipeListPage> {
-  static const int _maxPredictions = 5;
-  static const Duration _debounce = Duration(milliseconds: 250);
+  static const Duration _debounce = Duration(milliseconds: 300);
 
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   Timer? _debounceTimer;
 
-  /// Применённый (через submit) фильтр — управляет содержимым списка.
-  String _appliedQuery = '';
-
-  /// Текущий ввод (без debounce) — управляет содержимым подсказок.
+  /// Текущий префикс в поле поиска (без debounce). Используется
+  /// для очистки подсказок, когда поле пустое.
   String _liveQuery = '';
+
+  /// Результаты API для выпадающего списка, уже отфильтрованные
+  /// по началу имени. Пустой список + включённый [_predictionsLoading]
+  /// = спиннер внутри dropdown.
+  List<Recipe> _predictionRecipes = const [];
+  bool _predictionsLoading = false;
+
+  /// Префикс последнего успешного запроса — используется для
+  /// отбрасывания результатов устаревших запросов (race-condition).
+  String _lastQueryInFlight = '';
+
+  /// Рецепты, показанные в основном списке. По умолчанию совпадает
+  /// с `widget.recipes`; после submit / выбора подсказки — результат
+  /// фильтра (или API).
+  late List<Recipe> _displayed = widget.recipes;
 
   @override
   void initState() {
     super.initState();
     _focusNode.addListener(_onFocusChange);
+    _controller.addListener(_onTextChanged);
   }
 
   @override
@@ -58,6 +77,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
     _debounceTimer?.cancel();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
+    _controller.removeListener(_onTextChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -67,46 +87,104 @@ class _RecipeListPageState extends State<RecipeListPage> {
     setState(() {});
   }
 
+  /// Следит за controller-ом, чтобы реагировать на `controller.clear()`
+  /// из [SearchAppBar] (клавиша ✕), когда onChanged не вызывается.
+  void _onTextChanged() {
+    if (_controller.text.isEmpty && _displayed != widget.recipes) {
+      setState(() {
+        _displayed = widget.recipes;
+        _predictionRecipes = const [];
+        _liveQuery = '';
+      });
+    }
+  }
+
   void _onChanged(String value) {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(_debounce, () {
-      if (!mounted) return;
-      setState(() => _liveQuery = value);
-    });
+    final trimmed = value.trim();
+    setState(() => _liveQuery = trimmed);
+    if (trimmed.isEmpty) {
+      setState(() {
+        _predictionRecipes = const [];
+        _predictionsLoading = false;
+      });
+      return;
+    }
+    _debounceTimer = Timer(_debounce, () => _runPredictionQuery(trimmed));
   }
 
   void _onSubmitted(String value) {
     _debounceTimer?.cancel();
-    setState(() {
-      _liveQuery = value;
-      _appliedQuery = value;
-    });
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      setState(() {
+        _displayed = widget.recipes;
+        _predictionRecipes = const [];
+        _liveQuery = '';
+      });
+      _focusNode.unfocus();
+      return;
+    }
+    _runPredictionQuery(trimmed, applyToList: true);
     _focusNode.unfocus();
   }
 
-  List<Recipe> _filtered() {
-    if (_appliedQuery.trim().isEmpty) return widget.recipes;
-    final q = _appliedQuery.toLowerCase();
-    return widget.recipes
-        .where((r) => r.name.toLowerCase().contains(q))
+  /// Дёргает API и отфильтровывает результат по началу имени
+  /// (TheMealDB их отдаёт по подстроке, берём строже — startsWith).
+  /// Если [api] = null (тесты), фильтрует локальный [widget.recipes].
+  Future<void> _runPredictionQuery(
+    String prefix, {
+    bool applyToList = false,
+  }) async {
+    final api = widget.api;
+    if (api == null) {
+      final hits = _localPrefix(widget.recipes, prefix);
+      setState(() {
+        _predictionRecipes = hits;
+        _predictionsLoading = false;
+        if (applyToList) _displayed = hits;
+      });
+      return;
+    }
+    setState(() {
+      _predictionsLoading = true;
+      _lastQueryInFlight = prefix;
+    });
+    try {
+      final fetched = await api.searchByName(query: prefix);
+      if (!mounted) return;
+      // Отбрасываем протухшие запросы: пользователь мог успеть
+      // ввести больше букв, пока этот висел в полёте.
+      if (_lastQueryInFlight != prefix) return;
+      final hits = _localPrefix(fetched, prefix);
+      setState(() {
+        _predictionRecipes = hits;
+        _predictionsLoading = false;
+        if (applyToList) _displayed = hits;
+      });
+    } on Object {
+      if (!mounted) return;
+      if (_lastQueryInFlight != prefix) return;
+      setState(() {
+        _predictionRecipes = const [];
+        _predictionsLoading = false;
+        if (applyToList) _displayed = const [];
+      });
+    }
+  }
+
+  static List<Recipe> _localPrefix(List<Recipe> source, String prefix) {
+    final p = prefix.toLowerCase();
+    return source
+        .where((r) => r.name.toLowerCase().startsWith(p))
         .toList(growable: false);
   }
 
-  List<Recipe> _predictions() {
-    final q = _liveQuery.trim().toLowerCase();
-    if (q.isEmpty) return const [];
-    return widget.recipes
-        .where((r) => r.name.toLowerCase().contains(q))
-        .take(_maxPredictions)
-        .toList(growable: false);
-  }
-
-  bool get _showPredictions =>
-      _focusNode.hasFocus && _liveQuery.trim().isNotEmpty;
+  bool get _showPredictions => _focusNode.hasFocus && _liveQuery.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filtered();
+    final list = _displayed;
     return Scaffold(
       backgroundColor: AppColors.surfaceMuted,
       appBar: SearchAppBar(
@@ -120,15 +198,15 @@ class _RecipeListPageState extends State<RecipeListPage> {
         child: Stack(
           children: [
             Positioned.fill(
-              child: filtered.isEmpty
+              child: list.isEmpty
                   ? const _EmptyState()
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(
                         vertical: AppSpacing.sm,
                       ),
-                      itemCount: filtered.length,
+                      itemCount: list.length,
                       itemBuilder: (context, index) {
-                        final recipe = filtered[index];
+                        final recipe = list[index];
                         return RecipeCard(
                           recipe: recipe,
                           onTap: () => _openDetails(context, recipe),
@@ -142,10 +220,10 @@ class _RecipeListPageState extends State<RecipeListPage> {
                 right: 0,
                 top: 0,
                 child: SearchPredictions(
-                  items: _predictions(),
+                  items: _predictionRecipes,
+                  loading: _predictionsLoading,
                   onTap: (recipe) {
-                    _focusNode.unfocus();
-                    _openDetails(context, recipe);
+                    _onPredictionTap(recipe);
                   },
                 ),
               ),
@@ -182,6 +260,21 @@ class _RecipeListPageState extends State<RecipeListPage> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => RecipeDetailsPage(recipe: full)),
     );
+  }
+
+  /// Тап по подсказке: работает как фильтр — заменяет основной
+  /// список на все подгруженные с этим префиксом, подставляет
+  /// имя в поле поиска, снимает фокус и скроллит список вверх.
+  void _onPredictionTap(Recipe recipe) {
+    _focusNode.unfocus();
+    _controller.text = recipe.name;
+    _controller.selection = TextSelection.collapsed(
+      offset: recipe.name.length,
+    );
+    setState(() {
+      _liveQuery = recipe.name;
+      _displayed = List<Recipe>.unmodifiable(_predictionRecipes);
+    });
   }
 }
 

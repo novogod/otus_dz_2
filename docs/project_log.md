@@ -1,5 +1,48 @@
 # Project Log
 
+## recipe_list — Online prefix-предсказания + filter-by-pick
+
+**Date:** 2026-04-29
+
+### Описание
+
+Авто-подсказки в `SearchAppBar` теперь дёргают онлайн API
+(TheMealDB), а не фильтруют то, что уже в памяти страницы. Дропдаун
+скроллится, показывает только рецепты, чьи имена **начинаются** с
+введённого префикса (case-insensitive). Тап по подсказке — а равно и
+keyboard submit — заменяет основной список загруженными совпадениями
+(работает как фильтр с дозагрузкой). Очистка поля возвращает базовый
+список.
+
+### Что сделано
+
+- [recipe_list/lib/ui/recipe_list_page.dart](recipe_list/lib/ui/recipe_list_page.dart):
+  состояние переписано — `_runPredictionQuery(prefix)` дёргает
+  `RecipeApi.searchByName`, фильтрует по `startsWith`, защищается
+  от race condition через `_lastQueryInFlight`. Тап по подсказке
+  подставляет имя в поле и подменяет `_displayed`. Очистка через ✕
+  возвращает `widget.recipes`. Если `api == null` (тесты) — фолбэк
+  локальный startsWith-фильтр.
+- [recipe_list/lib/ui/search_app_bar.dart](recipe_list/lib/ui/search_app_bar.dart):
+  у `SearchPredictions` появился флаг `loading`, `maxHeight` поднят
+  до 320, добавлен `Scrollbar` поверх `ListView.separated` —
+  длинные списки прокручиваются.
+- Документ
+  [docs/search_predictions.md](docs/search_predictions.md): описание
+  state machine, race-handling, связи с MongoDB-буфером и Gemini.
+- Чек-лист
+  [docs/todo/search_api_deploy.md](docs/todo/search_api_deploy.md):
+  что осталось сделать на клиенте, что — в `mahallem_ist` (API,
+  Mongo, перевод, auth, тесты, rollout).
+
+### Проверки
+
+- `flutter analyze` — 0 issues.
+- `flutter test` — 17/17 passed (тест "search field filters list on
+  submit" продолжает проходить через локальный фолбэк).
+
+---
+
 ## recipe_list — Search AppBar и language toggle в шапке
 
 **Date:** 2026-04-29

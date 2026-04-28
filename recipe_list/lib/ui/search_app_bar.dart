@@ -134,15 +134,21 @@ class _SearchField extends StatelessWidget {
 }
 
 /// Выпадающий список предсказаний под поисковой строкой. Размещается
-/// в теле страницы поверх ListView рецептов.
+/// в теле страницы поверх ListView рецептов. Прокручивается, если
+/// результатов больше, чем умещается в `maxHeight`.
 class SearchPredictions extends StatelessWidget {
   final List<Recipe> items;
   final ValueChanged<Recipe> onTap;
+
+  /// Показывать индикатор загрузки вместо списка / "no matches".
+  /// Используется, пока летит запрос к API.
+  final bool loading;
 
   const SearchPredictions({
     super.key,
     required this.items,
     required this.onTap,
+    this.loading = false,
   });
 
   @override
@@ -153,8 +159,19 @@ class SearchPredictions extends StatelessWidget {
       elevation: 4,
       shadowColor: AppColors.navBarShadow,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 240),
-        child: items.isEmpty
+        constraints: const BoxConstraints(maxHeight: 320),
+        child: loading && items.isEmpty
+            ? const Padding(
+                padding: EdgeInsets.all(AppSpacing.md),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            : items.isEmpty
             ? Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Text(
@@ -166,34 +183,36 @@ class SearchPredictions extends StatelessWidget {
                   ),
                 ),
               )
-            : ListView.separated(
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                itemCount: items.length,
-                separatorBuilder: (_, _) =>
-                    const Divider(height: 1, color: AppColors.surfaceMuted),
-                itemBuilder: (context, index) {
-                  final r = items[index];
-                  return ListTile(
-                    dense: true,
-                    leading: const Icon(
-                      Icons.search,
-                      size: 18,
-                      color: AppColors.textSecondary,
-                    ),
-                    title: Text(
-                      r.name,
-                      style: const TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
+            : Scrollbar(
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) =>
+                      const Divider(height: 1, color: AppColors.surfaceMuted),
+                  itemBuilder: (context, index) {
+                    final r = items[index];
+                    return ListTile(
+                      dense: true,
+                      leading: const Icon(
+                        Icons.search,
+                        size: 18,
+                        color: AppColors.textSecondary,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onTap: () => onTap(r),
-                  );
-                },
+                      title: Text(
+                        r.name,
+                        style: const TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () => onTap(r),
+                    );
+                  },
+                ),
               ),
       ),
     );
