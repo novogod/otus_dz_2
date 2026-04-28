@@ -156,7 +156,8 @@ class RecipeDetailsPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                          onPressed: () => _openSource(context, recipe.sourceUrl!),
+                          onPressed: () =>
+                              _openSource(context, recipe.sourceUrl!),
                           icon: const Icon(Icons.link),
                           label: Text(s.source),
                         ),
@@ -178,9 +179,9 @@ class RecipeDetailsPage extends StatelessWidget {
   }
 
   static void _openSource(BuildContext context, String url) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => SourcePage(url: url)),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => SourcePage(url: url)));
   }
 }
 

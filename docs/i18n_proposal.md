@@ -89,69 +89,109 @@ Pluralization (`s.ingredientCount`) moves into ARB plural syntax:
 RU has the four-form rule (`one` / `few` / `many` / `other`) handled
 natively by `intl`.
 
-## 4. Dynamic content — LibreTranslate (+ MyMemory fallback), server-side only
+## 4. Dynamic content — production deployment, server-side only
 
-No translation provider is ever called from the Flutter binary. All
-requests go to the existing `mahallem_ist` Node service, which talks
-to an in-cluster LibreTranslate container — no API key needs to ship
-in an APK/IPA, which is what would let an attacker exhaust paid
-quota (OWASP A02 / A07).
+No translation provider is ever called from the Flutter binary, and
+LibreTranslate is **never** exposed publicly. All requests from the
+phone go to the production Node service on `mahallem.ist`, which
+calls LibreTranslate / MyMemory over the internal docker network.
+No API key ships in the APK/IPA — that would let an attacker
+exhaust paid quota (OWASP A02 / A07).
+
+### 4.0 Production topology (verified against `mahallem_ist`)
+
+| Component | URL | Reachable from phone? | Source |
+| --- | --- | --- | --- |
+| Public Node API gateway | `https://mahallem.ist` (Nginx → `127.0.0.1:4001`) | yes | `hostinger-deployment/nginx-configs/mahallem.ist` |
+| Admin panel | `https://admin.mahallem.ist` (→ `127.0.0.1:3000`) | yes (staff only) | same |
+| LibreTranslate | `http://mahallem-translate:5000` (docker-internal) | **no** | `local_user_portal/utils/translation.js`, `DOCKER_NETWORK_AND_ROUTING_ARCHITECTURE.md` "Internal-Only Services (No Host Port Mapping)" |
+| MyMemory | `https://api.mymemory.translated.net/get?...&de=support@mahallem.ist` | (server-side outbound only) | `local_user_portal/utils/translation.js` |
+| Hosting | EU Frankfurt, IP `72.61.181.62`, Let's Encrypt wildcard `*.mahallem.ist`, **Nginx** reverse proxy (not Caddy/Traefik) | — | `hostinger-deployment/DEPLOYMENT_WORKFLOW.md` |
+
+So the recipe app's data flow in production is:
 
 ```
-   Flutter app
-       │  HTTPS
+   Flutter app (recipe_list)
+       │  HTTPS to https://mahallem.ist/recipes/...
        ▼
-   Recipes API ──┬─→ http://mahallem-translate:5000/translate   (LibreTranslate, self-hosted)
-   (Node, in     │
-    mahallem_ist │
-    docker stack)└─→ https://api.mymemory.translated.net/get    (MyMemory, fallback)
+   Nginx 443 (Frankfurt)         ──┐  Let's Encrypt, *.mahallem.ist
+   proxy_pass 127.0.0.1:4001      │
+       │                           │
+       ▼                           │
+   Node (local_user_portal)       │
+   /recipes/* namespace  ──┐      │
+       │                    │     │
+       │ docker-internal    │     │
+       ▼                    ▼     │
+   mahallem-translate     api.mymemory.translated.net  (HTTPS outbound)
+   :5000  (LibreTranslate, Apache-2, self-hosted)
        │
        ▼
-   MongoDB (recipes + translations)
+   MongoDB (recipes + translations,
+            same docker stack)
        ▲
        │  scheduled refresh
-   TheMealDB (upstream)
+   TheMealDB (https://www.themealdb.com)
 ```
 
-The same Node service that runs the existing translation pipeline
-for `mahallem_ist` exposes a new namespace `/recipes/*`. Endpoints —
-Section 5.
+The recipe app adds a new HTTP namespace under the existing public
+host. **No new domain, no new TLS cert, no new firewall rule needed.**
+Pick one of:
 
-### 4.1 Providers
+* `https://mahallem.ist/recipes/...` — simplest; piggy-backs on the
+  Nginx vhost that already terminates TLS for the user portal. Add
+  a `location /recipes/` block that proxies to the same
+  `127.0.0.1:4001` Node process (`local_user_portal`) which handles
+  the new routes.
+* `https://api.mahallem.ist/recipes/...` — clean separation, requires
+  one new Nginx server block + one DNS A-record. Recommended once
+  the recipe API has its own dependencies (currently it doesn't).
 
-**Primary — LibreTranslate (self-hosted).**
+We'll start with `https://mahallem.ist/recipes/...` and migrate to
+`api.mahallem.ist` if the namespaces ever conflict.
 
-* Reachable at `http://mahallem-translate:5000/translate` from
-  inside the docker network. Same container the user portal uses.
-* Open-source, Apache-2 licensed; runs entirely on our hardware. No
-  Google / Microsoft / Yandex / DeepL leg of the request, so it is
-  not subject to RU sanctions or Roskomnadzor blocks against US
-  cloud APIs.
-* Languages enabled in mahallem and reused here: `en, ru, tr, es,
+### 4.1 Providers (production reality)
+
+**Primary — LibreTranslate, internal-only.**
+
+* Lives in the production docker stack as service `mahallem-translate`,
+  reachable only from other containers on the same network at
+  `http://mahallem-translate:5000`. (Note: deployment docs reference
+  port 5050 in one place and 5000 in another — confirm via
+  `docker ps` before wiring; mahallem's `translation.js` defaults to
+  5000.) `LIBRETRANSLATE_URL` env var overrides if needed.
+* Open-source, Apache-2 licensed. The container runs on the same
+  Frankfurt host as the rest of mahallem — no Google / Microsoft /
+  Yandex / DeepL leg of the request, so it is not subject to RU
+  sanctions or Roskomnadzor blocks against US cloud APIs.
+* Languages installed on the production container: `en, ru, tr, es,
   fr, de, it, uk`. The recipe app only needs `en, ru` — the other
-  six are listed for posterity in case we ship the app to other
-  mahallem markets later.
-* Request shape (matches mahallem's helper exactly):
+  six are listed in case we ship the app to other mahallem markets
+  later.
+* Internal request shape (Node helper → LibreTranslate, **never**
+  exposed to the phone):
   ```json
-  POST /translate
+  POST http://mahallem-translate:5000/translate
   { "q": "chicken handi", "source": "en", "target": "ru", "format": "text" }
   ```
-* Quality on culinary copy: serviceable for tags / category /
-  ingredients; somewhat literal on instructions. We tighten the
-  output with a small **glossary** table (Section 4.4) for the
-  ~150 high-traffic culinary terms.
 
-**Fallback — MyMemory.**
+**Fallback — MyMemory (outbound from server only).**
 
 * Reachable at `https://api.mymemory.translated.net/get?q=...&langpair=en|ru&de=support@mahallem.ist`.
-* Free tier (anonymous): 1 000 words/day, ~5 000 with the email
-  parameter, ~50 K with the keyed plan — same email mahallem
-  already uses.
+* Free tier with the `support@mahallem.ist` email gets ~50 K
+  chars/day — same email mahallem already uses.
 * Used when LibreTranslate (a) returns an empty / echo response,
   (b) fails 5xx, or (c) is unreachable for > 2 s.
-* Also used as **primary** for the three RTL/Persianate languages
-  LibreTranslate doesn't ship models for in mahallem (`fa, ar, ku`),
-  if we ever expand beyond `en/ru`.
+* Also primary for the three RTL/Persianate languages LibreTranslate
+  doesn't ship models for (`fa, ar, ku`), if we expand beyond
+  `en/ru`.
+
+**What the phone sees.** The phone only ever calls the production
+public host — `https://mahallem.ist/recipes/...` — over HTTPS. It
+does not know LibreTranslate exists and could not reach it even if
+it did (no host-port mapping, no DNS record). That is a deliberate
+mahallem design choice ("Internal-Only Services" in the deployment
+docs) and we inherit it for free.
 
 Neither provider routes traffic via Google. Both work from a
 Russian IP today.
@@ -286,12 +326,12 @@ payload itself goes into MongoDB.
 
 ### 5.2 Server endpoints
 
-| Method | Path | Purpose |
+| Method | Path (production: `https://mahallem.ist`) | Purpose |
 | --- | --- | --- |
-| `GET` | `/recipes?lang=ru&since=<iso>&limit=200` | Returns recipes updated after `since`, oldest-first, capped at `limit`. Used by the phone for incremental sync. |
-| `GET` | `/recipes/:id?lang=ru` | Single recipe details, including image URLs, in the requested language. If missing in MongoDB, the server pulls from TheMealDB, translates, persists, then responds. |
-| `GET` | `/recipes/search?q=...&lang=ru&limit=20` | Server-side text search over `i18n.<lang>.name`. On miss falls back to `TheMealDB /search.php?s=q`, then translates and persists each hit. |
-| `GET` | `/health` | Liveness. |
+| `GET` | `https://mahallem.ist/recipes?lang=ru&since=<iso>&limit=200` | Returns recipes updated after `since`, oldest-first, capped at `limit`. Used by the phone for incremental sync. |
+| `GET` | `https://mahallem.ist/recipes/:id?lang=ru` | Single recipe details, including image URLs, in the requested language. If missing in MongoDB, the server pulls from TheMealDB, translates, persists, then responds. |
+| `GET` | `https://mahallem.ist/recipes/search?q=...&lang=ru&limit=20` | Server-side text search over `i18n.<lang>.name`. On miss falls back to `TheMealDB /search.php?s=q`, then translates and persists each hit. |
+| `GET` | `https://mahallem.ist/recipes/health` | Liveness. |
 
 All endpoints are protected by the same auth the rest of the
 mahallem_ist stack uses (App Check / signed app-attestation token).

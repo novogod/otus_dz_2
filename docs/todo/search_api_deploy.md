@@ -22,9 +22,11 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## B. Frontend — to do
 
-- [ ] Replace direct `MealDbClient` URL with the new
-      `https://api.<our-domain>/recipes/...` once the backend ships.
-      Single touchpoint: `RecipeApi`.
+- [ ] Replace direct `MealDbClient` URL with the production
+      mahallem host: **`https://mahallem.ist/recipes/...`** (Nginx
+      → `127.0.0.1:4001` Node, Frankfurt). Single touchpoint:
+      `RecipeApi.baseUrl`. Switch via build flavor / `--dart-define`
+      so debug builds can still hit a staging origin.
 - [ ] Add a tiny `RecipeRepository` between `RecipeApi` and the UI:
   - [ ] in-memory LRU (capacity 200) keyed by recipe id;
   - [ ] persistent layer (Drift / sqflite) with the same cap;
@@ -40,37 +42,56 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done.
 - [ ] Optional: prefetch top-popular recipes on app start
       (`/recipes?since=...&limit=50`).
 
-## C. Backend (`mahallem_ist`)
+## C. Backend (`mahallem_ist`, production = Frankfurt host)
 
 - [ ] Add a `recipes` MongoDB collection with the schema in
       `i18n_proposal.md` §5.1 (bilingual `i18n.{en,ru}` payload,
       `contentHash`, `popularity`, `fetchedAt`, `translatedAt`).
 - [ ] Indexes: `_id`, text index on `i18n.en.name` + `i18n.ru.name`,
       `fetchedAt`.
-- [ ] Endpoint `GET /recipes/search?q=<prefix>&lang=<ru|en>&limit=20`:
+- [ ] Mount the new routes inside `local_user_portal` (the same
+      Node process Nginx already proxies to on `127.0.0.1:4001`) at
+      path prefix `/recipes`. **No new domain, no new TLS cert
+      needed** — the existing Let's Encrypt wildcard for
+      `*.mahallem.ist` covers it.
+- [ ] Add a `location /recipes/ { proxy_pass http://127.0.0.1:4001; }`
+      block to `hostinger-deployment/nginx-configs/mahallem.ist`
+      (or just rely on the existing root proxy if it already covers
+      `/`).
+- [ ] Endpoint `GET https://mahallem.ist/recipes/search?q=<prefix>&lang=<ru|en>&limit=20`:
   - [ ] Mongo regex `^<prefix>` (case-insensitive) against
         `i18n.<lang>.name`.
   - [ ] If hit count < 5 → fall back to TheMealDB
         `search.php?s=<prefix>`, translate via the LibreTranslate +
         MyMemory pipeline (Section D), upsert.
   - [ ] Return uniform `Recipe` JSON.
-- [ ] Endpoint `GET /recipes/:id?lang=...` (details). Same on-miss
-      fetch + translate.
-- [ ] Endpoint `GET /recipes?since=<iso>&lang=...&limit=200` for
-      incremental sync.
+- [ ] Endpoint `GET https://mahallem.ist/recipes/:id?lang=...`
+      (details). Same on-miss fetch + translate.
+- [ ] Endpoint `GET https://mahallem.ist/recipes?since=<iso>&lang=...&limit=200`
+      for incremental sync.
+- [ ] Endpoint `GET https://mahallem.ist/recipes/health` (liveness;
+      monitored by the existing mahallem uptime probe).
 - [ ] Server-side cap: keep at most **2 000** recipes, evict by
       `(popularity asc, fetchedAt asc)`.
 - [ ] Hourly job: pull from `random.php`, translate, upsert.
 - [ ] Daily job: re-validate top-popular against TheMealDB
       `lookup.php`, refresh if `contentHash` changed.
+- [ ] Confirm the `mahallem-translate` container is reachable from
+      `local_user_portal` over the docker network (it already is for
+      the existing job-translation flow); recipes reuse the same
+      service — no new container, no new firewall rule.
 
 ## D. Translation pipeline (Google-free — Russia compatible)
 
 - [ ] Reuse mahallem's `local_user_portal/utils/translation.js`
-      helper. It already wraps **LibreTranslate** (self-hosted at
-      `http://mahallem-translate:5000`) with **MyMemory**
-      (`https://api.mymemory.translated.net`, signed with
-      `support@mahallem.ist`) as a fallback.
+      helper. It already wraps **LibreTranslate** — docker-internal
+      at `http://mahallem-translate:5000` (env
+      `LIBRETRANSLATE_URL`), confirmed not exposed publicly per
+      `DOCKER_NETWORK_AND_ROUTING_ARCHITECTURE.md` — with
+      **MyMemory** (`https://api.mymemory.translated.net`, signed
+      with `support@mahallem.ist`) as a fallback.
+- [ ] Verify the production container's port (5000 vs 5050) via
+      `docker ps` on the Frankfurt host before wiring.
 - [ ] Add a `translateRecipe(meal, src='en', dst='ru')` wrapper that
       batches name, category, area, tags, ingredient names, and
       instructions into one pass and returns the bilingual payload

@@ -1,5 +1,57 @@
 # Project Log
 
+## docs — Production endpoints для перевода (mahallem.ist)
+
+**Date:** 2026-04-29
+
+### Что было не так
+
+В `docs/i18n_proposal.md` фигурировал URL
+`http://mahallem-translate:5000/translate` — это адрес контейнера
+**внутри docker-сети разработческой машины**. С телефона на
+мобильной сети туда не достучаться.
+
+### Что в проде на самом деле (проверено по
+`mahallem_ist/project_docs` и `hostinger-deployment/`)
+
+- **Public Node API gateway:** `https://mahallem.ist` — Nginx :443
+  (Frankfurt, IP `72.61.181.62`, Let's Encrypt wildcard
+  `*.mahallem.ist`) → `127.0.0.1:4001` (`local_user_portal`).
+- **Admin:** `https://admin.mahallem.ist` → `127.0.0.1:3000`.
+- **LibreTranslate:** `http://mahallem-translate:5000` — **только
+  internal docker network**, нет host-port mapping, нет DNS.
+  Источник: `DOCKER_NETWORK_AND_ROUTING_ARCHITECTURE.md` раздел
+  "Internal-Only Services". `LIBRETRANSLATE_URL` env-override.
+- **MyMemory:** outbound HTTPS из Node-процесса к
+  `api.mymemory.translated.net`, подпись
+  `de=support@mahallem.ist`.
+
+Телефон **никогда** не вызывает LibreTranslate напрямую.
+
+### Что обновлено
+
+- [docs/i18n_proposal.md](i18n_proposal.md): §4 переписан под
+  production-топологию — добавлена таблица "что где живёт", блок-
+  схема с Nginx Frankfurt → Node :4001 → docker-internal
+  LibreTranslate. §5.2 endpoints теперь абсолютные URL под
+  `https://mahallem.ist/recipes/...`.
+- [docs/todo/search_api_deploy.md](todo/search_api_deploy.md): §B
+  ставит `RecipeApi.baseUrl` на `https://mahallem.ist/recipes/...`,
+  предлагает переключение через `--dart-define`. §C добавляет
+  пункт "mount routes inside `local_user_portal` под /recipes",
+  Nginx-блок `location /recipes/`, проверку
+  `LIBRETRANSLATE_URL` и порта (5000 vs 5050) на live-хосте.
+
+### Решение по доменам
+
+* Стартуем с `https://mahallem.ist/recipes/...` — переиспользуем
+  существующий vhost, TLS-серт, фаервол. Нулевые расходы.
+* Переезд на `https://api.mahallem.ist/recipes/...` — опционально,
+  когда recipe-API получит свои зависимости. Это +1 server block
+  Nginx + 1 DNS A-запись, серт уже покрыт wildcard'ом.
+
+---
+
 ## docs — Перевод без Google: LibreTranslate + MyMemory
 
 **Date:** 2026-04-29
