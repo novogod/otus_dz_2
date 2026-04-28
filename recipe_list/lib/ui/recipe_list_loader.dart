@@ -78,32 +78,12 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
 
   static Future<List<Recipe>> _defaultLoader(RecipeApi api) async {
     if (api.backend == RecipeBackend.mahallem) {
-      // mahallem-search требует prefix.length>=2 + локаль-зависимый
-      // индекс — сложно подобрать seed для RU с холодным кэшем,
-      // поэтому смешиваем несколько категорий через /filter
-      // (lite-выдача, но многоязычная и без префикс-проблем).
-      const categories = ['Chicken', 'Beef', 'Dessert', 'Seafood'];
-      final batches = await Future.wait(
-        categories.map(
-          (c) => api.filterByCategory(c).catchError((_) => <Recipe>[]),
-        ),
-      );
-      // Чередуем по одной из каждой категории (round-robin),
-      // чтобы при скролле не было длинного блока однотипных карточек.
-      final mixed = <Recipe>[];
-      var i = 0;
-      while (mixed.length < 60) {
-        var added = false;
-        for (final batch in batches) {
-          if (i < batch.length) {
-            mixed.add(batch[i]);
-            added = true;
-          }
-        }
-        if (!added) break;
-        i++;
-      }
-      return mixed;
+      // С mahallem в full=1 режиме сервер параллельно лукапит и
+      // переводит каждую карточку — для богатой UI-карточки нужны
+      // category/area/tags/ingredients. Берём одну категорию, чтобы
+      // не выбивать receiveTimeout на холодном кэше (~30 параллельных
+      // переводов ≈ 10–20 с).
+      return api.filterByCategory('Chicken');
     }
     // TheMealDB: одно слово возвращает полные карточки.
     return api.searchByName(query: 'c', lang: appLang.value);
