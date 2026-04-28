@@ -1,5 +1,74 @@
 # Project Log
 
+## docs — Перевод без Google: LibreTranslate + MyMemory
+
+**Date:** 2026-04-29
+
+### Описание
+
+Приложение нацелено на Россию, где сервисы Google (включая Gemini /
+Cloud Translation) работают нестабильно и часто блокируются. Мы
+полностью убрали Google из path перевода и переехали на стек,
+который уже крутится в `mahallem_ist` Docker (см. их
+`TRANSLATION_SYSTEM_IMPLEMENTATION.md`,
+`DYNAMIC_TRANSLATION_SYSTEM.md`,
+`SMART_BACKGROUND_TRANSLATION.md`):
+
+- **Primary:** LibreTranslate (self-hosted, контейнер
+  `mahallem-translate:5000`, open-source, без обращения к Google).
+  Поддерживает 8 из 10 платформенных языков mahallem (`en, ru, tr,
+  es, fr, de, it, uk`) — нам сейчас нужно только `en/ru`.
+- **Fallback:** MyMemory (`api.mymemory.translated.net`), free tier
+  с почтой `support@mahallem.ist`. Также основной провайдер для
+  `fa, ar, ku`, если когда-либо понадобятся.
+- **Glossary** + **permanent translation_cache** в Postgres —
+  скопировано один-в-один с mahallem.
+- **Background retry cron** (10 мин), как в mahallem
+  `SMART_BACKGROUND_TRANSLATION`: подбирает рецепты с NULL-полями,
+  до 10 повторов.
+
+### Что обновлено
+
+- [docs/i18n_proposal.md](i18n_proposal.md): §1 цели — добавлено
+  "no Google services". §4 целиком переписан с Gemini на
+  LibreTranslate + MyMemory, добавлены §4.4 glossary и §4.5
+  permanent cache. §8 migration plan обновлён. §9 open questions —
+  цена и Play Integrity переосмыслены под self-hosted MT.
+- [docs/todo/search_api_deploy.md](todo/search_api_deploy.md): §D
+  Translation pipeline переписан под LT + MyMemory, добавлены
+  заметки про lowercase quirk, echo-guard через fallback, glossary
+  и явное "do not introduce any Google product".
+- [docs/search_predictions.md](search_predictions.md): упоминание
+  Gemini заменено на LibreTranslate + MyMemory.
+
+### Почему именно так
+
+1. **Russia-friendly:** ни один HTTP-запрос на горячем пути не
+   уходит к google.com / generativelanguage.googleapis.com.
+   LibreTranslate физически крутится у нас, MyMemory — итальянский
+   сервис, доступный из RU.
+2. **Zero new infra:** контейнер `mahallem-translate` уже есть.
+   Postgres-таблицы `translation_cache` и `translation_glossary`
+   уже существуют в `mahallem_ist`. Мы только добавляем
+   `translateRecipe(meal)` поверх существующего
+   `lib/utils/translation.js`.
+3. **Цена:** marginal cost = CPU mahallem-translate, который мы и
+   так платим. MyMemory — free tier 50K chars/day, для 2 000
+   рецептов одноразовый прогон ~50K вызовов в LT, MyMemory
+   практически не задействован.
+4. **Масштабируется на 10 языков mahallem:** изменений в коде
+   приложения не требуется — только новые ARB-файлы и
+   подколлекции `i18n.<lang>.*` в MongoDB.
+
+### Что НЕ менялось
+
+- Сама архитектура MongoDB-буфера 2000/200, eviction policy,
+  endpoints `/recipes/*`, sync 15 мин, образ Drift на телефоне —
+  всё как раньше. Поменялась только реализация переводящего
+  модуля внутри Node-сервиса.
+
+---
+
 ## recipe_list — Online prefix-предсказания + filter-by-pick
 
 **Date:** 2026-04-29

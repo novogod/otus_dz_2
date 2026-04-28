@@ -44,17 +44,25 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 0,
       leading: IconButton(
         tooltip: 'Back',
-        icon: const Icon(Icons.arrow_back, color: AppColors.primaryDark),
+        icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
         onPressed: onBack ?? () => Navigator.of(context).maybePop(),
       ),
-      title: _SearchField(
-        controller: controller,
-        focusNode: focusNode,
-        hint: s.searchHint,
-        onChanged: onChanged,
-        onSubmitted: onSubmitted,
+      title: Center(
+        child: FractionallySizedBox(
+          widthFactor: 0.85,
+          child: _SearchField(
+            controller: controller,
+            focusNode: focusNode,
+            hint: s.searchHint,
+            onChanged: onChanged,
+            onSubmitted: onSubmitted,
+          ),
+        ),
       ),
-      actions: const [LangIconButton()],
+      actions: const [
+        SizedBox(width: AppSpacing.sm),
+        LangIconButton(),
+      ],
     );
   }
 }

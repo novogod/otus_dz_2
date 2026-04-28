@@ -82,8 +82,9 @@ spelled out in [i18n_proposal.md](i18n_proposal.md) — is to talk to
 the `mahallem_ist` Node API instead, which:
 
 * serves recipes from MongoDB (fast, bilingual);
-* on a search miss, fetches from TheMealDB, runs the Gemini
-  translation pipeline, persists, and returns the bilingual rows;
+* on a search miss, fetches from TheMealDB, runs the
+  LibreTranslate (+ MyMemory fallback) translation pipeline,
+  persists, and returns the bilingual rows;
 * enforces the 2 000-row server-side cap with LRU/popularity
   eviction.
 

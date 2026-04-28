@@ -51,7 +51,8 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done.
   - [ ] Mongo regex `^<prefix>` (case-insensitive) against
         `i18n.<lang>.name`.
   - [ ] If hit count < 5 → fall back to TheMealDB
-        `search.php?s=<prefix>`, translate via Gemini, upsert.
+        `search.php?s=<prefix>`, translate via the LibreTranslate +
+        MyMemory pipeline (Section D), upsert.
   - [ ] Return uniform `Recipe` JSON.
 - [ ] Endpoint `GET /recipes/:id?lang=...` (details). Same on-miss
       fetch + translate.
@@ -63,18 +64,38 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done.
 - [ ] Daily job: re-validate top-popular against TheMealDB
       `lookup.php`, refresh if `contentHash` changed.
 
-## D. Translation pipeline
+## D. Translation pipeline (Google-free — Russia compatible)
 
-- [ ] Server module that batches recipe fields into a single Gemini
-      prompt (`gemini-1.5-flash`).
-- [ ] Re-uses `GEMINI_API_KEY` from
-      `local_docker_admin_backend/.env` — never reaches the Flutter
-      binary.
-- [ ] Echo guard: if Gemini returns the source unchanged, retry once
-      with a stricter prompt.
-- [ ] 429 backoff with jitter.
-- [ ] Daily token / cost cap; on cap, return source language only
-      and log a warning.
+- [ ] Reuse mahallem's `local_user_portal/utils/translation.js`
+      helper. It already wraps **LibreTranslate** (self-hosted at
+      `http://mahallem-translate:5000`) with **MyMemory**
+      (`https://api.mymemory.translated.net`, signed with
+      `support@mahallem.ist`) as a fallback.
+- [ ] Add a `translateRecipe(meal, src='en', dst='ru')` wrapper that
+      batches name, category, area, tags, ingredient names, and
+      instructions into one pass and returns the bilingual payload
+      shape used by the recipe MongoDB collection.
+- [ ] Lowercase inputs before calling LibreTranslate (known LT
+      quirk) and recapitalize the first letter of each returned
+      string — same workaround mahallem already uses.
+- [ ] Echo guard: if LT returns the source unchanged, retry once via
+      MyMemory before giving up.
+- [ ] 429 backoff with jitter (MyMemory enforces ~1 req/s on the
+      free tier).
+- [ ] Permanent `translation_cache` (Postgres) keyed by
+      `(source_text, source_lang, target_lang)` — reused from
+      mahallem.
+- [ ] `translation_glossary` table seeded with TheMealDB category /
+      area names and the top ~150 ingredients, edited via a small
+      admin endpoint.
+- [ ] Background retry cron (10 min, mahallem-style): pick recipes
+      with NULL fields, retry up to 10 times, then mark
+      `translation_failed=true` and stop.
+- [ ] Daily quota cap on MyMemory; on cap, only LibreTranslate is
+      used and rows that fall through stay NULL until next day.
+- [ ] **Do not introduce any Google product** (Translate, Gemini,
+      Vertex, Cloud Translation) on the translation hot path — the
+      app must keep working from a Russian IP.
 
 ## E. Auth & abuse protection
 

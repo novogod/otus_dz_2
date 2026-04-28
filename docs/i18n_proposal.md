@@ -15,13 +15,30 @@ predictions). This document describes what we add next.
 1. Every visible string — static UI **and** dynamic recipe content
    (name, category, area, tags, ingredients, instructions) — is shown
    in English or Russian, switched by the AppBar `RU` / `EN` button.
-2. Only one translation provider, reused from `mahallem_ist`: Google
-   Gemini via the existing `GEMINI_API_KEY`.
-3. Phone-side storage for recipes is a small, capped MongoDB-backed
+2. **No Google services in the translation path.** The app is
+   targeted at Russia, where Google Translate / Gemini availability
+   is unreliable and access from a Russian IP is intermittently
+   blocked. The pipeline must work end-to-end without any Google
+   product, including no Google reCAPTCHA, no Cloud Translation, no
+   Vertex / Gemini.
+3. Reuse the translation infrastructure already running in the
+   `mahallem_ist` docker stack — see
+   [TRANSLATION_SYSTEM_IMPLEMENTATION.md](https://internal/mahallem_ist/project_docs/TRANSLATION_SYSTEM_IMPLEMENTATION.md),
+   [DYNAMIC_TRANSLATION_SYSTEM.md](https://internal/mahallem_ist/project_docs/DYNAMIC_TRANSLATION_SYSTEM.md),
+   [SMART_BACKGROUND_TRANSLATION.md](https://internal/mahallem_ist/project_docs/SMART_BACKGROUND_TRANSLATION.md).
+   Two providers, both Google-free:
+   * **LibreTranslate** (self-hosted, container `mahallem-translate`
+     on port 5000) — primary, used for `en ↔ ru` (and the other
+     mahallem languages: `tr, es, fr, de, it, uk` if we ever scale).
+   * **MyMemory** (`https://api.mymemory.translated.net`) — fallback
+     and the only path for `fa, ar, ku` in mahallem. Free tier covers
+     ~50 K chars/day per email; we sign with `support@mahallem.ist`
+     same as the main platform.
+4. Phone-side storage for recipes is a small, capped MongoDB-backed
    cache — both as a "buffer" so we don't translate the same recipe
    twice, and as the source of the list / details / images while
    online or offline.
-4. The phone always shows the freshest data when connected. If the
+5. The phone always shows the freshest data when connected. If the
    user searches for something not yet cached, it is fetched from the
    server and added to the cache (evicting the oldest entries).
 
@@ -72,23 +89,22 @@ Pluralization (`s.ingredientCount`) moves into ARB plural syntax:
 RU has the four-form rule (`one` / `few` / `many` / `other`) handled
 natively by `intl`.
 
-## 4. Dynamic content — Gemini, server-side only
+## 4. Dynamic content — LibreTranslate (+ MyMemory fallback), server-side only
 
-We reuse the `GEMINI_API_KEY` already provisioned in
-`/Volumes/Working_MacOS_Extended/mahallem/mahallem_ist/local_docker_admin_backend/.env`.
-**The key never reaches the Flutter binary.** That is OWASP A02
-(Cryptographic Failures) / A07 (Authentication Failures): a key
-shipped in an APK/IPA can be extracted by anyone who unzips the
-bundle and used until the quota is exhausted at our expense.
+No translation provider is ever called from the Flutter binary. All
+requests go to the existing `mahallem_ist` Node service, which talks
+to an in-cluster LibreTranslate container — no API key needs to ship
+in an APK/IPA, which is what would let an attacker exhaust paid
+quota (OWASP A02 / A07).
 
 ```
    Flutter app
        │  HTTPS
        ▼
-   Recipes API   ──Gemini API── (translation)
-   (Node, in
-    mahallem_ist
-    docker stack)
+   Recipes API ──┬─→ http://mahallem-translate:5000/translate   (LibreTranslate, self-hosted)
+   (Node, in     │
+    mahallem_ist │
+    docker stack)└─→ https://api.mymemory.translated.net/get    (MyMemory, fallback)
        │
        ▼
    MongoDB (recipes + translations)
@@ -97,19 +113,48 @@ bundle and used until the quota is exhausted at our expense.
    TheMealDB (upstream)
 ```
 
-The same Node service that already holds `GEMINI_API_KEY` exposes a
-new namespace `/recipes/*`. Endpoints (Section 5).
+The same Node service that runs the existing translation pipeline
+for `mahallem_ist` exposes a new namespace `/recipes/*`. Endpoints —
+Section 5.
 
-### 4.1 Provider: `gemini-1.5-flash`
+### 4.1 Providers
 
-* Endpoint:
-  `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GEMINI_API_KEY`
-* Prompt is **batched** per recipe — name, category, area, tags,
-  ingredient names, and instructions are sent as one numbered list
-  and parsed back. Roughly 25 fields → 1 round-trip.
-* Why Gemini over Google Translate / DeepL: the only translation-
-  capable key already provisioned is for Gemini. No new contracts.
-  Quality on cooking text is on par with DeepL for `ru`↔`en`.
+**Primary — LibreTranslate (self-hosted).**
+
+* Reachable at `http://mahallem-translate:5000/translate` from
+  inside the docker network. Same container the user portal uses.
+* Open-source, Apache-2 licensed; runs entirely on our hardware. No
+  Google / Microsoft / Yandex / DeepL leg of the request, so it is
+  not subject to RU sanctions or Roskomnadzor blocks against US
+  cloud APIs.
+* Languages enabled in mahallem and reused here: `en, ru, tr, es,
+  fr, de, it, uk`. The recipe app only needs `en, ru` — the other
+  six are listed for posterity in case we ship the app to other
+  mahallem markets later.
+* Request shape (matches mahallem's helper exactly):
+  ```json
+  POST /translate
+  { "q": "chicken handi", "source": "en", "target": "ru", "format": "text" }
+  ```
+* Quality on culinary copy: serviceable for tags / category /
+  ingredients; somewhat literal on instructions. We tighten the
+  output with a small **glossary** table (Section 4.4) for the
+  ~150 high-traffic culinary terms.
+
+**Fallback — MyMemory.**
+
+* Reachable at `https://api.mymemory.translated.net/get?q=...&langpair=en|ru&de=support@mahallem.ist`.
+* Free tier (anonymous): 1 000 words/day, ~5 000 with the email
+  parameter, ~50 K with the keyed plan — same email mahallem
+  already uses.
+* Used when LibreTranslate (a) returns an empty / echo response,
+  (b) fails 5xx, or (c) is unreachable for > 2 s.
+* Also used as **primary** for the three RTL/Persianate languages
+  LibreTranslate doesn't ship models for in mahallem (`fa, ar, ku`),
+  if we ever expand beyond `en/ru`.
+
+Neither provider routes traffic via Google. Both work from a
+Russian IP today.
 
 ### 4.2 What to translate, what not
 
@@ -119,20 +164,90 @@ new namespace `/recipes/*`. Endpoints (Section 5).
 | `ingredients[].measure` | no | "1 cup", "200 g" — formatting risk outweighs benefit. |
 | `youtubeUrl`, `sourceUrl`, `imageUrl` | no | URLs. |
 
-### 4.3 Failure modes
+LibreTranslate has a known quirk where capitalized inputs can be
+left untranslated. mahallem normalizes by sending `q.toLowerCase()`
+and re-capitalizing the first letter of the response; we copy that
+behaviour.
 
-* Network error / 5xx → fall back to source language; show a small
-  "translation unavailable" hint, never crash.
-* 429 → exponential backoff on the server; client treats it as a
-  transient network error.
-* Echo bug (Gemini sometimes returns the source unchanged) → cheap
-  heuristic: if output equals input, retry once with a stricter
-  prompt.
+### 4.3 Failure modes & fallback chain
+
+```
+translate(text, src, dst):
+  if glossary[src→dst].has(text): return glossary[...][text]
+  if cache.has(text, src, dst):    return cache.get(...)
+  try: return libreTranslate(text, src, dst)        # primary
+  catch (timeout, 5xx, empty, echo):
+    try: return myMemory(text, src, dst)            # fallback
+    catch:
+      enqueueRetry(recipeId, field)                 # background job
+      return null                                    # caller renders source-lang text
+```
+
+* Network error / 5xx on **both** providers → write `null` for that
+  field, increment `translation_retry_count`. The 10-minute cron
+  (mahallem already runs it — see
+  `SMART_BACKGROUND_TRANSLATION.md`) picks rows with NULLs and
+  retries up to 10 times before giving up.
+* 429 → exponential backoff, jitter; client sees a generic transient
+  error.
+* Echo (output equals input) → treat as failure, fall through to
+  MyMemory.
+* On total failure the phone renders the source-language string. We
+  do **not** show "translation unavailable" placeholders — graceful
+  degrade is required by the mahallem playbook and avoids dead-end
+  UX for users who can read both languages anyway.
+
+### 4.4 Glossary table
+
+A tiny `translation_glossary` table (mirrors mahallem's) bypasses the
+MT engine for high-traffic phrases that LibreTranslate gets wrong:
+
+```sql
+CREATE TABLE translation_glossary (
+  phrase_en VARCHAR(200) PRIMARY KEY,
+  phrase_ru VARCHAR(200) NOT NULL,
+  hit_count INT NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+Seeded with category / area names (`Beef → Говядина`, `Italian →
+Итальянская`) and the top ~150 ingredients from TheMealDB. Edits go
+through a small admin endpoint; cache invalidation is by
+`phrase_en`. The glossary is checked **before** the cache and the
+MT call.
+
+### 4.5 Permanent translation cache
+
+A second table holds every successful MT call so we never pay twice
+for the same string (mahallem's pattern, transcribed verbatim):
+
+```sql
+CREATE TABLE translation_cache (
+  source_text   TEXT NOT NULL,
+  source_lang   VARCHAR(5) NOT NULL,
+  target_lang   VARCHAR(5) NOT NULL,
+  translated_text TEXT NOT NULL,
+  hit_count     INT NOT NULL DEFAULT 1,
+  created_at    TIMESTAMP DEFAULT NOW(),
+  last_hit_at   TIMESTAMP DEFAULT NOW(),
+  PRIMARY KEY (source_text, source_lang, target_lang)
+);
+```
+
+No TTL — translations of recipe ingredients don't go stale. Eviction
+only if the table outgrows its disk budget (we cap at 1 M rows;
+LRU on `last_hit_at` if exceeded). For 2 000 recipes × ~25 fields
+that is ~50 K rows, well under cap.
 
 ## 5. MongoDB as the recipe buffer
 
-MongoDB lives in the `mahallem_ist` docker stack. The phone never
-talks to MongoDB directly — only through the Node API.
+MongoDB lives in the `mahallem_ist` docker stack alongside the
+translation containers. The phone never talks to MongoDB directly —
+only through the Node API. The `translation_glossary` and
+`translation_cache` tables (Section 4.4–4.5) live in the existing
+Postgres alongside other mahallem caches; only the bilingual recipe
+payload itself goes into MongoDB.
 
 ### 5.1 Collection `recipes`
 
@@ -270,8 +385,11 @@ swaps `imageUrl` → `file://...` in the local row.
 1. **Static i18n** — introduce `flutter_localizations`, move `S` over
    to ARB. No backend dependency. Ships first.
 2. **Server `/recipes` API** in mahallem_ist — minimal `GET /recipes`
-   and `GET /recipes/:id`, MongoDB upsert, Gemini translation. No
-   client changes yet; verify with curl.
+   and `GET /recipes/:id`, MongoDB upsert. Translation goes through
+   the existing `lib/utils/translation.js` helper that already wraps
+   LibreTranslate + MyMemory; we add a thin `translateRecipe(meal)`
+   on top that batches all string fields per recipe. No Flutter
+   changes yet; verify with curl.
 3. **Phone `RecipeRepository`** with Drift + LRU. Replace direct
    `RecipeApi` calls in `RecipeListLoader` and details navigation.
    TheMealDB code stays as a fallback during cutover, then is
@@ -286,13 +404,28 @@ swaps `imageUrl` → `file://...` in the local row.
 
 1. **Auth on the new endpoints.** `recipe_list` has no user accounts.
    Minimum viable: App Check / Play Integrity gating per app build.
-2. **Cost ceiling.** Gemini Flash is cheap (~$0.075 per 1M input
-   tokens at time of writing) but daily caps must exist server-side;
-   on cap, return source language only.
+   Note: Play Integrity itself is a Google service. Acceptable here
+   because it runs at install/attestation time on the device, not on
+   the translation hot path; if Play Integrity is blocked, the app
+   downgrades to a shared HMAC token baked at build time + per-IP
+   rate limit.
+2. **Capacity ceiling.** LibreTranslate is CPU-bound on the host;
+   benchmark before going wide. mahallem currently sustains ~30
+   req/s on a 4-vCPU container. At 25 fields per recipe and 2 000
+   recipes total, the one-time translation pass is ~50 K calls →
+   ~30 minutes wall time. After that, only deltas + glossary
+   lookups, which are negligible.
 3. **MongoDB hosting.** Reuse the existing mahallem_ist MongoDB
    instance vs. a dedicated database for recipes. Probably the
    former under `db: recipes`.
 4. **Both-languages-or-one.** Either translate on demand
    per-language (cheaper, slower toggle) or always store both
-   (instant toggle, ~2× translation cost). Decide after first week
-   of telemetry.
+   (instant toggle, ~2× translation cost). Recommended: store both
+   at write time — LibreTranslate is free at the marginal call, so
+   the only cost is CPU time we already pay for mahallem.
+5. **Adding more languages.** The same pipeline scales to all 10
+   mahallem languages with no code change — only new ARB files
+   client-side and an entry per locale in the recipe `i18n.{lang}`
+   sub-document. Recommended order if we ever go beyond `en/ru`:
+   `tr` (mahallem core), `uk`, `es`, `fr`, `de`, `it`, then `fa`,
+   `ar`, `ku` via MyMemory.
