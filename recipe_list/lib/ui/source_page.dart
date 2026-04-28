@@ -25,21 +25,56 @@ class _SourcePageState extends State<SourcePage> {
   late final WebViewController _controller;
   double _progress = 0;
   bool _loading = true;
+  String _currentUrl = '';
+
+  /// Многие кулинарные сайты отдают мобильному WKWebView без UA
+  /// редирект на главную. Подставляем строку Safari/iOS, чтобы
+  /// получать тот же ответ, что и реальный мобильный браузер.
+  static const String _userAgent =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) '
+      'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 '
+      'Mobile/15E148 Safari/604.1';
 
   @override
   void initState() {
     super.initState();
+    _currentUrl = widget.url;
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(AppColors.surface)
+      ..setUserAgent(_userAgent)
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (p) => setState(() => _progress = p / 100),
-          onPageStarted: (_) => setState(() => _loading = true),
-          onPageFinished: (_) => setState(() => _loading = false),
+          onPageStarted: (u) => setState(() {
+            _loading = true;
+            _currentUrl = u;
+          }),
+          onPageFinished: (u) => setState(() {
+            _loading = false;
+            _currentUrl = u;
+          }),
+          onUrlChange: (c) {
+            final u = c.url;
+            if (u != null) setState(() => _currentUrl = u);
+          },
         ),
       )
-      ..loadRequest(Uri.parse(widget.url));
+      ..loadRequest(
+        Uri.parse(widget.url),
+        headers: const {
+          // Часть CDN отдают главную, если Accept не указан явно.
+          'Accept':
+              'text/html,application/xhtml+xml,application/xml;q=0.9,'
+              'image/avif,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9,ru;q=0.8',
+        },
+      );
+  }
+
+  String get _hostLabel {
+    final u = Uri.tryParse(_currentUrl);
+    return u?.host ?? _currentUrl;
   }
 
   @override
@@ -56,15 +91,33 @@ class _SourcePageState extends State<SourcePage> {
           icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: Text(
-          s.source,
-          style: const TextStyle(
-            fontFamily: AppTextStyles.fontFamily,
-            fontWeight: FontWeight.w400,
-            fontSize: 20,
-            height: 23 / 20,
-            color: AppColors.primaryDark,
-          ),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              s.source,
+              style: const TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontWeight: FontWeight.w400,
+                fontSize: 20,
+                height: 23 / 20,
+                color: AppColors.primaryDark,
+              ),
+            ),
+            if (_hostLabel.isNotEmpty)
+              Text(
+                _hostLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 11,
+                  height: 13 / 11,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+          ],
         ),
         centerTitle: true,
         actions: const [LangIconButton()],
