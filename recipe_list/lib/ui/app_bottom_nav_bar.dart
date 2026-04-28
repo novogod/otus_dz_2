@@ -79,16 +79,19 @@ class _Tab extends StatelessWidget {
     final color = active ? AppColors.primary : AppColors.textInactive;
     return InkWell(
       onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(item.icon, size: 24, color: color),
-          const SizedBox(height: 2),
-          Text(
-            item.label,
-            style: AppTextStyles.tabLabel.copyWith(color: color),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Icon(item.icon, size: 24, color: color),
+            const SizedBox(height: 2),
+            Text(
+              item.label,
+              style: AppTextStyles.tabLabel.copyWith(color: color),
+            ),
+          ],
+        ),
       ),
     );
   }
