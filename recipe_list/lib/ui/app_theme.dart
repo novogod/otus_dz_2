@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Дизайн-система Otus Food App, выгруженная из Figma
 /// (file `alUTMeT3w9XlbNf3orwyFA`). Подробности и ссылки на узлы —
@@ -216,7 +217,7 @@ class AppTheme {
 
   static ThemeData get light => ThemeData(
     useMaterial3: true,
-    fontFamily: AppTextStyles.fontFamily,
+    fontFamily: GoogleFonts.roboto().fontFamily,
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       primary: AppColors.primary,

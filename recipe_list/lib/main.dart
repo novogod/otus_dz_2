@@ -50,9 +50,7 @@ class _AppRootState extends State<_AppRoot>
     _slide = Tween<Offset>(
       begin: const Offset(0, -1), // въезд сверху
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     Future<void>.delayed(AppDurations.splash, () {
       if (mounted) _controller.forward();

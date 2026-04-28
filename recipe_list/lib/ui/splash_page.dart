@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'app_theme.dart';
 
@@ -79,27 +80,30 @@ class _MaskedLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const textWidget = Text(
+    // Используем GoogleFonts.roboto, чтобы гарантированно получить
+    // Roboto Black (w900) из Figma, а не системный fallback (на iOS/macOS/web
+    // это был SF Compact / Helvetica, который на w900 рисует буквы ощутимо
+    // шире Roboto Black).
+    final textStyle = GoogleFonts.roboto(
+      fontWeight: FontWeight.w900,
+      fontSize: 95,
+      height: 82 / 95,
+      color: Colors.white,
+    );
+    final textWidget = Text(
       'OTUS\nFOOD',
       textAlign: TextAlign.center,
-      style: TextStyle(
-        fontFamily: AppTextStyles.fontFamily,
-        fontWeight: FontWeight.w900,
-        fontSize: 95,
-        height: 82 / 95,
-        // ShaderMask перекрасит, цвет нужен лишь для альфы (1.0).
-        color: Colors.white,
-      ),
+      style: textStyle,
     );
 
     final img = image;
     if (img == null) {
-      return const FittedBox(
+      return FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(
           'OTUS\nFOOD',
           textAlign: TextAlign.center,
-          style: AppTextStyles.splashLogo,
+          style: textStyle.copyWith(color: AppColors.textPrimary),
         ),
       );
     }
