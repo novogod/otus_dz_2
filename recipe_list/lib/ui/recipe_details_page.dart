@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
 
@@ -15,15 +16,16 @@ class RecipeDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.primaryDark,
         elevation: 0,
-        title: const Text(
-          'Рецепт',
-          style: TextStyle(
+        title: Text(
+          s.recipeTitle,
+          style: const TextStyle(
             fontFamily: AppTextStyles.fontFamily,
             fontWeight: FontWeight.w400,
             fontSize: 20,
@@ -97,13 +99,13 @@ class RecipeDetailsPage extends StatelessWidget {
                 ],
                 if (recipe.ingredients.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xl),
-                  const Text('Ингредиенты', style: AppTextStyles.sectionTitle),
+                  Text(s.ingredientsHeader, style: AppTextStyles.sectionTitle),
                   const SizedBox(height: AppSpacing.md),
                   _IngredientsBlock(items: recipe.ingredients),
                 ],
                 if (recipe.instructions != null) ...[
                   const SizedBox(height: AppSpacing.xl),
-                  const Text('Инструкция', style: AppTextStyles.sectionTitle),
+                  Text(s.instructionsHeader, style: AppTextStyles.sectionTitle),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     recipe.instructions!,
@@ -135,7 +137,7 @@ class RecipeDetailsPage extends StatelessWidget {
                           ),
                           onPressed: () => _open(recipe.youtubeUrl!),
                           icon: const Icon(Icons.play_arrow),
-                          label: const Text('YouTube'),
+                          label: Text(s.youtube),
                         ),
                       if (recipe.sourceUrl != null)
                         OutlinedButton.icon(
@@ -153,7 +155,7 @@ class RecipeDetailsPage extends StatelessWidget {
                           ),
                           onPressed: () => _open(recipe.sourceUrl!),
                           icon: const Icon(Icons.link),
-                          label: const Text('Источник'),
+                          label: Text(s.source),
                         ),
                     ],
                   ),

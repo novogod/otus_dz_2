@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
+import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
@@ -48,12 +49,13 @@ class RecipeListPage extends StatelessWidget {
 
   void _onNavTap(BuildContext context, AppNavTab tab) {
     if (tab == AppNavTab.recipes) return;
+    final s = S.of(context);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text('Этот раздел пока в разработке'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(s.tabComingSoon),
+          duration: const Duration(seconds: 2),
         ),
       );
   }
@@ -76,15 +78,16 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final s = S.of(context);
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.no_meals, size: 64, color: AppColors.textInactive),
-          SizedBox(height: AppSpacing.md),
+          const Icon(Icons.no_meals, size: 64, color: AppColors.textInactive),
+          const SizedBox(height: AppSpacing.md),
           Text(
-            'Нет рецептов',
-            style: TextStyle(fontSize: 16, color: AppColors.textInactive),
+            s.emptyList,
+            style: const TextStyle(fontSize: 16, color: AppColors.textInactive),
           ),
         ],
       ),

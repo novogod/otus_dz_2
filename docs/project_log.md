@@ -1,5 +1,46 @@
 # Project Log
 
+## recipe_list — Переключатель языка RU/EN + предложение по live-переводам
+
+**Date:** 2026-04-29
+
+### Описание
+
+Введён первичный i18n-каркас: `AppLang { ru, en }`, глобальный
+`ValueNotifier`, обёртка `AppLangScope` поверх `MaterialApp.home`,
+объект `S.of(context)` со всеми статическими строками UI. В верхнем
+левом углу появилась круглая FAB-кнопка `LangFab` (56×56, фон
+`AppColors.primary`, текст `RU`/`EN` Roboto 900/18 белым) — поверх
+любого экрана, цикл RU↔EN по тапу.
+
+### Что сделано
+
+- [recipe_list/lib/i18n.dart](recipe_list/lib/i18n.dart): enum,
+  `appLang`, `cycleAppLang`, `AppLangScope`, `S` со всеми текущими
+  строками (навбар, snackbar, empty/error, экран деталей, плюрализация
+  ингредиентов RU/EN).
+- [recipe_list/lib/ui/lang_fab.dart](recipe_list/lib/ui/lang_fab.dart):
+  круглый FAB с `Material(shape: CircleBorder)` + `InkWell`.
+- [recipe_list/lib/main.dart](recipe_list/lib/main.dart): `home`
+  обёрнут в `AppLangScope`, `LangFab` помещён `Positioned(top:0,left:0)`
+  внутрь корневого `Stack` с `SafeArea` и `EdgeInsets.all(AppSpacing.md)`.
+- Все hard-coded русские строки в `app_bottom_nav_bar.dart`,
+  `recipe_list_page.dart`, `recipe_list_loader.dart`,
+  `recipe_details_page.dart`, `recipe_card.dart` заменены на вызовы `S`.
+- [docs/i18n_proposal.md](docs/i18n_proposal.md): план перехода к
+  живым переводам через Gemini API. Ключ берём из `mahallem_ist`
+  (`local_docker_admin_backend/.env` → `GEMINI_API_KEY`), но **не**
+  встраиваем в клиент — только через тонкий прокси (OWASP A02/A07).
+  Описаны кэш по sha256, батчинг, какие поля переводить, fallback при
+  ошибках, и миграция статических строк на штатный `gen-l10n` потом.
+
+### Проверки
+
+- `flutter analyze` — 0 issues.
+- `flutter test` — 16/16 passed.
+
+---
+
 ## recipe_list — Нижний навбар (logIn-вариант)
 
 **Date:** 2026-04-29

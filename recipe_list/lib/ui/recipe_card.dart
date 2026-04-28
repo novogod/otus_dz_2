@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
 
@@ -287,6 +288,7 @@ class _IngredientCount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Row(
       children: [
         const Icon(
@@ -296,20 +298,10 @@ class _IngredientCount extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.xs),
         Text(
-          '$count ${_pluralize(count)}',
+          s.ingredientCount(count),
           style: AppTextStyles.recipeMeta,
         ),
       ],
     );
-  }
-
-  static String _pluralize(int n) {
-    final mod10 = n % 10;
-    final mod100 = n % 100;
-    if (mod10 == 1 && mod100 != 11) return 'ингредиент';
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-      return 'ингредиента';
-    }
-    return 'ингредиентов';
   }
 }

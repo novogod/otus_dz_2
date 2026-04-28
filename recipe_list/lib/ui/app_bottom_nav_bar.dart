@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../i18n.dart';
 import 'app_theme.dart';
 
 /// Идентификаторы вкладок нижнего навбара (`logIn`-вариант, §6 дизайн-системы).
@@ -20,14 +21,22 @@ class AppBottomNavBar extends StatelessWidget {
   const AppBottomNavBar({super.key, required this.current, this.onTap});
 
   static const _items = <_NavItem>[
-    _NavItem(AppNavTab.recipes, 'Рецепты', Icons.local_pizza_outlined),
-    _NavItem(AppNavTab.fridge, 'Холодильник', Icons.kitchen_outlined),
-    _NavItem(AppNavTab.favorites, 'Избранное', Icons.favorite_border),
-    _NavItem(AppNavTab.profile, 'Профиль', Icons.person_outline),
+    _NavItem(AppNavTab.recipes, Icons.local_pizza_outlined),
+    _NavItem(AppNavTab.fridge, Icons.kitchen_outlined),
+    _NavItem(AppNavTab.favorites, Icons.favorite_border),
+    _NavItem(AppNavTab.profile, Icons.person_outline),
   ];
+
+  static String _label(AppNavTab tab, S s) => switch (tab) {
+    AppNavTab.recipes => s.tabRecipes,
+    AppNavTab.fridge => s.tabFridge,
+    AppNavTab.favorites => s.tabFavorites,
+    AppNavTab.profile => s.tabProfile,
+  };
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Material(
       color: AppColors.surface,
       elevation: 0,
@@ -45,7 +54,8 @@ class AppBottomNavBar extends StatelessWidget {
                 for (final item in _items)
                   Expanded(
                     child: _Tab(
-                      item: item,
+                      icon: item.icon,
+                      label: _label(item.tab, s),
                       active: item.tab == current,
                       onTap: onTap == null ? null : () => onTap!(item.tab),
                     ),
@@ -61,18 +71,23 @@ class AppBottomNavBar extends StatelessWidget {
 
 class _NavItem {
   final AppNavTab tab;
-  final String label;
   final IconData icon;
 
-  const _NavItem(this.tab, this.label, this.icon);
+  const _NavItem(this.tab, this.icon);
 }
 
 class _Tab extends StatelessWidget {
-  final _NavItem item;
+  final IconData icon;
+  final String label;
   final bool active;
   final VoidCallback? onTap;
 
-  const _Tab({required this.item, required this.active, this.onTap});
+  const _Tab({
+    required this.icon,
+    required this.label,
+    required this.active,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -84,10 +99,10 @@ class _Tab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Icon(item.icon, size: 24, color: color),
+            Icon(icon, size: 24, color: color),
             const SizedBox(height: 2),
             Text(
-              item.label,
+              label,
               style: AppTextStyles.tabLabel.copyWith(color: color),
             ),
           ],

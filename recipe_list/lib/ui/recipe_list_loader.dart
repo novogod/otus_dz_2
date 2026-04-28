@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
+import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
 import 'recipe_list_page.dart';
@@ -50,6 +51,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
           );
         }
         if (snapshot.hasError) {
+          final s = S.of(context);
           return Scaffold(
             backgroundColor: AppColors.surfaceMuted,
             body: Center(
@@ -59,15 +61,12 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Ошибка загрузки: ${snapshot.error}',
+                      s.loadError(snapshot.error ?? ''),
                       textAlign: TextAlign.center,
                       style: AppTextStyles.inputHint,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    FilledButton(
-                      onPressed: _retry,
-                      child: const Text('Повторить'),
-                    ),
+                    FilledButton(onPressed: _retry, child: Text(s.retry)),
                   ],
                 ),
               ),

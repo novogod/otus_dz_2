@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'i18n.dart';
 import 'ui/app_theme.dart';
+import 'ui/lang_fab.dart';
 import 'ui/recipe_list_loader.dart';
 import 'ui/splash_page.dart';
 
@@ -17,7 +19,7 @@ class RecipeApp extends StatelessWidget {
       title: 'Otus Food',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const _AppRoot(),
+      home: const AppLangScope(child: _AppRoot()),
     );
   }
 }
@@ -78,6 +80,18 @@ class _AppRootState extends State<_AppRoot>
           // Список «въезжает» снизу, заслоняя splash.
           Positioned.fill(
             child: SlideTransition(position: _slide, child: RecipeListLoader()),
+          ),
+          // Глобальный FAB переключения RU/EN — поверх любого экрана,
+          // в левом верхнем углу с учётом safe area.
+          const Positioned(
+            top: 0,
+            left: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(AppSpacing.md),
+                child: LangFab(),
+              ),
+            ),
           ),
         ],
       ),
