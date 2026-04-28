@@ -12,8 +12,7 @@
 /// остальное (`RecipeApi`, `RecipeRepository`, UI) работает одинаково.
 class RecipeApiConfig {
   /// База TheMealDB, используется по умолчанию.
-  static const String mealDbBaseUrl =
-      'https://www.themealdb.com/api/json/v1/1';
+  static const String mealDbBaseUrl = 'https://www.themealdb.com/api/json/v1/1';
 
   /// Прод-эндпоинт mahallem; задаётся через `--dart-define`.
   static const String mahallemBaseFromEnv = String.fromEnvironment(
@@ -21,8 +20,9 @@ class RecipeApiConfig {
   );
 
   /// Активный режим: mahallem, если задан env, иначе themealdb.
-  static RecipeBackend get backend =>
-      mahallemBaseFromEnv.isNotEmpty ? RecipeBackend.mahallem : RecipeBackend.mealDb;
+  static RecipeBackend get backend => mahallemBaseFromEnv.isNotEmpty
+      ? RecipeBackend.mahallem
+      : RecipeBackend.mealDb;
 
   /// База, которую нужно подставить в Dio.
   static String get activeBaseUrl =>

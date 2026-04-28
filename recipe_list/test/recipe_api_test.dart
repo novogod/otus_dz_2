@@ -44,7 +44,9 @@ void main() {
   }) {
     final dio = Dio(BaseOptions(baseUrl: MealDbClient.baseUrl));
     dio.httpClientAdapter = capture ?? _StubAdapter(responses);
-    return RecipeApi(client: MealDbClient(dio: dio, backend: backend));
+    return RecipeApi(
+      client: MealDbClient(dio: dio, backend: backend),
+    );
   }
 
   test('searchByName parses full meal payload', () async {
@@ -108,24 +110,26 @@ void main() {
   });
 
   group('mahallem backend', () {
-    test('searchByName uses /search?q=&lang= and forwards AppLang.ru',
-        () async {
-      final adapter = _StubAdapter({
-        '/search': {'meals': null},
-      });
-      final api = makeApi(
-        const {},
-        backend: RecipeBackend.mahallem,
-        capture: adapter,
-      );
-      await api.searchByName(query: 'chick', lang: AppLang.ru);
-      expect(adapter.calls, hasLength(1));
-      expect(adapter.calls.single.path, '/search');
-      expect(adapter.calls.single.queryParameters, {
-        'q': 'chick',
-        'lang': 'ru',
-      });
-    });
+    test(
+      'searchByName uses /search?q=&lang= and forwards AppLang.ru',
+      () async {
+        final adapter = _StubAdapter({
+          '/search': {'meals': null},
+        });
+        final api = makeApi(
+          const {},
+          backend: RecipeBackend.mahallem,
+          capture: adapter,
+        );
+        await api.searchByName(query: 'chick', lang: AppLang.ru);
+        expect(adapter.calls, hasLength(1));
+        expect(adapter.calls.single.path, '/search');
+        expect(adapter.calls.single.queryParameters, {
+          'q': 'chick',
+          'lang': 'ru',
+        });
+      },
+    );
 
     test('lookup hits /:id?lang=', () async {
       final adapter = _StubAdapter({
@@ -145,10 +149,7 @@ void main() {
       final adapter = _StubAdapter({
         '/search.php': {'meals': null},
       });
-      final api = makeApi(
-        const {},
-        capture: adapter,
-      );
+      final api = makeApi(const {}, capture: adapter);
       await api.searchByName(query: 'a', lang: AppLang.ru);
       expect(adapter.calls.single.path, '/search.php');
       expect(adapter.calls.single.queryParameters, {'s': 'a'});

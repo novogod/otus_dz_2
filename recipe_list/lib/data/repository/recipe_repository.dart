@@ -57,10 +57,7 @@ class RecipeRepository {
        _api = api,
        _now = now ?? DateTime.now;
 
-  Future<RecipeSearchResult> searchByName(
-    String prefix,
-    AppLang lang,
-  ) async {
+  Future<RecipeSearchResult> searchByName(String prefix, AppLang lang) async {
     final p = prefix.trim().toLowerCase();
     if (p.isEmpty) {
       return const RecipeSearchResult(
@@ -147,8 +144,7 @@ class RecipeRepository {
     await _evictIfOverCap();
   }
 
-  Future<void> _upsert(Recipe r, AppLang lang) =>
-      _upsertAll([r], lang);
+  Future<void> _upsert(Recipe r, AppLang lang) => _upsertAll([r], lang);
 
   Future<List<Recipe>> _localPrefix(String prefixLower, AppLang lang) async {
     final escaped = prefixLower

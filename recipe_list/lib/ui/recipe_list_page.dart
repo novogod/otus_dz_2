@@ -175,9 +175,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
       if (repo != null) {
         final res = await repo.searchByName(prefix, appLang.value);
         hits = res.recipes
-            .where(
-              (r) => r.name.toLowerCase().startsWith(prefix.toLowerCase()),
-            )
+            .where((r) => r.name.toLowerCase().startsWith(prefix.toLowerCase()))
             .toList(growable: false);
         offline = res.offline;
       } else {
@@ -313,9 +311,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
   void _onPredictionTap(Recipe recipe) {
     _focusNode.unfocus();
     _controller.text = recipe.name;
-    _controller.selection = TextSelection.collapsed(
-      offset: recipe.name.length,
-    );
+    _controller.selection = TextSelection.collapsed(offset: recipe.name.length);
     setState(() {
       _liveQuery = recipe.name;
       _displayed = List<Recipe>.unmodifiable(_predictionRecipes);
@@ -392,10 +388,7 @@ class _OfflineBanner extends StatelessWidget {
                   width: 28,
                   height: 28,
                 ),
-                icon: const Icon(
-                  Icons.close,
-                  color: AppColors.textSecondary,
-                ),
+                icon: const Icon(Icons.close, color: AppColors.textSecondary),
                 onPressed: onDismiss,
               ),
             ],

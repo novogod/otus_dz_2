@@ -36,8 +36,7 @@ class _FakeApi implements RecipeApi {
   Future<List<Recipe>> filterByArea(String area) async => const [];
 
   @override
-  Future<List<Recipe>> filterByIngredient(String ingredient) async =>
-      const [];
+  Future<List<Recipe>> filterByIngredient(String ingredient) async => const [];
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -87,17 +86,14 @@ void main() {
     });
 
     test('cache miss -> hits API and persists results', () async {
-      final api = _FakeApi(
-        (_) => [_r(1, 'Apple Pie'), _r(2, 'Apricot Tart')],
-      );
+      final api = _FakeApi((_) => [_r(1, 'Apple Pie'), _r(2, 'Apricot Tart')]);
       final repo = RecipeRepository(db: db, api: api);
 
       final res = await repo.searchByName('ap', AppLang.en);
 
       expect(res.fromCache, isFalse);
       expect(res.offline, isFalse);
-      expect(res.recipes.map((r) => r.name),
-          ['Apple Pie', 'Apricot Tart']);
+      expect(res.recipes.map((r) => r.name), ['Apple Pie', 'Apricot Tart']);
       expect(api.calls, hasLength(1));
       expect(await repo.count(), 2);
     });
@@ -136,12 +132,7 @@ void main() {
     test('LRU eviction respects cap by last_used_at', () async {
       var clock = DateTime(2026, 1, 1);
       final api = _FakeApi((_) => const []);
-      final repo = RecipeRepository(
-        db: db,
-        api: api,
-        cap: 3,
-        now: () => clock,
-      );
+      final repo = RecipeRepository(db: db, api: api, cap: 3, now: () => clock);
 
       // Вставляем 4 рецепта, каждый со своим временем.
       for (var i = 0; i < 4; i++) {
@@ -168,10 +159,7 @@ void main() {
         now: () => clock,
       );
 
-      await repo.upsertAll(
-        [_r(1, 'Alpha'), _r(2, 'Beta')],
-        AppLang.en,
-      );
+      await repo.upsertAll([_r(1, 'Alpha'), _r(2, 'Beta')], AppLang.en);
 
       // Пользуем "Alpha" чуть позже.
       clock = clock.add(const Duration(minutes: 5));
@@ -188,21 +176,23 @@ void main() {
       expect(ids, {1, 3});
     });
 
-    test('network error with cached hits returns cached and offline=false',
-        () async {
-      final api = _ThrowingApi();
-      final repo = RecipeRepository(db: db, api: api, cacheHitThreshold: 5);
+    test(
+      'network error with cached hits returns cached and offline=false',
+      () async {
+        final api = _ThrowingApi();
+        final repo = RecipeRepository(db: db, api: api, cacheHitThreshold: 5);
 
-      await db.insert(
-        'recipes',
-        writeRecipe(_r(1, 'Apricot'), lang: 'en', lastUsedAt: 1),
-      );
+        await db.insert(
+          'recipes',
+          writeRecipe(_r(1, 'Apricot'), lang: 'en', lastUsedAt: 1),
+        );
 
-      final res = await repo.searchByName('ap', AppLang.en);
-      expect(res.recipes.map((r) => r.name), ['Apricot']);
-      expect(res.fromCache, isTrue);
-      expect(res.offline, isFalse);
-    });
+        final res = await repo.searchByName('ap', AppLang.en);
+        expect(res.recipes.map((r) => r.name), ['Apricot']);
+        expect(res.fromCache, isTrue);
+        expect(res.offline, isFalse);
+      },
+    );
 
     test('network error with empty cache returns offline=true', () async {
       final api = _ThrowingApi();

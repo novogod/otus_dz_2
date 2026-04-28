@@ -48,9 +48,7 @@ class RecipeApi {
     final mahallem = _client.backend == RecipeBackend.mahallem;
     final res = await _client.dio.get<Map<String, dynamic>>(
       mahallem ? '/$id' : '/lookup.php',
-      queryParameters: mahallem
-          ? _langParams(lang)
-          : {'i': id.toString()},
+      queryParameters: mahallem ? _langParams(lang) : {'i': id.toString()},
     );
     final list = _parseFull(res.data);
     return list.isEmpty ? null : list.first;
@@ -83,10 +81,7 @@ class RecipeApi {
 
   Map<String, String> _searchParams(String query, AppLang? lang) {
     if (_client.backend == RecipeBackend.mahallem) {
-      return {
-        'q': query,
-        ..._langParams(lang),
-      };
+      return {'q': query, ..._langParams(lang)};
     }
     return {'s': query};
   }
