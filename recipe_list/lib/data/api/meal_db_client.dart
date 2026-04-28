@@ -29,7 +29,10 @@ class MealDbClient {
             BaseOptions(
               baseUrl: RecipeApiConfig.activeBaseUrl,
               connectTimeout: const Duration(seconds: 10),
-              receiveTimeout: const Duration(seconds: 10),
+              // mahallem cold-cache lookup translates ~25 fields
+              // through LibreTranslate and can take 10–25s. TheMealDB
+              // is fast but a generous ceiling does no harm.
+              receiveTimeout: const Duration(seconds: 30),
               responseType: ResponseType.json,
             ),
           );

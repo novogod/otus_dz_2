@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
+import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
@@ -44,6 +45,20 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   void initState() {
     super.initState();
     _future = _runLoad();
+    appLang.addListener(_onLangChanged);
+  }
+
+  @override
+  void dispose() {
+    appLang.removeListener(_onLangChanged);
+    super.dispose();
+  }
+
+  void _onLangChanged() {
+    if (!mounted) return;
+    setState(() {
+      _future = _runLoad();
+    });
   }
 
   Future<_LoadResult> _runLoad() async {
@@ -61,12 +76,37 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     return _LoadResult(recipes: recipes, repository: repo);
   }
 
-  static Future<List<Recipe>> _defaultLoader(RecipeApi api) {
-    // Используем фильтр по категории «Chicken»: оба бэкенда
-    // (TheMealDB / mahallem) возвращают ~30 рецептов вне зависимости
-    // от языка интерфейса (mahallem-search ищет по префиксу в текущей
-    // локали, что для RU с «ch» даёт пусто — поэтому именно filter).
-    return api.filterByCategory('Chicken');
+  static Future<List<Recipe>> _defaultLoader(RecipeApi api) async {
+    if (api.backend == RecipeBackend.mahallem) {
+      // mahallem-search требует prefix.length>=2 + локаль-зависимый
+      // индекс — сложно подобрать seed для RU с холодным кэшем,
+      // поэтому смешиваем несколько категорий через /filter
+      // (lite-выдача, но многоязычная и без префикс-проблем).
+      const categories = ['Chicken', 'Beef', 'Dessert', 'Seafood'];
+      final batches = await Future.wait(
+        categories.map(
+          (c) => api.filterByCategory(c).catchError((_) => <Recipe>[]),
+        ),
+      );
+      // Чередуем по одной из каждой категории (round-robin),
+      // чтобы при скролле не было длинного блока однотипных карточек.
+      final mixed = <Recipe>[];
+      var i = 0;
+      while (mixed.length < 60) {
+        var added = false;
+        for (final batch in batches) {
+          if (i < batch.length) {
+            mixed.add(batch[i]);
+            added = true;
+          }
+        }
+        if (!added) break;
+        i++;
+      }
+      return mixed;
+    }
+    // TheMealDB: одно слово возвращает полные карточки.
+    return api.searchByName(query: 'c', lang: appLang.value);
   }
 
   static Future<RecipeRepository?> _defaultRepoBuilder(RecipeApi api) async {

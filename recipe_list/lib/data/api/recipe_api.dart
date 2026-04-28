@@ -64,15 +64,25 @@ class RecipeApi {
   }
 
   Future<List<Recipe>> _filter(String key, String value) async {
+    final mahallem = _client.backend == RecipeBackend.mahallem;
     final res = await _client.dio.get<Map<String, dynamic>>(
       _path('/filter.php', '/filter'),
-      queryParameters: {key: value},
+      queryParameters: {
+        key: value,
+        // mahallem поддерживает full=1 — возвращает уже переведённые
+        // полные рецепты (категория/теги/ингредиенты), что нужно для
+        // богатой карточки. Без флага — lite-payload, как у TheMealDB.
+        if (mahallem) 'full': '1',
+        if (mahallem) ..._langParams(null),
+      },
     );
     final meals = res.data?['meals'];
     if (meals is! List) return const [];
+    // На mahallem с full=1 приходят полные данные; парсим как fromMealDb.
+    final parser = mahallem ? Recipe.fromMealDb : Recipe.fromMealDbLite;
     return meals
         .whereType<Map<String, dynamic>>()
-        .map(Recipe.fromMealDbLite)
+        .map(parser)
         .toList(growable: false);
   }
 
