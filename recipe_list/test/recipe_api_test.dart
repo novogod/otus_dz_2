@@ -131,9 +131,9 @@ void main() {
       },
     );
 
-    test('lookup hits /:id?lang=', () async {
+    test('lookup hits /lookup/:id?lang=', () async {
       final adapter = _StubAdapter({
-        '/52772': {'meals': null},
+        '/lookup/52772': {'meals': null},
       });
       final api = makeApi(
         const {},
@@ -141,7 +141,7 @@ void main() {
         capture: adapter,
       );
       await api.lookup(52772, lang: AppLang.en);
-      expect(adapter.calls.single.path, '/52772');
+      expect(adapter.calls.single.path, '/lookup/52772');
       expect(adapter.calls.single.queryParameters, {'lang': 'en'});
     });
 

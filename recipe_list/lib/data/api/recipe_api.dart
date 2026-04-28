@@ -47,7 +47,7 @@ class RecipeApi {
   Future<Recipe?> lookup(int id, {AppLang? lang}) async {
     final mahallem = _client.backend == RecipeBackend.mahallem;
     final res = await _client.dio.get<Map<String, dynamic>>(
-      mahallem ? '/$id' : '/lookup.php',
+      mahallem ? '/lookup/$id' : '/lookup.php',
       queryParameters: mahallem ? _langParams(lang) : {'i': id.toString()},
     );
     final list = _parseFull(res.data);
