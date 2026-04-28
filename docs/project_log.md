@@ -204,3 +204,77 @@ flutter test               # 14/14 passed
 flutter run -d emulator-5554   # Android
 flutter run -d chrome          # web
 ```
+
+## recipe_list — Дизайн-система и splash из Figma
+
+**Date:** 2026-04-28
+
+### Описание
+
+Применены 4 замечания ревьюера к `recipe_list` и проведён полный рефакторинг
+под дизайн-систему, выгруженную напрямую из Figma REST API
+(file `alUTMeT3w9XlbNf3orwyFA`, frames `135:691`, `102:3`, `116:33`,
+`118:76`, `121:584` и компонент-сеты `121:443`, `121:169`, `145:551`,
+`145:579`).
+
+### Замечания ревьюера
+
+1. Имитированная сетевая задержка `RecipeManager` уменьшена до 400 мс
+   (было 1 200 мс).
+2. Тема разделена: `app_theme.dart` экспортирует `AppTheme.light` и
+   токены (`AppColors`, `AppTextStyles`, `AppRadii`, `AppSpacing`,
+   `AppShadows`, `AppDurations`, `kSplashGradient`).
+3. Карточка рецепта переверстана 1:1 по Figma — фото `149×136` слева
+   на всю высоту, скруглены только левые углы (5 dp), цвет названия
+   `#000000`, длительность `#2ECC71`.
+4. На экране списка убран глобальный заголовок «Рецепты» — на макете
+   его нет; добавлен соответствующий тест.
+
+### Дизайн-система
+
+- [docs/design_system.md](../docs/design_system.md) — единый источник
+  правды (палитра, типографика Roboto, сетка 428×926 dp, навбар в двух
+  раскладках logIn/logOut, шаг рецепта 3 состояния, чекбокс, like,
+  бейдж «Закладка», экраны login/register/profile/favorites/recipe
+  details/cooking/list+FAB).
+- Сырые Figma JSON-дампы в репозитории не хранятся (
+  `docs/figma/` и `recipe_list/docs/figma/` добавлены в `.gitignore`),
+  скрипт воспроизведения выгрузки в `mktemp` приведён в §13 документа.
+- Токен Figma хранится локально в `.figma_env`
+  (`chmod 600`, в `.gitignore`).
+
+### Splash-экран
+
+- `lib/ui/splash_page.dart` — full-screen `LinearGradient`
+  `#2ECC71 → #165932`, центрированный логотип «OTUS\nFOOD»
+  Roboto w900 95/82.
+- `lib/main.dart` управляет переходом: 2 с splash → `AnimatedSwitcher`
+  с `FadeTransition` 600 мс на `RecipeListLoader`.
+
+### Структура (изменения)
+
+```
+recipe_list/
+└── lib/
+    ├── main.dart                  # _AppRoot со splash → list переходом
+    └── ui/
+        ├── app_theme.dart         # NEW: токены DS + AppTheme.light
+        ├── splash_page.dart       # NEW: splash 1:1 по frame 135:691
+        ├── recipe_list_loader.dart # NEW: FutureBuilder + loading/error
+        ├── recipe_list_page.dart  # без AppBar, surfaceMuted фон
+        └── recipe_card.dart       # фото слева 149×136, типографика DS
+
+docs/
+├── design_system.md               # NEW: дизайн-система (~330 строк)
+├── foodapi_alternative.md         # NEW
+├── foodapi_dzolotov.md            # NEW
+└── todo/                          # NEW: рабочие заметки
+```
+
+### Запуск и проверки
+
+```bash
+cd recipe_list
+flutter analyze    # No issues found
+flutter test       # 14/14 passed
+```

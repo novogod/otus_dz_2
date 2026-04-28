@@ -71,8 +71,12 @@ class RecipeManager {
     ),
   ];
 
+  /// Имитация задержки сети — пригодится для консистентности с будущим
+  /// HTTP-клиентом и для отображения состояния загрузки в UI.
+  static const Duration _networkDelay = Duration(milliseconds: 400);
+
   Future<List<Recipe>> getRecipes() async {
-    // Имитация задержки сети (минимальная) для консистентности с будущим API.
-    return Future.value(List.unmodifiable(_recipes));
+    await Future<void>.delayed(_networkDelay);
+    return List.unmodifiable(_recipes);
   }
 }

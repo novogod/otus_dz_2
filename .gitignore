@@ -1,1 +1,8 @@
 .DS_Store
+
+# Figma API credentials — keep out of git
+.figma_env
+
+# Raw Figma REST dumps — only the human-readable docs/design_system.md is committed
+docs/figma/
+recipe_list/docs/figma/

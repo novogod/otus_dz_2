@@ -1,91 +1,58 @@
 import 'package:flutter/material.dart';
 
-import 'data/recipe_manager.dart';
-import 'models/recipe.dart';
-import 'ui/recipe_list_page.dart';
+import 'ui/app_theme.dart';
+import 'ui/recipe_list_loader.dart';
+import 'ui/splash_page.dart';
 
-void main() {
-  runApp(const RecipeApp());
-}
+void main() => runApp(const RecipeApp());
 
-/// Корневой виджет приложения.
-///
-/// Создаёт [MaterialApp] с темой по дизайну Otus Food App и в качестве
-/// домашнего экрана подаёт [RecipeListPage], получая список рецептов из
-/// [RecipeManager].
+/// Корневой виджет приложения. Точка входа максимально короткая —
+/// тема, splash и загрузка данных вынесены в отдельные виджеты.
 class RecipeApp extends StatelessWidget {
-  static const Color primaryGreen = Color(0xFF2ECC71);
-  static const Color darkGreen = Color(0xFF165932);
-  static const Color subtitleGrey = Color(0xFF797676);
-  static const Color background = Color(0xFFFFFFFF);
-
-  const RecipeApp({super.key, this.manager = const RecipeManager()});
-
-  final RecipeManager manager;
+  const RecipeApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Otus Food',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryGreen,
-          primary: primaryGreen,
-          secondary: darkGreen,
-          surface: background,
-        ),
-        scaffoldBackgroundColor: background,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: background,
-          foregroundColor: darkGreen,
-          elevation: 0,
-          centerTitle: true,
-          titleTextStyle: TextStyle(
-            color: darkGreen,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        textTheme: const TextTheme(
-          titleMedium: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: darkGreen,
-          ),
-          bodyMedium: TextStyle(fontSize: 14, color: subtitleGrey),
-        ),
-      ),
-      home: _RecipeListLoader(manager: manager),
+      theme: AppTheme.light,
+      home: const _AppRoot(),
     );
   }
 }
 
-/// Загружает список рецептов через [RecipeManager] и подаёт его в
-/// [RecipeListPage].
-class _RecipeListLoader extends StatelessWidget {
-  final RecipeManager manager;
+/// Показывает splash на `AppDurations.splash`, затем плавно
+/// (`AppDurations.fade`) сменяет его на список рецептов.
+class _AppRoot extends StatefulWidget {
+  const _AppRoot();
 
-  const _RecipeListLoader({required this.manager});
+  @override
+  State<_AppRoot> createState() => _AppRootState();
+}
+
+class _AppRootState extends State<_AppRoot> {
+  bool _splashDone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(AppDurations.splash, () {
+      if (mounted) setState(() => _splashDone = true);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Recipe>>(
-      future: manager.getRecipes(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(child: Text('Ошибка загрузки: ${snapshot.error}')),
-          );
-        }
-        return RecipeListPage(recipes: snapshot.data ?? const []);
-      },
+    return AnimatedSwitcher(
+      duration: AppDurations.fade,
+      switchInCurve: Curves.easeIn,
+      switchOutCurve: Curves.easeOut,
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
+      child: _splashDone
+          ? const RecipeListLoader(key: ValueKey('home'))
+          : const SplashPage(key: ValueKey('splash')),
     );
   }
 }

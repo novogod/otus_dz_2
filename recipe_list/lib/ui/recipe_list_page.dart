@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../models/recipe.dart';
+import 'app_theme.dart';
 import 'recipe_card.dart';
 
-/// Страница со списком рецептов.
-///
-/// Принимает готовый список [recipes] через конструктор. Загрузка данных —
-/// ответственность вызывающего кода (например, `FutureBuilder` поверх
-/// `RecipeManager.getRecipes()`).
+/// Страница со списком рецептов. Принимает готовый список через конструктор —
+/// загрузка данных вынесена выше (см. `RecipeListLoader`).
 class RecipeListPage extends StatelessWidget {
   final List<Recipe> recipes;
 
@@ -16,27 +14,29 @@ class RecipeListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Рецепты'), centerTitle: true),
-      body: recipes.isEmpty
-          ? const _EmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: recipes.length,
-              itemBuilder: (context, index) {
-                final recipe = recipes[index];
-                return RecipeCard(
-                  recipe: recipe,
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Открыт рецепт: ${recipe.name}'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+      backgroundColor: AppColors.surfaceMuted,
+      body: SafeArea(
+        child: recipes.isEmpty
+            ? const _EmptyState()
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                itemCount: recipes.length,
+                itemBuilder: (context, index) {
+                  final recipe = recipes[index];
+                  return RecipeCard(
+                    recipe: recipe,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Открыт рецепт: ${recipe.name}'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+      ),
     );
   }
 }
@@ -50,11 +50,11 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.no_meals, size: 64, color: Color(0xFF797676)),
-          SizedBox(height: 12),
+          Icon(Icons.no_meals, size: 64, color: AppColors.textInactive),
+          SizedBox(height: AppSpacing.md),
           Text(
             'Нет рецептов',
-            style: TextStyle(fontSize: 16, color: Color(0xFF797676)),
+            style: TextStyle(fontSize: 16, color: AppColors.textInactive),
           ),
         ],
       ),

@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../models/recipe.dart';
+import 'app_theme.dart';
 
-/// Карточка одного рецепта в списке.
+/// Карточка рецепта в списке. Размеры и стили — из дизайн-системы
+/// `app_theme.dart` (см. `docs/design_system.md`).
 ///
-/// По дизайну Otus Food App: фото, название, длительность приготовления.
+/// Layout по Figma (component `116:33`): фото слева на всю высоту карточки
+/// (149 x 136), скруглены только левые углы; справа — название рецепта
+/// (Roboto 500/22, чёрный) и время приготовления с иконкой часов
+/// (Roboto 400/16, бренд-зелёный).
 class RecipeCard extends StatelessWidget {
+  static const double cardHeight = 136;
+  static const double imageWidth = 149;
+
   final Recipe recipe;
   final VoidCallback? onTap;
 
@@ -13,79 +21,94 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Material(
-        color: Colors.white,
-        elevation: 2,
-        borderRadius: BorderRadius.circular(12),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Image.network(
-                  recipe.photo,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    color: const Color(0xFFEEEEEE),
-                    child: const Icon(
-                      Icons.restaurant,
-                      size: 48,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  loadingBuilder: (_, child, progress) {
-                    if (progress == null) return child;
-                    return Container(
-                      color: const Color(0xFFF5F5F5),
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      recipe.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF165932),
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.access_time,
-                          size: 18,
-                          color: Color(0xFF2ECC71),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${recipe.duration} мин',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF797676),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.pagePadding,
+        vertical: AppSpacing.sm,
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadii.cardAll,
+          boxShadow: AppShadows.card,
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: AppRadii.cardAll,
+            child: SizedBox(
+              height: cardHeight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ClipRRect(
+                    borderRadius: AppRadii.cardLeft,
+                    child: SizedBox(
+                      width: imageWidth,
+                      height: cardHeight,
+                      child: Image.network(
+                        recipe.photo,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          color: AppColors.surfaceMuted,
+                          child: const Icon(
+                            Icons.restaurant,
+                            size: 32,
+                            color: AppColors.textInactive,
                           ),
                         ),
-                      ],
+                        loadingBuilder: (_, child, progress) {
+                          if (progress == null) return child;
+                          return Container(
+                            color: AppColors.surfaceMuted,
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.lg,
+                        AppSpacing.md,
+                        AppSpacing.lg,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            recipe.name,
+                            style: AppTextStyles.recipeTitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.access_time,
+                                size: 16,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              Text(
+                                '${recipe.duration} мин',
+                                style: AppTextStyles.recipeMeta,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

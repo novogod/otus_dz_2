@@ -43,9 +43,10 @@ void main() {
       expect(find.byType(ListView), findsOneWidget);
     });
 
-    testWidgets('AppBar shows "Рецепты"', (tester) async {
+    testWidgets('does not show a global "Рецепты" header', (tester) async {
       await tester.pumpWidget(wrap(RecipeListPage(recipes: sample(2))));
-      expect(find.widgetWithText(AppBar, 'Рецепты'), findsOneWidget);
+      expect(find.text('Рецепты'), findsNothing);
+      expect(find.byType(AppBar), findsNothing);
     });
   });
 }
