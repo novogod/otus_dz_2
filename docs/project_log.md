@@ -1,5 +1,47 @@
 # Project Log
 
+## recipe_list — Страница рецепта по гайдлайну и чистка анализа
+
+**Date:** 2026-04-29
+
+### Описание
+
+Привели экран деталей рецепта в соответствие с `docs/design_system.md` §9l
+после жалобы «серый текст на сером фоне нечитаем».
+
+### Что сделано
+
+- **`RecipeDetailsPage`** переписан под спеку §9l:
+  - фон `#FFFFFF` вместо `#ECECEC`;
+  - hero-фото 396×220 (`AspectRatio 396/220`), радиус 5 dp;
+  - AppBar `«Рецепт»` Roboto 400/20 `#165932` (§9a);
+  - заголовок страницы — Roboto 500/24 `#000` (`AppTextStyles.pageTitle`);
+  - подзаголовки секций — Roboto 500/16 `#165932`
+    (`AppTextStyles.sectionTitle`);
+  - блок ингредиентов — белый контейнер с обводкой `#797676` w=3, две
+    колонки: меры (89 dp, Roboto 400/13/27 `#797676`) и названия
+    (Roboto 500/14/27 `#000`);
+  - кнопки YouTube / Источник — primary filled и outline w=3, радиус 25
+    (§9g).
+- **Дизайн-токены**: в `app_theme.dart` добавлены
+  `AppColors.textSecondary` (`#797676`) и текстовые стили `pageTitle`,
+  `sectionTitle`, `ingredientName`, `ingredientQty`.
+- **Причина бага**: на странице деталей использовался стиль
+  `AppTextStyles.inputHint` (`#C2C2C2` — токен плейсхолдера логин-формы)
+  поверх `AppColors.surfaceMuted` (`#ECECEC`). На white-фоне с правильным
+  `textSecondary` текст контрастен.
+- **Анализатор**: в `recipe_list/analysis_options.yaml` добавлен
+  `analyzer.exclude: [docs/**, ../docs/**]`, чтобы общая папка `docs/` не
+  попадала в анализ пакета.
+- **Форматирование**: автоформаттер ужал `SlideTransition` в `main.dart`.
+
+### Контроль качества
+
+- `flutter analyze` — 0 issues.
+- `flutter test` — 16/16 passed.
+
+---
+
 ## recipe_list — Интеграция с TheMealDB и редизайн карточки
 
 **Date:** 2026-04-29

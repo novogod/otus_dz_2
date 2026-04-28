@@ -77,10 +77,7 @@ class _AppRootState extends State<_AppRoot>
           const Positioned.fill(child: SplashPage()),
           // Список «въезжает» снизу, заслоняя splash.
           Positioned.fill(
-            child: SlideTransition(
-              position: _slide,
-              child: RecipeListLoader(),
-            ),
+            child: SlideTransition(position: _slide, child: RecipeListLoader()),
           ),
         ],
       ),
