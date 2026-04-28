@@ -17,11 +17,7 @@ class AppBottomNavBar extends StatelessWidget {
   final AppNavTab current;
   final ValueChanged<AppNavTab>? onTap;
 
-  const AppBottomNavBar({
-    super.key,
-    required this.current,
-    this.onTap,
-  });
+  const AppBottomNavBar({super.key, required this.current, this.onTap});
 
   static const _items = <_NavItem>[
     _NavItem(AppNavTab.recipes, 'Рецепты', Icons.local_pizza_outlined),
@@ -32,25 +28,31 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 60,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: AppShadows.navBar,
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            for (final item in _items)
-              Expanded(
-                child: _Tab(
-                  item: item,
-                  active: item.tab == current,
-                  onTap: onTap == null ? null : () => onTap!(item.tab),
-                ),
-              ),
-          ],
+    return Material(
+      color: AppColors.surface,
+      elevation: 0,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          boxShadow: AppShadows.navBar,
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 60,
+            child: Row(
+              children: [
+                for (final item in _items)
+                  Expanded(
+                    child: _Tab(
+                      item: item,
+                      active: item.tab == current,
+                      onTap: onTap == null ? null : () => onTap!(item.tab),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
