@@ -67,19 +67,25 @@ class _AppRootState extends State<_AppRoot>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Сплеш всегда внизу стека — он не двигается во время
-        // перехода MOVE_IN, его лишь перекрывает сверху список.
-        const Positioned.fill(child: SplashPage()),
-        // Список «въезжает» сверху, заслоняя splash.
-        Positioned.fill(
-          child: SlideTransition(
-            position: _slide,
-            child: const RecipeListLoader(),
+    // Material нужен, чтобы Text внутри splash/list получил
+    // DefaultTextStyle темы вместо debug-fallback (жёлтое
+    // подчёркивание, неверный вес).
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          // Сплеш всегда внизу стека — он не двигается во время
+          // перехода MOVE_IN, его лишь перекрывает сверху список.
+          const Positioned.fill(child: SplashPage()),
+          // Список «въезжает» сверху, заслоняя splash.
+          Positioned.fill(
+            child: SlideTransition(
+              position: _slide,
+              child: const RecipeListLoader(),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
