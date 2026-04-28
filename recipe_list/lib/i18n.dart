@@ -63,6 +63,10 @@ class S {
   String loadError(Object error) =>
       _t('Ошибка загрузки: $error', 'Failed to load: $error');
   String get retry => _t('Повторить', 'Retry');
+  String get offlineNotice => _t(
+        'Нет связи с сервером — показываем сохранённое.',
+        'No connection — showing cached recipes.',
+      );
 
   // Details page.
   String get recipeTitle => _t('Рецепт', 'Recipe');

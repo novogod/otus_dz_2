@@ -1,47 +1,87 @@
 import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
+import '../data/local/recipe_db.dart';
+import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
 import 'recipe_list_page.dart';
 
-/// Загружает список рецептов из TheMealDB и отображает loading / error / data.
+/// Загружает список рецептов и поднимает локальный кэш.
 ///
-/// По умолчанию использует `searchByName(query: 'a')` — это самый
-/// простой способ получить «много» полных рецептов одним запросом.
+/// Параллельно с первым `searchByName` открывает sqflite-БД,
+/// создаёт [RecipeRepository] и кладёт начальную выдачу в кэш —
+/// это делает повторное открытие приложения мгновенным даже без
+/// сети (см. §B6/B7 docs/todo/search_api_deploy.md).
+///
+/// Если открытие БД упало (например, в widget-тестах без
+/// path_provider), репозиторий остаётся `null` и страница
+/// работает по старому пути «прямой `RecipeApi`».
 class RecipeListLoader extends StatefulWidget {
   final RecipeApi api;
   final Future<List<Recipe>> Function(RecipeApi api)? loader;
 
-  RecipeListLoader({super.key, RecipeApi? api, this.loader})
-    : api = api ?? RecipeApi();
+  /// Если задан — переопределяет создание репозитория. В тестах
+  /// сюда передают `(_) async => null`, чтобы пропустить sqflite.
+  final Future<RecipeRepository?> Function(RecipeApi api)? repositoryBuilder;
+
+  RecipeListLoader({
+    super.key,
+    RecipeApi? api,
+    this.loader,
+    this.repositoryBuilder,
+  }) : api = api ?? RecipeApi();
 
   @override
   State<RecipeListLoader> createState() => _RecipeListLoaderState();
 }
 
 class _RecipeListLoaderState extends State<RecipeListLoader> {
-  late Future<List<Recipe>> _future;
+  late Future<_LoadResult> _future;
 
   @override
   void initState() {
     super.initState();
-    _future = (widget.loader ?? _defaultLoader)(widget.api);
+    _future = _runLoad();
+  }
+
+  Future<_LoadResult> _runLoad() async {
+    final repo = await (widget.repositoryBuilder ?? _defaultRepoBuilder)(
+      widget.api,
+    );
+    final recipes = await (widget.loader ?? _defaultLoader)(widget.api);
+    if (repo != null && recipes.isNotEmpty) {
+      try {
+        await repo.upsertAll(recipes, appLang.value);
+      } on Object {
+        // Кэш не критичен — игнорируем ошибки записи.
+      }
+    }
+    return _LoadResult(recipes: recipes, repository: repo);
   }
 
   static Future<List<Recipe>> _defaultLoader(RecipeApi api) =>
       api.searchByName(query: 'a', lang: appLang.value);
 
+  static Future<RecipeRepository?> _defaultRepoBuilder(RecipeApi api) async {
+    try {
+      final db = await openRecipeDatabase();
+      return RecipeRepository(db: db, api: api);
+    } on Object {
+      return null;
+    }
+  }
+
   void _retry() {
     setState(() {
-      _future = (widget.loader ?? _defaultLoader)(widget.api);
+      _future = _runLoad();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Recipe>>(
+    return FutureBuilder<_LoadResult>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
@@ -73,11 +113,20 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             ),
           );
         }
+        final result = snapshot.data!;
         return RecipeListPage(
-          recipes: snapshot.data ?? const [],
+          recipes: result.recipes,
           api: widget.api,
+          repository: result.repository,
         );
       },
     );
   }
+}
+
+class _LoadResult {
+  final List<Recipe> recipes;
+  final RecipeRepository? repository;
+
+  _LoadResult({required this.recipes, required this.repository});
 }

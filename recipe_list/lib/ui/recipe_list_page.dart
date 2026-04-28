@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
+import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_bottom_nav_bar.dart';
@@ -33,7 +34,19 @@ class RecipeListPage extends StatefulWidget {
   final List<Recipe> recipes;
   final RecipeApi? api;
 
-  const RecipeListPage({super.key, required this.recipes, this.api});
+  /// Необязательный кэш-репозиторий. Если задан — все публичные
+  /// поиски идут через [RecipeRepository.searchByName] (cache-first
+  /// + флаг offline для баннера). Без репозитория —
+  /// старый путь через [RecipeApi] напрямую (используется
+  /// в widget-тестах).
+  final RecipeRepository? repository;
+
+  const RecipeListPage({
+    super.key,
+    required this.recipes,
+    this.api,
+    this.repository,
+  });
 
   @override
   State<RecipeListPage> createState() => _RecipeListPageState();
@@ -59,6 +72,10 @@ class _RecipeListPageState extends State<RecipeListPage> {
   /// Префикс последнего успешного запроса — используется для
   /// отбрасывания результатов устаревших запросов (race-condition).
   String _lastQueryInFlight = '';
+
+  /// Выставляется, когда и локальный кэш, и сеть одновременно
+  /// пусты: показываем вверху плашку «offline» (§B6).
+  bool _offline = false;
 
   /// Рецепты, показанные в основном списке. По умолчанию совпадает
   /// с `widget.recipes`; после submit / выбора подсказки — результат
@@ -136,8 +153,10 @@ class _RecipeListPageState extends State<RecipeListPage> {
     String prefix, {
     bool applyToList = false,
   }) async {
+    final repo = widget.repository;
     final api = widget.api;
-    if (api == null) {
+    if (repo == null && api == null) {
+      // Тестовый фолбэк: локальный префикс-фильтр по widget.recipes.
       final hits = _localPrefix(widget.recipes, prefix);
       setState(() {
         _predictionRecipes = hits;
@@ -151,18 +170,32 @@ class _RecipeListPageState extends State<RecipeListPage> {
       _lastQueryInFlight = prefix;
     });
     try {
-      final fetched = await api.searchByName(
-        query: prefix,
-        lang: appLang.value,
-      );
+      List<Recipe> hits;
+      bool offline;
+      if (repo != null) {
+        final res = await repo.searchByName(prefix, appLang.value);
+        hits = res.recipes
+            .where(
+              (r) => r.name.toLowerCase().startsWith(prefix.toLowerCase()),
+            )
+            .toList(growable: false);
+        offline = res.offline;
+      } else {
+        final fetched = await api!.searchByName(
+          query: prefix,
+          lang: appLang.value,
+        );
+        hits = _localPrefix(fetched, prefix);
+        offline = false;
+      }
       if (!mounted) return;
       // Отбрасываем протухшие запросы: пользователь мог успеть
       // ввести больше букв, пока этот висел в полёте.
       if (_lastQueryInFlight != prefix) return;
-      final hits = _localPrefix(fetched, prefix);
       setState(() {
         _predictionRecipes = hits;
         _predictionsLoading = false;
+        _offline = offline;
         if (applyToList) _displayed = hits;
       });
     } on Object {
@@ -171,6 +204,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
       setState(() {
         _predictionRecipes = const [];
         _predictionsLoading = false;
+        _offline = true;
         if (applyToList) _displayed = const [];
       });
     }
@@ -198,38 +232,46 @@ class _RecipeListPageState extends State<RecipeListPage> {
       ),
       body: SafeArea(
         bottom: false,
-        child: Stack(
+        child: Column(
           children: [
-            Positioned.fill(
-              child: list.isEmpty
-                  ? const _EmptyState()
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.sm,
+            if (_offline)
+              _OfflineBanner(onDismiss: () => setState(() => _offline = false)),
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: list.isEmpty
+                        ? const _EmptyState()
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.sm,
+                            ),
+                            itemCount: list.length,
+                            itemBuilder: (context, index) {
+                              final recipe = list[index];
+                              return RecipeCard(
+                                recipe: recipe,
+                                onTap: () => _openDetails(context, recipe),
+                              );
+                            },
+                          ),
+                  ),
+                  if (_showPredictions)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      child: SearchPredictions(
+                        items: _predictionRecipes,
+                        loading: _predictionsLoading,
+                        onTap: (recipe) {
+                          _onPredictionTap(recipe);
+                        },
                       ),
-                      itemCount: list.length,
-                      itemBuilder: (context, index) {
-                        final recipe = list[index];
-                        return RecipeCard(
-                          recipe: recipe,
-                          onTap: () => _openDetails(context, recipe),
-                        );
-                      },
                     ),
-            ),
-            if (_showPredictions)
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                child: SearchPredictions(
-                  items: _predictionRecipes,
-                  loading: _predictionsLoading,
-                  onTap: (recipe) {
-                    _onPredictionTap(recipe);
-                  },
-                ),
+                ],
               ),
+            ),
           ],
         ),
       ),
@@ -298,6 +340,67 @@ class _EmptyState extends StatelessWidget {
             style: const TextStyle(fontSize: 16, color: AppColors.textInactive),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Плашка «нет сети» над списком — появляется, когда репозиторий
+/// вернул `offline=true` (и кэш, и сеть промахнулись). См. §B6
+/// docs/todo/search_api_deploy.md.
+class _OfflineBanner extends StatelessWidget {
+  final VoidCallback onDismiss;
+
+  const _OfflineBanner({required this.onDismiss});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    return Material(
+      color: AppColors.surfaceMuted,
+      child: SafeArea(
+        bottom: false,
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.cloud_off,
+                size: 18,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  s.offlineNotice,
+                  style: const TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Dismiss',
+                iconSize: 18,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 28,
+                  height: 28,
+                ),
+                icon: const Icon(
+                  Icons.close,
+                  color: AppColors.textSecondary,
+                ),
+                onPressed: onDismiss,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
