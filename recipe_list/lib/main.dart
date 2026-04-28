@@ -48,7 +48,7 @@ class _AppRootState extends State<_AppRoot>
       duration: AppDurations.splashTransition,
     );
     _slide = Tween<Offset>(
-      begin: const Offset(0, -1), // въезд сверху
+      begin: const Offset(0, 1), // въезд снизу (Figma MOVE_IN/BOTTOM)
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
@@ -73,9 +73,9 @@ class _AppRootState extends State<_AppRoot>
       child: Stack(
         children: [
           // Сплеш всегда внизу стека — он не двигается во время
-          // перехода MOVE_IN, его лишь перекрывает сверху список.
+          // перехода MOVE_IN, его лишь перекрывает поверх список.
           const Positioned.fill(child: SplashPage()),
-          // Список «въезжает» сверху, заслоняя splash.
+          // Список «въезжает» снизу, заслоняя splash.
           Positioned.fill(
             child: SlideTransition(
               position: _slide,
