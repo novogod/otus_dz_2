@@ -151,7 +151,10 @@ class _RecipeListPageState extends State<RecipeListPage> {
       _lastQueryInFlight = prefix;
     });
     try {
-      final fetched = await api.searchByName(query: prefix);
+      final fetched = await api.searchByName(
+        query: prefix,
+        lang: appLang.value,
+      );
       if (!mounted) return;
       // Отбрасываем протухшие запросы: пользователь мог успеть
       // ввести больше букв, пока этот висел в полёте.
@@ -253,7 +256,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
   Future<void> _openDetails(BuildContext context, Recipe recipe) async {
     Recipe full = recipe;
     if (recipe.isLite && widget.api != null) {
-      final fetched = await widget.api!.lookup(recipe.id);
+      final fetched = await widget.api!.lookup(recipe.id, lang: appLang.value);
       if (fetched != null) full = fetched;
     }
     if (!context.mounted) return;

@@ -1,19 +1,33 @@
 import 'package:dio/dio.dart';
 
-/// Базовый HTTP-клиент TheMealDB.
+import 'recipe_api_config.dart';
+
+/// Базовый HTTP-клиент рецептов.
 ///
-/// База: `https://www.themealdb.com/api/json/v1/1`.
+/// База берётся из [RecipeApiConfig.activeBaseUrl]:
+/// * по умолчанию — `https://www.themealdb.com/api/json/v1/1`;
+/// * под `--dart-define=MAHALLEM_RECIPES_BASE=...` — собственный
+///   сервер mahallem (см. `docs/i18n_proposal.md` §5).
+///
+/// Сам клиент знает только про базу и таймауты. О формате путей
+/// (`/search.php?s=` vs `/recipes/search?q=`) знает [RecipeApi]
+/// через текущий [RecipeApiConfig.backend].
 class MealDbClient {
-  static const String baseUrl = 'https://www.themealdb.com/api/json/v1/1';
+  /// Старая константа сохранена для совместимости с тестами,
+  /// которые держат на неё ссылку. Не использовать в новом коде —
+  /// читать [RecipeApiConfig.activeBaseUrl].
+  static const String baseUrl = RecipeApiConfig.mealDbBaseUrl;
 
   final Dio dio;
+  final RecipeBackend backend;
 
-  MealDbClient({Dio? dio})
-    : dio =
+  MealDbClient({Dio? dio, RecipeBackend? backend})
+    : backend = backend ?? RecipeApiConfig.backend,
+      dio =
           dio ??
           Dio(
             BaseOptions(
-              baseUrl: baseUrl,
+              baseUrl: RecipeApiConfig.activeBaseUrl,
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 10),
               responseType: ResponseType.json,

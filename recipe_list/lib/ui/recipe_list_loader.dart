@@ -31,7 +31,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   }
 
   static Future<List<Recipe>> _defaultLoader(RecipeApi api) =>
-      api.searchByName(query: 'a');
+      api.searchByName(query: 'a', lang: appLang.value);
 
   void _retry() {
     setState(() {

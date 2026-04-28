@@ -4,11 +4,14 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:recipe_list/data/api/meal_db_client.dart';
 import 'package:recipe_list/data/api/recipe_api.dart';
+import 'package:recipe_list/data/api/recipe_api_config.dart';
+import 'package:recipe_list/i18n.dart';
 
 /// Подменяет HTTP-транспорт Dio: возвращает заранее заданные ответы по
 /// пути запроса. Достаточно для юнит-тестов парсинга `RecipeApi`.
 class _StubAdapter implements HttpClientAdapter {
   final Map<String, Object?> responses;
+  final List<RequestOptions> calls = [];
 
   _StubAdapter(this.responses);
 
@@ -21,6 +24,7 @@ class _StubAdapter implements HttpClientAdapter {
     Stream<List<int>>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    calls.add(options);
     final body = responses[options.path] ?? const {'meals': null};
     return ResponseBody.fromString(
       jsonEncode(body),
@@ -33,10 +37,14 @@ class _StubAdapter implements HttpClientAdapter {
 }
 
 void main() {
-  RecipeApi makeApi(Map<String, Object?> responses) {
+  RecipeApi makeApi(
+    Map<String, Object?> responses, {
+    RecipeBackend backend = RecipeBackend.mealDb,
+    _StubAdapter? capture,
+  }) {
     final dio = Dio(BaseOptions(baseUrl: MealDbClient.baseUrl));
-    dio.httpClientAdapter = _StubAdapter(responses);
-    return RecipeApi(client: MealDbClient(dio: dio));
+    dio.httpClientAdapter = capture ?? _StubAdapter(responses);
+    return RecipeApi(client: MealDbClient(dio: dio, backend: backend));
   }
 
   test('searchByName parses full meal payload', () async {
@@ -97,5 +105,53 @@ void main() {
       '/lookup.php': {'meals': null},
     });
     expect(await api.lookup(0), isNull);
+  });
+
+  group('mahallem backend', () {
+    test('searchByName uses /search?q=&lang= and forwards AppLang.ru',
+        () async {
+      final adapter = _StubAdapter({
+        '/search': {'meals': null},
+      });
+      final api = makeApi(
+        const {},
+        backend: RecipeBackend.mahallem,
+        capture: adapter,
+      );
+      await api.searchByName(query: 'chick', lang: AppLang.ru);
+      expect(adapter.calls, hasLength(1));
+      expect(adapter.calls.single.path, '/search');
+      expect(adapter.calls.single.queryParameters, {
+        'q': 'chick',
+        'lang': 'ru',
+      });
+    });
+
+    test('lookup hits /:id?lang=', () async {
+      final adapter = _StubAdapter({
+        '/52772': {'meals': null},
+      });
+      final api = makeApi(
+        const {},
+        backend: RecipeBackend.mahallem,
+        capture: adapter,
+      );
+      await api.lookup(52772, lang: AppLang.en);
+      expect(adapter.calls.single.path, '/52772');
+      expect(adapter.calls.single.queryParameters, {'lang': 'en'});
+    });
+
+    test('mealDb backend ignores lang and keeps /search.php?s=', () async {
+      final adapter = _StubAdapter({
+        '/search.php': {'meals': null},
+      });
+      final api = makeApi(
+        const {},
+        capture: adapter,
+      );
+      await api.searchByName(query: 'a', lang: AppLang.ru);
+      expect(adapter.calls.single.path, '/search.php');
+      expect(adapter.calls.single.queryParameters, {'s': 'a'});
+    });
   });
 }
