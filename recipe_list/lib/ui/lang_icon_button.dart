@@ -14,61 +14,71 @@ class LangIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = S.of(context);
-    final current = appLang.value;
-    final next = AppLang.values[(current.index + 1) % AppLang.values.length];
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      child: Semantics(
-        button: true,
-        label: 'Switch language to ${next.label}',
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Флаг слева от кнопки. 24×16 — пропорция 3:2,
-            // совпадает с оригинальными SVG из mahallem_flutter.
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: SizedBox(
-                width: 24,
-                height: 16,
-                child: SvgPicture.asset(
-                  current.flagAsset,
-                  fit: BoxFit.cover,
-                  semanticsLabel: '${current.label} flag',
+    // Подписываемся на appLang явно: AppLangScope живёт в `home`,
+    // а pushed-маршруты (например, RecipeDetailsPage) находятся
+    // ВЫШЕ home в Navigator-стеке и AppLangScope не получают.
+    // Без этой подписки тап по кнопке на деталях не перерисовывает
+    // флаг/лейбл — пользователь думает, что кнопка «не кликается».
+    return ValueListenableBuilder<AppLang>(
+      valueListenable: appLang,
+      builder: (context, current, _) {
+        final s = S.of(context);
+        final next =
+            AppLang.values[(current.index + 1) % AppLang.values.length];
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          child: Semantics(
+            button: true,
+            label: 'Switch language to ${next.label}',
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Флаг слева от кнопки. 24×16 — пропорция 3:2,
+                // совпадает с оригинальными SVG из mahallem_flutter.
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: SizedBox(
+                    width: 24,
+                    height: 16,
+                    child: SvgPicture.asset(
+                      current.flagAsset,
+                      fit: BoxFit.cover,
+                      semanticsLabel: '${current.label} flag',
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Material(
-              color: AppColors.primary,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: cycleAppLang,
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Center(
-                    child: Text(
-                      s.langLabel,
-                      style: const TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                        color: AppColors.surface,
+                const SizedBox(width: AppSpacing.sm),
+                Material(
+                  color: AppColors.primary,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: cycleAppLang,
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Center(
+                        child: Text(
+                          s.langLabel,
+                          style: const TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: AppColors.surface,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

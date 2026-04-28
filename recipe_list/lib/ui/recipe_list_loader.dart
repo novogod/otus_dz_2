@@ -202,7 +202,13 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       }
       if (accumulator.length >= _seedTarget) break;
     }
-    return accumulator.values.toList(growable: false);
+    // Перемешиваем итоговую выборку, чтобы лента не выглядела
+    // «50 куриных, потом 50 говяжьих» — категории заходят
+    // последовательно, и без shuffle первая категория из
+    // случайного набора всегда занимает верх списка.
+    final list = accumulator.values.toList();
+    list.shuffle();
+    return list;
   }
 
   Future<void> _persist(
