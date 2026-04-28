@@ -328,7 +328,19 @@ class _LoadingScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(value: progress),
+                  // Круговой индикатор по design_system.md §12:
+                  // CircularProgressIndicator(color: primary). 56×56
+                  // с увеличенным stroke — заметнее на surfaceMuted.
+                  SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 5,
+                      color: AppColors.primary,
+                      backgroundColor: AppColors.surface,
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     s.loadingTitle,
@@ -346,6 +358,22 @@ class _LoadingScreen extends StatelessWidget {
                     style: AppTextStyles.inputHint,
                   ),
                   if (hasProgress) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    // Линейный прогресс-бар: дополнение к кругу,
+                    // визуально показывает «сколько ещё осталось»
+                    // (см. design_system.md — primary для прогресса).
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 240),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 6,
+                          color: AppColors.primary,
+                          backgroundColor: AppColors.surface,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       s.loadingProgress(st.loaded, st.target),

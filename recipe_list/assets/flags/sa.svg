@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <rect fill="#006C35" width="1200" height="800"/>
+  <g transform="translate(600,340)" fill="#fff">
+    <text font-family="Arial,sans-serif" font-size="120" text-anchor="middle" font-weight="bold" dy="0.35em">لا إله إلا الله</text>
+  </g>
+  <g transform="translate(600,520)" fill="#fff">
+    <rect x="-120" y="-8" width="240" height="16" rx="2"/>
+    <rect x="-120" y="-8" width="16" height="-60" rx="2"/>
+    <rect x="104" y="-8" width="16" height="-60" rx="2"/>
+    <rect x="-60" y="-68" width="180" height="12" rx="2"/>
+    <rect x="-60" y="-68" width="12" height="60" rx="2"/>
+    <circle cx="0" cy="-74" r="20"/>
+  </g>
+</svg>

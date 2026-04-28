@@ -62,6 +62,10 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: const [
         SizedBox(width: AppSpacing.sm),
         LangIconButton(),
+        // Удвоенный отступ от кнопки до правого края экрана:
+        // внутри LangIconButton уже есть horizontal sm; добавляя ещё
+        // один sm, получаем 16 px справа вместо прежних 8.
+        SizedBox(width: AppSpacing.sm),
       ],
     );
   }

@@ -40,6 +40,7 @@ dependencies:
   sqflite: ^2.3.3
   path: ^1.9.0
   path_provider: ^2.1.4
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +67,7 @@ flutter:
 
   assets:
     - assets/images/splash_food.jpg
+    - assets/flags/
 
   fonts:
     - family: Roboto

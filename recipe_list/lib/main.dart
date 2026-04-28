@@ -7,6 +7,19 @@ import 'ui/splash_page.dart';
 
 void main() => runApp(const RecipeApp());
 
+/// Глобальный ключ корневого виджета приложения. Используется
+/// единственным публичным API файла — [restartApp] — чтобы
+/// перезапустить splash-последовательность из любого места UI
+/// (например, по тапу на «назад» в [SearchAppBar]).
+final GlobalKey<_AppRootState> _appRootKey = GlobalKey<_AppRootState>();
+
+/// Перезапускает связку «splash → список рецептов» с самого начала:
+/// сбрасывает SlideTransition, пересоздаёт [RecipeListLoader] (что
+/// заново триггерит весь load-pipeline) и снова ждёт `AppDurations.splash`
+/// перед переходом. Безопасно вызывать до монтирования —
+/// тогда вызов будет no-op.
+void restartApp() => _appRootKey.currentState?._restart();
+
 /// Корневой виджет приложения. Точка входа максимально короткая —
 /// тема, splash и загрузка данных вынесены в отдельные виджеты.
 class RecipeApp extends StatelessWidget {
@@ -18,7 +31,7 @@ class RecipeApp extends StatelessWidget {
       title: 'Otus Food',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const AppLangScope(child: _AppRoot()),
+      home: AppLangScope(child: _AppRoot(key: _appRootKey)),
     );
   }
 }
@@ -30,7 +43,7 @@ class RecipeApp extends StatelessWidget {
 /// MOVE_IN / TOP в Figma — это «новый экран въезжает сверху, наплывая
 /// поверх предыдущего». Splash при этом остаётся на месте.
 class _AppRoot extends StatefulWidget {
-  const _AppRoot();
+  const _AppRoot({super.key});
 
   @override
   State<_AppRoot> createState() => _AppRootState();
@@ -40,6 +53,11 @@ class _AppRootState extends State<_AppRoot>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<Offset> _slide;
+
+  /// Ключ для `RecipeListLoader`, чтобы при перезапуске
+  /// последовательности (см. [_restart]) Flutter создал новый
+  /// State и заново прогнал весь load-pipeline.
+  Key _loaderKey = UniqueKey();
 
   @override
   void initState() {
@@ -53,6 +71,22 @@ class _AppRootState extends State<_AppRoot>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
+    Future<void>.delayed(AppDurations.splash, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  /// Перезапускает splash-последовательность. Сбрасывает
+  /// SlideTransition в начало, пересоздаёт [RecipeListLoader]
+  /// через новый ключ и снова ждёт `AppDurations.splash`,
+  /// после чего «въезжает» поверх splash. Используется для
+  /// «back»-кнопки на списке (см. `SearchAppBar.onBack`).
+  void _restart() {
+    if (!mounted) return;
+    _controller.reset();
+    setState(() {
+      _loaderKey = UniqueKey();
+    });
     Future<void>.delayed(AppDurations.splash, () {
       if (mounted) _controller.forward();
     });
@@ -79,7 +113,10 @@ class _AppRootState extends State<_AppRoot>
           // Список «въезжает» снизу, заслоняя splash. Переключатель
           // языка живёт в его AppBar — пока splash, кнопки нет.
           Positioned.fill(
-            child: SlideTransition(position: _slide, child: RecipeListLoader()),
+            child: SlideTransition(
+              position: _slide,
+              child: RecipeListLoader(key: _loaderKey),
+            ),
           ),
         ],
       ),

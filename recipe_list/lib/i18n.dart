@@ -1,8 +1,32 @@
 import 'package:flutter/material.dart';
 
-/// Поддерживаемые языки UI. Сейчас всего два — переключаются FAB-ом
-/// в верхнем левом углу.
-enum AppLang { ru, en }
+/// Поддерживаемые языки UI. Совпадают с языками платформы
+/// mahallem_ist (см. `routes/post-job.js` — `phrase_<code>` в БД):
+/// `ru, en, es, fr, de, it, tr, ar, fa, ku`. На каждый язык есть
+/// SVG-флаг в `assets/flags/<flag>.svg` (10 файлов, скопированных
+/// из `mahallem_flutter/assets/pictures/flags`).
+enum AppLang {
+  ru('RU', 'ru'),
+  en('EN', 'us'),
+  es('ES', 'es'),
+  fr('FR', 'fr'),
+  de('DE', 'de'),
+  it('IT', 'it'),
+  tr('TR', 'tr'),
+  ar('AR', 'sa'),
+  fa('FA', 'ir'),
+  ku('KU', 'iq');
+
+  /// Подпись на круглой кнопке (двухбуквенный лейбл).
+  final String label;
+
+  /// Имя SVG-флага без расширения (`assets/flags/<flag>.svg`).
+  final String flag;
+
+  const AppLang(this.label, this.flag);
+
+  String get flagAsset => 'assets/flags/$flag.svg';
+}
 
 /// Глобальное хранилище текущего языка. Простейшее решение: один
 /// `ValueNotifier`, на который подписываемся через
@@ -100,16 +124,18 @@ class S {
 
   // Card ingredient count.
   String ingredientCount(int n) {
-    if (lang == AppLang.en) return n == 1 ? '1 ingredient' : '$n ingredients';
-    final mod10 = n % 10;
-    final mod100 = n % 100;
-    if (mod10 == 1 && mod100 != 11) return '$n ингредиент';
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-      return '$n ингредиента';
+    if (lang == AppLang.ru) {
+      final mod10 = n % 10;
+      final mod100 = n % 100;
+      if (mod10 == 1 && mod100 != 11) return '$n ингредиент';
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+        return '$n ингредиента';
+      }
+      return '$n ингредиентов';
     }
-    return '$n ингредиентов';
+    return n == 1 ? '1 ingredient' : '$n ingredients';
   }
 
   // FAB label.
-  String get langLabel => lang == AppLang.ru ? 'RU' : 'EN';
+  String get langLabel => lang.label;
 }

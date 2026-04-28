@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../data/api/recipe_api.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
+import '../main.dart' show restartApp;
 import '../models/recipe.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
@@ -227,6 +228,10 @@ class _RecipeListPageState extends State<RecipeListPage> {
         focusNode: _focusNode,
         onChanged: _onChanged,
         onSubmitted: _onSubmitted,
+        // «Назад» на списке = перезапуск всей splash-последовательности
+        // (см. `restartApp` в main.dart). Maybe-pop здесь бесполезен,
+        // т.к. список — корень навигатора.
+        onBack: restartApp,
       ),
       body: SafeArea(
         bottom: false,
