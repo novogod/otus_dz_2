@@ -75,12 +75,14 @@ Future<void> main(List<String> argv) async {
       final problems = _validateShape(baseJson, translated);
       if (problems.isNotEmpty) {
         stderr.writeln('  ✗ shape mismatch for $code:');
-        for (final p in problems) stderr.writeln('    - $p');
+        for (final p in problems) {
+          stderr.writeln('    - $p');
+        }
         stderr.writeln('  refusing to write $outPath');
         exit(1);
       }
       File(outPath).writeAsStringSync(
-        const JsonEncoder.withIndent('  ').convert(translated) + '\n',
+        '${const JsonEncoder.withIndent('  ').convert(translated)}\n',
       );
       stdout.writeln('  ✓ wrote $outPath');
     }

@@ -1,8 +1,35 @@
 # TODO — Full UI i18n via slang + Gemini
 
-Status: **shipped** in commits `30766ef` (i18n pipeline) and `f446b3e`
-(loading-screen progress-bar fix found during sim verification). Origin/main
-is current. Design rationale lives in `docs/i18n_slang_gemini.md`.
+## ⛳ PRIME DIRECTIVE — never close this task
+
+**Every word on every screen must render in the language chosen at the
+language button on the AppBar. No English fallback. No half-translated
+recipe titles, no English `#tags`, no English areas, no untouched
+instructions. Period.**
+
+Definition of done:
+
+- For each of `ru, es, fr, de, it, tr, ar, fa, ku`: open the running app on
+  iPhone sim, drive every reachable screen (list, details, search results,
+  fridge, favorites, profile, source webview header), screenshot, and grep
+  the screenshot OCR for any A–Z token outside the brand allow-list
+  (`Otus Food`, `YouTube`). Zero hits required.
+- This applies to data fetched from `mahallem.ist` *as displayed*: if the
+  server returns English, the client must translate before rendering.
+
+Workflow loop until done:
+1. Pick the next locale not yet at zero-English.
+2. Identify the offending string source (interface label vs server payload).
+3. Implement the smallest fix that closes it.
+4. `flutter test --no-pub` — must stay green.
+5. Hot-restart sim, screenshot, OCR/eyeball verify, commit, push.
+6. Repeat.
+
+Status: **in progress** — interface labels shipped (`30766ef`,
+`f446b3e`, `df33035`); recipe content (title, area, tags, instructions)
+still leaks English from the mahallem backend. See §C10.
+
+Design rationale lives in `docs/i18n_slang_gemini.md`.
 
 ## C0 — secrets plumbing  ✅
 
@@ -108,7 +135,37 @@ Fix in `lib/ui/recipe_list_loader.dart`:
 
 - [ ] Drive the running sim through `ar` (RTL), `de`, `tr`, `ku` once the
   list is loaded; capture a screenshot per locale; confirm zero English
-  tokens in chrome.
+  tokens in interface labels.
+
+## C10 — recipe content gap (NEW, blocks PRIME DIRECTIVE) 🔴
+
+Verified on `2026-04-28` against `https://mahallem.ist/recipes/filter?c=Pork&lang=ru&full=1`:
+
+| field           | value                                  | translated? |
+|-----------------|----------------------------------------|-------------|
+| `strMeal`       | ` Bubble & Squeak`                     | ❌ English  |
+| `strArea`       | `British`                              | ❌ English  |
+| `strTags`       | `SideDish,Speciality`                  | ❌ English  |
+| `strCategory`   | `Свинина`                              | ✅          |
+| `strIngredient1`| `Сливочное масло`                      | ✅          |
+| `strInstructions` | mostly English with a few RU nouns   | ❌ partial  |
+
+The doc `docs/i18n_slang_gemini.md` declared recipe content "out of scope —
+already translated server-side". That assumption is wrong. Until either
+the server is fixed or the client compensates, the prime directive cannot
+be satisfied.
+
+Decision pending (user to choose):
+
+- [ ] **Option A — Fix mahallem backend.** Extend `local_user_portal/utils/translate-recipe.js`
+  to also translate `strMeal`, `strArea`, `strTags`, full `strInstructions`
+  for all 10 langs. Requires SSH deploy. Architecturally correct.
+- [ ] **Option B — Translate in Flutter.** On first display per
+  `(recipeId, lang)`, send untranslated fields to Gemini at runtime, cache
+  in sqflite. Self-contained but ships a Gemini key into the binary or
+  proxies through a backend route.
+- [ ] **Option C — A + B.** Backend authoritative; client fills any
+  remaining English-leak as a safety net.
 
 ## Rollback plan
 
