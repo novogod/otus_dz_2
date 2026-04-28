@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_theme.dart';
 
@@ -80,16 +79,9 @@ class _MaskedLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Используем GoogleFonts.roboto, чтобы гарантированно получить
-    // Roboto Black (w900) из Figma, а не системный fallback (на iOS/macOS/web
-    // это был SF Compact / Helvetica, который на w900 рисует буквы ощутимо
-    // шире Roboto Black).
-    final textStyle = GoogleFonts.roboto(
-      fontWeight: FontWeight.w900,
-      fontSize: 95,
-      height: 82 / 95,
-      color: Colors.white,
-    );
+    // Набор стилей берём из бандлового Roboto Black (assets/fonts/Roboto-Black.ttf)
+    // через fontFamily 'Roboto' — см. pubspec.yaml.
+    final textStyle = AppTextStyles.splashLogo.copyWith(color: Colors.white);
     final textWidget = Text(
       'OTUS\nFOOD',
       textAlign: TextAlign.center,
