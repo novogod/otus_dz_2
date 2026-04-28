@@ -2,27 +2,21 @@
 
 ## ⛳ PRIME DIRECTIVE — never close this task
 
-**Every word on every screen must render in the language chosen at the
-language button on the AppBar. No English fallback. No half-translated
-recipe titles, no English `#tags`, no English areas, no untouched
-instructions. Period.**
+**EVERY VISIBLE WORD ON THE CURRENT SCREEN SHOULD BE ON the language
+displayed on the language button. On button click every word on the same
+screen should change. No questions. Silent implementation till the final
+result.**
 
-Definition of done:
-
-- For each of `ru, es, fr, de, it, tr, ar, fa, ku`: open the running app on
-  iPhone sim, drive every reachable screen (list, details, search results,
-  fridge, favorites, profile, source webview header), screenshot, and grep
-  the screenshot OCR for any A–Z token outside the brand allow-list
-  (`Otus Food`, `YouTube`). Zero hits required.
-- This applies to data fetched from `mahallem.ist` *as displayed*: if the
-  server returns English, the client must translate before rendering.
+Failure definition: any deviation from the main task in exact formula as
+written in the prompt (no changes, no additions or extractions, no
+assumptions, exactly as written).
 
 Workflow loop until done:
-1. Pick the next locale not yet at zero-English.
-2. Identify the offending string source (interface label vs server payload).
-3. Implement the smallest fix that closes it.
+1. Pick the next locale not yet fully matching the language button.
+2. Identify the offending visible word's source.
+3. Implement the smallest fix that closes it. Silent — no questions.
 4. `flutter test --no-pub` — must stay green.
-5. Hot-restart sim, screenshot, OCR/eyeball verify, commit, push.
+5. Hot-restart sim, screenshot, verify, commit, push.
 6. Repeat.
 
 Status: **in progress** — interface labels shipped (`30766ef`,
