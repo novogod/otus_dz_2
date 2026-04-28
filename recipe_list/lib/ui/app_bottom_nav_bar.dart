@@ -39,7 +39,7 @@ class AppBottomNavBar extends StatelessWidget {
         child: SafeArea(
           top: false,
           child: SizedBox(
-            height: 60,
+            height: 84,
             child: Row(
               children: [
                 for (final item in _items)
@@ -80,7 +80,7 @@ class _Tab extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.only(top: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
