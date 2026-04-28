@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../data/api/recipe_api.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
 import 'recipe_card.dart';
+import 'recipe_details_page.dart';
 
 /// Страница со списком рецептов. Принимает готовый список через конструктор —
 /// загрузка данных вынесена выше (см. `RecipeListLoader`).
+///
+/// При тапе на карточку открывает экран деталей. Если карточка lite
+/// (поля категории/инструкций пустые), сначала вызывает
+/// [RecipeApi.lookup], чтобы догрузить полную версию рецепта.
 class RecipeListPage extends StatelessWidget {
   final List<Recipe> recipes;
+  final RecipeApi? api;
 
-  const RecipeListPage({super.key, required this.recipes});
+  const RecipeListPage({super.key, required this.recipes, this.api});
 
   @override
   Widget build(BuildContext context) {
@@ -25,17 +32,24 @@ class RecipeListPage extends StatelessWidget {
                   final recipe = recipes[index];
                   return RecipeCard(
                     recipe: recipe,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Открыт рецепт: ${recipe.name}'),
-                          duration: const Duration(seconds: 1),
-                        ),
-                      );
-                    },
+                    onTap: () => _openDetails(context, recipe),
                   );
                 },
               ),
+      ),
+    );
+  }
+
+  Future<void> _openDetails(BuildContext context, Recipe recipe) async {
+    Recipe full = recipe;
+    if (recipe.isLite && api != null) {
+      final fetched = await api!.lookup(recipe.id);
+      if (fetched != null) full = fetched;
+    }
+    if (!context.mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => RecipeDetailsPage(recipe: full),
       ),
     );
   }

@@ -1,5 +1,54 @@
 # Project Log
 
+## recipe_list — Интеграция с TheMealDB и редизайн карточки
+
+**Date:** 2026-04-29
+
+### Описание
+
+Подключили `recipe_list` к публичному API `https://www.themealdb.com/api/json/v1/1`
+вместо локального `RecipeManager`. Полностью переработали модель `Recipe` и
+карточку, чтобы вытащить максимум доступных данных. Добавлен экран деталей.
+
+### Сделано
+
+- **Зависимости**: добавлены `dio: ^5.7.0` и `url_launcher: ^6.3.0`. Прописано
+  разрешение `INTERNET` в `AndroidManifest.xml`.
+- **Модель `Recipe`**: удалены `duration`/`description`. Введены
+  `category`, `area`, `tags: List<String>`, `instructions`,
+  `ingredients: List<RecipeIngredient>`, `youtubeUrl?`, `sourceUrl?`. Класс
+  `RecipeIngredient { name, measure }` с `==`/`hashCode`.
+  Фабрики `Recipe.fromMealDb` (полный объект, ходит по `strIngredient1..20`/
+  `strMeasure1..20`, разбивает `strTags` по запятой) и `Recipe.fromMealDbLite`
+  (только id/name/photo для ответов `filter.php`). Геттер `isLite` —
+  определяет, нужно ли догружать детали.
+- **Слой данных**: `lib/data/api/meal_db_client.dart` — `Dio` с baseUrl и
+  таймаутами 10 сек; `lib/data/api/recipe_api.dart` — методы `searchByName`,
+  `filterByCategory/Area/Ingredient`, `lookup(id)`, `random()`.
+  `RecipeManager` и его тест удалены.
+- **`RecipeCard`**: фото 16:9 с авто-добавлением суффикса `/medium`; оверлей
+  YouTube (открывается через `url_launcher`); бейджи category/area; чипы
+  `#tag` (до 3 + `+N`); счётчик ингредиентов с русской плюрализацией. Lite
+  — только фото и название.
+- **`RecipeDetailsPage`** (новый): фото, бейджи, теги, ингредиенты с мерами,
+  инструкция, кнопки «Открыть на YouTube» и «Источник».
+- **`RecipeListPage`**: при тапе на lite-карточку догружает детали через
+  `RecipeApi.lookup(id)` и пушит детали.
+- **`RecipeListLoader`**: stateful, грузит `searchByName(query: 'a')` по
+  умолчанию, показывает progress / retry-button по ошибке.
+
+### Тесты
+
+- `recipe_test.dart` — фабрики на реальной фикстуре `lookup.php?i=52772`
+  (полный + lite, пропуск пустых ингредиентов, парсинг тегов).
+- `recipe_card_test.dart` — full и lite режимы, onTap.
+- `recipe_list_page_test.dart` — обновлены фикстуры под новые поля.
+- `recipe_api_test.dart` (новый) — мок `Dio.httpClientAdapter`, проверка
+  `searchByName`, `filterByCategory`, `lookup`.
+- Итог: `flutter analyze` — 0 issues, `flutter test` — 16/16 pass.
+
+---
+
 ## recipe_list — Splash 1:1 с Figma-прототипом
 
 **Date:** 2026-04-28

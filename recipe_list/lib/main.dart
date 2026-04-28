@@ -79,7 +79,7 @@ class _AppRootState extends State<_AppRoot>
           Positioned.fill(
             child: SlideTransition(
               position: _slide,
-              child: const RecipeListLoader(),
+              child: RecipeListLoader(),
             ),
           ),
         ],

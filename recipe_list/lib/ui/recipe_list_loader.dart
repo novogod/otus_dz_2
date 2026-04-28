@@ -1,21 +1,47 @@
 import 'package:flutter/material.dart';
 
-import '../data/recipe_manager.dart';
+import '../data/api/recipe_api.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
 import 'recipe_list_page.dart';
 
-/// Загружает список рецептов и отображает состояния loading / error / data.
-/// Тема и точка входа от него не зависят — `main.dart` остаётся коротким.
-class RecipeListLoader extends StatelessWidget {
-  final RecipeManager manager;
+/// Загружает список рецептов из TheMealDB и отображает loading / error / data.
+///
+/// По умолчанию использует `searchByName(query: 'a')` — это самый
+/// простой способ получить «много» полных рецептов одним запросом.
+class RecipeListLoader extends StatefulWidget {
+  final RecipeApi api;
+  final Future<List<Recipe>> Function(RecipeApi api)? loader;
 
-  const RecipeListLoader({super.key, this.manager = const RecipeManager()});
+  RecipeListLoader({super.key, RecipeApi? api, this.loader})
+    : api = api ?? RecipeApi();
+
+  @override
+  State<RecipeListLoader> createState() => _RecipeListLoaderState();
+}
+
+class _RecipeListLoaderState extends State<RecipeListLoader> {
+  late Future<List<Recipe>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = (widget.loader ?? _defaultLoader)(widget.api);
+  }
+
+  static Future<List<Recipe>> _defaultLoader(RecipeApi api) =>
+      api.searchByName(query: 'a');
+
+  void _retry() {
+    setState(() {
+      _future = (widget.loader ?? _defaultLoader)(widget.api);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Recipe>>(
-      future: manager.getRecipes(),
+      future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
@@ -29,16 +55,29 @@ class RecipeListLoader extends StatelessWidget {
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Text(
-                  'Ошибка загрузки: ${snapshot.error}',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.inputHint,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Ошибка загрузки: ${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.inputHint,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    FilledButton(
+                      onPressed: _retry,
+                      child: const Text('Повторить'),
+                    ),
+                  ],
                 ),
               ),
             ),
           );
         }
-        return RecipeListPage(recipes: snapshot.data ?? const []);
+        return RecipeListPage(
+          recipes: snapshot.data ?? const [],
+          api: widget.api,
+        );
       },
     );
   }

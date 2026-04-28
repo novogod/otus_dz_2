@@ -4,34 +4,58 @@ import 'package:recipe_list/models/recipe.dart';
 import 'package:recipe_list/ui/recipe_card.dart';
 
 void main() {
-  const recipe = Recipe(
+  const fullRecipe = Recipe(
     id: 1,
-    name: 'Лазанья',
-    duration: 60,
+    name: 'Teriyaki Chicken Casserole',
     photo: 'https://example.com/photo.jpg',
-    description: 'Описание',
+    category: 'Chicken',
+    area: 'Japanese',
+    tags: ['Meat', 'Casserole'],
+    instructions: 'Cook it.',
+    ingredients: [
+      RecipeIngredient(name: 'soy sauce', measure: '3/4 cup'),
+      RecipeIngredient(name: 'water', measure: '1/2 cup'),
+      RecipeIngredient(name: 'brown sugar', measure: '1/4 cup'),
+    ],
   );
 
-  Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+  const liteRecipe = Recipe(
+    id: 2,
+    name: 'Baked salmon',
+    photo: 'https://example.com/lite.jpg',
+  );
+
+  Widget wrap(Widget child) => MaterialApp(
+    home: Scaffold(body: SingleChildScrollView(child: child)),
+  );
 
   group('RecipeCard', () {
-    testWidgets('shows recipe name', (tester) async {
-      await tester.pumpWidget(wrap(const RecipeCard(recipe: recipe)));
-      expect(find.text('Лазанья'), findsOneWidget);
+    testWidgets('full recipe shows name, badges, tags and ingredient count', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(const RecipeCard(recipe: fullRecipe)));
+      expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
+      expect(find.text('Chicken'), findsOneWidget);
+      expect(find.text('Japanese'), findsOneWidget);
+      expect(find.text('#Meat'), findsOneWidget);
+      expect(find.text('#Casserole'), findsOneWidget);
+      expect(find.text('3 ингредиента'), findsOneWidget);
     });
 
-    testWidgets('shows duration in "XX мин" format', (tester) async {
-      await tester.pumpWidget(wrap(const RecipeCard(recipe: recipe)));
-      expect(find.text('60 мин'), findsOneWidget);
+    testWidgets('lite recipe shows only photo + name', (tester) async {
+      await tester.pumpWidget(wrap(const RecipeCard(recipe: liteRecipe)));
+      expect(find.text('Baked salmon'), findsOneWidget);
+      expect(find.textContaining('ингредиент'), findsNothing);
+      expect(find.text('Chicken'), findsNothing);
     });
 
     testWidgets('invokes onTap when tapped', (tester) async {
       var taps = 0;
       await tester.pumpWidget(
-        wrap(RecipeCard(recipe: recipe, onTap: () => taps++)),
+        wrap(RecipeCard(recipe: fullRecipe, onTap: () => taps++)),
       );
-      await tester.tap(find.byType(InkWell));
-      await tester.pumpAndSettle();
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle(const Duration(milliseconds: 100));
       expect(taps, 1);
     });
   });

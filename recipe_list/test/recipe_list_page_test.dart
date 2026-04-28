@@ -10,9 +10,9 @@ void main() {
       Recipe(
         id: i,
         name: 'Recipe $i',
-        duration: 10 * i,
         photo: 'https://example.com/$i.jpg',
-        description: 'desc $i',
+        category: 'Cat $i',
+        area: 'Area $i',
       ),
   ];
 
@@ -20,8 +20,6 @@ void main() {
 
   group('RecipeListPage', () {
     testWidgets('renders one RecipeCard per recipe', (tester) async {
-      // Make the surface tall enough so that lazy ListView.builder
-      // materialises all 3 cards.
       tester.view.physicalSize = const Size(800, 4000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
