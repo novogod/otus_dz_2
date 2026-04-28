@@ -1,5 +1,36 @@
 # Project Log
 
+## recipe_list — Нижний навбар (logIn-вариант)
+
+**Date:** 2026-04-29
+
+### Описание
+
+Добавлен bottom navbar по `docs/design_system.md` §6, которого не было
+в текущей реализации.
+
+### Что сделано
+
+- Новый виджет [recipe_list/lib/ui/app_bottom_nav_bar.dart](recipe_list/lib/ui/app_bottom_nav_bar.dart):
+  4 вкладки `logIn`-варианта (Рецепты / Холодильник / Избранное / Профиль),
+  высота 60 dp, белый фон, тень `AppShadows.navBar`, активная вкладка
+  `#2ECC71`, неактивные `#C2C2C2`, подписи Roboto 400/10/23, иконки 24 dp.
+- Иконки временно из Material-набора (`local_pizza_outlined`,
+  `kitchen_outlined`, `favorite_border`, `person_outline`) — SVG-ассеты
+  `assets/icons/nav/` ещё не добавлены (см. §10 design_system).
+- `RecipeListPage` теперь рендерит `AppBottomNavBar(current: recipes)`;
+  тап по неактивной вкладке показывает SnackBar «в разработке».
+- Тест `does not show a global "Рецепты" header` уточнён: теперь проверяет
+  только отсутствие `AppBar` (текст «Рецепты» легитимно приходит из
+  навбара).
+
+### Контроль качества
+
+- `flutter analyze` — 0 issues.
+- `flutter test` — 16/16 passed.
+
+---
+
 ## recipe_list — Страница рецепта по гайдлайну и чистка анализа
 
 **Date:** 2026-04-29

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
 import '../models/recipe.dart';
+import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
 import 'recipe_card.dart';
 import 'recipe_details_page.dart';
@@ -23,6 +24,7 @@ class RecipeListPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.surfaceMuted,
       body: SafeArea(
+        bottom: false,
         child: recipes.isEmpty
             ? const _EmptyState()
             : ListView.builder(
@@ -37,7 +39,23 @@ class RecipeListPage extends StatelessWidget {
                 },
               ),
       ),
+      bottomNavigationBar: AppBottomNavBar(
+        current: AppNavTab.recipes,
+        onTap: (tab) => _onNavTap(context, tab),
+      ),
     );
+  }
+
+  void _onNavTap(BuildContext context, AppNavTab tab) {
+    if (tab == AppNavTab.recipes) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Этот раздел пока в разработке'),
+          duration: Duration(seconds: 2),
+        ),
+      );
   }
 
   Future<void> _openDetails(BuildContext context, Recipe recipe) async {

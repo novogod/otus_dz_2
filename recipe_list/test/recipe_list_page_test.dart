@@ -43,7 +43,8 @@ void main() {
 
     testWidgets('does not show a global "Рецепты" header', (tester) async {
       await tester.pumpWidget(wrap(RecipeListPage(recipes: sample(2))));
-      expect(find.text('Рецепты'), findsNothing);
+      // У экрана нет AppBar — заголовок «Рецепты» приходит из bottom navbar
+      // (см. design_system §6), но не из верхней панели.
       expect(find.byType(AppBar), findsNothing);
     });
   });
