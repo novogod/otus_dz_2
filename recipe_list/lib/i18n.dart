@@ -71,6 +71,11 @@ class S {
   String get youtube => _t('YouTube', 'YouTube');
   String get source => _t('Источник', 'Source');
 
+  // Search bar.
+  String get searchHint => _t('Поиск рецепта', 'Search recipe');
+  String get searchClear => _t('Очистить', 'Clear');
+  String get searchNoMatches => _t('Совпадений не найдено', 'No matches');
+
   // Card ingredient count.
   String ingredientCount(int n) {
     if (lang == AppLang.en) return n == 1 ? '1 ingredient' : '$n ingredients';

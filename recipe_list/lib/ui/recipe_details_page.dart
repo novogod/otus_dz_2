@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
+import 'lang_icon_button.dart';
 
 /// Экран деталей рецепта. Реализует разметку из `docs/design_system.md`
 /// §9l: белый фон, hero-фото 396×220, заголовок страницы 24/#000,
@@ -34,6 +35,7 @@ class RecipeDetailsPage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
+        actions: const [LangIconButton()],
       ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: AppSpacing.xl),
@@ -240,10 +242,7 @@ class _IngredientsBlock extends StatelessWidget {
                     ),
                   ),
                   Expanded(
-                    child: Text(
-                      ing.name,
-                      style: AppTextStyles.ingredientName,
-                    ),
+                    child: Text(ing.name, style: AppTextStyles.ingredientName),
                   ),
                 ],
               ),

@@ -43,9 +43,26 @@ void main() {
 
     testWidgets('does not show a global "Рецепты" header', (tester) async {
       await tester.pumpWidget(wrap(RecipeListPage(recipes: sample(2))));
-      // У экрана нет AppBar — заголовок «Рецепты» приходит из bottom navbar
-      // (см. design_system §6), но не из верхней панели.
-      expect(find.byType(AppBar), findsNothing);
+      // У экрана есть AppBar с поиском (см. SearchAppBar), но в нём
+      // не должно быть текстового заголовка «Рецепты» — это слово
+      // зарезервировано за нижним навбаром (см. design_system §6).
+      expect(find.byType(AppBar), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Рецепты'), findsNothing);
+    });
+
+    testWidgets('search field filters list on submit', (tester) async {
+      tester.view.physicalSize = const Size(800, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(wrap(RecipeListPage(recipes: sample(3))));
+      expect(find.byType(RecipeCard), findsNWidgets(3));
+
+      await tester.enterText(find.byType(TextField), 'Recipe 2');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+      expect(find.byType(RecipeCard), findsOneWidget);
     });
   });
 }

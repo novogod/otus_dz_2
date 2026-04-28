@@ -101,10 +101,7 @@ class _Tab extends StatelessWidget {
           children: [
             Icon(icon, size: 24, color: color),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: AppTextStyles.tabLabel.copyWith(color: color),
-            ),
+            Text(label, style: AppTextStyles.tabLabel.copyWith(color: color)),
           ],
         ),
       ),

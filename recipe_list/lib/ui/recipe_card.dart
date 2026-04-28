@@ -65,9 +65,7 @@ class RecipeCard extends StatelessWidget {
                         ],
                         if (recipe.ingredients.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.sm),
-                          _IngredientCount(
-                            count: recipe.ingredients.length,
-                          ),
+                          _IngredientCount(count: recipe.ingredients.length),
                         ],
                       ],
                     ],
@@ -170,11 +168,7 @@ class _YoutubeBadge extends StatelessWidget {
         onTap: _launch,
         child: const Padding(
           padding: EdgeInsets.all(AppSpacing.sm),
-          child: Icon(
-            Icons.play_arrow,
-            color: Colors.white,
-            size: 24,
-          ),
+          child: Icon(Icons.play_arrow, color: Colors.white, size: 24),
         ),
       ),
     );
@@ -297,10 +291,7 @@ class _IngredientCount extends StatelessWidget {
           color: AppColors.primary,
         ),
         const SizedBox(width: AppSpacing.xs),
-        Text(
-          s.ingredientCount(count),
-          style: AppTextStyles.recipeMeta,
-        ),
+        Text(s.ingredientCount(count), style: AppTextStyles.recipeMeta),
       ],
     );
   }

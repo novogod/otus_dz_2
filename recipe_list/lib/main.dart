@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'i18n.dart';
 import 'ui/app_theme.dart';
-import 'ui/lang_fab.dart';
 import 'ui/recipe_list_loader.dart';
 import 'ui/splash_page.dart';
 
@@ -77,21 +76,10 @@ class _AppRootState extends State<_AppRoot>
           // Сплеш всегда внизу стека — он не двигается во время
           // перехода MOVE_IN, его лишь перекрывает поверх список.
           const Positioned.fill(child: SplashPage()),
-          // Список «въезжает» снизу, заслоняя splash.
+          // Список «въезжает» снизу, заслоняя splash. Переключатель
+          // языка живёт в его AppBar — пока splash, кнопки нет.
           Positioned.fill(
             child: SlideTransition(position: _slide, child: RecipeListLoader()),
-          ),
-          // Глобальный FAB переключения RU/EN — поверх любого экрана,
-          // в левом верхнем углу с учётом safe area.
-          const Positioned(
-            top: 0,
-            left: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(AppSpacing.md),
-                child: LangFab(),
-              ),
-            ),
           ),
         ],
       ),

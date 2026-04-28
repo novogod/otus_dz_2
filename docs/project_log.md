@@ -1,5 +1,52 @@
 # Project Log
 
+## recipe_list — Search AppBar и language toggle в шапке
+
+**Date:** 2026-04-29
+
+### Описание
+
+Заменили глобальный `LangFab` на полноценный AppBar у списка рецептов.
+Шапка содержит back-кнопку слева, поле поиска с выпадающими подсказками
+по центру и круглый переключатель `RU` / `EN` справа. На splash-экране
+AppBar нет, поэтому переключатель языка появляется ровно после анимации
+перехода с splash на список — раньше FAB был виден поверх splash.
+
+### Что сделано
+
+- Удалён [recipe_list/lib/ui/lang_fab.dart](recipe_list/lib/ui/lang_fab.dart)
+  и `Positioned`-обёртка в `main.dart`.
+- Новый
+  [recipe_list/lib/ui/lang_icon_button.dart](recipe_list/lib/ui/lang_icon_button.dart):
+  40×40 круг, `AppColors.primary`, текст Roboto 800/14 белым, для
+  `AppBar.actions`.
+- Новый
+  [recipe_list/lib/ui/search_app_bar.dart](recipe_list/lib/ui/search_app_bar.dart):
+  `SearchAppBar` (`PreferredSizeWidget`) — leading back, title `TextField`
+  с иконкой 🔍 и кнопкой ✕, actions `LangIconButton`. Дополнительно
+  `SearchPredictions` — `Material(elevation: 4)` dropdown под шапкой с
+  топ-5 совпадений, fallback `S.searchNoMatches`.
+- [recipe_list/lib/ui/recipe_list_page.dart](recipe_list/lib/ui/recipe_list_page.dart)
+  переведён на `StatefulWidget`. Локальный фильтр по `recipe.name`,
+  debounce 250 мс на live-подсказки, submit (Enter / IME search) или тап
+  по подсказке применяют фильтр / открывают экран деталей.
+- В [recipe_list/lib/ui/recipe_details_page.dart](recipe_list/lib/ui/recipe_details_page.dart)
+  добавлен `LangIconButton` в `actions`. Back-кнопка приходит из
+  `AppBar.automaticallyImplyLeading`.
+- Расширен `S`: `searchHint`, `searchClear`, `searchNoMatches`.
+- Документ
+  [docs/search_appbar.md](docs/search_appbar.md) описывает компоненты,
+  состояние, поведение и направления развития (remote-предсказания,
+  история поиска, переход на Material 3 `SearchAnchor`).
+
+### Проверки
+
+- `flutter analyze` — 0 issues.
+- `flutter test` — 17/17 passed (новый кейс «search field filters list
+  on submit»).
+
+---
+
 ## recipe_list — Переключатель языка RU/EN + предложение по live-переводам
 
 **Date:** 2026-04-29
