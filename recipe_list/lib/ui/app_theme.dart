@@ -33,6 +33,10 @@ class AppColors {
   /// Основной текст (название рецепта, заголовки).
   static const Color textPrimary = Color(0xFF000000);
 
+  /// Вторичный текст (количества ингредиентов, обводка ингредиент-блока,
+  /// тело неактивного шага). Figma `#797676`.
+  static const Color textSecondary = Color(0xFF797676);
+
   /// Неактивный текст / плейсхолдеры / неактивный таб навбара.
   static const Color textInactive = Color(0xFFC2C2C2);
 
@@ -129,6 +133,43 @@ class AppTextStyles {
     fontSize: 22,
     height: 1.0,
     color: AppColors.textPrimary,
+  );
+
+  /// Заголовок страницы рецепта (Figma 24/22 #000).
+  static const TextStyle pageTitle = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w500,
+    fontSize: 24,
+    height: 22 / 24,
+    color: AppColors.textPrimary,
+  );
+
+  /// Подзаголовок секции на странице рецепта («Ингредиенты»,
+  /// «Шаги приготовления»). Figma 16/23 #165932.
+  static const TextStyle sectionTitle = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w500,
+    fontSize: 16,
+    height: 23 / 16,
+    color: AppColors.primaryDark,
+  );
+
+  /// Название ингредиента в блоке ингредиентов.
+  static const TextStyle ingredientName = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w500,
+    fontSize: 14,
+    height: 27 / 14,
+    color: AppColors.textPrimary,
+  );
+
+  /// Количество в блоке ингредиентов.
+  static const TextStyle ingredientQty = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w400,
+    fontSize: 13,
+    height: 27 / 13,
+    color: AppColors.textSecondary,
   );
 
   /// Длительность рецепта в карточке.
