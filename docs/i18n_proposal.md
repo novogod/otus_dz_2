@@ -1,91 +1,298 @@
-# i18n & Live Translation Proposal
+# i18n & Recipe Sync Proposal
 
-Status: **proposal** (not implemented yet — only the offline RU/EN switcher is live, see `lib/i18n.dart` and `lib/ui/lang_fab.dart`).
+Status: **proposal**. Today only the offline RU/EN switcher is live —
+see `lib/i18n.dart`, `lib/ui/lang_icon_button.dart` (language toggle in
+the AppBar), and `lib/ui/search_app_bar.dart` (search field with
+predictions). This document describes what we add next.
 
-## 1. What is already done
+> Note on terminology: there is no library called "Libramentum" in the
+> Flutter ecosystem. The first-party localization stack is
+> `flutter_localizations` + `intl` with the `gen-l10n` code generator
+> (ARB files → `AppLocalizations` class). That's what we use below.
 
-* `AppLang { ru, en }` enum + global `ValueNotifier<AppLang> appLang` in `lib/i18n.dart`.
-* `AppLangScope` widget wraps the root subtree in `MaterialApp.home`, so toggling language rebuilds the whole app.
-* `S.of(context)` returns a const string bag for the current language. All visible strings in the app (navbar, snackbars, list/empty/error states, details page, ingredient pluralization) are routed through `S`.
-* `LangFab` — a 56×56 dp circular FAB with `AppColors.primary` (`#2ECC71`) background and white Roboto-900 / 18 sp `RU` / `EN` label, pinned to the top-left corner of the root `Stack` (`main.dart`) so it floats above every screen. Tap → `cycleAppLang()`.
+## 1. Goals
 
-This covers **static UI strings**. It does **not** translate dynamic recipe content fetched from TheMealDB (recipe name, category, area, instructions, tags, ingredient names) — TheMealDB returns those mostly in English, plus some non-Latin meals in their native language. Live translation is the next step.
+1. Every visible string — static UI **and** dynamic recipe content
+   (name, category, area, tags, ingredients, instructions) — is shown
+   in English or Russian, switched by the AppBar `RU` / `EN` button.
+2. Only one translation provider, reused from `mahallem_ist`: Google
+   Gemini via the existing `GEMINI_API_KEY`.
+3. Phone-side storage for recipes is a small, capped MongoDB-backed
+   cache — both as a "buffer" so we don't translate the same recipe
+   twice, and as the source of the list / details / images while
+   online or offline.
+4. The phone always shows the freshest data when connected. If the
+   user searches for something not yet cached, it is fetched from the
+   server and added to the cache (evicting the oldest entries).
 
-## 2. Live translation strategy
+## 2. What is already done
 
-The `mahallem_ist` project (`/Volumes/Working_MacOS_Extended/mahallem/mahallem_ist/local_docker_admin_backend/.env`) already has a working `GEMINI_API_KEY` provisioned for Google's Gemini API. We reuse the same key, **never embedding it in the Flutter client**.
+* `AppLang { ru, en }` enum + global `ValueNotifier<AppLang>` in
+  `lib/i18n.dart`.
+* `AppLangScope` wraps the root subtree under `MaterialApp.home`, so
+  toggling rebuilds the whole UI.
+* `S.of(context)` returns a const string bag for the current language.
+  All visible **static** strings (navbar, snackbars, list/empty/error
+  states, details headers, ingredient pluralization, search hints) go
+  through `S`.
+* The language toggle is `LangIconButton` in `AppBar.actions`. It is
+  **not** shown on the splash screen — splash has no AppBar.
 
-### 2.1 Provider: Google Gemini (`gemini-1.5-flash`)
+This covers static UI. It does **not** translate dynamic recipe
+content from TheMealDB. Sections 3–6 below address that.
 
-* Endpoint: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GEMINI_API_KEY`.
-* Prompt template:
-  ```
-  Translate the following short text from {sourceLang} to {targetLang}.
-  Preserve cooking jargon. Output translation only, no quotes, no commentary.
-  Text: """{text}"""
-  ```
-* Why Gemini and not Google Translate / DeepL: the only translation-capable key already provisioned in `mahallem_ist` is for Gemini. No new API contracts, no extra billing setup. Quality on cooking-domain text is on par with DeepL for `ru`↔`en`.
+## 3. Static strings — `flutter_localizations` + `gen-l10n`
 
-### 2.2 Architecture: thin proxy, **never the raw key in the app**
+The hand-rolled `S` class is fine for ~20 keys but doesn't scale. The
+target structure once the recipe sync is in place:
 
 ```
-Flutter app  ──HTTPS──>  /translate (our proxy)  ──HTTPS──>  Gemini API
-                                  ▲
-                         GEMINI_API_KEY (server-side only)
+recipe_list/
+  l10n.yaml
+  lib/l10n/
+    app_en.arb
+    app_ru.arb
+    (generated) app_localizations.dart
 ```
 
-**Reason — OWASP A02 (Cryptographic Failures) / A07 (Identification & Authentication).** Bundling the Gemini key into a release APK/IPA exposes it to anyone who unzips the bundle. A malicious actor would burn through the quota and the bill. The key MUST stay on a server we control. The proxy:
+* `MaterialApp.localizationsDelegates: AppLocalizations.localizationsDelegates`
+* `MaterialApp.supportedLocales: AppLocalizations.supportedLocales`
+* `MaterialApp.locale` is driven by the `AppLang` notifier — the
+  toggle still cycles `RU` ↔ `EN`, but it now flips
+  `Locale('ru')` ↔ `Locale('en')` and the standard
+  `AppLocalizations.of(context)` resolves the strings.
+* `S.of(context)` becomes a thin wrapper over `AppLocalizations` so
+  every existing call site (`s.tabRecipes`, `s.searchHint`, …)
+  continues to compile. The migration is mechanical.
 
-1. accepts `POST /translate` with `{ text, from, to }` (and optionally an idempotency hash);
-2. injects the key from env (`process.env.GEMINI_API_KEY`);
-3. forwards to Gemini and returns the translated string;
-4. enforces auth (e.g. Firebase ID token or a signed app-attestation token), per-IP rate limit, and request-size cap.
+Pluralization (`s.ingredientCount`) moves into ARB plural syntax:
+```
+"ingredientCount": "{count, plural, one{{count} ingredient} other{{count} ingredients}}"
+```
+RU has the four-form rule (`one` / `few` / `many` / `other`) handled
+natively by `intl`.
 
-For local development only, `--dart-define=GEMINI_API_KEY=...` may be used while we don't yet have the proxy. This MUST NOT ship to release builds.
+## 4. Dynamic content — Gemini, server-side only
 
-### 2.3 Client-side caching
+We reuse the `GEMINI_API_KEY` already provisioned in
+`/Volumes/Working_MacOS_Extended/mahallem/mahallem_ist/local_docker_admin_backend/.env`.
+**The key never reaches the Flutter binary.** That is OWASP A02
+(Cryptographic Failures) / A07 (Authentication Failures): a key
+shipped in an APK/IPA can be extracted by anyone who unzips the
+bundle and used until the quota is exhausted at our expense.
 
-Translating ~20 ingredients × N recipes per scroll session is wasteful. Cache by `sha256(sourceText + '|' + targetLang)`:
+```
+   Flutter app
+       │  HTTPS
+       ▼
+   Recipes API   ──Gemini API── (translation)
+   (Node, in
+    mahallem_ist
+    docker stack)
+       │
+       ▼
+   MongoDB (recipes + translations)
+       ▲
+       │  scheduled refresh
+   TheMealDB (upstream)
+```
 
-* in-memory `LinkedHashMap<String, String>` (LRU, cap 1000) for the session;
-* persistent layer: `shared_preferences` or `hive` keyed by the same hash, with a TTL of 30 days.
+The same Node service that already holds `GEMINI_API_KEY` exposes a
+new namespace `/recipes/*`. Endpoints (Section 5).
 
-Cache hit ratio ≥ 80 % is realistic since ingredient names repeat heavily.
+### 4.1 Provider: `gemini-1.5-flash`
 
-### 2.4 Batching
+* Endpoint:
+  `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$GEMINI_API_KEY`
+* Prompt is **batched** per recipe — name, category, area, tags,
+  ingredient names, and instructions are sent as one numbered list
+  and parsed back. Roughly 25 fields → 1 round-trip.
+* Why Gemini over Google Translate / DeepL: the only translation-
+  capable key already provisioned is for Gemini. No new contracts.
+  Quality on cooking text is on par with DeepL for `ru`↔`en`.
 
-Gemini's request quota is per-call, not per-token, and round-trips dominate latency. For each recipe build:
-
-* collect all uncached strings (name, category, area, tags, ingredients\*, instructions);
-* serialize into a single prompt with numbered lines;
-* parse the numbered response back.
-
-That collapses ~25 calls per recipe into 1.
-
-### 2.5 What to translate, what NOT to translate
+### 4.2 What to translate, what not
 
 | Field | Translate? | Notes |
 | --- | --- | --- |
-| `recipe.name` | yes | Source is usually English; Russians want it in RU. |
-| `recipe.category`, `recipe.area` | yes | Short, very cacheable. |
-| `recipe.tags` | yes | Same. |
-| `recipe.ingredients[].name` | yes | Highest cache reuse. |
-| `recipe.ingredients[].measure` | **no** | Numeric + unit; risk of misformatting outweighs benefit. |
-| `recipe.instructions` | yes | Long; translate only when details page opens, not in list. |
-| `recipe.youtubeUrl`, `recipe.sourceUrl`, `recipe.imageUrl` | no | URLs. |
+| `name`, `category`, `area`, `tags`, `ingredients[].name`, `instructions` | yes | Stored bilingually. |
+| `ingredients[].measure` | no | "1 cup", "200 g" — formatting risk outweighs benefit. |
+| `youtubeUrl`, `sourceUrl`, `imageUrl` | no | URLs. |
 
-### 2.6 Failure modes
+### 4.3 Failure modes
 
-* Network error / 5xx → fall back to original English text and surface a small "translation unavailable" hint (no exception bubble-up).
-* Rate-limit (429) → exponential backoff in the proxy; client treats it like a transient network error.
-* Wrong-language detection (Gemini sometimes echoes the source) → cheap heuristic: if output equals input, log + retry once with a stricter prompt.
+* Network error / 5xx → fall back to source language; show a small
+  "translation unavailable" hint, never crash.
+* 429 → exponential backoff on the server; client treats it as a
+  transient network error.
+* Echo bug (Gemini sometimes returns the source unchanged) → cheap
+  heuristic: if output equals input, retry once with a stricter
+  prompt.
 
-## 3. Migration of static strings
+## 5. MongoDB as the recipe buffer
 
-Once the proxy exists, static UI strings should move from `S` (hand-rolled map) to standard Flutter `gen-l10n` ARB files. `S` will then expose the same getters (`s.tabRecipes`, etc.) backed by generated `AppLocalizations`. The `AppLang` toggle becomes a wrapper that flips `MaterialApp.locale`. The migration is mechanical because every call site already uses `S.of(context).<getter>`.
+MongoDB lives in the `mahallem_ist` docker stack. The phone never
+talks to MongoDB directly — only through the Node API.
 
-## 4. Open questions
+### 5.1 Collection `recipes`
 
-1. **Where does the proxy live?** Existing `mahallem_ist` Docker stack already has Node/Express services; the cheapest path is to add a `/translate` route there next to whatever consumes `GEMINI_API_KEY` today. Confirm with the mahallem_ist owner before reusing the deployment.
-2. **Auth on the proxy.** If recipe_list has no user accounts yet, a minimum viable defense is App Check / Play Integrity API to gate the endpoint to our app builds.
-3. **Cost ceiling.** Gemini Flash is cheap (~$0.075 per 1M input tokens at the time of writing) but unlimited client-driven translation can still spike. Set a daily/monthly cap in the proxy and degrade to English on cap.
+```js
+{
+  _id: 52772,                       // TheMealDB idMeal
+  source: "themealdb",
+  imageUrl: "https://www.themealdb.com/images/media/meals/.../<id>.jpg",
+  thumbUrl: "<imageUrl>/medium",
+  youtubeUrl: "...",
+  sourceUrl: "...",
+  // bilingual payload
+  i18n: {
+    en: {
+      name, category, area, tags: [...],
+      ingredients: [{ name, measure }, ...],
+      instructions
+    },
+    ru: { /* same shape, translated */ }
+  },
+  // bookkeeping
+  fetchedAt: ISODate,               // when we pulled from TheMealDB
+  translatedAt: ISODate,            // when ru side was filled
+  popularity: 0,                    // tap count (optional)
+  contentHash: "<sha256 of english payload>"
+}
+```
+
+* Indexes: `{ _id: 1 }` (default), `{ "i18n.en.name": "text", "i18n.ru.name": "text" }`,
+  `{ fetchedAt: -1 }`.
+* `contentHash` lets us detect when TheMealDB updated a recipe and
+  re-translate only the changed fields.
+* Server-side cap: keep at most **2 000** recipes in MongoDB. When
+  the cap is exceeded, drop the lowest-popularity / oldest-fetched
+  entries.
+
+### 5.2 Server endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/recipes?lang=ru&since=<iso>&limit=200` | Returns recipes updated after `since`, oldest-first, capped at `limit`. Used by the phone for incremental sync. |
+| `GET` | `/recipes/:id?lang=ru` | Single recipe details, including image URLs, in the requested language. If missing in MongoDB, the server pulls from TheMealDB, translates, persists, then responds. |
+| `GET` | `/recipes/search?q=...&lang=ru&limit=20` | Server-side text search over `i18n.<lang>.name`. On miss falls back to `TheMealDB /search.php?s=q`, then translates and persists each hit. |
+| `GET` | `/health` | Liveness. |
+
+All endpoints are protected by the same auth the rest of the
+mahallem_ist stack uses (App Check / signed app-attestation token).
+Per-IP rate limit + body-size cap stay in front.
+
+### 5.3 Server background jobs
+
+* **Hourly**: pull random recipes from `TheMealDB /random.php` to
+  keep the cache fresh; translate; insert/update.
+* **Daily**: re-validate top-popular recipes (`HEAD` against
+  TheMealDB if available; otherwise re-`lookup`) and refresh if
+  `contentHash` changed.
+
+## 6. Phone-side storage — capped local mirror
+
+The phone keeps **at most 200 recipes** locally so the list and
+details work offline and the language toggle is instant.
+
+### 6.1 Local store: Drift (SQLite)
+
+| Engine | Why | Why not |
+| --- | --- | --- |
+| **Drift / sqflite** ✅ | Full text index, range queries, well-known on Flutter, supports both iOS and Android. | A bit more boilerplate than Hive. |
+| Hive / Isar | Faster for pure key-value. | Weaker query story; `isar` ships native libs that complicate the build. |
+| MongoDB Realm | Direct MongoDB sync would be ideal. | Pulls in Realm SDK, ties us to Atlas pricing, and the key is then on the phone — same A02 problem we're avoiding. |
+
+We wrap Drift behind `RecipeRepository` so the upper layers don't see
+the engine. If we ever switch to Realm Sync, only the repository is
+touched.
+
+### 6.2 Eviction policy
+
+* Capacity: `kMaxLocalRecipes = 200` (rough envelope: 200 docs ×
+  ~6 KB JSON + image URLs only ≈ 1.5 MB; images stay in the OS-level
+  HTTP cache, not in SQLite).
+* Order: LRU by `lastSeenAt` (updated every time the user opens the
+  recipe in the list). Ties broken by `fetchedAt` ascending.
+
+### 6.3 Sync algorithm
+
+```
+on app start (and every 15 minutes while in foreground):
+  if !online: return
+  let since = max(localFetchedAt, now - 30d)
+  GET /recipes?lang=<currentLang>&since=since&limit=200
+  upsert each into local store
+  enforce kMaxLocalRecipes (drop LRU)
+```
+
+* `since` makes the response payload tiny on the steady state.
+* The phone always asks in the **current** language; the OTHER
+  language is fetched lazily when the user toggles. (Alternative:
+  always fetch both — costs ~2× bytes but avoids the toggle latency
+  spike. Pick once we have telemetry.)
+
+### 6.4 Search flow
+
+```
+user types "arrabiata":
+  1. Local prefix/contains match in current lang  → instant predictions
+  2. On submit (or after 250 ms debounce w/ no local hits):
+     GET /recipes/search?q=arrabiata&lang=ru
+  3. Upsert returned recipes locally; show in the list
+```
+
+Local results win the race — server search is only consulted when
+local has fewer than 5 matches, so we don't burn bandwidth on every
+keystroke.
+
+### 6.5 Details flow
+
+```
+user taps a card:
+  1. If local doc has full body in current lang → render
+  2. Else (lite or wrong lang or stale):
+     GET /recipes/:id?lang=<currentLang>
+     upsert locally, render
+```
+
+## 7. Pictures
+
+Images stay on TheMealDB CDN. We store **only the URL** in MongoDB
+and on the phone. The phone uses `cached_network_image` so the
+binary itself is in the platform HTTP cache — no need to push JPEGs
+through MongoDB. If we ever go offline-first for images too, we add
+a worker that downloads `/medium` thumbnails into app docs and
+swaps `imageUrl` → `file://...` in the local row.
+
+## 8. Migration plan
+
+1. **Static i18n** — introduce `flutter_localizations`, move `S` over
+   to ARB. No backend dependency. Ships first.
+2. **Server `/recipes` API** in mahallem_ist — minimal `GET /recipes`
+   and `GET /recipes/:id`, MongoDB upsert, Gemini translation. No
+   client changes yet; verify with curl.
+3. **Phone `RecipeRepository`** with Drift + LRU. Replace direct
+   `RecipeApi` calls in `RecipeListLoader` and details navigation.
+   TheMealDB code stays as a fallback during cutover, then is
+   removed.
+4. **Search** — point `SearchAppBar` predictions at the repository
+   first, server next.
+5. **Background sync** — `WorkManager` (Android) + BGProcessing task
+   (iOS) every 15 min while app is active; foreground refresh on
+   `AppLifecycleState.resumed` if `online`.
+
+## 9. Open questions
+
+1. **Auth on the new endpoints.** `recipe_list` has no user accounts.
+   Minimum viable: App Check / Play Integrity gating per app build.
+2. **Cost ceiling.** Gemini Flash is cheap (~$0.075 per 1M input
+   tokens at time of writing) but daily caps must exist server-side;
+   on cap, return source language only.
+3. **MongoDB hosting.** Reuse the existing mahallem_ist MongoDB
+   instance vs. a dedicated database for recipes. Probably the
+   former under `db: recipes`.
+4. **Both-languages-or-one.** Either translate on demand
+   per-language (cheaper, slower toggle) or always store both
+   (instant toggle, ~2× translation cost). Decide after first week
+   of telemetry.
