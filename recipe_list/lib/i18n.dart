@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 
+import 'i18n/strings.g.dart';
+
 /// Поддерживаемые языки UI. Совпадают с языками платформы
 /// mahallem_ist (см. `routes/post-job.js` — `phrase_<code>` в БД):
 /// `ru, en, es, fr, de, it, tr, ar, fa, ku`. На каждый язык есть
 /// SVG-флаг в `assets/flags/<flag>.svg` (10 файлов, скопированных
 /// из `mahallem_flutter/assets/pictures/flags`).
 enum AppLang {
-  ru('RU', 'ru'),
-  en('EN', 'us'),
-  es('ES', 'es'),
-  fr('FR', 'fr'),
-  de('DE', 'de'),
-  it('IT', 'it'),
-  tr('TR', 'tr'),
-  ar('AR', 'sa'),
-  fa('FA', 'ir'),
-  ku('KU', 'iq');
+  ru('RU', 'ru', AppLocale.ru),
+  en('EN', 'us', AppLocale.en),
+  es('ES', 'es', AppLocale.es),
+  fr('FR', 'fr', AppLocale.fr),
+  de('DE', 'de', AppLocale.de),
+  it('IT', 'it', AppLocale.it),
+  tr('TR', 'tr', AppLocale.tr),
+  ar('AR', 'sa', AppLocale.ar),
+  fa('FA', 'ir', AppLocale.fa),
+  ku('KU', 'iq', AppLocale.ku);
 
   /// Подпись на круглой кнопке (двухбуквенный лейбл).
   final String label;
@@ -23,15 +25,19 @@ enum AppLang {
   /// Имя SVG-флага без расширения (`assets/flags/<flag>.svg`).
   final String flag;
 
-  const AppLang(this.label, this.flag);
+  /// Соответствующий AppLocale из сгенерированного slang-каталога.
+  final AppLocale locale;
+
+  const AppLang(this.label, this.flag, this.locale);
 
   String get flagAsset => 'assets/flags/$flag.svg';
+
+  /// RTL-направление текста для арабского, фарси и курдского.
+  bool get isRtl =>
+      this == AppLang.ar || this == AppLang.fa || this == AppLang.ku;
 }
 
-/// Глобальное хранилище текущего языка. Простейшее решение: один
-/// `ValueNotifier`, на который подписываемся через
-/// [AppLangScope]. В дальнейшем заменяется на `Riverpod`/`Bloc`,
-/// либо на стандартный `Localizations` из Flutter.
+/// Глобальное хранилище текущего языка.
 final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.ru);
 
 /// Переключает текущий язык на следующий из [AppLang].
@@ -41,8 +47,23 @@ void cycleAppLang() {
   appLang.value = next;
 }
 
-/// Подписывает поддерево на изменение `appLang` — после каждого тапа FAB
-/// весь UI ниже [AppLangScope] перестроится.
+/// Связывает [appLang] с slang's [LocaleSettings]. Вызывать один раз
+/// в `main()` — после этого каждое изменение `appLang.value`
+/// автоматически перенастраивает текущий локаль slang, и все
+/// `Translations.of(context)` ниже `TranslationProvider` обновляются.
+bool _listenerInstalled = false;
+void initI18n() {
+  if (_listenerInstalled) return;
+  _listenerInstalled = true;
+  LocaleSettings.setLocaleSync(appLang.value.locale);
+  appLang.addListener(() {
+    LocaleSettings.setLocaleSync(appLang.value.locale);
+  });
+}
+
+/// Подписывает поддерево на изменение `appLang` — после каждого тапа
+/// языковой кнопки весь UI ниже [AppLangScope] перестроится и при
+/// необходимости получит RTL-направление.
 class AppLangScope extends StatelessWidget {
   final Widget child;
 
@@ -52,90 +73,80 @@ class AppLangScope extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<AppLang>(
       valueListenable: appLang,
-      builder: (context, _, _) => child,
+      builder: (context, value, _) {
+        if (value.isRtl) {
+          return Directionality(textDirection: TextDirection.rtl, child: child);
+        }
+        return child;
+      },
     );
   }
 }
 
-/// Жёстко зашитые переводы. Список ключей — все строки, которые сейчас
-/// показываются пользователю в `recipe_list`. При расширении словарь
-/// растёт; см. [docs/i18n_proposal.md] про живые переводы через Gemini.
+/// Тонкая обёртка над сгенерированными slang-переводами. Сохраняет
+/// прежний API `S.of(context).foo`, чтобы не менять call sites.
 @immutable
 class S {
-  const S._(this.lang);
+  const S._(this._t);
 
-  final AppLang lang;
+  final Translations _t;
 
   static S of(BuildContext context) {
-    // Подписываемся явно — этого достаточно, потому что вверху дерева
-    // всегда стоит [AppLangScope].
-    return S._(appLang.value);
+    initI18n(); // идемпотентно; гарантирует синхронизацию appLang→slang
+    try {
+      return S._(Translations.of(context));
+    } catch (_) {
+      return S._(t);
+    }
   }
 
-  String _t(String ru, String en) => lang == AppLang.ru ? ru : en;
+  // App chrome.
+  String get appTitle => _t.appTitle;
+  String get back => _t.back;
+  String get dismiss => _t.dismiss;
 
   // Bottom navbar.
-  String get tabRecipes => _t('Рецепты', 'Recipes');
-  String get tabFridge => _t('Холодильник', 'Fridge');
-  String get tabFavorites => _t('Избранное', 'Favorites');
-  String get tabProfile => _t('Профиль', 'Profile');
-  String get tabComingSoon =>
-      _t('Этот раздел пока в разработке', 'This section is coming soon');
+  String get tabRecipes => _t.tabRecipes;
+  String get tabFridge => _t.tabFridge;
+  String get tabFavorites => _t.tabFavorites;
+  String get tabProfile => _t.tabProfile;
+  String get tabComingSoon => _t.tabComingSoon;
 
   // List page.
-  String get emptyList => _t('Нет рецептов', 'No recipes');
-  String loadError(Object error) =>
-      _t('Ошибка загрузки: $error', 'Failed to load: $error');
-  String get retry => _t('Повторить', 'Retry');
-  String get offlineNotice => _t(
-    'Нет связи с сервером — показываем сохранённое.',
-    'No connection — showing cached recipes.',
-  );
+  String get emptyList => _t.emptyList;
+  String loadError(Object error) => _t.loadError(error: error);
+  String get retry => _t.retry;
+  String get offlineNotice => _t.offlineNotice;
 
   // Preload / loading screen.
-  String get loadingTitle =>
-      _t('Готовим коллекцию рецептов', 'Preparing recipe collection');
-  String loadingStage(String category, int done, int total) => _t(
-    'Загружаем «$category» ($done/$total категорий)…',
-    'Loading "$category" ($done/$total categories)…',
-  );
-  String loadingProgress(int loaded, int target) => _t(
-    'Получено $loaded из $target рецептов',
-    'Loaded $loaded of $target recipes',
-  );
-  String get loadingFromCache =>
-      _t('Открываем сохранённые рецепты…', 'Opening cached recipes…');
-  String get emptyHint => _t(
-    'Сервер не вернул рецептов. Проверьте подключение и нажмите «Повторить».',
-    'The server returned no recipes. Check your connection and tap "Retry".',
-  );
+  String get loadingTitle => _t.loadingTitle;
+  String loadingStage(String category, int done, int total) =>
+      _t.loadingStage(category: category, done: done, total: total);
+  String loadingProgress(int loaded, int target) =>
+      _t.loadingProgress(loaded: loaded, target: target);
+  String get loadingFromCache => _t.loadingFromCache;
+  String get emptyHint => _t.emptyHint;
 
   // Details page.
-  String get recipeTitle => _t('Рецепт', 'Recipe');
-  String get ingredientsHeader => _t('Ингредиенты', 'Ingredients');
-  String get instructionsHeader => _t('Инструкция', 'Instructions');
-  String get youtube => _t('YouTube', 'YouTube');
-  String get source => _t('Источник', 'Source');
+  String get recipeTitle => _t.recipeTitle;
+  String get ingredientsHeader => _t.ingredientsHeader;
+  String get instructionsHeader => _t.instructionsHeader;
+  String get youtube => _t.youtube;
+  String get source => _t.source;
 
   // Search bar.
-  String get searchHint => _t('Поиск рецепта', 'Search recipe');
-  String get searchClear => _t('Очистить', 'Clear');
-  String get searchNoMatches => _t('Совпадений не найдено', 'No matches');
+  String get searchHint => _t.searchHint;
+  String get searchClear => _t.searchClear;
+  String get searchNoMatches => _t.searchNoMatches;
 
-  // Card ingredient count.
-  String ingredientCount(int n) {
-    if (lang == AppLang.ru) {
-      final mod10 = n % 10;
-      final mod100 = n % 100;
-      if (mod10 == 1 && mod100 != 11) return '$n ингредиент';
-      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-        return '$n ингредиента';
-      }
-      return '$n ингредиентов';
-    }
-    return n == 1 ? '1 ingredient' : '$n ingredients';
-  }
+  // Card ingredient count (CLDR plural).
+  String ingredientCount(int n) => _t.ingredientCount(n: n);
 
-  // FAB label.
-  String get langLabel => lang.label;
+  // Accessibility labels.
+  String switchLanguageTo(String label) =>
+      _t.a11y.switchLanguageTo(label: label);
+  String flagOf(String label) => _t.a11y.flagOf(label: label);
+
+  // FAB label — derives from current AppLang, not from translations.
+  String get langLabel => appLang.value.label;
 }

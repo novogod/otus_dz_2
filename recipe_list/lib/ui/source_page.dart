@@ -87,7 +87,7 @@ class _SourcePageState extends State<SourcePage> {
         foregroundColor: AppColors.primaryDark,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: s.back,
           icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
           onPressed: () => Navigator.of(context).maybePop(),
         ),

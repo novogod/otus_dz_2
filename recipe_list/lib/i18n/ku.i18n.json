@@ -1,0 +1,35 @@
+{
+  "appTitle": "Otus Food",
+  "back": "گەڕانەوە",
+  "dismiss": "ڕەتکردنەوە",
+  "tabRecipes": "ڕێچەتەکان",
+  "tabFridge": "بەفرگر",
+  "tabFavorites": "دڵخوازەکان",
+  "tabProfile": "پڕۆفایل",
+  "tabComingSoon": "ئەم بەشە بەم زووانە بەردەست دەبێت",
+  "emptyList": "هیچ ڕێچەتەیەک نییە",
+  "loadError": "شکستی هێنا لە بارکردن: ${error}",
+  "retry": "دووبارە هەوڵبدەوە",
+  "offlineNotice": "هیچ پەیوەندییەک نییە — ڕێچەتە پاشەکەوتکراوەکان نیشان دەدرێن.",
+  "loadingTitle": "ئامادەکردنی کۆمەڵەی ڕێچەتەکان",
+  "loadingStage": "بارکردنی \"${category}\" (${done}/${total} پۆل)…",
+  "loadingProgress": "${loaded} لە ${target} ڕێچەتە بارکرا",
+  "loadingFromCache": "کردنەوەی ڕێچەتە پاشەکەوتکراوەکان…",
+  "emptyHint": "سێرڤەر هیچ ڕێچەتەیەکی نەگەڕاندەوە. پەیوەندییەکەت بپشکنە و کرتە لەسەر \"دووبارە هەوڵبدەوە\" بکە.",
+  "recipeTitle": "ڕێچەتە",
+  "ingredientsHeader": "پێکهاتەکان",
+  "instructionsHeader": "ڕێنماییەکان",
+  "youtube": "YouTube",
+  "source": "سەرچاوە",
+  "searchHint": "گەڕان بەدوای ڕێچەتە",
+  "searchClear": "پاککردنەوە",
+  "searchNoMatches": "هیچ گونجاوێک نییە",
+  "ingredientCount": {
+    "one": "${n} پێکهاتە",
+    "other": "${n} پێکهاتە"
+  },
+  "a11y": {
+    "switchLanguageTo": "گۆڕینی زمان بۆ ${label}",
+    "flagOf": "ئاڵای ${label}"
+  }
+}

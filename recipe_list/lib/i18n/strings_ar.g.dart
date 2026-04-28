@@ -1,0 +1,126 @@
+///
+/// Generated file. Do not edit.
+///
+// coverage:ignore-file
+// ignore_for_file: type=lint, unused_import
+// dart format off
+
+import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
+import 'package:slang/generated.dart';
+import 'strings.g.dart';
+
+// Path: <root>
+class TranslationsAr with BaseTranslations<AppLocale, Translations> implements Translations {
+	/// You can call this constructor and build your own translation instance of this locale.
+	/// Constructing via the enum [AppLocale.build] is preferred.
+	TranslationsAr({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver, TranslationMetadata<AppLocale, Translations>? meta})
+		: assert(overrides == null, 'Set "translation_overrides: true" in order to enable this feature.'),
+		  $meta = meta ?? TranslationMetadata(
+		    locale: AppLocale.ar,
+		    overrides: overrides ?? {},
+		    cardinalResolver: cardinalResolver,
+		    ordinalResolver: ordinalResolver,
+		  ) {
+		$meta.setFlatMapFunction(_flatMapFunction);
+	}
+
+	/// Metadata for the translations of <ar>.
+	@override final TranslationMetadata<AppLocale, Translations> $meta;
+
+	/// Access flat map
+	@override dynamic operator[](String key) => $meta.getTranslation(key);
+
+	late final TranslationsAr _root = this; // ignore: unused_field
+
+	@override 
+	TranslationsAr $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsAr(meta: meta ?? this.$meta);
+
+	// Translations
+	@override String get appTitle => 'Otus Food';
+	@override String get back => 'رجوع';
+	@override String get dismiss => 'إغلاق';
+	@override String get tabRecipes => 'وصفات';
+	@override String get tabFridge => 'ثلاجة';
+	@override String get tabFavorites => 'المفضلة';
+	@override String get tabProfile => 'الملف الشخصي';
+	@override String get tabComingSoon => 'هذا القسم قادم قريباً';
+	@override String get emptyList => 'لا توجد وصفات';
+	@override String loadError({required Object error}) => 'فشل التحميل: ${error}';
+	@override String get retry => 'إعادة المحاولة';
+	@override String get offlineNotice => 'لا يوجد اتصال — يتم عرض الوصفات المخزنة مؤقتاً.';
+	@override String get loadingTitle => 'جارٍ إعداد مجموعة الوصفات';
+	@override String loadingStage({required Object category, required Object done, required Object total}) => 'جارٍ تحميل "${category}" (${done}/${total} فئات)…';
+	@override String loadingProgress({required Object loaded, required Object target}) => 'تم تحميل ${loaded} من أصل ${target} وصفة';
+	@override String get loadingFromCache => 'جارٍ فتح الوصفات المخزنة مؤقتاً…';
+	@override String get emptyHint => 'لم يُرجع الخادم أي وصفات. تحقق من اتصالك وانقر على "إعادة المحاولة".';
+	@override String get recipeTitle => 'وصفة';
+	@override String get ingredientsHeader => 'المكونات';
+	@override String get instructionsHeader => 'طريقة التحضير';
+	@override String get youtube => 'YouTube';
+	@override String get source => 'المصدر';
+	@override String get searchHint => 'ابحث عن وصفة';
+	@override String get searchClear => 'مسح';
+	@override String get searchNoMatches => 'لا توجد نتائج مطابقة';
+	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n,
+		zero: '${n} مكون',
+		one: '${n} مكون',
+		two: '${n} مكونان',
+		few: '${n} مكونات',
+		many: '${n} مكوناً',
+		other: '${n} مكون',
+	);
+	@override late final _TranslationsA11yAr a11y = _TranslationsA11yAr._(_root);
+}
+
+// Path: a11y
+class _TranslationsA11yAr implements TranslationsA11yEn {
+	_TranslationsA11yAr._(this._root);
+
+	final TranslationsAr _root; // ignore: unused_field
+
+	// Translations
+	@override String switchLanguageTo({required Object label}) => 'تغيير اللغة إلى ${label}';
+	@override String flagOf({required Object label}) => 'علم ${label}';
+}
+
+/// The flat map containing all translations for locale <ar>.
+/// Only for edge cases! For simple maps, use the map function of this library.
+///
+/// The Dart AOT compiler has issues with very large switch statements,
+/// so the map is split into smaller functions (512 entries each).
+extension on TranslationsAr {
+	dynamic _flatMapFunction(String path) {
+		return switch (path) {
+			'appTitle' => 'Otus Food',
+			'back' => 'رجوع',
+			'dismiss' => 'إغلاق',
+			'tabRecipes' => 'وصفات',
+			'tabFridge' => 'ثلاجة',
+			'tabFavorites' => 'المفضلة',
+			'tabProfile' => 'الملف الشخصي',
+			'tabComingSoon' => 'هذا القسم قادم قريباً',
+			'emptyList' => 'لا توجد وصفات',
+			'loadError' => ({required Object error}) => 'فشل التحميل: ${error}',
+			'retry' => 'إعادة المحاولة',
+			'offlineNotice' => 'لا يوجد اتصال — يتم عرض الوصفات المخزنة مؤقتاً.',
+			'loadingTitle' => 'جارٍ إعداد مجموعة الوصفات',
+			'loadingStage' => ({required Object category, required Object done, required Object total}) => 'جارٍ تحميل "${category}" (${done}/${total} فئات)…',
+			'loadingProgress' => ({required Object loaded, required Object target}) => 'تم تحميل ${loaded} من أصل ${target} وصفة',
+			'loadingFromCache' => 'جارٍ فتح الوصفات المخزنة مؤقتاً…',
+			'emptyHint' => 'لم يُرجع الخادم أي وصفات. تحقق من اتصالك وانقر على "إعادة المحاولة".',
+			'recipeTitle' => 'وصفة',
+			'ingredientsHeader' => 'المكونات',
+			'instructionsHeader' => 'طريقة التحضير',
+			'youtube' => 'YouTube',
+			'source' => 'المصدر',
+			'searchHint' => 'ابحث عن وصفة',
+			'searchClear' => 'مسح',
+			'searchNoMatches' => 'لا توجد نتائج مطابقة',
+			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, zero: '${n} مكون', one: '${n} مكون', two: '${n} مكونان', few: '${n} مكونات', many: '${n} مكوناً', other: '${n} مكون', ), 
+			'a11y.switchLanguageTo' => ({required Object label}) => 'تغيير اللغة إلى ${label}',
+			'a11y.flagOf' => ({required Object label}) => 'علم ${label}',
+			_ => null,
+		};
+	}
+}

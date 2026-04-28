@@ -1,0 +1,35 @@
+{
+  "appTitle": "Otus Food",
+  "back": "بازگشت",
+  "dismiss": "بستن",
+  "tabRecipes": "دستور پخت‌ها",
+  "tabFridge": "یخچال",
+  "tabFavorites": "مورد علاقه‌ها",
+  "tabProfile": "پروفایل",
+  "tabComingSoon": "این بخش به زودی فعال می‌شود",
+  "emptyList": "دستور پختی یافت نشد",
+  "loadError": "خطا در بارگذاری: ${error}",
+  "retry": "تلاش مجدد",
+  "offlineNotice": "بدون اتصال — نمایش دستور پخت‌های ذخیره شده.",
+  "loadingTitle": "در حال آماده‌سازی مجموعه دستور پخت‌ها",
+  "loadingStage": "در حال بارگذاری \"${category}\" (${done}/${total} دسته‌بندی)…",
+  "loadingProgress": "${loaded} از ${target} دستور پخت بارگذاری شد",
+  "loadingFromCache": "در حال باز کردن دستور پخت‌های ذخیره شده…",
+  "emptyHint": "سرور هیچ دستور پختی برنگرداند. اتصال خود را بررسی کرده و روی \"تلاش مجدد\" ضربه بزنید.",
+  "recipeTitle": "دستور پخت",
+  "ingredientsHeader": "مواد لازم",
+  "instructionsHeader": "دستورالعمل‌ها",
+  "youtube": "YouTube",
+  "source": "منبع",
+  "searchHint": "جستجوی دستور پخت",
+  "searchClear": "پاک کردن",
+  "searchNoMatches": "موردی یافت نشد",
+  "ingredientCount": {
+    "one": "${n} ماده اولیه",
+    "other": "${n} ماده اولیه"
+  },
+  "a11y": {
+    "switchLanguageTo": "تغییر زبان به ${label}",
+    "flagOf": "پرچم ${label}"
+  }
+}

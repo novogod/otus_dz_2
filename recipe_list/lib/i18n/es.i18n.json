@@ -1,0 +1,35 @@
+{
+  "appTitle": "Otus Food",
+  "back": "Atrás",
+  "dismiss": "Descartar",
+  "tabRecipes": "Recetas",
+  "tabFridge": "Nevera",
+  "tabFavorites": "Favoritos",
+  "tabProfile": "Perfil",
+  "tabComingSoon": "Esta sección estará disponible pronto",
+  "emptyList": "No hay recetas",
+  "loadError": "Error al cargar: ${error}",
+  "retry": "Reintentar",
+  "offlineNotice": "Sin conexión — mostrando recetas en caché.",
+  "loadingTitle": "Preparando colección de recetas",
+  "loadingStage": "Cargando \"${category}\" (${done}/${total} categorías)…",
+  "loadingProgress": "Cargadas ${loaded} de ${target} recetas",
+  "loadingFromCache": "Abriendo recetas en caché…",
+  "emptyHint": "El servidor no devolvió recetas. Comprueba tu conexión y pulsa \"Reintentar\".",
+  "recipeTitle": "Receta",
+  "ingredientsHeader": "Ingredientes",
+  "instructionsHeader": "Instrucciones",
+  "youtube": "YouTube",
+  "source": "Fuente",
+  "searchHint": "Buscar receta",
+  "searchClear": "Limpiar",
+  "searchNoMatches": "No hay coincidencias",
+  "ingredientCount": {
+    "one": "${n} ingrediente",
+    "other": "${n} ingredientes"
+  },
+  "a11y": {
+    "switchLanguageTo": "Cambiar idioma a ${label}",
+    "flagOf": "Bandera de ${label}"
+  }
+}

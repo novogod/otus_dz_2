@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../i18n.dart';
 import 'app_theme.dart';
 import 'lang_icon_button.dart';
 
@@ -50,6 +51,7 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return AppBar(
       backgroundColor: AppColors.surface,
       foregroundColor: AppColors.primaryDark,
@@ -57,7 +59,7 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: titleSpacing,
       centerTitle: centerTitle,
       leading: IconButton(
-        tooltip: 'Back',
+        tooltip: s.back,
         icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
         onPressed: onBack ?? () => Navigator.of(context).maybePop(),
       ),

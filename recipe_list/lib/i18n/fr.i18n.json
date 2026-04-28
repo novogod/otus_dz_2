@@ -1,0 +1,35 @@
+{
+  "appTitle": "Otus Food",
+  "back": "Retour",
+  "dismiss": "Ignorer",
+  "tabRecipes": "Recettes",
+  "tabFridge": "Réfrigérateur",
+  "tabFavorites": "Favoris",
+  "tabProfile": "Profil",
+  "tabComingSoon": "Cette section sera bientôt disponible",
+  "emptyList": "Aucune recette",
+  "loadError": "Échec du chargement : ${error}",
+  "retry": "Réessayer",
+  "offlineNotice": "Pas de connexion — affichage des recettes en cache.",
+  "loadingTitle": "Préparation de la collection de recettes",
+  "loadingStage": "Chargement de \"${category}\" (${done}/${total} catégories)…",
+  "loadingProgress": "${loaded} recettes chargées sur ${target}",
+  "loadingFromCache": "Ouverture des recettes en cache…",
+  "emptyHint": "Le serveur n'a renvoyé aucune recette. Vérifiez votre connexion et appuyez sur \"Réessayer\".",
+  "recipeTitle": "Recette",
+  "ingredientsHeader": "Ingrédients",
+  "instructionsHeader": "Instructions",
+  "youtube": "YouTube",
+  "source": "Source",
+  "searchHint": "Rechercher une recette",
+  "searchClear": "Effacer",
+  "searchNoMatches": "Aucun résultat",
+  "ingredientCount": {
+    "one": "${n} ingrédient",
+    "other": "${n} ingrédients"
+  },
+  "a11y": {
+    "switchLanguageTo": "Changer la langue pour ${label}",
+    "flagOf": "Drapeau de ${label}"
+  }
+}

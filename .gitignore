@@ -6,3 +6,7 @@
 # Raw Figma REST dumps — only the human-readable docs/design_system.md is committed
 docs/figma/
 recipe_list/docs/figma/
+
+# Gemini API key (used by slang_gpt at build time only) — keep out of git
+.env_gemini
+recipe_list/.env_gemini

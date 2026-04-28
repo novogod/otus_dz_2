@@ -1,0 +1,122 @@
+///
+/// Generated file. Do not edit.
+///
+// coverage:ignore-file
+// ignore_for_file: type=lint, unused_import
+// dart format off
+
+import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
+import 'package:slang/generated.dart';
+import 'strings.g.dart';
+
+// Path: <root>
+class TranslationsFr with BaseTranslations<AppLocale, Translations> implements Translations {
+	/// You can call this constructor and build your own translation instance of this locale.
+	/// Constructing via the enum [AppLocale.build] is preferred.
+	TranslationsFr({Map<String, Node>? overrides, PluralResolver? cardinalResolver, PluralResolver? ordinalResolver, TranslationMetadata<AppLocale, Translations>? meta})
+		: assert(overrides == null, 'Set "translation_overrides: true" in order to enable this feature.'),
+		  $meta = meta ?? TranslationMetadata(
+		    locale: AppLocale.fr,
+		    overrides: overrides ?? {},
+		    cardinalResolver: cardinalResolver,
+		    ordinalResolver: ordinalResolver,
+		  ) {
+		$meta.setFlatMapFunction(_flatMapFunction);
+	}
+
+	/// Metadata for the translations of <fr>.
+	@override final TranslationMetadata<AppLocale, Translations> $meta;
+
+	/// Access flat map
+	@override dynamic operator[](String key) => $meta.getTranslation(key);
+
+	late final TranslationsFr _root = this; // ignore: unused_field
+
+	@override 
+	TranslationsFr $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsFr(meta: meta ?? this.$meta);
+
+	// Translations
+	@override String get appTitle => 'Otus Food';
+	@override String get back => 'Retour';
+	@override String get dismiss => 'Ignorer';
+	@override String get tabRecipes => 'Recettes';
+	@override String get tabFridge => 'Réfrigérateur';
+	@override String get tabFavorites => 'Favoris';
+	@override String get tabProfile => 'Profil';
+	@override String get tabComingSoon => 'Cette section sera bientôt disponible';
+	@override String get emptyList => 'Aucune recette';
+	@override String loadError({required Object error}) => 'Échec du chargement : ${error}';
+	@override String get retry => 'Réessayer';
+	@override String get offlineNotice => 'Pas de connexion — affichage des recettes en cache.';
+	@override String get loadingTitle => 'Préparation de la collection de recettes';
+	@override String loadingStage({required Object category, required Object done, required Object total}) => 'Chargement de "${category}" (${done}/${total} catégories)…';
+	@override String loadingProgress({required Object loaded, required Object target}) => '${loaded} recettes chargées sur ${target}';
+	@override String get loadingFromCache => 'Ouverture des recettes en cache…';
+	@override String get emptyHint => 'Le serveur n\'a renvoyé aucune recette. Vérifiez votre connexion et appuyez sur "Réessayer".';
+	@override String get recipeTitle => 'Recette';
+	@override String get ingredientsHeader => 'Ingrédients';
+	@override String get instructionsHeader => 'Instructions';
+	@override String get youtube => 'YouTube';
+	@override String get source => 'Source';
+	@override String get searchHint => 'Rechercher une recette';
+	@override String get searchClear => 'Effacer';
+	@override String get searchNoMatches => 'Aucun résultat';
+	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fr'))(n,
+		one: '${n} ingrédient',
+		other: '${n} ingrédients',
+	);
+	@override late final _TranslationsA11yFr a11y = _TranslationsA11yFr._(_root);
+}
+
+// Path: a11y
+class _TranslationsA11yFr implements TranslationsA11yEn {
+	_TranslationsA11yFr._(this._root);
+
+	final TranslationsFr _root; // ignore: unused_field
+
+	// Translations
+	@override String switchLanguageTo({required Object label}) => 'Changer la langue pour ${label}';
+	@override String flagOf({required Object label}) => 'Drapeau de ${label}';
+}
+
+/// The flat map containing all translations for locale <fr>.
+/// Only for edge cases! For simple maps, use the map function of this library.
+///
+/// The Dart AOT compiler has issues with very large switch statements,
+/// so the map is split into smaller functions (512 entries each).
+extension on TranslationsFr {
+	dynamic _flatMapFunction(String path) {
+		return switch (path) {
+			'appTitle' => 'Otus Food',
+			'back' => 'Retour',
+			'dismiss' => 'Ignorer',
+			'tabRecipes' => 'Recettes',
+			'tabFridge' => 'Réfrigérateur',
+			'tabFavorites' => 'Favoris',
+			'tabProfile' => 'Profil',
+			'tabComingSoon' => 'Cette section sera bientôt disponible',
+			'emptyList' => 'Aucune recette',
+			'loadError' => ({required Object error}) => 'Échec du chargement : ${error}',
+			'retry' => 'Réessayer',
+			'offlineNotice' => 'Pas de connexion — affichage des recettes en cache.',
+			'loadingTitle' => 'Préparation de la collection de recettes',
+			'loadingStage' => ({required Object category, required Object done, required Object total}) => 'Chargement de "${category}" (${done}/${total} catégories)…',
+			'loadingProgress' => ({required Object loaded, required Object target}) => '${loaded} recettes chargées sur ${target}',
+			'loadingFromCache' => 'Ouverture des recettes en cache…',
+			'emptyHint' => 'Le serveur n\'a renvoyé aucune recette. Vérifiez votre connexion et appuyez sur "Réessayer".',
+			'recipeTitle' => 'Recette',
+			'ingredientsHeader' => 'Ingrédients',
+			'instructionsHeader' => 'Instructions',
+			'youtube' => 'YouTube',
+			'source' => 'Source',
+			'searchHint' => 'Rechercher une recette',
+			'searchClear' => 'Effacer',
+			'searchNoMatches' => 'Aucun résultat',
+			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fr'))(n, one: '${n} ingrédient', other: '${n} ingrédients', ), 
+			'a11y.switchLanguageTo' => ({required Object label}) => 'Changer la langue pour ${label}',
+			'a11y.flagOf' => ({required Object label}) => 'Drapeau de ${label}',
+			_ => null,
+		};
+	}
+}

@@ -32,7 +32,7 @@ class LangIconButton extends StatelessWidget {
           ),
           child: Semantics(
             button: true,
-            label: 'Switch language to ${next.label}',
+            label: s.switchLanguageTo(next.label),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -46,7 +46,7 @@ class LangIconButton extends StatelessWidget {
                     child: SvgPicture.asset(
                       current.flagAsset,
                       fit: BoxFit.cover,
-                      semanticsLabel: '${current.label} flag',
+                      semanticsLabel: s.flagOf(current.label),
                     ),
                   ),
                 ),

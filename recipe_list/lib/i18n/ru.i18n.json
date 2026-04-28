@@ -1,0 +1,37 @@
+{
+  "appTitle": "Otus Food",
+  "back": "Назад",
+  "dismiss": "Скрыть",
+  "tabRecipes": "Рецепты",
+  "tabFridge": "Холодильник",
+  "tabFavorites": "Избранное",
+  "tabProfile": "Профиль",
+  "tabComingSoon": "Этот раздел пока в разработке",
+  "emptyList": "Нет рецептов",
+  "loadError": "Ошибка загрузки: ${error}",
+  "retry": "Повторить",
+  "offlineNotice": "Нет связи с сервером — показываем сохранённое.",
+  "loadingTitle": "Готовим коллекцию рецептов",
+  "loadingStage": "Загружаем «${category}» (${done}/${total} категорий)…",
+  "loadingProgress": "Получено ${loaded} из ${target} рецептов",
+  "loadingFromCache": "Открываем сохранённые рецепты…",
+  "emptyHint": "Сервер не вернул рецептов. Проверьте подключение и нажмите «Повторить».",
+  "recipeTitle": "Рецепт",
+  "ingredientsHeader": "Ингредиенты",
+  "instructionsHeader": "Инструкция",
+  "youtube": "YouTube",
+  "source": "Источник",
+  "searchHint": "Поиск рецепта",
+  "searchClear": "Очистить",
+  "searchNoMatches": "Совпадений не найдено",
+  "ingredientCount": {
+    "one": "${n} ингредиент",
+    "few": "${n} ингредиента",
+    "many": "${n} ингредиентов",
+    "other": "${n} ингредиента"
+  },
+  "a11y": {
+    "switchLanguageTo": "Переключить язык на ${label}",
+    "flagOf": "Флаг ${label}"
+  }
+}

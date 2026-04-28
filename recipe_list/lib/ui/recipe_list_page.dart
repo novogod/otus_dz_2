@@ -388,7 +388,7 @@ class _OfflineBanner extends StatelessWidget {
                 ),
               ),
               IconButton(
-                tooltip: 'Dismiss',
+                tooltip: s.dismiss,
                 iconSize: 18,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints.tightFor(

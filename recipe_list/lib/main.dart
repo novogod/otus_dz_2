@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'i18n.dart';
+import 'i18n/strings.g.dart';
 import 'ui/app_theme.dart';
 import 'ui/recipe_list_loader.dart';
 import 'ui/splash_page.dart';
 
-void main() => runApp(const RecipeApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  initI18n();
+  runApp(TranslationProvider(child: const RecipeApp()));
+}
 
 /// Глобальный ключ корневого виджета приложения. Используется
 /// единственным публичным API файла — [restartApp] — чтобы
@@ -27,10 +33,14 @@ class RecipeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = Translations.of(context);
     return MaterialApp(
-      title: 'Otus Food',
+      title: t.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      locale: TranslationProvider.of(context).flutterLocale,
+      supportedLocales: AppLocaleUtils.supportedLocales,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       home: AppLangScope(child: _AppRoot(key: _appRootKey)),
     );
   }

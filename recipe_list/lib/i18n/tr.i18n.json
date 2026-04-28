@@ -1,0 +1,35 @@
+{
+  "appTitle": "Otus Food",
+  "back": "Geri",
+  "dismiss": "Kapat",
+  "tabRecipes": "Tarifler",
+  "tabFridge": "Buzdolabı",
+  "tabFavorites": "Favoriler",
+  "tabProfile": "Profil",
+  "tabComingSoon": "Bu bölüm yakında geliyor",
+  "emptyList": "Tarif yok",
+  "loadError": "Yüklenemedi: ${error}",
+  "retry": "Tekrar Dene",
+  "offlineNotice": "Bağlantı yok — önbelleğe alınmış tarifler gösteriliyor.",
+  "loadingTitle": "Tarif koleksiyonu hazırlanıyor",
+  "loadingStage": "\"${category}\" yükleniyor (${done}/${total} kategori)…",
+  "loadingProgress": "${target} tariften ${loaded} tanesi yüklendi",
+  "loadingFromCache": "Önbelleğe alınmış tarifler açılıyor…",
+  "emptyHint": "Sunucu tarif döndürmedi. Bağlantınızı kontrol edin ve \"Tekrar Dene\"ye dokunun.",
+  "recipeTitle": "Tarif",
+  "ingredientsHeader": "Malzemeler",
+  "instructionsHeader": "Talimatlar",
+  "youtube": "YouTube",
+  "source": "Kaynak",
+  "searchHint": "Tarif ara",
+  "searchClear": "Temizle",
+  "searchNoMatches": "Eşleşme yok",
+  "ingredientCount": {
+    "one": "${n} malzeme",
+    "other": "${n} malzeme"
+  },
+  "a11y": {
+    "switchLanguageTo": "Dili ${label} olarak değiştir",
+    "flagOf": "${label} bayrağı"
+  }
+}

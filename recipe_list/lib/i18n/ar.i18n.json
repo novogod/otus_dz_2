@@ -1,0 +1,39 @@
+{
+  "appTitle": "Otus Food",
+  "back": "رجوع",
+  "dismiss": "إغلاق",
+  "tabRecipes": "وصفات",
+  "tabFridge": "ثلاجة",
+  "tabFavorites": "المفضلة",
+  "tabProfile": "الملف الشخصي",
+  "tabComingSoon": "هذا القسم قادم قريباً",
+  "emptyList": "لا توجد وصفات",
+  "loadError": "فشل التحميل: ${error}",
+  "retry": "إعادة المحاولة",
+  "offlineNotice": "لا يوجد اتصال — يتم عرض الوصفات المخزنة مؤقتاً.",
+  "loadingTitle": "جارٍ إعداد مجموعة الوصفات",
+  "loadingStage": "جارٍ تحميل \"${category}\" (${done}/${total} فئات)…",
+  "loadingProgress": "تم تحميل ${loaded} من أصل ${target} وصفة",
+  "loadingFromCache": "جارٍ فتح الوصفات المخزنة مؤقتاً…",
+  "emptyHint": "لم يُرجع الخادم أي وصفات. تحقق من اتصالك وانقر على \"إعادة المحاولة\".",
+  "recipeTitle": "وصفة",
+  "ingredientsHeader": "المكونات",
+  "instructionsHeader": "طريقة التحضير",
+  "youtube": "YouTube",
+  "source": "المصدر",
+  "searchHint": "ابحث عن وصفة",
+  "searchClear": "مسح",
+  "searchNoMatches": "لا توجد نتائج مطابقة",
+  "ingredientCount": {
+    "zero": "${n} مكون",
+    "one": "${n} مكون",
+    "two": "${n} مكونان",
+    "few": "${n} مكونات",
+    "many": "${n} مكوناً",
+    "other": "${n} مكون"
+  },
+  "a11y": {
+    "switchLanguageTo": "تغيير اللغة إلى ${label}",
+    "flagOf": "علم ${label}"
+  }
+}
