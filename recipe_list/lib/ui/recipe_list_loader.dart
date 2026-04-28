@@ -273,6 +273,15 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       } on Object {
         // одна категория не приехала — пробуем следующую
       }
+      // Обновляем прогресс-бар сразу после категории, иначе он
+      // «замирает» до начала следующей итерации.
+      _stage.value = _LoadStage.fetching(
+        category: cat,
+        done: i + 1,
+        total: categories.length,
+        loaded: accumulator.length,
+        target: _seedTarget,
+      );
       if (accumulator.length >= _seedTarget) break;
     }
     // Перемешиваем итоговую выборку, чтобы лента не выглядела
@@ -403,9 +412,24 @@ class _LoadingScreen extends StatelessWidget {
             valueListenable: stage,
             builder: (context, st, _) {
               final hasProgress = st.target > 0;
-              final progress = hasProgress
+              // Прогресс-бар берёт МАКСИМУМ из «прошли категорий» и
+              // «получили рецептов из таргета». Категории идут
+              // последовательно: пока первая `filterByCategory` не
+              // вернётся, accumulator=0, и привязка только к рецептам
+              // даёт «мертвый» бар на 30+ секунд. Категория же
+              // всегда монотонно растёт — пользователь видит, что
+              // приложение живо.
+              final categoryProgress = (st.total > 0)
+                  ? (st.done / st.total).clamp(0.0, 1.0)
+                  : 0.0;
+              final recipeProgress = hasProgress
                   ? (st.loaded / st.target).clamp(0.0, 1.0)
-                  : null;
+                  : 0.0;
+              final progress = (st.kind == _LoadStageKind.fetching)
+                  ? (categoryProgress > recipeProgress
+                        ? categoryProgress
+                        : recipeProgress)
+                  : (hasProgress ? recipeProgress : null);
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -420,7 +444,9 @@ class _LoadingScreen extends StatelessWidget {
                       value: progress,
                       strokeWidth: 5,
                       color: AppColors.primary,
-                      backgroundColor: AppColors.surface,
+                      backgroundColor: AppColors.primary.withValues(
+                        alpha: 0.18,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -452,7 +478,13 @@ class _LoadingScreen extends StatelessWidget {
                           value: progress,
                           minHeight: 6,
                           color: AppColors.primary,
-                          backgroundColor: AppColors.surface,
+                          // Слегка затонированный primary вместо
+                          // чисто-белого: при 0% было видно «полную»
+                          // полоску, потому что белый track сливался
+                          // со светлым фоном экрана.
+                          backgroundColor: AppColors.primary.withValues(
+                            alpha: 0.18,
+                          ),
                         ),
                       ),
                     ),
