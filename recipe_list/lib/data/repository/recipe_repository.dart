@@ -129,6 +129,30 @@ class RecipeRepository {
     return (rows.first['c'] as int?) ?? 0;
   }
 
+  /// Сколько рецептов в кэше под выбранный язык.
+  Future<int> countFor(AppLang lang) async {
+    final rows = await _db.rawQuery(
+      'SELECT COUNT(*) AS c FROM recipes WHERE lang = ?;',
+      [lang.name],
+    );
+    return (rows.first['c'] as int?) ?? 0;
+  }
+
+  /// Топ-N рецептов из кэша для языка [lang], отсортированных
+  /// LRU-новизной (свежие — первыми). Используется как мгновенный
+  /// preload на старте: UI показывает 200 локальных карточек ещё
+  /// до похода в сеть.
+  Future<List<Recipe>> listCached(AppLang lang, {int limit = 200}) async {
+    final rows = await _db.query(
+      'recipes',
+      where: 'lang = ?',
+      whereArgs: [lang.name],
+      orderBy: 'last_used_at DESC',
+      limit: limit,
+    );
+    return rows.map(readRecipe).toList(growable: false);
+  }
+
   Future<void> _upsertAll(List<Recipe> recipes, AppLang lang) async {
     if (recipes.isEmpty) return;
     final ts = _now().millisecondsSinceEpoch;
