@@ -110,10 +110,22 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       _stage.value = const _LoadStage.openingCache();
     }
 
-    // mahallem: всегда идём через категории (DB-first, со случайной
-    // ротацией набора на каждом открытии). Сеть подключается только
-    // если для какой-то категории локально мало рецептов.
+    // mahallem: cache-first. Если для текущего языка в локальной
+    // БД уже лежит >=50 рецептов — отдаём их сразу, без сети и без
+    // splash «готовим коллекцию». Это критично при переключении
+    // языка: пользователь не должен ждать перевод заново каждый раз,
+    // когда уже один раз прокачал язык. Кэш живёт «вечно» (LRU
+    // вытеснение по 5 MB / 2000 строк, перевод не выкидывается,
+    // пока не упрёмся в бюджет).
     if (widget.api.backend == RecipeBackend.mahallem) {
+      if (repo != null) {
+        final cachedCount = await repo.countFor(lang);
+        if (cachedCount >= 50) {
+          final cached = await repo.listCached(lang, limit: _seedTarget);
+          return _LoadResult(recipes: cached, repository: repo);
+        }
+      }
+      // Холодный язык — заводим ленту через категории.
       final recipes = await _seedFromCategories(repo, lang);
       return _LoadResult(recipes: recipes, repository: repo);
     }
