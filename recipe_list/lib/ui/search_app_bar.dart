@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../i18n.dart';
 import '../models/recipe.dart';
+import 'app_page_bar.dart';
 import 'app_theme.dart';
-import 'lang_icon_button.dart';
 
 /// Виджет AppBar со строкой поиска (`title`), кнопкой «назад» (`leading`)
-/// и переключателем языка (`actions`). Шапка живёт только на экранах
-/// после splash, поэтому переключатель языка визуально не появляется
-/// до перехода с splash → список (см. `lib/main.dart`).
+/// и переключателем языка (`actions`). Всё «обвес» (back, lang, отступы)
+/// делегируется общему [AppPageBar] — здесь специфично только поле
+/// поиска как `title`.
 ///
 /// Сам список предсказаний (dropdown) не входит в [PreferredSize] —
 /// он рендерится в теле страницы, чтобы перекрывать список рецептов
@@ -37,16 +37,10 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    return AppBar(
-      backgroundColor: AppColors.surface,
-      foregroundColor: AppColors.primaryDark,
-      elevation: 0,
+    return AppPageBar(
+      onBack: onBack,
       titleSpacing: 0,
-      leading: IconButton(
-        tooltip: 'Back',
-        icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
-        onPressed: onBack ?? () => Navigator.of(context).maybePop(),
-      ),
+      centerTitle: false,
       title: Center(
         child: FractionallySizedBox(
           widthFactor: 0.85,
@@ -59,14 +53,6 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-      actions: const [
-        SizedBox(width: AppSpacing.sm),
-        LangIconButton(),
-        // Удвоенный отступ от кнопки до правого края экрана:
-        // внутри LangIconButton уже есть horizontal sm; добавляя ещё
-        // один sm, получаем 16 px справа вместо прежних 8.
-        SizedBox(width: AppSpacing.sm),
-      ],
     );
   }
 }

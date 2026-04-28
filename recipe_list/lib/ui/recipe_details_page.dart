@@ -4,8 +4,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/api/recipe_api.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
+import 'app_bottom_nav_bar.dart';
+import 'app_page_bar.dart';
 import 'app_theme.dart';
-import 'lang_icon_button.dart';
 import 'source_page.dart';
 
 /// Экран деталей рецепта. Реализует разметку из `docs/design_system.md`
@@ -65,10 +66,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     final recipe = _recipe;
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.primaryDark,
-        elevation: 0,
+      appBar: AppPageBar(
         title: Text(
           s.recipeTitle,
           style: const TextStyle(
@@ -79,8 +77,10 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
             color: AppColors.primaryDark,
           ),
         ),
-        centerTitle: true,
-        actions: const [LangIconButton()],
+      ),
+      bottomNavigationBar: AppBottomNavBar(
+        current: AppNavTab.recipes,
+        onTap: (_) => Navigator.of(context).maybePop(),
       ),
       body: SafeArea(
         top: false,
