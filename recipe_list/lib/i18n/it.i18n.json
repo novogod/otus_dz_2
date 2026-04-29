@@ -34,7 +34,8 @@
     "flagOf": "Bandiera di ${label}",
     "offlineReloadUnavailable": "Sei offline. Vengono mostrate le ricette precedenti.",
     "scrollToTop": "Torna su",
-    "addRecipe": "Aggiungi ricetta"
+    "addRecipe": "Aggiungi ricetta",
+    "addRecipePhotoPicker": "Selezione foto ricetta"
   },
   "addRecipeTitle": "Aggiungi ricetta",
   "addRecipeName": "Nome della ricetta",
@@ -53,5 +54,12 @@
   "addRecipeEnglishHint": "Inserisci in inglese — le traduzioni vengono generate automaticamente.",
   "addRecipeSaving": "Salvataggio…",
   "addRecipeError": "Impossibile salvare la ricetta. Riprova.",
-  "addRecipeSuccess": "Ricetta aggiunta!"
+  "addRecipeSuccess": "Ricetta aggiunta!",
+  "addRecipePhotoFromGallery": "Scegli dalla galleria",
+  "addRecipePhotoFromCamera": "Scatta foto",
+  "addRecipePhotoRequired": "La foto è obbligatoria",
+  "addRecipePhotoRemove": "Rimuovi foto",
+  "addRecipePhotoSourceTitle": "Aggiungi una foto",
+  "addRecipePhotoErrorAccessDenied": "Accesso alle foto negato. Consentilo nelle Impostazioni.",
+  "addRecipePhotoErrorTooLarge": "La foto è troppo grande anche dopo la compressione. Provane un'altra."
 }

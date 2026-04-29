@@ -89,6 +89,13 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeSaving => 'جارٍ الحفظ…';
 	@override String get addRecipeError => 'تعذّر حفظ الوصفة. حاول مرة أخرى.';
 	@override String get addRecipeSuccess => 'تمت إضافة الوصفة!';
+	@override String get addRecipePhotoFromGallery => 'اختر من المعرض';
+	@override String get addRecipePhotoFromCamera => 'التقاط صورة';
+	@override String get addRecipePhotoRequired => 'الصورة مطلوبة';
+	@override String get addRecipePhotoRemove => 'إزالة الصورة';
+	@override String get addRecipePhotoSourceTitle => 'أضف صورة';
+	@override String get addRecipePhotoErrorAccessDenied => 'تم رفض الوصول إلى الصور. اسمح بالوصول من الإعدادات.';
+	@override String get addRecipePhotoErrorTooLarge => 'الصورة كبيرة جدًا حتى بعد الضغط. جرّب صورة أخرى.';
 }
 
 // Path: a11y
@@ -104,6 +111,7 @@ class _TranslationsA11yAr implements TranslationsA11yEn {
 	@override String get offlineReloadUnavailable => 'أنت غير متصل بالإنترنت. عرض الوصفات السابقة.';
 	@override String get scrollToTop => 'التمرير إلى الأعلى';
 	@override String get addRecipe => 'إضافة وصفة';
+	@override String get addRecipePhotoPicker => 'اختيار صورة الوصفة';
 }
 
 /// The flat map containing all translations for locale <ar>.
@@ -146,6 +154,7 @@ extension on TranslationsAr {
 			'a11y.offlineReloadUnavailable' => 'أنت غير متصل بالإنترنت. عرض الوصفات السابقة.',
 			'a11y.scrollToTop' => 'التمرير إلى الأعلى',
 			'a11y.addRecipe' => 'إضافة وصفة',
+			'a11y.addRecipePhotoPicker' => 'اختيار صورة الوصفة',
 			'addRecipeTitle' => 'إضافة وصفة',
 			'addRecipeName' => 'اسم الوصفة',
 			'addRecipePhoto' => 'رابط الصورة',
@@ -164,6 +173,13 @@ extension on TranslationsAr {
 			'addRecipeSaving' => 'جارٍ الحفظ…',
 			'addRecipeError' => 'تعذّر حفظ الوصفة. حاول مرة أخرى.',
 			'addRecipeSuccess' => 'تمت إضافة الوصفة!',
+			'addRecipePhotoFromGallery' => 'اختر من المعرض',
+			'addRecipePhotoFromCamera' => 'التقاط صورة',
+			'addRecipePhotoRequired' => 'الصورة مطلوبة',
+			'addRecipePhotoRemove' => 'إزالة الصورة',
+			'addRecipePhotoSourceTitle' => 'أضف صورة',
+			'addRecipePhotoErrorAccessDenied' => 'تم رفض الوصول إلى الصور. اسمح بالوصول من الإعدادات.',
+			'addRecipePhotoErrorTooLarge' => 'الصورة كبيرة جدًا حتى بعد الضغط. جرّب صورة أخرى.',
 			_ => null,
 		};
 	}

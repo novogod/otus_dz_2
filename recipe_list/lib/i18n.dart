@@ -263,6 +263,17 @@ class S {
   String get addRecipeError => _t.addRecipeError;
   String get addRecipeSuccess => _t.addRecipeSuccess;
 
+  // Photo picker (chunk 11 + 13 of recipe_photo_upload.md).
+  String get addRecipePhotoFromGallery => _t.addRecipePhotoFromGallery;
+  String get addRecipePhotoFromCamera => _t.addRecipePhotoFromCamera;
+  String get addRecipePhotoRequired => _t.addRecipePhotoRequired;
+  String get addRecipePhotoRemove => _t.addRecipePhotoRemove;
+  String get addRecipePhotoSourceTitle => _t.addRecipePhotoSourceTitle;
+  String get addRecipePhotoErrorAccessDenied =>
+      _t.addRecipePhotoErrorAccessDenied;
+  String get addRecipePhotoErrorTooLarge => _t.addRecipePhotoErrorTooLarge;
+  String get addRecipePhotoPicker => _t.a11y.addRecipePhotoPicker;
+
   // FAB label — derives from current AppLang, not from translations.
   String get langLabel => appLang.value.label;
 

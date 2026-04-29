@@ -34,7 +34,8 @@
     "reloadFeed": "Reload feed",
     "offlineReloadUnavailable": "You're offline. Showing previous recipes.",
     "scrollToTop": "Scroll to top",
-    "addRecipe": "Add recipe"
+    "addRecipe": "Add recipe",
+    "addRecipePhotoPicker": "Recipe photo picker"
   },
   "addRecipeTitle": "Add recipe",
   "addRecipeName": "Recipe name",
@@ -53,5 +54,12 @@
   "addRecipeEnglishHint": "Please enter in English — translations are generated automatically.",
   "addRecipeSaving": "Saving…",
   "addRecipeError": "Couldn't save recipe. Try again.",
-  "addRecipeSuccess": "Recipe added!"
+  "addRecipeSuccess": "Recipe added!",
+  "addRecipePhotoFromGallery": "Choose from gallery",
+  "addRecipePhotoFromCamera": "Take photo",
+  "addRecipePhotoRequired": "Photo is required",
+  "addRecipePhotoRemove": "Remove photo",
+  "addRecipePhotoSourceTitle": "Add a photo",
+  "addRecipePhotoErrorAccessDenied": "Access to photos denied. Allow access in Settings.",
+  "addRecipePhotoErrorTooLarge": "Photo is too large even after compression. Try another one."
 }

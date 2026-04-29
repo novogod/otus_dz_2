@@ -38,7 +38,8 @@
     "flagOf": "علم ${label}",
     "offlineReloadUnavailable": "أنت غير متصل بالإنترنت. عرض الوصفات السابقة.",
     "scrollToTop": "التمرير إلى الأعلى",
-    "addRecipe": "إضافة وصفة"
+    "addRecipe": "إضافة وصفة",
+    "addRecipePhotoPicker": "اختيار صورة الوصفة"
   },
   "addRecipeTitle": "إضافة وصفة",
   "addRecipeName": "اسم الوصفة",
@@ -57,5 +58,12 @@
   "addRecipeEnglishHint": "أدخل بالإنجليزية — تُنشأ الترجمات تلقائيًا.",
   "addRecipeSaving": "جارٍ الحفظ…",
   "addRecipeError": "تعذّر حفظ الوصفة. حاول مرة أخرى.",
-  "addRecipeSuccess": "تمت إضافة الوصفة!"
+  "addRecipeSuccess": "تمت إضافة الوصفة!",
+  "addRecipePhotoFromGallery": "اختر من المعرض",
+  "addRecipePhotoFromCamera": "التقاط صورة",
+  "addRecipePhotoRequired": "الصورة مطلوبة",
+  "addRecipePhotoRemove": "إزالة الصورة",
+  "addRecipePhotoSourceTitle": "أضف صورة",
+  "addRecipePhotoErrorAccessDenied": "تم رفض الوصول إلى الصور. اسمح بالوصول من الإعدادات.",
+  "addRecipePhotoErrorTooLarge": "الصورة كبيرة جدًا حتى بعد الضغط. جرّب صورة أخرى."
 }

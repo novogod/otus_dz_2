@@ -85,6 +85,13 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeSaving => 'Tê tomarkirin…';
 	@override String get addRecipeError => 'Resipe nehate tomarkirin. Dîsa biceribîne.';
 	@override String get addRecipeSuccess => 'Resipe hate zêdekirin!';
+	@override String get addRecipePhotoFromGallery => 'Hilbijêre ji galeriyê';
+	@override String get addRecipePhotoFromCamera => 'Wêneyê bikişîne';
+	@override String get addRecipePhotoRequired => 'Wêne pêwîst e';
+	@override String get addRecipePhotoRemove => 'Wêneyê rake';
+	@override String get addRecipePhotoSourceTitle => 'Wêneyek lê zêde bike';
+	@override String get addRecipePhotoErrorAccessDenied => 'Gihîştina wêneyan hat redkirin. Ji Mîhengan destûr bide.';
+	@override String get addRecipePhotoErrorTooLarge => 'Wêne piştî perçiqandinê jî pir mezin e. Yekê din biceribîne.';
 }
 
 // Path: a11y
@@ -100,6 +107,7 @@ class _TranslationsA11yKu implements TranslationsA11yEn {
 	@override String get offlineReloadUnavailable => 'دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.';
 	@override String get scrollToTop => 'گەڕانەوە بۆ سەرەوە';
 	@override String get addRecipe => 'Resipe zêde bike';
+	@override String get addRecipePhotoPicker => 'Hilbijêrê wêneyê reçeteyê';
 }
 
 /// The flat map containing all translations for locale <ku>.
@@ -142,6 +150,7 @@ extension on TranslationsKu {
 			'a11y.offlineReloadUnavailable' => 'دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.',
 			'a11y.scrollToTop' => 'گەڕانەوە بۆ سەرەوە',
 			'a11y.addRecipe' => 'Resipe zêde bike',
+			'a11y.addRecipePhotoPicker' => 'Hilbijêrê wêneyê reçeteyê',
 			'addRecipeTitle' => 'Resipe zêde bike',
 			'addRecipeName' => 'Navê resipê',
 			'addRecipePhoto' => 'URLa wêneyê',
@@ -160,6 +169,13 @@ extension on TranslationsKu {
 			'addRecipeSaving' => 'Tê tomarkirin…',
 			'addRecipeError' => 'Resipe nehate tomarkirin. Dîsa biceribîne.',
 			'addRecipeSuccess' => 'Resipe hate zêdekirin!',
+			'addRecipePhotoFromGallery' => 'Hilbijêre ji galeriyê',
+			'addRecipePhotoFromCamera' => 'Wêneyê bikişîne',
+			'addRecipePhotoRequired' => 'Wêne pêwîst e',
+			'addRecipePhotoRemove' => 'Wêneyê rake',
+			'addRecipePhotoSourceTitle' => 'Wêneyek lê zêde bike',
+			'addRecipePhotoErrorAccessDenied' => 'Gihîştina wêneyan hat redkirin. Ji Mîhengan destûr bide.',
+			'addRecipePhotoErrorTooLarge' => 'Wêne piştî perçiqandinê jî pir mezin e. Yekê din biceribîne.',
 			_ => null,
 		};
 	}

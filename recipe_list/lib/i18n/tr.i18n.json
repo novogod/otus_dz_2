@@ -34,7 +34,8 @@
     "flagOf": "${label} bayrağı",
     "offlineReloadUnavailable": "Çevrimdışısınız. Önceki tarifler gösteriliyor.",
     "scrollToTop": "Yukarı kaydır",
-    "addRecipe": "Tarif ekle"
+    "addRecipe": "Tarif ekle",
+    "addRecipePhotoPicker": "Tarif fotoğraf seçici"
   },
   "addRecipeTitle": "Tarif ekle",
   "addRecipeName": "Tarif adı",
@@ -53,5 +54,12 @@
   "addRecipeEnglishHint": "Lütfen İngilizce girin — çeviriler otomatik oluşturulur.",
   "addRecipeSaving": "Kaydediliyor…",
   "addRecipeError": "Tarif kaydedilemedi. Tekrar deneyin.",
-  "addRecipeSuccess": "Tarif eklendi!"
+  "addRecipeSuccess": "Tarif eklendi!",
+  "addRecipePhotoFromGallery": "Galeriden seç",
+  "addRecipePhotoFromCamera": "Fotoğraf çek",
+  "addRecipePhotoRequired": "Fotoğraf zorunludur",
+  "addRecipePhotoRemove": "Fotoğrafı kaldır",
+  "addRecipePhotoSourceTitle": "Fotoğraf ekle",
+  "addRecipePhotoErrorAccessDenied": "Fotoğraflara erişim reddedildi. Ayarlardan izin verin.",
+  "addRecipePhotoErrorTooLarge": "Fotoğraf sıkıştırmadan sonra bile çok büyük. Başkasını deneyin."
 }

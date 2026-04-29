@@ -85,6 +85,13 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeSaving => 'Enregistrement…';
 	@override String get addRecipeError => 'Impossible d\'enregistrer la recette. Réessayez.';
 	@override String get addRecipeSuccess => 'Recette ajoutée !';
+	@override String get addRecipePhotoFromGallery => 'Choisir depuis la galerie';
+	@override String get addRecipePhotoFromCamera => 'Prendre une photo';
+	@override String get addRecipePhotoRequired => 'La photo est obligatoire';
+	@override String get addRecipePhotoRemove => 'Supprimer la photo';
+	@override String get addRecipePhotoSourceTitle => 'Ajouter une photo';
+	@override String get addRecipePhotoErrorAccessDenied => 'Accès aux photos refusé. Autorisez-le dans les Réglages.';
+	@override String get addRecipePhotoErrorTooLarge => 'Photo trop volumineuse même après compression. Essayez-en une autre.';
 }
 
 // Path: a11y
@@ -100,6 +107,7 @@ class _TranslationsA11yFr implements TranslationsA11yEn {
 	@override String get offlineReloadUnavailable => 'Hors ligne. Les recettes précédentes sont affichées.';
 	@override String get scrollToTop => 'Revenir en haut';
 	@override String get addRecipe => 'Ajouter une recette';
+	@override String get addRecipePhotoPicker => 'Sélecteur de photo de recette';
 }
 
 /// The flat map containing all translations for locale <fr>.
@@ -142,6 +150,7 @@ extension on TranslationsFr {
 			'a11y.offlineReloadUnavailable' => 'Hors ligne. Les recettes précédentes sont affichées.',
 			'a11y.scrollToTop' => 'Revenir en haut',
 			'a11y.addRecipe' => 'Ajouter une recette',
+			'a11y.addRecipePhotoPicker' => 'Sélecteur de photo de recette',
 			'addRecipeTitle' => 'Ajouter une recette',
 			'addRecipeName' => 'Nom de la recette',
 			'addRecipePhoto' => 'URL de la photo',
@@ -160,6 +169,13 @@ extension on TranslationsFr {
 			'addRecipeSaving' => 'Enregistrement…',
 			'addRecipeError' => 'Impossible d\'enregistrer la recette. Réessayez.',
 			'addRecipeSuccess' => 'Recette ajoutée !',
+			'addRecipePhotoFromGallery' => 'Choisir depuis la galerie',
+			'addRecipePhotoFromCamera' => 'Prendre une photo',
+			'addRecipePhotoRequired' => 'La photo est obligatoire',
+			'addRecipePhotoRemove' => 'Supprimer la photo',
+			'addRecipePhotoSourceTitle' => 'Ajouter une photo',
+			'addRecipePhotoErrorAccessDenied' => 'Accès aux photos refusé. Autorisez-le dans les Réglages.',
+			'addRecipePhotoErrorTooLarge' => 'Photo trop volumineuse même après compression. Essayez-en une autre.',
 			_ => null,
 		};
 	}

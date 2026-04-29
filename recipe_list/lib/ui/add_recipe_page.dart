@@ -1,10 +1,16 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
+import '../utils/photo_downscaler.dart';
 import 'app_theme.dart';
 
 /// Экран «Добавить рецепт». Доступен из FAB-а с плюсом на
@@ -46,6 +52,14 @@ class _AddRecipePageState extends State<AddRecipePage> {
   final List<_IngredientRow> _ingredientRows = [_IngredientRow()];
 
   bool _saving = false;
+  bool _compressing = false;
+  bool _photoTouched = false; // user pressed Save → show "required" error
+  File? _pickedPhoto;
+
+  /// Web-сборка не поддерживает `image_picker` через нативный путь —
+  /// оставляем URL-fallback. На mobile/desktop URL-поле скрыто:
+  /// фото обязательно выбирается через picker.
+  bool get _allowUrlFallback => kIsWeb;
 
   @override
   void dispose() {
@@ -57,7 +71,20 @@ class _AddRecipePageState extends State<AddRecipePage> {
     for (final r in _ingredientRows) {
       r.dispose();
     }
+    _disposePickedPhoto();
     super.dispose();
+  }
+
+  /// Удаляет временный файл из downscaler-а (если есть). Вызываем
+  /// при ре-пике, drop-е или dispose. Ошибки игнорируем — это
+  /// best-effort cleanup в каталоге temp.
+  void _disposePickedPhoto() {
+    final f = _pickedPhoto;
+    if (f != null) {
+      try {
+        if (f.existsSync()) f.deleteSync();
+      } catch (_) {}
+    }
   }
 
   /// Новая строка ингредиента. Сервер канонизирует
@@ -93,6 +120,130 @@ class _AddRecipePageState extends State<AddRecipePage> {
     return out;
   }
 
+  /// Выбор фото с указанного источника (камера / галерея).
+  /// На входе — `XFile` от `image_picker`, на выходе — сжатый
+  /// JPEG ≤ 5 МБ (см. [downscaleForUpload]).
+  Future<void> _pickPhoto(ImageSource source) async {
+    final s = S.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final picker = ImagePicker();
+      // Не задаём maxWidth/maxHeight/imageQuality — сжатие делает
+      // [downscaleForUpload] для предсказуемого результата (см. чанк 11.5).
+      final raw = await picker.pickImage(source: source);
+      if (raw == null) return; // user cancelled
+
+      if (!mounted) return;
+      setState(() => _compressing = true);
+      final compressed = await downscaleForUpload(raw);
+      if (!mounted) {
+        try {
+          if (await compressed.exists()) await compressed.delete();
+        } catch (_) {}
+        return;
+      }
+      // Удаляем предыдущий tmp до подмены ссылки.
+      _disposePickedPhoto();
+      setState(() {
+        _pickedPhoto = compressed;
+        _compressing = false;
+        _photoTouched = true;
+      });
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      setState(() => _compressing = false);
+      final code = e.code.toLowerCase();
+      final msg = (code.contains('access_denied') || code.contains('permission'))
+          ? s.addRecipePhotoErrorAccessDenied
+          : s.addRecipeError;
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(msg)));
+    } on StateError catch (e) {
+      if (!mounted) return;
+      setState(() => _compressing = false);
+      final msg = e.message == 'photo_too_large'
+          ? s.addRecipePhotoErrorTooLarge
+          : s.addRecipeError;
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(msg)));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _compressing = false);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(s.addRecipeError)));
+    }
+  }
+
+  /// Bottom-sheet «Откуда взять фото?» с пунктами camera / gallery /
+  /// remove (последний только в filled-state).
+  Future<void> _showPhotoSourceSheet() async {
+    final s = S.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                ),
+                child: Text(
+                  s.addRecipePhotoSourceTitle,
+                  style: Theme.of(ctx).textTheme.titleMedium,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: Text(s.addRecipePhotoFromCamera),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _pickPhoto(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: Text(s.addRecipePhotoFromGallery),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _pickPhoto(ImageSource.gallery);
+                },
+              ),
+              if (_pickedPhoto != null)
+                ListTile(
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.primaryDark,
+                  ),
+                  title: Text(s.addRecipePhotoRemove),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _clearPickedPhoto();
+                  },
+                ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _clearPickedPhoto() {
+    _disposePickedPhoto();
+    setState(() {
+      _pickedPhoto = null;
+      _photoTouched = true;
+    });
+  }
+
   Future<void> _save() async {
     final s = S.of(context);
     if (!_formKey.currentState!.validate()) return;
@@ -103,13 +254,26 @@ class _AddRecipePageState extends State<AddRecipePage> {
         ..showSnackBar(SnackBar(content: Text(s.addRecipeError)));
       return;
     }
+    // Photo validation: на mobile нужен picked file; на web допустим
+    // URL-fallback (см. [_allowUrlFallback]).
+    final hasPicked = _pickedPhoto != null;
+    final hasUrl = _photo.text.trim().isNotEmpty;
+    if (!hasPicked && !(_allowUrlFallback && hasUrl)) {
+      setState(() => _photoTouched = true);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(s.addRecipePhotoRequired)));
+      return;
+    }
     setState(() => _saving = true);
 
     // Build draft. id is a placeholder — server assigns the real one.
     final draft = Recipe(
       id: 0,
       name: _name.text.trim(),
-      photo: _photo.text.trim(),
+      // Server replaces strMealThumb after upload. Use placeholder
+      // when uploading a file; send URL as-is on web fallback.
+      photo: hasPicked ? 'pending://upload' : _photo.text.trim(),
       category: _category.text.trim().isEmpty ? null : _category.text.trim(),
       area: _area.text.trim().isEmpty ? null : _area.text.trim(),
       instructions: _instructions.text.trim().isEmpty
@@ -119,7 +283,9 @@ class _AddRecipePageState extends State<AddRecipePage> {
     );
 
     try {
-      final saved = await api.createRecipe(draft);
+      final saved = hasPicked
+          ? await api.createRecipeWithPhoto(draft, _pickedPhoto!)
+          : await api.createRecipe(draft);
       // Mirror server-assigned row into the local cache so the new
       // recipe survives a cold start. Best-effort — failure here
       // doesn't roll back the server insert.
@@ -170,13 +336,29 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _photo,
-                decoration: InputDecoration(labelText: s.addRecipePhoto),
-                keyboardType: TextInputType.url,
-                validator: _required,
-                textInputAction: TextInputAction.next,
+              // Photo picker (camera / gallery). На web — URL-fallback ниже.
+              Semantics(
+                button: true,
+                label: s.addRecipePhotoPicker,
+                child: _PhotoPicker(
+                  picked: _pickedPhoto,
+                  loading: _compressing,
+                  errorText: (_photoTouched && _pickedPhoto == null && !_allowUrlFallback)
+                      ? s.addRecipePhotoRequired
+                      : null,
+                  onTap: _compressing ? null : _showPhotoSourceSheet,
+                  onClear: _pickedPhoto == null ? null : _clearPickedPhoto,
+                ),
               ),
+              if (_allowUrlFallback) ...[
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _photo,
+                  decoration: InputDecoration(labelText: s.addRecipePhoto),
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.next,
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _category,
@@ -362,6 +544,134 @@ class _IngredientRowField extends StatelessWidget {
             onPressed: onAdd,
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// Превью / placeholder фотографии рецепта. Размер 160×160 dp.
+///
+/// Состояния:
+///   * empty: dashed-border placeholder с иконкой `add_a_photo`.
+///     Тап → `onTap` (показывает bottom-sheet с camera/gallery).
+///   * loading: тот же фрейм, по центру `CircularProgressIndicator`.
+///   * filled: `Image.file` cover, в правом верхнем углу — `×`,
+///     закрывающий выбор. Тап по картинке → `onTap` (replace).
+class _PhotoPicker extends StatelessWidget {
+  const _PhotoPicker({
+    required this.picked,
+    required this.loading,
+    required this.errorText,
+    required this.onTap,
+    required this.onClear,
+  });
+
+  final File? picked;
+  final bool loading;
+  final String? errorText;
+  final VoidCallback? onTap;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasError = errorText != null;
+    final borderColor = hasError
+        ? theme.colorScheme.error
+        : AppColors.primaryDark.withValues(alpha: 0.6);
+    final radius = BorderRadius.circular(AppSpacing.md);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: SizedBox(
+            width: 160,
+            height: 160,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: radius,
+                      border: Border.all(
+                        color: borderColor,
+                        width: picked == null ? 1.5 : 1,
+                      ),
+                      color: picked == null
+                          ? theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.5)
+                          : Colors.black,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: radius,
+                      child: picked != null
+                          ? Image.file(picked!, fit: BoxFit.cover)
+                          : Center(
+                              child: Icon(
+                                Icons.add_a_photo_outlined,
+                                size: 40,
+                                color: hasError
+                                    ? theme.colorScheme.error
+                                    : AppColors.primaryDark,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+                if (loading)
+                  const Positioned.fill(
+                    child: ColoredBox(
+                      color: Color(0x66000000),
+                      child: Center(
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (picked != null && onClear != null && !loading)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Material(
+                      color: Colors.black54,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: onClear,
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.close,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (hasError)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Text(
+              errorText!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ),
       ],
     );
   }

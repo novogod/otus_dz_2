@@ -177,6 +177,27 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// en: 'Recipe added!'
 	String get addRecipeSuccess => 'Recipe added!';
+
+	/// en: 'Choose from gallery'
+	String get addRecipePhotoFromGallery => 'Choose from gallery';
+
+	/// en: 'Take photo'
+	String get addRecipePhotoFromCamera => 'Take photo';
+
+	/// en: 'Photo is required'
+	String get addRecipePhotoRequired => 'Photo is required';
+
+	/// en: 'Remove photo'
+	String get addRecipePhotoRemove => 'Remove photo';
+
+	/// en: 'Add a photo'
+	String get addRecipePhotoSourceTitle => 'Add a photo';
+
+	/// en: 'Access to photos denied. Allow access in Settings.'
+	String get addRecipePhotoErrorAccessDenied => 'Access to photos denied. Allow access in Settings.';
+
+	/// en: 'Photo is too large even after compression. Try another one.'
+	String get addRecipePhotoErrorTooLarge => 'Photo is too large even after compression. Try another one.';
 }
 
 // Path: a11y
@@ -204,6 +225,9 @@ class TranslationsA11yEn {
 
 	/// en: 'Add recipe'
 	String get addRecipe => 'Add recipe';
+
+	/// en: 'Recipe photo picker'
+	String get addRecipePhotoPicker => 'Recipe photo picker';
 }
 
 /// The flat map containing all translations for locale <en>.
@@ -246,6 +270,7 @@ extension on Translations {
 			'a11y.offlineReloadUnavailable' => 'You\'re offline. Showing previous recipes.',
 			'a11y.scrollToTop' => 'Scroll to top',
 			'a11y.addRecipe' => 'Add recipe',
+			'a11y.addRecipePhotoPicker' => 'Recipe photo picker',
 			'addRecipeTitle' => 'Add recipe',
 			'addRecipeName' => 'Recipe name',
 			'addRecipePhoto' => 'Photo URL',
@@ -264,6 +289,13 @@ extension on Translations {
 			'addRecipeSaving' => 'Saving…',
 			'addRecipeError' => 'Couldn\'t save recipe. Try again.',
 			'addRecipeSuccess' => 'Recipe added!',
+			'addRecipePhotoFromGallery' => 'Choose from gallery',
+			'addRecipePhotoFromCamera' => 'Take photo',
+			'addRecipePhotoRequired' => 'Photo is required',
+			'addRecipePhotoRemove' => 'Remove photo',
+			'addRecipePhotoSourceTitle' => 'Add a photo',
+			'addRecipePhotoErrorAccessDenied' => 'Access to photos denied. Allow access in Settings.',
+			'addRecipePhotoErrorTooLarge' => 'Photo is too large even after compression. Try another one.',
 			_ => null,
 		};
 	}

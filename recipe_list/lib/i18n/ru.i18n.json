@@ -36,7 +36,8 @@
     "reloadFeed": "Обновить ленту",
     "offlineReloadUnavailable": "Нет сети. Показываем прежние рецепты.",
     "scrollToTop": "Наверх",
-    "addRecipe": "Добавить рецепт"
+    "addRecipe": "Добавить рецепт",
+    "addRecipePhotoPicker": "Выбор фото рецепта"
   },
   "addRecipeTitle": "Добавить рецепт",
   "addRecipeName": "Название рецепта",
@@ -55,5 +56,12 @@
   "addRecipeEnglishHint": "Заполните на английском — переводы создадутся автоматически.",
   "addRecipeSaving": "Сохраняем…",
   "addRecipeError": "Не удалось сохранить рецепт. Попробуйте ещё раз.",
-  "addRecipeSuccess": "Рецепт добавлен!"
+  "addRecipeSuccess": "Рецепт добавлен!",
+  "addRecipePhotoFromGallery": "Выбрать из галереи",
+  "addRecipePhotoFromCamera": "Сделать фото",
+  "addRecipePhotoRequired": "Фото обязательно",
+  "addRecipePhotoRemove": "Удалить фото",
+  "addRecipePhotoSourceTitle": "Добавить фото",
+  "addRecipePhotoErrorAccessDenied": "Доступ к фото запрещён. Разрешите доступ в настройках.",
+  "addRecipePhotoErrorTooLarge": "Фото слишком большое даже после сжатия. Выберите другое."
 }

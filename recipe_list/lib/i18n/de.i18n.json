@@ -34,7 +34,8 @@
     "flagOf": "Flagge von ${label}",
     "offlineReloadUnavailable": "Offline. Vorherige Rezepte werden angezeigt.",
     "scrollToTop": "Nach oben scrollen",
-    "addRecipe": "Rezept hinzufügen"
+    "addRecipe": "Rezept hinzufügen",
+    "addRecipePhotoPicker": "Rezept-Fotoauswahl"
   },
   "addRecipeTitle": "Rezept hinzufügen",
   "addRecipeName": "Rezeptname",
@@ -53,5 +54,12 @@
   "addRecipeEnglishHint": "Bitte auf Englisch eingeben — Übersetzungen werden automatisch erstellt.",
   "addRecipeSaving": "Speichert…",
   "addRecipeError": "Rezept konnte nicht gespeichert werden. Versuche es erneut.",
-  "addRecipeSuccess": "Rezept hinzugefügt!"
+  "addRecipeSuccess": "Rezept hinzugefügt!",
+  "addRecipePhotoFromGallery": "Aus Galerie auswählen",
+  "addRecipePhotoFromCamera": "Foto aufnehmen",
+  "addRecipePhotoRequired": "Foto ist erforderlich",
+  "addRecipePhotoRemove": "Foto entfernen",
+  "addRecipePhotoSourceTitle": "Foto hinzufügen",
+  "addRecipePhotoErrorAccessDenied": "Zugriff auf Fotos verweigert. Bitte in den Einstellungen erlauben.",
+  "addRecipePhotoErrorTooLarge": "Foto ist auch nach der Komprimierung zu groß. Bitte ein anderes wählen."
 }

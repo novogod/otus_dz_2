@@ -87,6 +87,13 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeSaving => 'Сохраняем…';
 	@override String get addRecipeError => 'Не удалось сохранить рецепт. Попробуйте ещё раз.';
 	@override String get addRecipeSuccess => 'Рецепт добавлен!';
+	@override String get addRecipePhotoFromGallery => 'Выбрать из галереи';
+	@override String get addRecipePhotoFromCamera => 'Сделать фото';
+	@override String get addRecipePhotoRequired => 'Фото обязательно';
+	@override String get addRecipePhotoRemove => 'Удалить фото';
+	@override String get addRecipePhotoSourceTitle => 'Добавить фото';
+	@override String get addRecipePhotoErrorAccessDenied => 'Доступ к фото запрещён. Разрешите доступ в настройках.';
+	@override String get addRecipePhotoErrorTooLarge => 'Фото слишком большое даже после сжатия. Выберите другое.';
 }
 
 // Path: a11y
@@ -102,6 +109,7 @@ class _TranslationsA11yRu implements TranslationsA11yEn {
 	@override String get offlineReloadUnavailable => 'Нет сети. Показываем прежние рецепты.';
 	@override String get scrollToTop => 'Наверх';
 	@override String get addRecipe => 'Добавить рецепт';
+	@override String get addRecipePhotoPicker => 'Выбор фото рецепта';
 }
 
 /// The flat map containing all translations for locale <ru>.
@@ -144,6 +152,7 @@ extension on TranslationsRu {
 			'a11y.offlineReloadUnavailable' => 'Нет сети. Показываем прежние рецепты.',
 			'a11y.scrollToTop' => 'Наверх',
 			'a11y.addRecipe' => 'Добавить рецепт',
+			'a11y.addRecipePhotoPicker' => 'Выбор фото рецепта',
 			'addRecipeTitle' => 'Добавить рецепт',
 			'addRecipeName' => 'Название рецепта',
 			'addRecipePhoto' => 'URL фотографии',
@@ -162,6 +171,13 @@ extension on TranslationsRu {
 			'addRecipeSaving' => 'Сохраняем…',
 			'addRecipeError' => 'Не удалось сохранить рецепт. Попробуйте ещё раз.',
 			'addRecipeSuccess' => 'Рецепт добавлен!',
+			'addRecipePhotoFromGallery' => 'Выбрать из галереи',
+			'addRecipePhotoFromCamera' => 'Сделать фото',
+			'addRecipePhotoRequired' => 'Фото обязательно',
+			'addRecipePhotoRemove' => 'Удалить фото',
+			'addRecipePhotoSourceTitle' => 'Добавить фото',
+			'addRecipePhotoErrorAccessDenied' => 'Доступ к фото запрещён. Разрешите доступ в настройках.',
+			'addRecipePhotoErrorTooLarge' => 'Фото слишком большое даже после сжатия. Выберите другое.',
 			_ => null,
 		};
 	}

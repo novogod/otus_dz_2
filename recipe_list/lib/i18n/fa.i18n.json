@@ -34,7 +34,8 @@
     "flagOf": "پرچم ${label}",
     "offlineReloadUnavailable": "آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.",
     "scrollToTop": "حرکت به بالا",
-    "addRecipe": "افزودن دستور"
+    "addRecipe": "افزودن دستور",
+    "addRecipePhotoPicker": "انتخاب عکس دستور"
   },
   "addRecipeTitle": "افزودن دستور",
   "addRecipeName": "نام دستور",
@@ -53,5 +54,12 @@
   "addRecipeEnglishHint": "لطفاً به انگلیسی وارد کنید — ترجمه‌ها خودکار ساخته می‌شوند.",
   "addRecipeSaving": "در حال ذخیره…",
   "addRecipeError": "ذخیرهٔ دستور ممکن نشد. دوباره تلاش کنید.",
-  "addRecipeSuccess": "دستور افزوده شد!"
+  "addRecipeSuccess": "دستور افزوده شد!",
+  "addRecipePhotoFromGallery": "انتخاب از گالری",
+  "addRecipePhotoFromCamera": "گرفتن عکس",
+  "addRecipePhotoRequired": "عکس الزامی است",
+  "addRecipePhotoRemove": "حذف عکس",
+  "addRecipePhotoSourceTitle": "افزودن عکس",
+  "addRecipePhotoErrorAccessDenied": "دسترسی به عکس‌ها رد شد. در تنظیمات اجازه دهید.",
+  "addRecipePhotoErrorTooLarge": "عکس حتی پس از فشرده‌سازی هم خیلی بزرگ است. یکی دیگر را امتحان کنید."
 }

@@ -34,7 +34,8 @@
     "flagOf": "Bandera de ${label}",
     "offlineReloadUnavailable": "Sin conexión. Mostrando recetas anteriores.",
     "scrollToTop": "Desplazar al inicio",
-    "addRecipe": "Añadir receta"
+    "addRecipe": "Añadir receta",
+    "addRecipePhotoPicker": "Selector de foto de receta"
   },
   "addRecipeTitle": "Añadir receta",
   "addRecipeName": "Nombre de la receta",
@@ -53,5 +54,12 @@
   "addRecipeEnglishHint": "Introduce en inglés — las traducciones se generan automáticamente.",
   "addRecipeSaving": "Guardando…",
   "addRecipeError": "No se pudo guardar la receta. Inténtalo de nuevo.",
-  "addRecipeSuccess": "¡Receta añadida!"
+  "addRecipeSuccess": "¡Receta añadida!",
+  "addRecipePhotoFromGallery": "Elegir de la galería",
+  "addRecipePhotoFromCamera": "Hacer foto",
+  "addRecipePhotoRequired": "La foto es obligatoria",
+  "addRecipePhotoRemove": "Quitar foto",
+  "addRecipePhotoSourceTitle": "Añadir una foto",
+  "addRecipePhotoErrorAccessDenied": "Acceso a fotos denegado. Permítelo en Ajustes.",
+  "addRecipePhotoErrorTooLarge": "La foto es demasiado grande incluso tras comprimirla. Prueba otra."
 }

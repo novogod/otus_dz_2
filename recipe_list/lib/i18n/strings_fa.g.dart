@@ -85,6 +85,13 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeSaving => 'در حال ذخیره…';
 	@override String get addRecipeError => 'ذخیرهٔ دستور ممکن نشد. دوباره تلاش کنید.';
 	@override String get addRecipeSuccess => 'دستور افزوده شد!';
+	@override String get addRecipePhotoFromGallery => 'انتخاب از گالری';
+	@override String get addRecipePhotoFromCamera => 'گرفتن عکس';
+	@override String get addRecipePhotoRequired => 'عکس الزامی است';
+	@override String get addRecipePhotoRemove => 'حذف عکس';
+	@override String get addRecipePhotoSourceTitle => 'افزودن عکس';
+	@override String get addRecipePhotoErrorAccessDenied => 'دسترسی به عکس‌ها رد شد. در تنظیمات اجازه دهید.';
+	@override String get addRecipePhotoErrorTooLarge => 'عکس حتی پس از فشرده‌سازی هم خیلی بزرگ است. یکی دیگر را امتحان کنید.';
 }
 
 // Path: a11y
@@ -100,6 +107,7 @@ class _TranslationsA11yFa implements TranslationsA11yEn {
 	@override String get offlineReloadUnavailable => 'آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.';
 	@override String get scrollToTop => 'حرکت به بالا';
 	@override String get addRecipe => 'افزودن دستور';
+	@override String get addRecipePhotoPicker => 'انتخاب عکس دستور';
 }
 
 /// The flat map containing all translations for locale <fa>.
@@ -142,6 +150,7 @@ extension on TranslationsFa {
 			'a11y.offlineReloadUnavailable' => 'آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.',
 			'a11y.scrollToTop' => 'حرکت به بالا',
 			'a11y.addRecipe' => 'افزودن دستور',
+			'a11y.addRecipePhotoPicker' => 'انتخاب عکس دستور',
 			'addRecipeTitle' => 'افزودن دستور',
 			'addRecipeName' => 'نام دستور',
 			'addRecipePhoto' => 'نشانی عکس',
@@ -160,6 +169,13 @@ extension on TranslationsFa {
 			'addRecipeSaving' => 'در حال ذخیره…',
 			'addRecipeError' => 'ذخیرهٔ دستور ممکن نشد. دوباره تلاش کنید.',
 			'addRecipeSuccess' => 'دستور افزوده شد!',
+			'addRecipePhotoFromGallery' => 'انتخاب از گالری',
+			'addRecipePhotoFromCamera' => 'گرفتن عکس',
+			'addRecipePhotoRequired' => 'عکس الزامی است',
+			'addRecipePhotoRemove' => 'حذف عکس',
+			'addRecipePhotoSourceTitle' => 'افزودن عکس',
+			'addRecipePhotoErrorAccessDenied' => 'دسترسی به عکس‌ها رد شد. در تنظیمات اجازه دهید.',
+			'addRecipePhotoErrorTooLarge' => 'عکس حتی پس از فشرده‌سازی هم خیلی بزرگ است. یکی دیگر را امتحان کنید.',
 			_ => null,
 		};
 	}

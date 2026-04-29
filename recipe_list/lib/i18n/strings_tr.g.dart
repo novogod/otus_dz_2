@@ -85,6 +85,13 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeSaving => 'Kaydediliyor…';
 	@override String get addRecipeError => 'Tarif kaydedilemedi. Tekrar deneyin.';
 	@override String get addRecipeSuccess => 'Tarif eklendi!';
+	@override String get addRecipePhotoFromGallery => 'Galeriden seç';
+	@override String get addRecipePhotoFromCamera => 'Fotoğraf çek';
+	@override String get addRecipePhotoRequired => 'Fotoğraf zorunludur';
+	@override String get addRecipePhotoRemove => 'Fotoğrafı kaldır';
+	@override String get addRecipePhotoSourceTitle => 'Fotoğraf ekle';
+	@override String get addRecipePhotoErrorAccessDenied => 'Fotoğraflara erişim reddedildi. Ayarlardan izin verin.';
+	@override String get addRecipePhotoErrorTooLarge => 'Fotoğraf sıkıştırmadan sonra bile çok büyük. Başkasını deneyin.';
 }
 
 // Path: a11y
@@ -100,6 +107,7 @@ class _TranslationsA11yTr implements TranslationsA11yEn {
 	@override String get offlineReloadUnavailable => 'Çevrimdışısınız. Önceki tarifler gösteriliyor.';
 	@override String get scrollToTop => 'Yukarı kaydır';
 	@override String get addRecipe => 'Tarif ekle';
+	@override String get addRecipePhotoPicker => 'Tarif fotoğraf seçici';
 }
 
 /// The flat map containing all translations for locale <tr>.
@@ -142,6 +150,7 @@ extension on TranslationsTr {
 			'a11y.offlineReloadUnavailable' => 'Çevrimdışısınız. Önceki tarifler gösteriliyor.',
 			'a11y.scrollToTop' => 'Yukarı kaydır',
 			'a11y.addRecipe' => 'Tarif ekle',
+			'a11y.addRecipePhotoPicker' => 'Tarif fotoğraf seçici',
 			'addRecipeTitle' => 'Tarif ekle',
 			'addRecipeName' => 'Tarif adı',
 			'addRecipePhoto' => 'Fotoğraf URL’si',
@@ -160,6 +169,13 @@ extension on TranslationsTr {
 			'addRecipeSaving' => 'Kaydediliyor…',
 			'addRecipeError' => 'Tarif kaydedilemedi. Tekrar deneyin.',
 			'addRecipeSuccess' => 'Tarif eklendi!',
+			'addRecipePhotoFromGallery' => 'Galeriden seç',
+			'addRecipePhotoFromCamera' => 'Fotoğraf çek',
+			'addRecipePhotoRequired' => 'Fotoğraf zorunludur',
+			'addRecipePhotoRemove' => 'Fotoğrafı kaldır',
+			'addRecipePhotoSourceTitle' => 'Fotoğraf ekle',
+			'addRecipePhotoErrorAccessDenied' => 'Fotoğraflara erişim reddedildi. Ayarlardan izin verin.',
+			'addRecipePhotoErrorTooLarge' => 'Fotoğraf sıkıştırmadan sonra bile çok büyük. Başkasını deneyin.',
 			_ => null,
 		};
 	}

@@ -34,7 +34,8 @@
     "flagOf": "ئاڵای ${label}",
     "offlineReloadUnavailable": "دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.",
     "scrollToTop": "گەڕانەوە بۆ سەرەوە",
-    "addRecipe": "Resipe zêde bike"
+    "addRecipe": "Resipe zêde bike",
+    "addRecipePhotoPicker": "Hilbijêrê wêneyê reçeteyê"
   },
   "addRecipeTitle": "Resipe zêde bike",
   "addRecipeName": "Navê resipê",
@@ -53,5 +54,12 @@
   "addRecipeEnglishHint": "Bi îngîlîzî binivîse — werger bixweber tê çêkirin.",
   "addRecipeSaving": "Tê tomarkirin…",
   "addRecipeError": "Resipe nehate tomarkirin. Dîsa biceribîne.",
-  "addRecipeSuccess": "Resipe hate zêdekirin!"
+  "addRecipeSuccess": "Resipe hate zêdekirin!",
+  "addRecipePhotoFromGallery": "Hilbijêre ji galeriyê",
+  "addRecipePhotoFromCamera": "Wêneyê bikişîne",
+  "addRecipePhotoRequired": "Wêne pêwîst e",
+  "addRecipePhotoRemove": "Wêneyê rake",
+  "addRecipePhotoSourceTitle": "Wêneyek lê zêde bike",
+  "addRecipePhotoErrorAccessDenied": "Gihîştina wêneyan hat redkirin. Ji Mîhengan destûr bide.",
+  "addRecipePhotoErrorTooLarge": "Wêne piştî perçiqandinê jî pir mezin e. Yekê din biceribîne."
 }
