@@ -91,6 +91,20 @@ class _RecipeListPageState extends State<RecipeListPage> {
   }
 
   @override
+  void didUpdateWidget(covariant RecipeListPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Когда родитель (RecipeListLoader) на смене языка передаёт уже
+    // переведённый список рецептов, обновляем `_displayed`, иначе
+    // экран продолжит рисовать старый (англоязычный) кэш.
+    // Если пользователь сейчас фильтрует по поиску — не трогаем
+    // отфильтрованный набор, чтобы не сбросить выбор.
+    if (!identical(oldWidget.recipes, widget.recipes) &&
+        identical(_displayed, oldWidget.recipes)) {
+      _displayed = widget.recipes;
+    }
+  }
+
+  @override
   void dispose() {
     _debounceTimer?.cancel();
     _focusNode.removeListener(_onFocusChange);

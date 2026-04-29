@@ -142,6 +142,29 @@ class RecipeRepository {
     }
   }
 
+  /// Bulk cache-only lookup: для каждого id вернёт перевод под `lang`
+  /// из локальной БД, либо `null`, если перевода ещё нет. Сеть НЕ
+  /// трогается. Используется на смене языка, чтобы мгновенно перерисовать
+  /// уже скачанные карточки, а сеть гонять только за промахами.
+  Future<Map<int, Recipe>> lookupManyCached(List<int> ids, AppLang lang) async {
+    if (ids.isEmpty) return const {};
+    final placeholders = List.filled(ids.length, '?').join(',');
+    final rows = await _db.query(
+      'recipes',
+      where: 'id IN ($placeholders) AND lang = ?',
+      whereArgs: [...ids, lang.name],
+    );
+    final out = <int, Recipe>{};
+    for (final r in rows) {
+      final rec = readRecipe(r);
+      if (!rec.isLite) out[rec.id] = rec;
+    }
+    if (out.isNotEmpty) {
+      await _touch(out.keys.toList(growable: false), lang);
+    }
+    return out;
+  }
+
   /// Используется фоновым прогревом / тестами.
   Future<void> upsertAll(List<Recipe> recipes, AppLang lang) =>
       _upsertAll(recipes, lang);

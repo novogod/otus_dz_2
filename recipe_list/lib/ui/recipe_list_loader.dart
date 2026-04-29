@@ -76,6 +76,11 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   void _onLangChanged() {
     if (!mounted) return;
     final last = _lastResult;
+    // ignore: avoid_print
+    print(
+      '[lang] _onLangChanged -> ${appLang.value.name} '
+      '(last=${last == null ? "null" : "${last.recipes.length} recipes"})',
+    );
     setState(() {
       _stage.value = const _LoadStage.initial();
       if (last == null || last.recipes.isEmpty) {
@@ -93,35 +98,70 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   }
 
   Future<_LoadResult> _retranslate(_LoadResult prev, AppLang lang) async {
+    final repo = prev.repository;
+    final ids = prev.recipes.map((r) => r.id).toList(growable: false);
+
+    // ШАГ 1 — мгновенный кэш-проход. Достаём из локального sqflite все
+    // переводы для (id, lang) одним запросом и тут же подменяем
+    // `_lastResult` + `_future` уже-переведённой лентой. UI перерисуется
+    // практически без задержки, если этот язык хоть раз посещался ранее.
+    Map<int, Recipe> cached = const {};
+    if (repo != null) {
+      try {
+        cached = await repo.lookupManyCached(ids, lang);
+      } on Object {
+        cached = const {};
+      }
+    }
+    final firstPass = [for (final r in prev.recipes) cached[r.id] ?? r];
+    if (cached.isNotEmpty && mounted) {
+      final partial = _LoadResult(recipes: firstPass, repository: repo);
+      setState(() {
+        _lastResult = partial;
+      });
+    }
+
     _stage.value = _LoadStage.fetching(
       category: 'recipes',
-      done: 0,
+      done: cached.length,
       total: prev.recipes.length,
-      loaded: 0,
+      loaded: cached.length,
       target: prev.recipes.length,
     );
-    final repo = prev.repository;
-    final translated = <Recipe>[];
+
+    // ШАГ 2 — добиваем промахи сетью. Перерисовываем по мере
+    // прихода каждой карточки, чтобы пользователь видел перевод сразу,
+    // а не ждал последовательный обход всех 200 рецептов.
+    final translated = [...firstPass];
+    int done = cached.length;
     for (var i = 0; i < prev.recipes.length; i++) {
+      if (cached.containsKey(prev.recipes[i].id)) continue;
       final original = prev.recipes[i];
-      Recipe next = original;
       try {
-        if (repo != null) {
-          final got = await repo.lookup(original.id, lang);
-          if (got != null) next = got;
-        } else {
-          final got = await widget.api.lookup(original.id, lang: lang);
-          if (got != null) next = got;
+        final got = repo != null
+            ? await repo.lookup(original.id, lang)
+            : await widget.api.lookup(original.id, lang: lang);
+        if (got != null) {
+          translated[i] = got;
+          if (mounted) {
+            final partial = _LoadResult(
+              recipes: List<Recipe>.from(translated),
+              repository: repo,
+            );
+            setState(() {
+              _lastResult = partial;
+            });
+          }
         }
       } on Object {
         // одна карточка не приехала — оставляем как есть
       }
-      translated.add(next);
+      done++;
       _stage.value = _LoadStage.fetching(
         category: 'recipes',
-        done: i + 1,
+        done: done,
         total: prev.recipes.length,
-        loaded: i + 1,
+        loaded: done,
         target: prev.recipes.length,
       );
     }
@@ -329,11 +369,22 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   Widget build(BuildContext context) {
     return FutureBuilder<_LoadResult>(
       future: _future,
+      // Передаём последний успешный результат как initialData — это
+      // не даёт FutureBuilder сбрасывать снимок при смене `_future`
+      // (например, при тапе по языковой кнопке: перевод идёт в
+      // фоне, а на экране остаётся прежняя лента в новом UI-языке
+      // slang — без полноэкранного «Готовим коллекцию рецептов»).
+      initialData: _lastResult,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
+        // Во время инкрементальной перерисовки на смене языка
+        // `_lastResult` обновляется по мере прихода каждой карточки
+        // через setState. Берём его в приоритете, чтобы пользователь
+        // видел перевод сразу, не дожидаясь завершения всего future.
+        final live = _lastResult ?? snapshot.data;
+        if (live == null && snapshot.connectionState != ConnectionState.done) {
           return _LoadingScreen(stage: _stage);
         }
-        if (snapshot.hasError) {
+        if (snapshot.hasError && live == null) {
           final s = S.of(context);
           return Scaffold(
             backgroundColor: AppColors.surfaceMuted,
@@ -356,7 +407,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             ),
           );
         }
-        final result = snapshot.data!;
+        final result = live ?? snapshot.data!;
         if (result.recipes.isEmpty) {
           final s = S.of(context);
           return Scaffold(
@@ -460,7 +511,11 @@ class _LoadingScreen extends StatelessWidget {
                     st.kind == _LoadStageKind.openingCache
                         ? s.loadingFromCache
                         : st.kind == _LoadStageKind.fetching
-                        ? s.loadingStage(st.category, st.done, st.total)
+                        ? s.loadingStage(
+                            s.localizedCategory(st.category),
+                            st.done,
+                            st.total,
+                          )
                         : '',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.inputHint,

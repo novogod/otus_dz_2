@@ -44,6 +44,8 @@ final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.ru);
 void cycleAppLang() {
   final next =
       AppLang.values[(appLang.value.index + 1) % AppLang.values.length];
+  // ignore: avoid_print
+  print('[lang] cycleAppLang ${appLang.value.name} -> ${next.name}');
   appLang.value = next;
 }
 
@@ -57,6 +59,8 @@ void initI18n() {
   _listenerInstalled = true;
   LocaleSettings.setLocaleSync(appLang.value.locale);
   appLang.addListener(() {
+    // ignore: avoid_print
+    print('[lang] initI18n listener -> ${appLang.value.name}');
     LocaleSettings.setLocaleSync(appLang.value.locale);
   });
 }
@@ -149,4 +153,185 @@ class S {
 
   // FAB label — derives from current AppLang, not from translations.
   String get langLabel => appLang.value.label;
+
+  /// Локализованное имя категории TheMealDB. Бэкенд `mahallem_ist`
+  /// присылает категории по-русски через `lang=ru`, но прогресс-бар
+  /// в `RecipeListLoader` показывает английский ключ (`'Lamb'`,
+  /// `'Pasta'`, …) — потому что итерируемся по локальному списку.
+  /// Маппим вручную, чтобы не делать сетевой запрос ради подписи.
+  String localizedCategory(String englishKey) =>
+      _categoryNames[appLang.value]?[englishKey] ?? englishKey;
 }
+
+const Map<AppLang, Map<String, String>> _categoryNames = {
+  AppLang.en: {
+    'recipes': 'recipes',
+    'Beef': 'Beef',
+    'Breakfast': 'Breakfast',
+    'Chicken': 'Chicken',
+    'Dessert': 'Dessert',
+    'Goat': 'Goat',
+    'Lamb': 'Lamb',
+    'Miscellaneous': 'Miscellaneous',
+    'Pasta': 'Pasta',
+    'Pork': 'Pork',
+    'Seafood': 'Seafood',
+    'Side': 'Side',
+    'Starter': 'Starter',
+    'Vegan': 'Vegan',
+    'Vegetarian': 'Vegetarian',
+  },
+  AppLang.ru: {
+    'recipes': 'рецепты',
+    'Beef': 'Говядина',
+    'Breakfast': 'Завтрак',
+    'Chicken': 'Курица',
+    'Dessert': 'Десерт',
+    'Goat': 'Козлятина',
+    'Lamb': 'Баранина',
+    'Miscellaneous': 'Разное',
+    'Pasta': 'Паста',
+    'Pork': 'Свинина',
+    'Seafood': 'Морепродукты',
+    'Side': 'Гарнир',
+    'Starter': 'Закуска',
+    'Vegan': 'Веганское',
+    'Vegetarian': 'Вегетарианское',
+  },
+  AppLang.es: {
+    'recipes': 'recetas',
+    'Beef': 'Ternera',
+    'Breakfast': 'Desayuno',
+    'Chicken': 'Pollo',
+    'Dessert': 'Postre',
+    'Goat': 'Cabra',
+    'Lamb': 'Cordero',
+    'Miscellaneous': 'Variado',
+    'Pasta': 'Pasta',
+    'Pork': 'Cerdo',
+    'Seafood': 'Mariscos',
+    'Side': 'Guarnición',
+    'Starter': 'Entrante',
+    'Vegan': 'Vegano',
+    'Vegetarian': 'Vegetariano',
+  },
+  AppLang.fr: {
+    'recipes': 'recettes',
+    'Beef': 'Bœuf',
+    'Breakfast': 'Petit-déjeuner',
+    'Chicken': 'Poulet',
+    'Dessert': 'Dessert',
+    'Goat': 'Chèvre',
+    'Lamb': 'Agneau',
+    'Miscellaneous': 'Divers',
+    'Pasta': 'Pâtes',
+    'Pork': 'Porc',
+    'Seafood': 'Fruits de mer',
+    'Side': 'Accompagnement',
+    'Starter': 'Entrée',
+    'Vegan': 'Végétalien',
+    'Vegetarian': 'Végétarien',
+  },
+  AppLang.de: {
+    'recipes': 'Rezepte',
+    'Beef': 'Rindfleisch',
+    'Breakfast': 'Frühstück',
+    'Chicken': 'Hähnchen',
+    'Dessert': 'Dessert',
+    'Goat': 'Ziege',
+    'Lamb': 'Lamm',
+    'Miscellaneous': 'Verschiedenes',
+    'Pasta': 'Pasta',
+    'Pork': 'Schweinefleisch',
+    'Seafood': 'Meeresfrüchte',
+    'Side': 'Beilage',
+    'Starter': 'Vorspeise',
+    'Vegan': 'Vegan',
+    'Vegetarian': 'Vegetarisch',
+  },
+  AppLang.it: {
+    'recipes': 'ricette',
+    'Beef': 'Manzo',
+    'Breakfast': 'Colazione',
+    'Chicken': 'Pollo',
+    'Dessert': 'Dolce',
+    'Goat': 'Capra',
+    'Lamb': 'Agnello',
+    'Miscellaneous': 'Varie',
+    'Pasta': 'Pasta',
+    'Pork': 'Maiale',
+    'Seafood': 'Frutti di mare',
+    'Side': 'Contorno',
+    'Starter': 'Antipasto',
+    'Vegan': 'Vegano',
+    'Vegetarian': 'Vegetariano',
+  },
+  AppLang.tr: {
+    'recipes': 'tarifler',
+    'Beef': 'Dana eti',
+    'Breakfast': 'Kahvaltı',
+    'Chicken': 'Tavuk',
+    'Dessert': 'Tatlı',
+    'Goat': 'Keçi',
+    'Lamb': 'Kuzu',
+    'Miscellaneous': 'Çeşitli',
+    'Pasta': 'Makarna',
+    'Pork': 'Domuz eti',
+    'Seafood': 'Deniz ürünleri',
+    'Side': 'Garnitür',
+    'Starter': 'Başlangıç',
+    'Vegan': 'Vegan',
+    'Vegetarian': 'Vejetaryen',
+  },
+  AppLang.ar: {
+    'recipes': 'وصفات',
+    'Beef': 'لحم بقري',
+    'Breakfast': 'فطور',
+    'Chicken': 'دجاج',
+    'Dessert': 'حلوى',
+    'Goat': 'لحم ماعز',
+    'Lamb': 'لحم ضأن',
+    'Miscellaneous': 'متنوع',
+    'Pasta': 'معكرونة',
+    'Pork': 'لحم خنزير',
+    'Seafood': 'مأكولات بحرية',
+    'Side': 'طبق جانبي',
+    'Starter': 'مقبلات',
+    'Vegan': 'نباتي صرف',
+    'Vegetarian': 'نباتي',
+  },
+  AppLang.fa: {
+    'recipes': 'دستورها',
+    'Beef': 'گوشت گاو',
+    'Breakfast': 'صبحانه',
+    'Chicken': 'مرغ',
+    'Dessert': 'دسر',
+    'Goat': 'گوشت بز',
+    'Lamb': 'گوشت بره',
+    'Miscellaneous': 'متفرقه',
+    'Pasta': 'پاستا',
+    'Pork': 'گوشت خوک',
+    'Seafood': 'غذای دریایی',
+    'Side': 'مخلفات',
+    'Starter': 'پیش‌غذا',
+    'Vegan': 'وگان',
+    'Vegetarian': 'گیاهی',
+  },
+  AppLang.ku: {
+    'recipes': 'ڕێسەکان',
+    'Beef': 'گۆشتی گا',
+    'Breakfast': 'نانی بەیانی',
+    'Chicken': 'مریشک',
+    'Dessert': 'شیرینی',
+    'Goat': 'گۆشتی بزن',
+    'Lamb': 'گۆشتی بەرخ',
+    'Miscellaneous': 'هەمەجۆر',
+    'Pasta': 'پاستا',
+    'Pork': 'گۆشتی بەراز',
+    'Seafood': 'خواردنی دەریایی',
+    'Side': 'لاکێش',
+    'Starter': 'خواردنی سەرەتایی',
+    'Vegan': 'ڤیگان',
+    'Vegetarian': 'ڕووەکی',
+  },
+};

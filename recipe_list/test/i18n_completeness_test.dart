@@ -98,6 +98,7 @@ void _walk(
       } else if (av.trim().isEmpty) {
         problems.add('empty value at $path');
       } else {
+        // ignore: deprecated_member_use
         for (final m in RegExp(
           r'\$\{[a-zA-Z_][a-zA-Z0-9_]*\}',
         ).allMatches(ev)) {
