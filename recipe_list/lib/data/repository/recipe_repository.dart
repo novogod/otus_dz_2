@@ -267,7 +267,7 @@ class RecipeRepository {
       );
     }
     await batch.commit(noResult: true);
-    await _evictIfOverCap();
+    await _evictIfOverCap(activeLang: lang);
   }
 
   Future<void> _upsert(Recipe r, AppLang lang) => _upsertAll([r], lang);
@@ -297,21 +297,63 @@ class RecipeRepository {
     );
   }
 
-  Future<void> _evictIfOverCap() async {
-    // 1) Сначала жёсткий байт-бюджет: вытесняем LRU-строки
-    //    пачками по 32, пока суммарный размер не вернётся под порог.
-    var bytes = await totalBytes();
-    while (bytes > byteCap) {
-      final removed = await _db.rawDelete(
-        'DELETE FROM recipes WHERE rowid IN ('
-        'SELECT rowid FROM recipes ORDER BY last_used_at ASC LIMIT 32'
-        ');',
-      );
-      if (removed == 0) break;
-      bytes = await totalBytes();
+  /// Бюджетное LRU-вытеснение с разделением по языку (todo/11).
+  ///
+  /// Активному языку выделяем 60 % от `byteCap`, остальным — 40 % на
+  /// всех. Сначала режем «прочие языки» по LRU, и только если этого
+  /// не хватило — вытесняем самые старые строки активного языка.
+  /// Это значит, что переключение языка не выкидывает прогретый
+  /// основной кэш пользователя.
+  ///
+  /// Если [activeLang] не передан, поведение совместимо со старым
+  /// глобальным LRU.
+  Future<void> _evictIfOverCap({AppLang? activeLang}) async {
+    if (activeLang == null) {
+      var bytes = await totalBytes();
+      while (bytes > byteCap) {
+        final removed = await _db.rawDelete(
+          'DELETE FROM recipes WHERE rowid IN ('
+          'SELECT rowid FROM recipes ORDER BY last_used_at ASC LIMIT 32'
+          ');',
+        );
+        if (removed == 0) break;
+        bytes = await totalBytes();
+      }
+    } else {
+      // 60 / 40 split. Округляем вниз: чуть жёстче, чем нужно.
+      final activeBudget = (byteCap * 6) ~/ 10;
+      final othersBudget = byteCap - activeBudget;
+
+      // 1) Срезаем «другие языки» по LRU, пока не уложимся в их 40 %.
+      var othersBytes = await _bytesFor(activeLang, isActive: false);
+      while (othersBytes > othersBudget) {
+        final removed = await _db.rawDelete(
+          'DELETE FROM recipes WHERE rowid IN ('
+          'SELECT rowid FROM recipes WHERE lang <> ? '
+          'ORDER BY last_used_at ASC LIMIT 32'
+          ');',
+          [activeLang.name],
+        );
+        if (removed == 0) break;
+        othersBytes = await _bytesFor(activeLang, isActive: false);
+      }
+
+      // 2) Если активный язык сам перерос свой бюджет — режем его LRU.
+      var activeBytes = await _bytesFor(activeLang, isActive: true);
+      while (activeBytes > activeBudget) {
+        final removed = await _db.rawDelete(
+          'DELETE FROM recipes WHERE rowid IN ('
+          'SELECT rowid FROM recipes WHERE lang = ? '
+          'ORDER BY last_used_at ASC LIMIT 32'
+          ');',
+          [activeLang.name],
+        );
+        if (removed == 0) break;
+        activeBytes = await _bytesFor(activeLang, isActive: true);
+      }
     }
 
-    // 2) Страховочный лимит по числу строк (защита от
+    // 3) Страховочный лимит по числу строк (защита от
     //    бесконечного роста индексов, если byte_size окажется занижен).
     final total = await count();
     if (total > cap) {
@@ -323,5 +365,18 @@ class RecipeRepository {
         [overflow],
       );
     }
+  }
+
+  Future<int> _bytesFor(AppLang lang, {required bool isActive}) async {
+    final rows = await _db.rawQuery(
+      isActive
+          ? 'SELECT COALESCE(SUM(byte_size), 0) AS b FROM recipes WHERE lang = ?;'
+          : 'SELECT COALESCE(SUM(byte_size), 0) AS b FROM recipes WHERE lang <> ?;',
+      [lang.name],
+    );
+    final v = rows.first['b'];
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return 0;
   }
 }
