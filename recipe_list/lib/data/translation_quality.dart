@@ -6,7 +6,9 @@ import '../models/recipe.dart';
 // `RegExp(...)` constructor reference appears in a single place
 // (silences the "RegExp will become final" deprecation hint when
 // using newer Dart SDKs in the IDE).
+// ignore: deprecated_member_use
 final Pattern _latinLetters = RegExp(r'[A-Za-z]');
+// ignore: deprecated_member_use
 final Pattern _nonAscii = RegExp(r'[^\u0000-\u007F]');
 
 /// Heuristic: does this recipe still look like it has not been

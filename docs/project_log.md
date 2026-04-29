@@ -1,5 +1,43 @@
 # Project Log
 
+## German page showed Spanish — sqflite cache schema bump v3→v4
+
+**Date:** 2026-04-29
+
+### Симптом
+
+Пользователь сообщил, что на странице деталей при переключении на
+немецкий показывается испанский текст. На сервере данные чистые —
+полный скан `recipes.i18n.de` (12 самых длинных строк + regex по
+fingerprint-словам `añad/horno/también/ñ/¡/¿/aceite/cucharad/sartén`)
+не нашёл ни одной испанской строки под `lang='de'`; в `translation_cache`
+для `target_lang='de'` тоже только одна легитимная запись с испанским
+заимствованием (`arroz al horno`).
+
+### Причина
+
+Отравленный **локальный sqflite-кэш на устройстве**: строки, попавшие
+туда во время предыдущих итераций пайплайна (до перехода на
+`gemini-2.5-flash-lite`), хранились под `(id, lang='de')` и
+`lookupManyCached` возвращал их напрямую без переsanity-чека.
+`recipeLooksUntranslated` не ловит испанский-как-немецкий, потому что
+испанский — латиница и проходит эвристику.
+
+### Фикс
+
+`recipe_list/lib/data/local/recipe_db.dart`: `kRecipeDbSchemaVersion`
+3 → 4. Существующий `onUpgrade` дропает и пересоздаёт таблицу
+`recipes`, поэтому при следующем запуске приложения кэш выбрасывается
+и каждая карточка перекачивается с уже исправленного сервера. Тот же
+паттерн, что использовался на границах v1→v2 и v2→v3.
+
+Коммит: `recipe_list@5d4b49e`.
+
+Дополнительно: `recipe_list/lib/data/translation_quality.dart` —
+заглушены `// ignore: deprecated_member_use` для двух конструкторов
+`RegExp(...)` (deprecation касается будущего `final`-запечатывания
+класса, не самого конструктора).
+
 ## translation pipeline — gemini-2.5-flash-lite, cache purge, details lang switch
 
 **Date:** 2026-04-29
