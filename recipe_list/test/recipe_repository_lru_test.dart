@@ -8,9 +8,13 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class _NopApi implements RecipeApi {
   @override
-  Future<List<Recipe>> searchByName({required String query, AppLang? lang}) async => const [];
+  Future<List<Recipe>> searchByName({
+    required String query,
+    AppLang? lang,
+  }) async => const [];
   @override
-  Future<Recipe?> lookup(int id, {AppLang? lang, Duration? timeout}) async => null;
+  Future<Recipe?> lookup(int id, {AppLang? lang, Duration? timeout}) async =>
+      null;
   @override
   Future<Recipe?> random({AppLang? lang}) async => null;
   @override
@@ -29,11 +33,7 @@ class _NopApi implements RecipeApi {
 /// padding the photo URL controls the size predictably.
 Recipe _bigRecipe(int id, {int bytes = 1024}) {
   final pad = 'x' * bytes;
-  return Recipe(
-    id: id,
-    name: 'r$id',
-    photo: 'https://x/$id/$pad.jpg',
-  );
+  return Recipe(id: id, name: 'r$id', photo: 'https://x/$id/$pad.jpg');
 }
 
 Future<Database> _openInMemoryDb() async {
@@ -58,11 +58,7 @@ void main() {
 
     test('eviction prefers non-active lang first', () async {
       // 10 KB byte cap → active budget 6 KB, others 4 KB.
-      final repo = RecipeRepository(
-        db: db,
-        api: _NopApi(),
-        byteCap: 10 * 1024,
-      );
+      final repo = RecipeRepository(db: db, api: _NopApi(), byteCap: 10 * 1024);
 
       // Seed 8 KB into RU (the future "other") and 2 KB into TR (active).
       await repo.upsertAll(
@@ -82,10 +78,16 @@ void main() {
 
       final ruCount = await repo.countFor(AppLang.ru);
       final trCount = await repo.countFor(AppLang.tr);
-      expect(trCount, greaterThanOrEqualTo(6),
-          reason: 'active TR rows must not be evicted while others over budget');
-      expect(ruCount, lessThan(8),
-          reason: 'non-active RU rows should be trimmed first');
+      expect(
+        trCount,
+        greaterThanOrEqualTo(6),
+        reason: 'active TR rows must not be evicted while others over budget',
+      );
+      expect(
+        ruCount,
+        lessThan(8),
+        reason: 'non-active RU rows should be trimmed first',
+      );
     });
 
     test('falls through to active lang when only it overflows', () async {

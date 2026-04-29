@@ -47,9 +47,6 @@ class FeedConfig {
       'FEED_TRANSLATE_CONCURRENCY',
       defaultValue: 8,
     ),
-    useBulkPage: bool.fromEnvironment(
-      'USE_BULK_PAGE',
-      defaultValue: false,
-    ),
+    useBulkPage: bool.fromEnvironment('USE_BULK_PAGE', defaultValue: false),
   );
 }

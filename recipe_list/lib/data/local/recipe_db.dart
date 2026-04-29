@@ -195,9 +195,5 @@ Map<String, Object?> writeRecipe(
 
 /// Map for INSERT/UPDATE into `recipe_bodies` (todo/12).
 Map<String, Object?> writeRecipeBody(Recipe r, {required String lang}) {
-  return {
-    'id': r.id,
-    'lang': lang,
-    'instructions': r.instructions,
-  };
+  return {'id': r.id, 'lang': lang, 'instructions': r.instructions};
 }

@@ -8,9 +8,13 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class _NopApi implements RecipeApi {
   @override
-  Future<List<Recipe>> searchByName({required String query, AppLang? lang}) async => const [];
+  Future<List<Recipe>> searchByName({
+    required String query,
+    AppLang? lang,
+  }) async => const [];
   @override
-  Future<Recipe?> lookup(int id, {AppLang? lang, Duration? timeout}) async => null;
+  Future<Recipe?> lookup(int id, {AppLang? lang, Duration? timeout}) async =>
+      null;
   @override
   Future<Recipe?> random({AppLang? lang}) async => null;
   @override
@@ -24,11 +28,11 @@ class _NopApi implements RecipeApi {
 }
 
 Recipe _r(int id, {String? instructions}) => Recipe(
-      id: id,
-      name: 'r$id',
-      photo: 'https://x/$id.jpg',
-      instructions: instructions,
-    );
+  id: id,
+  name: 'r$id',
+  photo: 'https://x/$id.jpg',
+  instructions: instructions,
+);
 
 Future<Database> _openInMemoryDb() async {
   sqfliteFfiInit();
@@ -67,8 +71,11 @@ void main() {
 
       final cached = await repo.listCached(AppLang.en);
       expect(cached, hasLength(1));
-      expect(cached.first.instructions, isNull,
-          reason: 'list-row payload must not carry the heavy blob');
+      expect(
+        cached.first.instructions,
+        isNull,
+        reason: 'list-row payload must not carry the heavy blob',
+      );
     });
 
     test('eviction cascades to recipe_bodies via trigger', () async {
@@ -77,11 +84,15 @@ void main() {
       // Manually delete the parent row to fire the trigger; eviction
       // path uses the same `DELETE FROM recipes WHERE rowid IN ...`
       // statement.
-      await db.rawDelete('DELETE FROM recipes WHERE id = ? AND lang = ?',
-          [1, 'en']);
+      await db.rawDelete('DELETE FROM recipes WHERE id = ? AND lang = ?', [
+        1,
+        'en',
+      ]);
       expect(await repo.getInstructions(1, AppLang.en), isNull);
       final orphans = await db.rawQuery(
-          'SELECT COUNT(*) AS c FROM recipe_bodies WHERE id = ?', [1]);
+        'SELECT COUNT(*) AS c FROM recipe_bodies WHERE id = ?',
+        [1],
+      );
       expect(orphans.first['c'], 0);
     });
 
@@ -90,13 +101,19 @@ void main() {
       // Same recipe with and without a long body. Their row byte_size
       // must match because instructions live elsewhere.
       await repo.upsertAll([_r(1, instructions: 'x' * 5000)], AppLang.en);
-      final rowsA = await db.query('recipes',
-          columns: ['byte_size'], where: 'id = ? AND lang = ?',
-          whereArgs: [1, 'en']);
+      final rowsA = await db.query(
+        'recipes',
+        columns: ['byte_size'],
+        where: 'id = ? AND lang = ?',
+        whereArgs: [1, 'en'],
+      );
       await repo.upsertAll([_r(2)], AppLang.en);
-      final rowsB = await db.query('recipes',
-          columns: ['byte_size'], where: 'id = ? AND lang = ?',
-          whereArgs: [2, 'en']);
+      final rowsB = await db.query(
+        'recipes',
+        columns: ['byte_size'],
+        where: 'id = ? AND lang = ?',
+        whereArgs: [2, 'en'],
+      );
       expect(rowsA.first['byte_size'], rowsB.first['byte_size']);
     });
   });

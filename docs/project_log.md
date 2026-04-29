@@ -1,5 +1,63 @@
 # Project Log
 
+## todo/01–13 + 99: full recipes-pipeline refactor
+
+**Date:** 2026-04-29
+
+Прошли все чанки из `todo/` последовательно (`flutter analyze` чисто
++ baseline тестов сохранён + push после каждого чанка). Базовые
+pre-existing fails (`cache hit at threshold`, `network error empty
+cache`, два English-residue теста на ноде) не трогались — они и были
+в зелёной базе до серии.
+
+### Клиент (`otus_dz_2`, ветка main)
+
+| Чанк | Commit | Что сделано |
+|------|--------|-------------|
+| 01 | `31d9a29` | `RecipeRepository` defaults: byteCap 64 MB, rowCap 8000. |
+| 02 | `a849eba` | `_runLoad` сохраняет предыдущую ленту при offline reload + SnackBar. |
+| 03 | `b655b47` | Reload affordance: вращающаяся иконка + LinearProgressIndicator под `AppPageBar`. |
+| 04 | `ad559f0` | `FeedConfig` вынесен из `RecipeListLoader`, читает `--dart-define`. |
+| 05 | `6b063c4` | `pickCategoriesFor` помнит прошлый набор и избегает повторов между нажатиями reload. |
+| 06 | `0411a10` | Streaming feed: `_publishPartialFeed` отдаёт переведённые порции по мере готовности. |
+| 08 | `acabf46` | `RecipeApi.fetchPage` + флаг `USE_BULK_PAGE` (по умолчанию выключено). |
+| 11 | `8d6a0a4` | Per-language LRU partitioning: 60/40 split active/others, batch=32. |
+| 12 | `8404825` | `recipes.instructions` вынесено в `recipe_bodies(id, lang)` + cascade trigger; `RecipeRepository.getInstructions(id, lang)`; `RecipeDetailsPage` лениво подгружает тело через `FutureBuilder` + shimmer. Schema v5. |
+| 13 | `33812cb` | Опциональный `appReloadTicker` + `requestAppReload()`; `ReloadIconButton({bool global = false})`. |
+
+### Сервер (`mahallem_ist`, ветка main)
+
+| Чанк | Commit | Что сделано |
+|------|--------|-------------|
+| 07 | `901d8f7a` | `GET /recipes/page?lang&offset&limit` — bulk endpoint поверх `RecipeRepository`. |
+| 09 | `2640d8b1` | L1 Redis cache (`lib/cache/redis-recipes.js`): `getOrSet` cache-aside, fail-open; `recipeKey/filterKey/pageKey`; обёрнуты `/recipes/lookup/:id`, `/recipes/filter`, `/recipes/page`. Compose: `redis` сервис с `--maxmemory ${RECIPES_REDIS_MAXMEMORY:-1500mb} --maxmemory-policy allkeys-lru`, БД `/4`. |
+| 10 | `a88083d9` | `lib/jobs/warmup-recipes.js`: `runWarmup` (popularity DESC, concurrency=16) + `scheduleWarmupOnStart` запускается из `server.js` (skip при `WARMUP_ON_START=0`). |
+| 99 | `ec1ddedf` | Rollback escape hatch: `REDIS_DISABLED=1` в `getOrSet` форсирует bypass без redeploy; `docs/recipes-rollout.md` для оператора. |
+
+### Проверки
+
+```bash
+# client
+cd recipe_list && flutter analyze        # No issues
+flutter test --no-pub                    # 53 pass, 2 baseline fail
+
+# server
+cd local_user_portal && node --test tests/**/*.test.js
+                                         # 24 pass, 2 baseline fail
+docker compose -f local_docker_admin_backend/docker-compose.yml config -q
+                                         # ok
+```
+
+### Rollback levers (без redeploy)
+
+| Lever | Effect |
+|-------|--------|
+| `REDIS_DISABLED=1` | `getOrSet` обходит Redis на каждом запросе. |
+| `WARMUP_ON_START=0` | пропускает прогрев при следующем рестарте. |
+| `--dart-define=USE_BULK_PAGE=0` | клиент возвращается на category fan-out. |
+
+---
+
 ## Reload button + categories/translation-buffer docs
 
 **Date:** 2026-04-29

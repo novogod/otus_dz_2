@@ -6,6 +6,7 @@ import 'package:recipe_list/data/api/meal_db_client.dart';
 import 'package:recipe_list/data/api/recipe_api.dart';
 import 'package:recipe_list/data/api/recipe_api_config.dart';
 import 'package:recipe_list/i18n.dart';
+
 class _StubAdapter implements HttpClientAdapter {
   final Map<String, Object?> responses;
   final List<RequestOptions> calls = [];

@@ -230,11 +230,9 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                             _renderedLang,
                           ),
                           builder: (ctx, snap) {
-                            if (snap.connectionState !=
-                                ConnectionState.done) {
+                            if (snap.connectionState != ConnectionState.done) {
                               return Container(
-                                key: const ValueKey(
-                                    'instructions-shimmer'),
+                                key: const ValueKey('instructions-shimmer'),
                                 height: 92,
                                 decoration: BoxDecoration(
                                   color: AppColors.surfaceMuted,
