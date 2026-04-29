@@ -305,9 +305,7 @@ class _IngredientRowField extends StatelessWidget {
               labelText: s.addRecipeIngredientQty,
               isDense: true,
             ),
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textInputAction: TextInputAction.next,
           ),
         ),

@@ -40,7 +40,7 @@
   "addRecipeName": "Nombre de la receta",
   "addRecipePhoto": "URL de la foto",
   "addRecipeCategory": "Categoría",
-  "addRecipeArea": "Cocina",
+  "addRecipeArea": "Cocina (país de origen)",
   "addRecipeInstructions": "Instrucciones",
   "addRecipeIngredientsLabel": "Ingredientes",
   "addRecipeIngredientName": "Nombre",

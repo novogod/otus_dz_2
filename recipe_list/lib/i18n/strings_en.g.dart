@@ -136,8 +136,8 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Category'
 	String get addRecipeCategory => 'Category';
 
-	/// en: 'Area / cuisine'
-	String get addRecipeArea => 'Area / cuisine';
+	/// en: 'Cuisine (country of origin)'
+	String get addRecipeArea => 'Cuisine (country of origin)';
 
 	/// en: 'Instructions'
 	String get addRecipeInstructions => 'Instructions';
@@ -250,7 +250,7 @@ extension on Translations {
 			'addRecipeName' => 'Recipe name',
 			'addRecipePhoto' => 'Photo URL',
 			'addRecipeCategory' => 'Category',
-			'addRecipeArea' => 'Area / cuisine',
+			'addRecipeArea' => 'Cuisine (country of origin)',
 			'addRecipeInstructions' => 'Instructions',
 			'addRecipeIngredientsLabel' => 'Ingredients',
 			'addRecipeIngredientName' => 'Name',

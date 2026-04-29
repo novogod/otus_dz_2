@@ -71,7 +71,7 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeName => 'Rezeptname';
 	@override String get addRecipePhoto => 'Foto-URL';
 	@override String get addRecipeCategory => 'Kategorie';
-	@override String get addRecipeArea => 'Küche';
+	@override String get addRecipeArea => 'Küche (Herkunftsland)';
 	@override String get addRecipeInstructions => 'Anleitung';
 	@override String get addRecipeIngredientsLabel => 'Zutaten';
 	@override String get addRecipeIngredientName => 'Name';
@@ -146,7 +146,7 @@ extension on TranslationsDe {
 			'addRecipeName' => 'Rezeptname',
 			'addRecipePhoto' => 'Foto-URL',
 			'addRecipeCategory' => 'Kategorie',
-			'addRecipeArea' => 'Küche',
+			'addRecipeArea' => 'Küche (Herkunftsland)',
 			'addRecipeInstructions' => 'Anleitung',
 			'addRecipeIngredientsLabel' => 'Zutaten',
 			'addRecipeIngredientName' => 'Name',

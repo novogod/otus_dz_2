@@ -42,7 +42,7 @@
   "addRecipeName": "Название рецепта",
   "addRecipePhoto": "URL фотографии",
   "addRecipeCategory": "Категория",
-  "addRecipeArea": "Кухня",
+  "addRecipeArea": "Кухня (страна происхождения)",
   "addRecipeInstructions": "Инструкция",
   "addRecipeIngredientsLabel": "Ингредиенты",
   "addRecipeIngredientName": "Название",

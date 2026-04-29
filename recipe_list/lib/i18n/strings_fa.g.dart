@@ -71,7 +71,7 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeName => 'نام دستور';
 	@override String get addRecipePhoto => 'نشانی عکس';
 	@override String get addRecipeCategory => 'دسته';
-	@override String get addRecipeArea => 'آشپزی';
+	@override String get addRecipeArea => 'آشپزی (کشور مبدأ)';
 	@override String get addRecipeInstructions => 'دستور پخت';
 	@override String get addRecipeIngredientsLabel => 'مواد';
 	@override String get addRecipeIngredientName => 'نام';
@@ -146,7 +146,7 @@ extension on TranslationsFa {
 			'addRecipeName' => 'نام دستور',
 			'addRecipePhoto' => 'نشانی عکس',
 			'addRecipeCategory' => 'دسته',
-			'addRecipeArea' => 'آشپزی',
+			'addRecipeArea' => 'آشپزی (کشور مبدأ)',
 			'addRecipeInstructions' => 'دستور پخت',
 			'addRecipeIngredientsLabel' => 'مواد',
 			'addRecipeIngredientName' => 'نام',

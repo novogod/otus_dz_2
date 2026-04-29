@@ -40,7 +40,7 @@
   "addRecipeName": "Tarif adı",
   "addRecipePhoto": "Fotoğraf URL’si",
   "addRecipeCategory": "Kategori",
-  "addRecipeArea": "Mutfak",
+  "addRecipeArea": "Mutfak (köken ülke)",
   "addRecipeInstructions": "Talimatlar",
   "addRecipeIngredientsLabel": "Malzemeler",
   "addRecipeIngredientName": "Ad",

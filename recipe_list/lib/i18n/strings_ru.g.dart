@@ -73,7 +73,7 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeName => 'Название рецепта';
 	@override String get addRecipePhoto => 'URL фотографии';
 	@override String get addRecipeCategory => 'Категория';
-	@override String get addRecipeArea => 'Кухня';
+	@override String get addRecipeArea => 'Кухня (страна происхождения)';
 	@override String get addRecipeInstructions => 'Инструкция';
 	@override String get addRecipeIngredientsLabel => 'Ингредиенты';
 	@override String get addRecipeIngredientName => 'Название';
@@ -148,7 +148,7 @@ extension on TranslationsRu {
 			'addRecipeName' => 'Название рецепта',
 			'addRecipePhoto' => 'URL фотографии',
 			'addRecipeCategory' => 'Категория',
-			'addRecipeArea' => 'Кухня',
+			'addRecipeArea' => 'Кухня (страна происхождения)',
 			'addRecipeInstructions' => 'Инструкция',
 			'addRecipeIngredientsLabel' => 'Ингредиенты',
 			'addRecipeIngredientName' => 'Название',

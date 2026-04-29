@@ -75,7 +75,7 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeName => 'اسم الوصفة';
 	@override String get addRecipePhoto => 'رابط الصورة';
 	@override String get addRecipeCategory => 'التصنيف';
-	@override String get addRecipeArea => 'المطبخ';
+	@override String get addRecipeArea => 'المطبخ (بلد المنشأ)';
 	@override String get addRecipeInstructions => 'التعليمات';
 	@override String get addRecipeIngredientsLabel => 'المكوّنات';
 	@override String get addRecipeIngredientName => 'الاسم';
@@ -150,7 +150,7 @@ extension on TranslationsAr {
 			'addRecipeName' => 'اسم الوصفة',
 			'addRecipePhoto' => 'رابط الصورة',
 			'addRecipeCategory' => 'التصنيف',
-			'addRecipeArea' => 'المطبخ',
+			'addRecipeArea' => 'المطبخ (بلد المنشأ)',
 			'addRecipeInstructions' => 'التعليمات',
 			'addRecipeIngredientsLabel' => 'المكوّنات',
 			'addRecipeIngredientName' => 'الاسم',
