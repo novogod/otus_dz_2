@@ -135,7 +135,7 @@ class RecipeRepository {
     );
   }
 
-  Future<Recipe?> lookup(int id, AppLang lang) async {
+  Future<Recipe?> lookup(int id, AppLang lang, {Duration? timeout}) async {
     final rows = await _db.query(
       'recipes',
       where: 'id = ? AND lang = ?',
@@ -148,7 +148,7 @@ class RecipeRepository {
       if (!cached.isLite) return cached;
     }
     try {
-      final fetched = await _api.lookup(id, lang: lang);
+      final fetched = await _api.lookup(id, lang: lang, timeout: timeout);
       if (fetched != null) await _upsert(fetched, lang);
       return fetched;
     } on Object {

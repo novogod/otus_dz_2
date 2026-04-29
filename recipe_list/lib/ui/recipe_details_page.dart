@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/api/recipe_api.dart';
-import '../data/translation_quality.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_bottom_nav_bar.dart';
@@ -44,11 +43,6 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
   /// ответ от старого языка не перезаписал результат нового.
   int _translateSeq = 0;
 
-  /// Сколько раз перезапрашивать lookup, если ответ всё ещё
-  /// выглядит непереведённым. Совпадает с `_residueRetryRounds`
-  /// в `recipe_list_loader.dart`.
-  static const int _residueRetryRounds = 3;
-
   @override
   void initState() {
     super.initState();
@@ -70,29 +64,26 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     if (api == null) return; // тесты без сети
     final seq = ++_translateSeq;
     if (mounted) setState(() => _translating = true);
+    // Per docs/translation-pipeline.md: server-side `_isEchoTranslation`
+    // + `evaluateCandidate` are authoritative. The client makes a
+    // single `/lookup` call per language switch; the loader stays on
+    // screen until that one call resolves. If the call fails, the
+    // previous-language copy stays visible (doc §"What the contract
+    // guarantees" → "Offline tolerance").
+    Recipe? fetched;
     try {
-      Recipe? best;
-      for (var round = 0; round <= _residueRetryRounds; round++) {
-        final Recipe? fetched;
-        try {
-          fetched = await api.lookup(_recipe.id, lang: lang);
-        } on Object {
-          break;
-        }
-        if (seq != _translateSeq) return; // язык переключили ещё раз
-        if (fetched == null) break;
-        best = fetched;
-        if (!recipeLooksUntranslated(fetched, lang)) break;
-      }
-      if (!mounted || seq != _translateSeq) return;
-      setState(() {
-        if (best != null) _recipe = best;
-        _translating = false;
-      });
-    } catch (_) {
-      if (!mounted || seq != _translateSeq) return;
-      setState(() => _translating = false);
+      fetched = await api.lookup(_recipe.id, lang: lang);
+    } on Object catch (e) {
+      // ignore: avoid_print
+      print('[lang] details lookup failed: $e');
+      fetched = null;
     }
+    if (!mounted || seq != _translateSeq) return;
+    final got = fetched;
+    setState(() {
+      if (got != null) _recipe = got;
+      _translating = false;
+    });
   }
 
   @override

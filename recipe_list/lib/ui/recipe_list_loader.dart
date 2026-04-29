@@ -5,7 +5,6 @@ import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
 import '../data/repository/recipe_repository.dart';
-import '../data/translation_quality.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
@@ -57,6 +56,11 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   /// до тех пор, пока все карточки не приедут из mahallem-кэша/MT.
   bool _translating = false;
 
+  /// Монотонный счётчик попыток перевода. Если пользователь жмёт
+  /// кнопку языка ещё раз, пока предыдущая `_retranslate` не
+  /// доехала, последний результат не должен перезаписать новый.
+  int _translateSeq = 0;
+
   @override
   void initState() {
     super.initState();
@@ -83,6 +87,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   void _onLangChanged() {
     if (!mounted) return;
     final last = _lastResult;
+    final seq = ++_translateSeq;
     // ignore: avoid_print
     print(
       '[lang] _onLangChanged -> ${appLang.value.name} '
@@ -92,17 +97,41 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       _stage.value = const _LoadStage.initial();
       _translating = true;
       if (last == null || last.recipes.isEmpty) {
-        _future = _runLoad().then((r) {
-          _lastResult = r;
-          if (mounted) setState(() => _translating = false);
-          return r;
-        });
+        _future = _runLoad()
+            .then((r) {
+              if (seq != _translateSeq || !mounted) return r;
+              _lastResult = r;
+              setState(() => _translating = false);
+              return r;
+            })
+            .catchError((Object e, StackTrace st) {
+              if (seq != _translateSeq || !mounted) {
+                throw e;
+              }
+              // ignore: avoid_print
+              print('[lang] _runLoad failed: $e');
+              setState(() => _translating = false);
+              throw e;
+            });
       } else {
-        _future = _retranslate(last, appLang.value).then((r) {
-          _lastResult = r;
-          if (mounted) setState(() => _translating = false);
-          return r;
-        });
+        _future = _retranslate(last, appLang.value)
+            .then((r) {
+              if (seq != _translateSeq || !mounted) return r;
+              _lastResult = r;
+              setState(() => _translating = false);
+              return r;
+            })
+            .catchError((Object e, StackTrace st) {
+              if (seq != _translateSeq || !mounted) {
+                throw e;
+              }
+              // ignore: avoid_print
+              print('[lang] _retranslate failed: $e');
+              // Doc rule: "If `/lookup` fails, the previous-language copy
+              // stays on screen". Drop the loader and keep _lastResult.
+              setState(() => _translating = false);
+              throw e;
+            });
       }
     });
   }
@@ -136,15 +165,22 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       target: prev.recipes.length,
     );
 
-    // ШАГ 2 — добиваем промахи сетью ПАРАЛЛЕЛЬНО.
+    // ШАГ 2 — добиваем промахи сетью ПАРАЛЛЕЛЬНО (worker-pool, не волны).
     //
-    // Раньше тут был последовательный `for` с `await`, и при 150–200
-    // рецептах × ~1 c на LT-вызов перевод тянулся минутами; пользователь
-    // успевал решить, что кнопка флага «не работает». Теперь идём
-    // батчами по [_translateConcurrency] параллельных запросов —
-    // сервер уже капнут на 6 одновременных переводов
-    // (`local_user_portal/utils/lt-limit.js`), так что 8 клиентских
-    // запросов не перегружают LT, а UI обновляется заметно быстрее.
+    // Раньше тут были волны `Future.wait` по 8 — но если в волне был
+    // один медленный рецепт (Gemini cold start, LT очередь), 7 воркеров
+    // простаивали до его таймаута. Сейчас держим N воркеров,
+    // каждый берёт следующий индекс из общей очереди — стабильно
+    // ~_translateConcurrency запросов в полёте.
+    //
+    // Дополнительно — общий deadline на всю фазу (§"Bounded latency"
+    // в docs/translation-pipeline.md обещает N × 1–4 c parallelized
+    // 8-wide; даже при 200 промахов это ~100 c). Если за 120 c всё
+    // ещё что-то висит — закрываем фазу и оставляем оригиналы (см.
+    // §"Offline tolerance": failed lookup leaves the previous-language
+    // copy on screen). Сервер всё равно сохранит i18n[lang] forever
+    // для тех, что доехали; в следующий заход lookupManyCached
+    // подхватит их без сети.
     final translated = [...firstPass];
     final missed = <int>[
       for (var i = 0; i < prev.recipes.length; i++)
@@ -152,88 +188,53 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     ];
     int done = cached.length;
     final total = prev.recipes.length;
+    final deadline = DateTime.now().add(const Duration(seconds: 120));
+    const perCallTimeout = Duration(seconds: 12);
 
-    for (var start = 0; start < missed.length; start += _translateConcurrency) {
-      final end = (start + _translateConcurrency).clamp(0, missed.length);
-      final batch = missed.sublist(start, end);
-      await Future.wait(
-        batch.map((idx) async {
-          final original = prev.recipes[idx];
-          try {
-            final got = repo != null
-                ? await repo.lookup(original.id, lang)
-                : await widget.api.lookup(original.id, lang: lang);
-            if (got != null) {
-              translated[idx] = got;
-            }
-          } on Object {
-            // одна карточка не приехала — оставляем оригинал
+    var cursor = 0;
+    Future<void> worker() async {
+      while (true) {
+        if (DateTime.now().isAfter(deadline)) return;
+        final i = cursor++;
+        if (i >= missed.length) return;
+        final idx = missed[i];
+        final original = prev.recipes[idx];
+        try {
+          final got = repo != null
+              ? await repo.lookup(original.id, lang, timeout: perCallTimeout)
+              : await widget.api.lookup(
+                  original.id,
+                  lang: lang,
+                  timeout: perCallTimeout,
+                );
+          if (got != null) {
+            translated[idx] = got;
           }
-        }),
-      );
-      done += batch.length;
-      // Список специально НЕ setState'им — _translating==true держит _LoadingScreen,
-      // результат показваем только когда все батчи завершатся.
-      _stage.value = _LoadStage.fetching(
-        category: 'recipes',
-        done: done,
-        total: total,
-        loaded: done,
-        target: total,
-      );
-    }
-
-    // Bounded retry: per docs/todo/i18n_slang_gemini.md "Quality contract"
-    // and docs/translation-pipeline.md "Quality gate" — if a recipe still
-    // looks untranslated for the requested language (e.g. server's
-    // self-purge dropped a poisoned i18n[lang] row but the first read
-    // came back during/before the re-translate, OR a transient Gemini
-    // failure left strInstructions echoing English), re-fetch each
-    // offender up to [_residueRetryRounds] times. Keep _translating=true
-    // throughout so the loader stays up.
-    for (var round = 0; round < _residueRetryRounds; round++) {
-      final stale = <int>[
-        for (var i = 0; i < translated.length; i++)
-          if (recipeLooksUntranslated(translated[i], lang)) i,
-      ];
-      if (stale.isEmpty) break;
-      // ignore: avoid_print
-      print(
-        '[lang] residue retry round=${round + 1} '
-        'stale=${stale.length}/${translated.length} lang=${lang.name}',
-      );
-      for (var s = 0; s < stale.length; s += _translateConcurrency) {
-        final batch = stale.sublist(
-          s,
-          (s + _translateConcurrency).clamp(0, stale.length),
-        );
-        await Future.wait(
-          batch.map((idx) async {
-            final original = prev.recipes[idx];
-            try {
-              final got = repo != null
-                  ? await repo.lookup(original.id, lang)
-                  : await widget.api.lookup(original.id, lang: lang);
-              if (got != null && !recipeLooksUntranslated(got, lang)) {
-                translated[idx] = got;
-              }
-            } on Object {
-              // оставляем как есть
-            }
-          }),
+        } on Object {
+          // одна карточка не приехала — оставляем оригинал
+        }
+        done++;
+        _stage.value = _LoadStage.fetching(
+          category: 'recipes',
+          done: done,
+          total: total,
+          loaded: done,
+          target: total,
         );
       }
     }
+
+    await Future.wait(List.generate(_translateConcurrency, (_) => worker()));
+
+    // Per docs/translation-pipeline.md: server-side `_isEchoTranslation`
+    // + `evaluateCandidate` are authoritative. The client must not
+    // re-validate Latin-residue heuristics — legitimate translations
+    // contain proper nouns ("Worcestershire"), units ("100 g"), and
+    // brand names that would loop forever. Once every recipe has
+    // returned from `/lookup` (whether translated, echoed, or fell
+    // back to the previous-language copy), the loader resolves.
     return _LoadResult(recipes: translated, repository: repo);
   }
-
-  /// How many rounds of "residue retry" to attempt after the initial
-  /// parallel fetch. Each round only re-queries recipes that still
-  /// look untranslated for the active language. 3 rounds × 8 wide =
-  /// 24 sequential server calls in the worst case per stuck recipe;
-  /// in practice all rounds clear after #1 because the server
-  /// self-purges poisoned `i18n[lang]` on read.
-  static const int _residueRetryRounds = 3;
 
   /// Сколько `lookup`-запросов держать в полёте параллельно при
   /// смене языка. Сервер LibreTranslate капнут на 6 одновременных

@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../i18n.dart';
 import '../../models/recipe.dart';
 import 'meal_db_client.dart';
@@ -44,11 +46,12 @@ class RecipeApi {
   Future<List<Recipe>> filterByIngredient(String ingredient) =>
       _filter('i', ingredient);
 
-  Future<Recipe?> lookup(int id, {AppLang? lang}) async {
+  Future<Recipe?> lookup(int id, {AppLang? lang, Duration? timeout}) async {
     final mahallem = _client.backend == RecipeBackend.mahallem;
     final res = await _client.dio.get<Map<String, dynamic>>(
       mahallem ? '/lookup/$id' : '/lookup.php',
       queryParameters: mahallem ? _langParams(lang) : {'i': id.toString()},
+      options: timeout == null ? null : Options(receiveTimeout: timeout),
     );
     final list = _parseFull(res.data);
     return list.isEmpty ? null : list.first;

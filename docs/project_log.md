@@ -1,5 +1,70 @@
 # Project Log
 
+## Language switch hung minutes/forever — removed client residue retry, server read-side purge, added worker pool + deadline
+
+**Date:** 2026-04-29
+
+### Симптом
+
+При переключении языка лоадер мог висеть 19+ минут (особенно `it`,
+иногда `es`). Иногда показывал 100% и не уходил в список. Иногда
+оставался в предыдущем языке (стейл-контент).
+
+### Причины (несколько слоёв нарушений `docs/translation-pipeline.md`)
+
+1. **Клиентский unbounded residue-retry** в `recipe_list_loader.dart`
+   и `recipe_details_page.dart` — `while (true)` с эвристикой
+   `recipeLooksUntranslated` (latin/total ≥0.15 и т.п.). Док
+   утверждает что серверный `_isEchoTranslation` авторитетен;
+   клиентская повторная валидация не сходилась для легитимных
+   переводов с латиницей (имена собственные, единицы измерения).
+2. **Wave-batches вместо worker pool**: `Future.wait` на батч из 8
+   ждал самый медленный запрос — 7 воркеров простаивали. Один
+   медленный `/lookup` стопорил всю фазу.
+3. **Нет per-call timeout**: dio receiveTimeout = 60 с.
+4. **Нет общего deadline** на фазу перевода.
+5. **Серверный read-side purge** в `routes/recipes.js _ensureLang`:
+   на каждом чтении пере-валидировал `i18n[lang]` через
+   `_isEchoTranslation` и удалял "плохие" блобы. Это нарушает
+   контракт «No cache rewrites. Server-side translation_cache is
+   immutable; client-side recipes is functionally immutable». Для
+   итальянского (а часть рецептов — `Pasta Carbonara`, `Tiramisu`
+   с byte-equal `strMeal/strCategory` к английскому → ECHO_RATIO_SHORT_MAX)
+   и для любого языка где LT-вывод оставлял English-marker слова
+   (`the|and|with|until|...`) кэш постоянно вытирался: каждый
+   тап языка → re-translate с нуля.
+
+### Фикс
+
+**Клиент** (`recipe_list/lib/`):
+- `ui/recipe_list_loader.dart`: убран `while (true)` residue-retry;
+  убран импорт `translation_quality.dart`. Wave-batches заменены
+  на worker-pool из `_translateConcurrency=8` воркеров с общей
+  курсорной очередью. Добавлен общий deadline на фазу перевода —
+  120 с. Per-call timeout — 12 с. Добавлены `_translateSeq` cancel
+  token и `.catchError` чтобы `_translating=false` всегда сбрасывался.
+- `ui/recipe_details_page.dart`: убран retry-loop, оставлен один
+  `/lookup` за переключение, по доку «If `/lookup` fails, the
+  previous-language copy stays on screen».
+- `data/api/recipe_api.dart`: `lookup` принимает опциональный
+  `Duration? timeout` → прокидывается в `dio.get` как `Options(receiveTimeout: ...)`.
+- `data/repository/recipe_repository.dart`: `lookup` принимает и
+  пробрасывает `timeout`.
+
+**Сервер** (`mahallem_ist/local_user_portal/routes/recipes.js`):
+- `_ensureLang`: read-path возвращает `row.i18n[lang]` без
+  ре-валидации. Гейт остаётся только при write (после translate).
+  Это восстанавливает «stored forever, never overwritten» из доков.
+
+### Результат
+
+- Холодный язык: bounded ~120 с (worst-case, обычно гораздо быстрее).
+- Тёплый язык: bulk-SELECT из локального sqflite, sub-50 ms.
+- Любой переведённый и сохранённый рецепт остаётся в кэше навсегда —
+  и на сервере, и на клиенте.
+
+---
+
 ## German page showed Spanish — sqflite cache schema bump v3→v4
 
 **Date:** 2026-04-29
