@@ -72,7 +72,11 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     // guarantees" → "Offline tolerance").
     Recipe? fetched;
     try {
-      fetched = await api.lookup(_recipe.id, lang: lang);
+      fetched = await api.lookup(
+        _recipe.id,
+        lang: lang,
+        timeout: const Duration(seconds: 120),
+      );
     } on Object catch (e) {
       // ignore: avoid_print
       print('[lang] details lookup failed: $e');

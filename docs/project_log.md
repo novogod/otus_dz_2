@@ -1,5 +1,61 @@
 # Project Log
 
+## i18n plural resolvers, Android back-callback, details lookup timeout, server rate-limit raise
+
+**Date:** 2026-04-29
+
+### Симптомы
+
+1. `Resolver for <lang = tr> not specified!` (и аналогично для `ku`/`fa`/`ar`) —
+   slang не имеет встроенных plural-резолверов для этих локалей, и приложение
+   шумело предупреждениями при каждом форматировании множественного числа.
+2. Android logcat: `OnBackInvokedCallback is not enabled for the application`.
+3. На холодном языке детали рецепта не успевали приехать —
+   `DioException [receive timeout] ... 0:01:00.000000`. Полная инструкция через
+   Gemini не укладывалась в дефолтный `receiveTimeout=60s`.
+4. После переключения языка списка `/lookup` отвечал `429 Too Many Requests` —
+   серверный `express-rate-limit` пускал только 60 req/min/IP, а
+   `recipe_list_loader` (8 параллельных воркеров × ~213 рецептов) выжигал
+   окно до того, как пользователь открывал детали.
+
+### Что сделано
+
+- `lib/i18n.dart`: новая `_registerPluralResolvers()` зовётся один раз перед
+  `LocaleSettings.setLocaleSync` и регистрирует `setPluralResolverSync` для
+  `tr`/`ku` (oneOrOther), `fa` (`n<=1?one:other`) и полный CLDR-набор для
+  `ar` (zero/one/two/few/many/other по `n%100`).
+- `android/app/src/main/AndroidManifest.xml`: добавлен
+  `android:enableOnBackInvokedCallback="true"` на `<application>` —
+  системная подсветка свайпа «назад» теперь работает корректно и без шума.
+- `lib/ui/recipe_details_page.dart`: `_onLangChanged` зовёт
+  `api.lookup(..., timeout: const Duration(seconds: 120))` вместо дефолтных
+  60s, чтобы холодный full-instructions перевод через Gemini успевал доехать.
+- Сервер `mahallem-user-portal` (`local_user_portal/routes/recipes.js`):
+  default `RECIPES_RATE_LIMIT` поднят с **60 → 1200 req/min/IP** и
+  снабжён комментарием почему. Переменная окружения по-прежнему может
+  переопределить значение. Файл задеплоен в контейнер
+  (`docker cp` + `docker restart`); nginx upstream-таймауты на `/recipes/`
+  уже были 240s, так что менять их не пришлось.
+
+### Проверка
+
+- Hot-restart на iOS-симуляторе: цикл по всем 10 локалям проходит без
+  «Resolver for <lang ...> not specified!» и без 429 на `/lookup`.
+- `docker logs mahallem-user-portal`: контейнер `healthy`, активные
+  `translateBest [en→fa] via gemini`, кэш заполняется.
+- `flutter test --no-pub`: остаются только два предсуществующих
+  fail-теста (`cache hit at threshold`, `network error empty cache offline=true`),
+  не связанные с этой задачей.
+
+### Файлы
+
+- `recipe_list/lib/i18n.dart`
+- `recipe_list/android/app/src/main/AndroidManifest.xml`
+- `recipe_list/lib/ui/recipe_details_page.dart`
+- `mahallem_ist/local_user_portal/routes/recipes.js` (отдельный репозиторий)
+
+---
+
 ## RTL/long-translation overflow on the list & details pages — added `AppMetrics` from `MediaQuery`
 
 **Date:** 2026-04-29

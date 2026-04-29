@@ -57,12 +57,64 @@ bool _listenerInstalled = false;
 void initI18n() {
   if (_listenerInstalled) return;
   _listenerInstalled = true;
+  _registerPluralResolvers();
   LocaleSettings.setLocaleSync(appLang.value.locale);
   appLang.addListener(() {
     // ignore: avoid_print
     print('[lang] initI18n listener -> ${appLang.value.name}');
     LocaleSettings.setLocaleSync(appLang.value.locale);
   });
+}
+
+/// Регистрирует cardinal-резолверы для языков, у slang которых нет
+/// встроенного правила (tr/ar/fa/ku). Без этого slang выводит
+/// `Resolver for <lang = …> not specified!` и использует случайный
+/// фолбэк. Правила минимальные — наши строки имеют только формы
+/// `one`/`other`, поэтому достаточно классической бинарной логики.
+void _registerPluralResolvers() {
+  String oneOrOther(
+    num n, {
+    String? zero,
+    String? one,
+    String? two,
+    String? few,
+    String? many,
+    String? other,
+  }) {
+    final form = (n == 1 ? one : other) ?? other ?? one ?? '';
+    return form;
+  }
+
+  // Турецкий: CLDR определяет только `other`, но наши строки имеют
+  // отдельную форму `one` — отдаём её при n==1 для лучшей подачи.
+  LocaleSettings.setPluralResolverSync(
+    language: 'tr',
+    cardinalResolver: oneOrOther,
+  );
+  // Курдский (sorani/iq): n==1 -> one, иначе other.
+  LocaleSettings.setPluralResolverSync(
+    language: 'ku',
+    cardinalResolver: oneOrOther,
+  );
+  // Фарси: n<=1 -> one, иначе other (CLDR).
+  LocaleSettings.setPluralResolverSync(
+    language: 'fa',
+    cardinalResolver: (n, {zero, one, two, few, many, other}) =>
+        (n <= 1 ? one : other) ?? other ?? one ?? '',
+  );
+  // Арабский: полный CLDR — zero/one/two/few/many/other.
+  LocaleSettings.setPluralResolverSync(
+    language: 'ar',
+    cardinalResolver: (n, {zero, one, two, few, many, other}) {
+      if (n == 0) return zero ?? other ?? one ?? '';
+      if (n == 1) return one ?? other ?? '';
+      if (n == 2) return two ?? other ?? one ?? '';
+      final mod100 = n.toInt() % 100;
+      if (mod100 >= 3 && mod100 <= 10) return few ?? other ?? '';
+      if (mod100 >= 11 && mod100 <= 99) return many ?? other ?? '';
+      return other ?? one ?? '';
+    },
+  );
 }
 
 /// Подписывает поддерево на изменение `appLang` — после каждого тапа
