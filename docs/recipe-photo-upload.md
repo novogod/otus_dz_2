@@ -288,15 +288,37 @@ async updateUserMealThumb(id, thumbUrl) {
    final picker = ImagePicker();
    final XFile? picked = await picker.pickImage(
      source: ImageSource.gallery, // и/или camera
-     maxWidth: 2048, maxHeight: 2048, imageQuality: 85,
+     // Без maxWidth/maxHeight/imageQuality — эти параметры
+     // ненадёжны на Android (игнорятся частью SAF-провайдеров).
+     // Ресайз делает единый client-side downscaler (см. §2.4.1).
    );
    ```
-   Пакеты: `image_picker: ^1.x` уже популярен в учебных проектах,
-   `image_cropper` опционален.
-2. На iOS — конвертить HEIC в JPEG через
-   `flutter_image_compress` перед отправкой (storage-api сам HEIC
-   принимает только при включённой image transformation, а у нас
-   имеется imgproxy — но проще конвертить заранее).
+   Пакеты: `image_picker: ^1.x` + `flutter_image_compress: ^2.x`
+   (обязательный, не опциональный). `image_cropper`
+   опционален.
+
+#### 2.4.1. Client-side downscaler
+
+`image_picker` не гарантирует ни размер, ни предсказуемый
+format: c iPhone приходит HEIC, с Pixel/Samsung — 4096-пиксельный
+JPEG на 6–10 МБ. Один путь `downscaleForUpload(XFile) -> File`
+([см. todo чанк 11.5](./todo/recipe_photo_upload.md#chunk-115)):
+
+* `flutter_image_compress.compressAndGetFile(...)` с
+  `minWidth: 1600, minHeight: 1600, quality: 80,
+  format: CompressFormat.jpeg, keepExif: false`.
+* Результат гарантированно JPEG (однородный
+  storage-api MIME), с верхней границей ~600 КБ
+  (хорошо лежит в 5 МБ бакет-лимит и быстро улетает на 3G).
+* `keepExif: false` — ranged GPS/serial/timestamps стрипаем
+  одной точкой (не полагаемся ни на image_picker, ни на imgproxy).
+* Fallback вторым проходом при > 5 МБ: `1280×1280, q=60`.
+* Без client-side resize multipart-запрос вырождается в
+  413 payload_too_large или просто «dead-висит» на слабом
+  канале — схема неприемлема.
+
+2. `AddRecipePage._save()` берёт результат downscaler-а,
+   не оригинал из `image_picker`.
 3. В `RecipeApi.createRecipe` добавить альтернативную сигнатуру:
    ```dart
    Future<Recipe> createRecipeWithPhoto(Recipe draft, File photo) async {
@@ -424,7 +446,8 @@ storage-api есть `STORAGE_BACKEND=s3` режим, его можно буде
 | Server | `local_user_portal/utils/backup-service.js` | `backupRecipePhotoFile(buffer, url)` |
 | Server | `local_user_portal/tests/recipes.test.js` | 2 теста: multipart-upload путь (mock storage-api) + fallback на JSON-only |
 | Cron | `local_user_portal/jobs/cleanup-orphan-recipe-photos.js` (новый) | раз в неделю чистит файлы без ссылок из `recipes.i18n.en.strMealThumb` |
-| Client | `recipe_list/pubspec.yaml` | `image_picker: ^1.x`, опционально `flutter_image_compress` |
+| Client | `recipe_list/pubspec.yaml` | `image_picker: ^1.x` + `flutter_image_compress: ^2.x` (обязательный downscaler) |
+| Client | `recipe_list/lib/utils/photo_downscaler.dart` | `downscaleForUpload(XFile)` — 1600×1600, q80, EXIF strip |
 | Client | `recipe_list/lib/data/api/recipe_api.dart` | новый метод `createRecipeWithPhoto(Recipe, File)` (multipart) |
 | Client | `recipe_list/lib/ui/add_recipe_page.dart` | ImagePicker-кнопки + предпросмотр + multipart-вызов |
 | Client i18n | `recipe_list/lib/i18n/*.i18n.json` (10 шт.) | `addRecipePhotoFromGallery`, `addRecipePhotoFromCamera`, `a11y.addRecipePhotoPicker` |

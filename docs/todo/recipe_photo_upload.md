@@ -279,8 +279,9 @@ Android.
   * «Из галереи» → `picker.pickImage(source: ImageSource.gallery,
     maxWidth: 2048, maxHeight: 2048, imageQuality: 85)`.
   * «Сделать снимок» → `ImageSource.camera`.
-- [ ] HEIC → JPEG конверт через `flutter_image_compress` если
-  `Platform.isIOS && file.path.endsWith('.heic')`.
+- [ ] HEIC → JPEG конверт + downscale делает единый
+  `downscaleForUpload(XFile)` из чанка 11.5 — не дублируем
+  вызовы `flutter_image_compress` по экрану.
 - [ ] Хранить выбранный `File` в `_pickedPhoto`, рендерить через
   `Image.file(_pickedPhoto)` 120×120 с borderRadius.
 - [ ] Валидация: `_pickedPhoto != null` ⇒ ok; иначе показать
@@ -293,6 +294,60 @@ Android.
 **Acceptance:** в эмуляторе/симуляторе можно выбрать фото и
 сохранить рецепт; `Recipe.photo` содержит URL вида
 `/storage/v1/object/public/recipe-photos/...`.
+
+## Чанк 11.5 — Клиент: единый downscaler
+
+Репо: `otus_dz_2`. `image_picker` **не является** надёжным
+resizer-ом: `maxWidth/maxHeight` на Android иногда игнорируется
+(выбор через SAF/Photo Picker), `imageQuality` работает только
+для JPEG, и 12 МП-фото с iPhone/Pixel прилетает в 5–10 МБ
+— упираясь в лимит 5 МБ в bucket’е `recipe-photos`.
+Пропускаем любой выбранный файл через единую функцию
+сжатия — и только потом рендерим превью и шлём на сервер.
+
+- [ ] `recipe_list/lib/utils/photo_downscaler.dart`:
+  ```dart
+  Future<File> downscaleForUpload(XFile src) async {
+    final tmp = await getTemporaryDirectory();
+    final out = File(p.join(tmp.path, 'rcp_${DateTime.now().microsecondsSinceEpoch}.jpg'));
+    final r1 = await FlutterImageCompress.compressAndGetFile(
+      src.path, out.path,
+      minWidth: 1600, minHeight: 1600,
+      quality: 80, format: CompressFormat.jpeg,
+      keepExif: false, // privacy: режем GPS/timestamp
+    );
+    if (r1 == null) throw StateError('compress_failed');
+    if (await out.length() <= 5 * 1024 * 1024) return out;
+    // Ультра-огромная съёмка (panorama, RAW-derived) — второй проход.
+    final r2 = await FlutterImageCompress.compressAndGetFile(
+      out.path, out.path,
+      minWidth: 1280, minHeight: 1280,
+      quality: 60, format: CompressFormat.jpeg, keepExif: false,
+    );
+    if (r2 == null || await out.length() > 5 * 1024 * 1024) {
+      throw StateError('photo_too_large');
+    }
+    return out;
+  }
+  ```
+- [ ] `image_picker` вызывается без `maxWidth/maxHeight/imageQuality`
+  — сжатие делает `flutter_image_compress` (одна точка
+  EXIF-strip, predictable JPEG output, без SAF-багов).
+- [ ] `AddRecipePage._save()` хранит путь к *сжатому*
+  файлу, оригинал не удерживается. Сжатый файл
+  удаляется в `finally` после успеха/ошибки
+  `createRecipeWithPhoto`.
+- [ ] Показываем `LinearProgressIndicator` на время сжатия
+  (может занять 0.5–2 с на старых устройствах).
+- [ ] Юнит-тест `test/utils/photo_downscaler_test.dart`:
+  вход — fixture-PNG 4096×3072, выход — JPEG ≤ 5 МБ и ширина
+  ≤ 1600. (На CI flutter_image_compress работает только в
+  integration-tests; если хост unit-test не поддерживает
+  — подменить через abstract `PhotoCodec` + fake.)
+
+**Acceptance:** фото c iPhone (HEIC, 4032×3024, ~3 МБ) после
+выбора превращается в JPEG 1600×1200, ~250–450 КБ, EXIF
+пустой; multipart-запрос улетает быстро даже на 3G.
 
 ## Чанк 12 — Клиент: imgproxy для превью
 
