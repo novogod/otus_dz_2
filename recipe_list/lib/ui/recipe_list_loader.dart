@@ -91,27 +91,33 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     if (!mounted) return;
     final seq = ++_translateSeq;
     final previous = _lastResult;
+    // Lightweight UX: spinner on the icon + linear bar in AppBar.
+    // Do NOT flip the global `_translating` (which would show the
+    // full-screen `_LoadingScreen`) — keep the existing feed visible
+    // while the reload is in flight. See todo/03.
+    reloadingFeed.value = true;
     setState(() {
       _stage.value = const _LoadStage.initial();
-      _translating = true;
       _future = _runLoad(forceReseed: true)
           .then((r) {
             if (seq != _translateSeq || !mounted) return r;
             _lastResult = r;
-            setState(() => _translating = false);
+            reloadingFeed.value = false;
+            setState(() {});
             return r;
           })
           .catchError((Object e, StackTrace st) {
             if (seq != _translateSeq || !mounted) {
+              reloadingFeed.value = false;
               throw e;
             }
             // ignore: avoid_print
             print('[reload] _runLoad failed: $e');
+            reloadingFeed.value = false;
             // Keep previous feed on screen instead of crashing the page.
             // Surface the offline state via a SnackBar.
             if (previous != null) {
               setState(() {
-                _translating = false;
                 _future = Future<_LoadResult>.value(previous);
               });
               _showOfflineReloadSnack();
@@ -119,7 +125,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             }
             // No previous feed — let the FutureBuilder render its error
             // state as before.
-            setState(() => _translating = false);
+            setState(() {});
             throw e;
           });
     });

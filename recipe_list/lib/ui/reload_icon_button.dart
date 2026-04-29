@@ -11,8 +11,42 @@ import 'app_theme.dart';
 /// слушает `RecipeListLoader` и заново перебирает случайные
 /// категории через mahallem-API (см. docs/categories.md и
 /// docs/translation-buffer.md).
-class ReloadIconButton extends StatelessWidget {
+class ReloadIconButton extends StatefulWidget {
   const ReloadIconButton({super.key});
+
+  @override
+  State<ReloadIconButton> createState() => _ReloadIconButtonState();
+}
+
+class _ReloadIconButtonState extends State<ReloadIconButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _spin = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    reloadingFeed.addListener(_syncSpin);
+    _syncSpin();
+  }
+
+  @override
+  void dispose() {
+    reloadingFeed.removeListener(_syncSpin);
+    _spin.dispose();
+    super.dispose();
+  }
+
+  void _syncSpin() {
+    if (reloadingFeed.value) {
+      if (!_spin.isAnimating) _spin.repeat();
+    } else {
+      _spin.stop();
+      _spin.value = 0;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +67,16 @@ class ReloadIconButton extends StatelessWidget {
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: requestFeedReload,
-              child: const SizedBox(
+              child: SizedBox(
                 width: 40,
                 height: 40,
-                child: Icon(
-                  Icons.refresh,
-                  size: 22,
-                  color: AppColors.primaryDark,
+                child: RotationTransition(
+                  turns: _spin,
+                  child: const Icon(
+                    Icons.refresh,
+                    size: 22,
+                    color: AppColors.primaryDark,
+                  ),
                 ),
               ),
             ),

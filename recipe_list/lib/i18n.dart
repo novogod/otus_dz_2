@@ -49,6 +49,12 @@ final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.ru);
 /// `_seedFromCategories` для категорий, у которых уже >= порога.
 final ValueNotifier<int> reloadFeedTicker = ValueNotifier<int>(0);
 
+/// Сигнал «лента сейчас перезагружается» для `ReloadIconButton`
+/// (анимация вращения иконки) и `AppPageBar` (тонкий
+/// `LinearProgressIndicator` под шапкой). Управляется
+/// `RecipeListLoader._onReloadRequested`. См. todo/03.
+final ValueNotifier<bool> reloadingFeed = ValueNotifier<bool>(false);
+
 /// Запрашивает повторный seed ленты: новый случайный набор
 /// категорий и попытку дотянуть свежие рецепты из сети.
 void requestFeedReload() {

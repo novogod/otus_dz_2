@@ -55,7 +55,12 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
   static const double _trailingGap = AppSpacing.xl;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize =>
+      const Size.fromHeight(kToolbarHeight + _kReloadProgressHeight);
+
+  /// Высота полоски `LinearProgressIndicator` под шапкой. См.
+  /// todo/03 и docs/categories.md §9.7.
+  static const double _kReloadProgressHeight = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +82,40 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
         const LangIconButton(),
         const SizedBox(width: _trailingGap),
       ],
+      bottom: showReload
+          ? const _ReloadProgressBar(height: _kReloadProgressHeight)
+          : null,
+    );
+  }
+}
+
+/// Тонкая полоска прогресса под `AppPageBar`, видимая только пока
+/// идёт reload (`reloadingFeed.value == true`). Заменяет
+/// full-screen `_LoadingScreen` на лёгкий индикатор, не перекрывая
+/// уже отрисованную ленту.
+class _ReloadProgressBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  final double height;
+  const _ReloadProgressBar({required this.height});
+
+  @override
+  Size get preferredSize => Size.fromHeight(height);
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: reloadingFeed,
+      builder: (context, busy, _) {
+        if (!busy) return SizedBox(height: height);
+        return SizedBox(
+          height: height,
+          child: const LinearProgressIndicator(
+            minHeight: 2,
+            backgroundColor: AppColors.surfaceMuted,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryDark),
+          ),
+        );
+      },
     );
   }
 }
