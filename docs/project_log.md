@@ -1,5 +1,61 @@
 # Project Log
 
+## Add-recipe feature + Russian docs
+
+**Date:** 2026-04-29
+
+Добавлена пользовательская история «нажать `+` → заполнить форму →
+сохранить рецепт». На главном экране вторая FAB-кнопка зеркально
+прижата к левому нижнему углу (`Positioned(left:…)`), открывает
+`AddRecipePage` (Form + 6 контроллеров, парсер ингредиентов
+`name | measure` до 20 шт). После успеха клиент вызывает
+`RecipeApi.createRecipe` (POST `/recipes` на mahallem-бэкенде; для
+TheMealDB-бэкенда метод проваливает запрос с `StateError`),
+зеркалит результат в sqflite через `RecipeRepository.upsertAll` и
+вставляет рецепт в начало `_displayed` без полной перезагрузки
+ленты.
+
+### Клиент (`otus_dz_2`, main)
+
+| Commit | Что сделано |
+|---|---|
+| `5202acb` | FAB `+` в `recipe_list_page.dart`, `AddRecipePage`, `RecipeApi.createRecipe`, `a11y.addRecipe` + 13 ключей формы во всех 10 локалях, slang regenerate, `docs/add-recipe-feature.md`, `docs/themealdb-add-recipe-investigation.md`. |
+| _этот_ | Переписаны оба doc-файла на русский для аудитории «преподаватель Flutter-школы Otus». |
+
+### Сервер (`mahallem_ist`, main)
+
+| Commit | Что сделано |
+|---|---|
+| `ca6cd882` | `RecipeRepository.createUserMeal(meal)` (id-floor `RECIPES_USER_MEAL_ID_FLOOR=1_000_000`, INSERT в `i18n.en`, eviction); `app.post('/recipes', …)` под существующим `limiter` + `authMiddleware`; 2 теста (id-allocation + reject without strMeal/strMealThumb). |
+
+### Исследование TheMealDB upstream
+
+`docs/themealdb-add-recipe-investigation.md` — почему пользователь-
+ские рецепты живут только в нашей Postgres + sqflite:
+
+* у бесплатного v1 все эндпоинты GET-only;
+* у v2 рекламная фраза «adding your own meals and images» без
+  опубликованного контракта (PayPal-подписка + переписка);
+* даже при наличии write-endpoint — не пытались бы (provenance,
+  локали, юридика, обратимость);
+* решение: `id ≥ 1_000_000`, отдаём через те же
+  `/recipes/page|search|lookup`, перевод лениво через `_ensureLang`.
+
+### Проверки
+
+* `flutter analyze` — чисто.
+* `flutter test --no-pub` — 56 / 2 (тот же baseline).
+* `node --test tests/recipes.test.js` — 12 / 2 (тот же baseline +
+  два новых теста зелёные).
+
+### Что вынесено за рамки
+
+Загрузка фото файлом (нужен object storage), edit/delete
+(`POST /recipes` всегда выделяет новый id), премодерация,
+production-redeploy mahallem.
+
+---
+
 ## todo/01–13 + 99: full recipes-pipeline refactor
 
 **Date:** 2026-04-29

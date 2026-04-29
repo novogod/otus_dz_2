@@ -1,119 +1,134 @@
-# TheMealDB — can we push user-submitted recipes upstream?
+# Можно ли отдавать пользовательские рецепты в TheMealDB?
 
-**Short answer: no, not via a public API.** We surveyed
-[`themealdb.com/api.php`](https://www.themealdb.com/api.php) and the
-premium-tier announcements; there is no documented `POST /addmeal` or
-similar. User-submitted recipes therefore live only in our Postgres
-table and the on-device sqflite cache (see
-[`add-recipe-feature.md`](./add-recipe-feature.md)).
+> Документ для преподавателя Flutter-школы (Otus). Сопроводительный
+> к [`add-recipe-feature.md`](./add-recipe-feature.md). Здесь собрано
+> исследование одного простого вопроса: «раз мы умеем читать рецепты
+> из TheMealDB, можем ли мы туда же *записывать*?» — и принятое
+> архитектурное решение.
 
 ---
 
-## 1. Free public API (v1)
+## TL;DR
 
-Base URL: `https://www.themealdb.com/api/json/v1/1/…`
+Через публичный API — **нельзя**. У TheMealDB нет ни одного
+HTTP-метода кроме `GET`. Поэтому пользовательские рецепты живут
+только в нашей собственной Postgres-таблице (`local_user_portal`)
+и в локальном sqflite на устройстве. Если в будущем захочется
+«вернуть рецепт upstream» — это придётся делать вручную, по почте.
 
-All endpoints are **HTTP GET only**. Confirmed by reading the
-official "API Endpoints" section on
-<https://www.themealdb.com/api.php>:
+---
 
-| Endpoint | Purpose |
+## 1. Бесплатный API v1
+
+Базовый URL: `https://www.themealdb.com/api/json/v1/1/…`
+
+Все эндпоинты — **только HTTP `GET`**. Это видно прямо на странице
+[`themealdb.com/api.php`](https://www.themealdb.com/api.php) в секции
+*API Endpoints*:
+
+| Endpoint | Назначение |
 |---|---|
-| `search.php?s={name}` | Search recipes by name |
-| `search.php?f={letter}` | List recipes by first letter |
-| `lookup.php?i={id}` | Single recipe by id |
-| `random.php` | One random recipe |
-| `categories.php` | All categories (rich) |
-| `list.php?c=list` / `?a=list` / `?i=list` | Filter pivots |
-| `filter.php?{c|a|i}={value}` | Filter by category / area / ingredient |
+| `search.php?s={name}` | Поиск по названию |
+| `search.php?f={letter}` | Список по первой букве |
+| `lookup.php?i={id}` | Один рецепт по id |
+| `random.php` | Один случайный рецепт |
+| `categories.php` | Все категории (расширенно) |
+| `list.php?c=list` / `?a=list` / `?i=list` | Списки фасетов |
+| `filter.php?{c|a|i}={value}` | Фильтр по категории / кухне / ингредиенту |
 
-There is **no** `add.php`, no `submit.php`, no documented mutation
-endpoint, and the page does not advertise any HTTP-mutation entry
-point. The only "upload your recipe" mechanism mentioned anywhere
-on the site is a contact email: **<thedatadb@gmail.com>** —
-described as a way to suggest *new categories or recipes*, not a
-programmatic write API.
+В этом списке нет ни `add.php`, ни `submit.php`, ни какого-либо
+другого мутирующего endpoint-а. Единственный официальный канал
+«предложить рецепт» на сайте — почта **<thedatadb@gmail.com>**, и
+там описан как способ предложить *новые категории или рецепты* —
+ручной модерируемый процесс, не программный API.
 
-## 2. Premium API (v2)
+## 2. Платный API v2
 
-The same `api.php` page advertises a paid v2 tier
-(<https://www.themealdb.com/api/json/v2/{key}/…>) requested via
-PayPal. Quoting the page:
+Та же страница `api.php` рекламирует платный тариф v2:
+`https://www.themealdb.com/api/json/v2/{key}/…`. Подписка
+оформляется через PayPal, ключ выдают вручную. Из рекламной фразы
+на сайте:
 
-> "The MealDB API allows you to access more advanced features
+> «The MealDB API allows you to access more advanced features
 > include adding your own meals and images. As a thank you for
 > supporting the project supporters get access to additional API
 > features such as multi-ingredient filter, latest meals & search
-> by area."
+> by area.»
 
-Important nuances:
+Важные оговорки:
 
-* The phrase **"adding your own meals and images"** appears in the
-  benefits blurb but **no URL or schema is published**. The
-  documented v2 endpoints on the same page (`latest.php`,
-  `randomselection.php`, multi-ingredient `filter.php?i=…,…`) are
-  read-only.
-* Access requires a paid PayPal subscription and a one-off email
-  exchange to receive an API key.
-* No SDK, no OpenAPI spec.
+* Фраза *«adding your own meals and images»* присутствует в
+  рекламе, но **никакой URL и никакая схема не опубликованы**.
+  Все документированные v2-эндпоинты на той же странице
+  (`latest.php`, `randomselection.php`, multi-ingredient
+  `filter.php?i=…,…`) — read-only.
+* Доступ требует платной PayPal-подписки и переписки с автором
+  ради ключа.
+* Ни SDK, ни OpenAPI/Swagger-спеки нет.
 
-We have not paid for v2, so we cannot empirically verify whether a
-write endpoint exists, what shape it expects, or what the rate
-limits are. **Treat the "add meals" capability as undocumented
-until proven otherwise.**
+Мы платную подписку не покупали и проверить эмпирически, существует
+ли write-endpoint у v2, **не можем**. До получения подтверждения
+лучше считать, что «add your own meals» в v2 — это рекламная
+формулировка, а не публичный программный API.
 
-## 3. Why we don't try anyway
+## 3. Почему мы не пытаемся, даже если бы он был
 
-Even if a v2 write endpoint existed:
+Допустим, write-endpoint у v2 действительно есть. Всё равно есть
+четыре независимые причины не отправлять туда пользовательские
+данные:
 
-1. **Provenance & moderation.** TheMealDB is a curated dataset.
-   Pushing arbitrary user input upstream would either require their
-   moderation queue (slow, no ETA) or pollute their public corpus —
-   neither is acceptable for the feature scope.
-2. **Locale split.** Our submitter writes in their app locale; we
-   normalise to English on the server (`i18n.en`), but TheMealDB
-   only hosts English. We'd need to gate uploads behind the same
-   echo-quality + translation pipeline (`_ensureLang`, see
-   `mahallem_ist/local_user_portal/docs/translation-pipeline.md`)
-   before submission, doubling the surface area.
-3. **Legal.** Re-publishing user-submitted content under a
-   third-party catalogue's terms is a separate legal review.
-4. **Reversibility.** Our own Postgres row can be deleted by an
-   operator. An upstream POST cannot.
+1. **Происхождение и модерация.** TheMealDB — кураторская база.
+   Любой POST упрётся либо в их модераторскую очередь (медленно,
+   без SLA), либо засорит публичный каталог. Ни то, ни другое не
+   допустимо для учебного проекта.
+2. **Локали.** Наш пользователь пишет на своей локали, мы
+   нормализуем к английскому в `i18n.en` через серверный
+   echo-gate + Gemini-cascade. У TheMealDB только английский, и
+   наша pipeline должна была бы исполняться **до** отправки —
+   удваиваем поверхность ошибок.
+3. **Юридика.** Перепубликация UGC-контента в чужой базе под их
+   условиями — отдельный разговор с лицензированием.
+4. **Обратимость.** Свою строку в Postgres оператор удаляет за 5
+   секунд `DELETE FROM recipes WHERE id = …`. Запись, ушедшая
+   куда-то в чужой каталог, не отзывается.
 
-## 4. Decision
+## 4. Принятое решение
 
-User-submitted recipes are stored only in:
+Пользовательские рецепты хранятся только в:
 
-* `recipes` table in our Postgres (`local_user_portal`),
-* `recipe_bodies` + `recipes` tables in the on-device sqflite
-  cache via `RecipeRepository.upsertAll`.
+* таблице `recipes` в нашей Postgres (`local_user_portal`),
+* таблицах `recipes` + `recipe_bodies` в локальном sqflite на
+  устройстве — через `RecipeRepository.upsertAll`.
 
-They are surfaced to other users through the same
-`/recipes/page`, `/recipes/search`, `/recipes/lookup/:id` endpoints
-that already serve TheMealDB-fetched rows — distinguished only by
-their id range (≥ `RECIPES_USER_MEAL_ID_FLOOR`, default `1_000_000`).
+Они выдаются другим пользователям через **те же** эндпоинты
+`/recipes/page`, `/recipes/search`, `/recipes/lookup/:id`, что и
+TheMealDB-рецепты. Отличаются только диапазоном `id`:
+`≥ RECIPES_USER_MEAL_ID_FLOOR` (по умолчанию `1_000_000`). Ленивый
+перевод выполняется тем же `_ensureLang`, который переводит
+upstream-данные.
 
-If we ever want to contribute a recipe upstream, the operational
-path is **manual**: email <thedatadb@gmail.com> with the canonical
-JSON.
+Если в обозримом будущем понадобится «отдать рецепт в TheMealDB»,
+канал — **ручной**: пишем письмо на <thedatadb@gmail.com> с
+канонизированным JSON.
 
-## 5. Re-evaluation triggers
+## 5. Когда переоткрыть это решение
 
-Reopen this investigation when any of the following becomes true:
+Это исследование стоит вернуть в работу, если выполнится **любое**
+из условий:
 
-* TheMealDB publishes an OpenAPI / Swagger spec including a write
-  endpoint;
-* a paying member of the team subscribes to v2 and confirms the
-  shape and quota of the "add your own meal" feature;
-* we decide to host our own MealDB-shape mirror (then the question
-  becomes "can we contribute *to our own mirror*", which is what
-  the current `POST /recipes` endpoint already does).
+* TheMealDB опубликует OpenAPI / Swagger со write-endpoint;
+* кто-то из команды оплатит v2 и эмпирически подтвердит контракт
+  «add your own meal» — формат тела, лимиты, авторизация;
+* мы решим хостить собственное MealDB-shape зеркало (тогда
+  «как добавлять туда рецепты?» становится тривиальным — у нас
+  уже есть `POST /recipes`, описанный в основном документе).
 
-## 6. References
+## 6. Источники
 
-* TheMealDB API documentation page: <https://www.themealdb.com/api.php>
-  — accessed during this investigation; no POST endpoint listed.
-* Contact: <thedatadb@gmail.com> (free) /
-  <https://www.themealdb.com/api.php#join> (premium signup).
-* Internal companion: [`add-recipe-feature.md`](./add-recipe-feature.md).
+* Документация TheMealDB: <https://www.themealdb.com/api.php> —
+  проверена в ходе исследования; ни один POST-endpoint не
+  заявлен.
+* Контакты: <thedatadb@gmail.com> (бесплатно, ручная модерация) /
+  <https://www.themealdb.com/api.php#join> (премиум через PayPal).
+* Сопроводительный документ:
+  [`add-recipe-feature.md`](./add-recipe-feature.md).
