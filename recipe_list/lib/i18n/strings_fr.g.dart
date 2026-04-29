@@ -80,6 +80,7 @@ class _TranslationsA11yFr implements TranslationsA11yEn {
 	@override String get reloadFeed => 'Actualiser la liste';
 	@override String flagOf({required Object label}) => 'Drapeau de ${label}';
 	@override String get offlineReloadUnavailable => 'Hors ligne. Les recettes précédentes sont affichées.';
+	@override String get scrollToTop => 'Revenir en haut';
 }
 
 /// The flat map containing all translations for locale <fr>.
@@ -120,6 +121,7 @@ extension on TranslationsFr {
 			'a11y.reloadFeed' => 'Actualiser la liste',
 			'a11y.flagOf' => ({required Object label}) => 'Drapeau de ${label}',
 			'a11y.offlineReloadUnavailable' => 'Hors ligne. Les recettes précédentes sont affichées.',
+			'a11y.scrollToTop' => 'Revenir en haut',
 			_ => null,
 		};
 	}

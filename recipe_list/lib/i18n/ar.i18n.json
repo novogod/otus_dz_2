@@ -36,6 +36,7 @@
     "switchLanguageTo": "تغيير اللغة إلى ${label}",
     "reloadFeed": "إعادة تحميل القائمة",
     "flagOf": "علم ${label}",
-    "offlineReloadUnavailable": "أنت غير متصل بالإنترنت. عرض الوصفات السابقة."
+    "offlineReloadUnavailable": "أنت غير متصل بالإنترنت. عرض الوصفات السابقة.",
+    "scrollToTop": "التمرير إلى الأعلى"
   }
 }

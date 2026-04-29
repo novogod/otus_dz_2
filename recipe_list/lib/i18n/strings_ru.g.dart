@@ -82,6 +82,7 @@ class _TranslationsA11yRu implements TranslationsA11yEn {
 	@override String flagOf({required Object label}) => 'Флаг ${label}';
 	@override String get reloadFeed => 'Обновить ленту';
 	@override String get offlineReloadUnavailable => 'Нет сети. Показываем прежние рецепты.';
+	@override String get scrollToTop => 'Наверх';
 }
 
 /// The flat map containing all translations for locale <ru>.
@@ -122,6 +123,7 @@ extension on TranslationsRu {
 			'a11y.flagOf' => ({required Object label}) => 'Флаг ${label}',
 			'a11y.reloadFeed' => 'Обновить ленту',
 			'a11y.offlineReloadUnavailable' => 'Нет сети. Показываем прежние рецепты.',
+			'a11y.scrollToTop' => 'Наверх',
 			_ => null,
 		};
 	}

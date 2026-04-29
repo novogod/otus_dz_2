@@ -32,6 +32,7 @@
     "switchLanguageTo": "Cambiar idioma a ${label}",
     "reloadFeed": "Recargar lista",
     "flagOf": "Bandera de ${label}",
-    "offlineReloadUnavailable": "Sin conexión. Mostrando recetas anteriores."
+    "offlineReloadUnavailable": "Sin conexión. Mostrando recetas anteriores.",
+    "scrollToTop": "Desplazar al inicio"
   }
 }

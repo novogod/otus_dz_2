@@ -84,6 +84,7 @@ class _TranslationsA11yAr implements TranslationsA11yEn {
 	@override String get reloadFeed => 'إعادة تحميل القائمة';
 	@override String flagOf({required Object label}) => 'علم ${label}';
 	@override String get offlineReloadUnavailable => 'أنت غير متصل بالإنترنت. عرض الوصفات السابقة.';
+	@override String get scrollToTop => 'التمرير إلى الأعلى';
 }
 
 /// The flat map containing all translations for locale <ar>.
@@ -124,6 +125,7 @@ extension on TranslationsAr {
 			'a11y.reloadFeed' => 'إعادة تحميل القائمة',
 			'a11y.flagOf' => ({required Object label}) => 'علم ${label}',
 			'a11y.offlineReloadUnavailable' => 'أنت غير متصل بالإنترنت. عرض الوصفات السابقة.',
+			'a11y.scrollToTop' => 'التمرير إلى الأعلى',
 			_ => null,
 		};
 	}

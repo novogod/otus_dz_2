@@ -240,6 +240,7 @@ class S {
   String flagOf(String label) => _t.a11y.flagOf(label: label);
   String get reloadFeed => _t.a11y.reloadFeed;
   String get offlineReloadUnavailable => _t.a11y.offlineReloadUnavailable;
+  String get scrollToTop => _t.a11y.scrollToTop;
 
   // FAB label — derives from current AppLang, not from translations.
   String get langLabel => appLang.value.label;

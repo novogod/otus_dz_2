@@ -32,6 +32,7 @@
     "switchLanguageTo": "Cambia lingua in ${label}",
     "reloadFeed": "Aggiorna lista",
     "flagOf": "Bandiera di ${label}",
-    "offlineReloadUnavailable": "Sei offline. Vengono mostrate le ricette precedenti."
+    "offlineReloadUnavailable": "Sei offline. Vengono mostrate le ricette precedenti.",
+    "scrollToTop": "Torna su"
   }
 }

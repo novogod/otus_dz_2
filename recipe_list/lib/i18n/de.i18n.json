@@ -32,6 +32,7 @@
     "switchLanguageTo": "Sprache wechseln zu ${label}",
     "reloadFeed": "Liste aktualisieren",
     "flagOf": "Flagge von ${label}",
-    "offlineReloadUnavailable": "Offline. Vorherige Rezepte werden angezeigt."
+    "offlineReloadUnavailable": "Offline. Vorherige Rezepte werden angezeigt.",
+    "scrollToTop": "Nach oben scrollen"
   }
 }

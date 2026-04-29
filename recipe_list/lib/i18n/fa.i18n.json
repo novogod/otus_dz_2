@@ -32,6 +32,7 @@
     "switchLanguageTo": "تغییر زبان به ${label}",
     "reloadFeed": "بارگذاری مجدد فهرست",
     "flagOf": "پرچم ${label}",
-    "offlineReloadUnavailable": "آفلاین هستید. دستور های قبلی نمایش داده می‌شوند."
+    "offlineReloadUnavailable": "آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.",
+    "scrollToTop": "حرکت به بالا"
   }
 }

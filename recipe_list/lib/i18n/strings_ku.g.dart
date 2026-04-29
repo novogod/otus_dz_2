@@ -80,6 +80,7 @@ class _TranslationsA11yKu implements TranslationsA11yEn {
 	@override String get reloadFeed => 'نوێکردنەوەی لیست';
 	@override String flagOf({required Object label}) => 'ئاڵای ${label}';
 	@override String get offlineReloadUnavailable => 'دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.';
+	@override String get scrollToTop => 'گەڕانەوە بۆ سەرەوە';
 }
 
 /// The flat map containing all translations for locale <ku>.
@@ -120,6 +121,7 @@ extension on TranslationsKu {
 			'a11y.reloadFeed' => 'نوێکردنەوەی لیست',
 			'a11y.flagOf' => ({required Object label}) => 'ئاڵای ${label}',
 			'a11y.offlineReloadUnavailable' => 'دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.',
+			'a11y.scrollToTop' => 'گەڕانەوە بۆ سەرەوە',
 			_ => null,
 		};
 	}

@@ -83,11 +83,39 @@ class _RecipeListPageState extends State<RecipeListPage> {
   /// фильтра (или API).
   late List<Recipe> _displayed = widget.recipes;
 
+  /// Прокрутка ленты — нужна чтобы (а) отслеживать, когда первый
+  /// элемент уехал за верхнюю границу экрана и показывать FAB
+  /// «наверх», и (б) самому FAB-у дёрнуть `animateTo(0)`.
+  final ScrollController _scrollController = ScrollController();
+
+  /// FAB «вверх» виден, когда лента ушла выше первого экрана
+  /// (`offset > 0`). Используем порог в 1 dp, чтобы избежать
+  /// дребезга при «pull-to-refresh».
+  bool _showScrollToTop = false;
+
   @override
   void initState() {
     super.initState();
     _focusNode.addListener(_onFocusChange);
     _controller.addListener(_onTextChanged);
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final shouldShow = _scrollController.hasClients &&
+        _scrollController.offset > 1.0;
+    if (shouldShow != _showScrollToTop) {
+      setState(() => _showScrollToTop = shouldShow);
+    }
+  }
+
+  void _scrollToTop() {
+    if (!_scrollController.hasClients) return;
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
@@ -111,6 +139,8 @@ class _RecipeListPageState extends State<RecipeListPage> {
     _focusNode.dispose();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -261,6 +291,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                     child: list.isEmpty
                         ? const _EmptyState()
                         : ListView.builder(
+                            controller: _scrollController,
                             padding: const EdgeInsets.symmetric(
                               vertical: AppSpacing.sm,
                             ),
@@ -273,6 +304,24 @@ class _RecipeListPageState extends State<RecipeListPage> {
                               );
                             },
                           ),
+                  ),
+                  // FAB «к началу списка». Появляется, когда первая
+                  // карточка ушла за верхнюю границу экрана. Стек
+                  // расположен внутри Expanded над bottomNavBar, так
+                  // что отступ снизу нужен только до края контента —
+                  // навбар уже под Stack-ом.
+                  Positioned(
+                    right: AppSpacing.lg,
+                    bottom: AppSpacing.lg,
+                    child: IgnorePointer(
+                      ignoring: !_showScrollToTop,
+                      child: AnimatedOpacity(
+                        opacity: _showScrollToTop ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOut,
+                        child: _ScrollToTopFab(onPressed: _scrollToTop),
+                      ),
+                    ),
                   ),
                   if (_showPredictions)
                     Positioned.fill(
@@ -339,6 +388,54 @@ class _RecipeListPageState extends State<RecipeListPage> {
       _liveQuery = recipe.name;
       _displayed = List<Recipe>.unmodifiable(_predictionRecipes);
     });
+  }
+}
+
+/// FAB «к началу списка». Дизайн-система §8/§9b/§9n: круг 56×56,
+/// фон `AppColors.primary`, тень `AppShadows.navBar`. Прозрачность
+/// 0.85 — так под FAB-ом видно фон ленты, и кнопка не давит на
+/// контент. Иконка — `Icons.keyboard_arrow_up` (chevron) в белом.
+class _ScrollToTopFab extends StatelessWidget {
+  const _ScrollToTopFab({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  static const double _size = 56;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    return Semantics(
+      button: true,
+      label: s.scrollToTop,
+      child: Tooltip(
+        message: s.scrollToTop,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: AppShadows.navBar,
+          ),
+          child: Material(
+            color: AppColors.primary.withValues(alpha: 0.85),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onPressed,
+              child: const SizedBox(
+                width: _size,
+                height: _size,
+                child: Icon(
+                  Icons.keyboard_arrow_up,
+                  size: 28,
+                  color: AppColors.surface,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
