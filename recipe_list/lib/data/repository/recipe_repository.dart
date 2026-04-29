@@ -88,36 +88,51 @@ class RecipeRepository {
         offline: false,
       );
     }
-    final cacheHits = await _localPrefix(p, lang);
-    if (cacheHits.length >= cacheHitThreshold) {
-      await _touch(cacheHits.map((r) => r.id).toList(), lang);
-      return RecipeSearchResult(
-        recipes: cacheHits,
-        fromCache: true,
-        offline: false,
-      );
+
+    // Стреляем в локальный кэш и в API одновременно — без short-circuit'а
+    // «достаточно кэша». Так пользователь всегда получает максимум
+    // совпадений: и то, что уже было оффлайн, и свежак с сервера.
+    final cacheFuture = _localPrefix(p, lang);
+    final apiFuture = _api
+        .searchByName(query: prefix, lang: lang)
+        .then<List<Recipe>>(
+          (fetched) => fetched
+              .where((r) => r.name.toLowerCase().startsWith(p))
+              .toList(growable: false),
+        )
+        .catchError((Object _) => const <Recipe>[]);
+
+    final cacheHits = await cacheFuture;
+    List<Recipe> apiHits = const [];
+    var apiFailed = false;
+    try {
+      apiHits = await apiFuture;
+    } on Object {
+      apiFailed = true;
     }
 
-    try {
-      final fetched = await _api.searchByName(query: prefix, lang: lang);
-      // TheMealDB отдаёт по подстроке — оставляем только startsWith,
-      // как и раньше делал UI.
-      final filtered = fetched
-          .where((r) => r.name.toLowerCase().startsWith(p))
-          .toList(growable: false);
-      await _upsertAll(filtered, lang);
-      return RecipeSearchResult(
-        recipes: filtered,
-        fromCache: false,
-        offline: false,
-      );
-    } on Object {
-      return RecipeSearchResult(
-        recipes: cacheHits,
-        fromCache: true,
-        offline: cacheHits.isEmpty,
-      );
+    // Дедуп по id, кэш — первым (LRU «свежак»), затем то, что докинула сеть.
+    final seen = <int>{};
+    final merged = <Recipe>[];
+    for (final r in cacheHits) {
+      if (seen.add(r.id)) merged.add(r);
     }
+    for (final r in apiHits) {
+      if (seen.add(r.id)) merged.add(r);
+    }
+
+    if (cacheHits.isNotEmpty) {
+      await _touch(cacheHits.map((r) => r.id).toList(), lang);
+    }
+    if (apiHits.isNotEmpty) {
+      await _upsertAll(apiHits, lang);
+    }
+
+    return RecipeSearchResult(
+      recipes: merged,
+      fromCache: apiHits.isEmpty,
+      offline: apiFailed && cacheHits.isEmpty,
+    );
   }
 
   Future<Recipe?> lookup(int id, AppLang lang) async {

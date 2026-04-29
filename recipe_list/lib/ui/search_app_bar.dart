@@ -156,8 +156,10 @@ class SearchPredictions extends StatelessWidget {
       color: AppColors.surface,
       elevation: 4,
       shadowColor: AppColors.navBarShadow,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 320),
+      // Высоту не ограничиваем — родитель растягивает выпадашку на всю
+      // доступную высоту тела экрана через `Positioned.fill`, а
+      // `ListView.separated` ниже сам прокручивается.
+      child: SizedBox.expand(
         child: loading && items.isEmpty
             ? const Padding(
                 padding: EdgeInsets.all(AppSpacing.md),
@@ -184,7 +186,6 @@ class SearchPredictions extends StatelessWidget {
             : Scrollbar(
                 child: ListView.separated(
                   padding: EdgeInsets.zero,
-                  shrinkWrap: true,
                   itemCount: items.length,
                   separatorBuilder: (_, _) =>
                       const Divider(height: 1, color: AppColors.surfaceMuted),

@@ -274,10 +274,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                           ),
                   ),
                   if (_showPredictions)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      top: 0,
+                    Positioned.fill(
                       child: SearchPredictions(
                         items: _predictionRecipes,
                         loading: _predictionsLoading,

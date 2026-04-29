@@ -1,5 +1,43 @@
 # Project Log
 
+## recipe_list — mahallem по умолчанию + UX-полировка поиска и деталей
+
+**Date:** 2026-04-28
+
+### Бэкенд по умолчанию
+
+- `lib/data/api/recipe_api_config.dart`: mahallem (`https://mahallem.ist/recipes`)
+  теперь дефолт для всех платформ. Запуск `flutter run` без
+  `--dart-define` сразу получает переводы. Передача
+  `--dart-define=MAHALLEM_RECIPES_BASE=` (пустая строка) форсит
+  fallback на TheMealDB; кастомный URL — переопределение того же define.
+
+### Поиск: кэш + API параллельно, без short-circuit
+
+- `lib/data/repository/recipe_repository.dart`: `searchByName` запускает
+  локальный `name_lower LIKE 'prefix%'` и `RecipeApi.searchByName`
+  одновременно, мерджит по id (кэш — первым, API-добор — после),
+  upsert-ит новинки. Прежнее правило «≥5 локальных совпадений → сеть
+  не дёргать» убрано: пользователь всегда видит максимум совпадений,
+  включая свежие с сервера.
+
+### Поисковая выпадашка: на весь экран и скроллится
+
+- `lib/ui/search_app_bar.dart`: убран `BoxConstraints(maxHeight: 320)`
+  у `SearchPredictions`, `ListView.separated` без `shrinkWrap` —
+  список нормально прокручивается.
+- `lib/ui/recipe_list_page.dart`: оверлей подсказок теперь
+  `Positioned.fill` (раньше `top:0`), занимает всю высоту тела
+  страницы, пока поле поиска в фокусе.
+
+### Деталка рецепта: таблица ингредиентов
+
+- `lib/ui/recipe_details_page.dart`: первый столбец оставлен на
+  фиксированных 89px; во втором столбце `Text` теперь начинается
+  с трёх неразрывных пробелов `'   ${ing.name}'`, чтобы длинные
+  переведённые названия (особенно RU/AR/FA) не наезжали на
+  колонку с количеством.
+
 ## docs — Production endpoints для перевода (mahallem.ist)
 
 **Date:** 2026-04-29

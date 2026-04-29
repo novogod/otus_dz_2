@@ -304,7 +304,10 @@ class _IngredientsBlock extends StatelessWidget {
                     ),
                   ),
                   Expanded(
-                    child: Text(ing.name, style: AppTextStyles.ingredientName),
+                    child: Text(
+                      '   ${ing.name}',
+                      style: AppTextStyles.ingredientName,
+                    ),
                   ),
                 ],
               ),
