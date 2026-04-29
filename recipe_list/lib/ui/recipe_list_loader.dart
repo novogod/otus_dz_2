@@ -5,6 +5,7 @@ import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
 import '../data/repository/recipe_repository.dart';
+import '../data/translation_quality.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
@@ -193,7 +194,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     for (var round = 0; round < _residueRetryRounds; round++) {
       final stale = <int>[
         for (var i = 0; i < translated.length; i++)
-          if (_looksUntranslated(translated[i], lang)) i,
+          if (recipeLooksUntranslated(translated[i], lang)) i,
       ];
       if (stale.isEmpty) break;
       // ignore: avoid_print
@@ -213,7 +214,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
               final got = repo != null
                   ? await repo.lookup(original.id, lang)
                   : await widget.api.lookup(original.id, lang: lang);
-              if (got != null && !_looksUntranslated(got, lang)) {
+              if (got != null && !recipeLooksUntranslated(got, lang)) {
                 translated[idx] = got;
               }
             } on Object {
@@ -233,31 +234,6 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   /// in practice all rounds clear after #1 because the server
   /// self-purges poisoned `i18n[lang]` on read.
   static const int _residueRetryRounds = 3;
-
-  /// Heuristic: does this recipe still look like it has not been
-  /// translated to [lang]? Mirrors the server-side gate in
-  /// `local_user_portal/routes/recipes.js _isEchoTranslation` so the
-  /// client and server stay in sync. Returns false for English target.
-  bool _looksUntranslated(Recipe r, AppLang lang) {
-    if (lang == AppLang.en) return false;
-    final inst = r.instructions ?? '';
-    if (inst.isEmpty) return false;
-    const nonLatin = {AppLang.ru, AppLang.ar, AppLang.fa, AppLang.ku};
-    if (nonLatin.contains(lang)) {
-      // Non-Latin target: count Latin letters; >= 15 % is residue.
-      final latin = RegExp(r'[A-Za-z]').allMatches(inst).length;
-      final nonAscii = RegExp(r'[^\u0000-\u007F]').allMatches(inst).length;
-      final total = latin + nonAscii;
-      if (total == 0) return true;
-      return (latin / total) >= 0.15;
-    }
-    // Latin target: detect "almost-pure ASCII English". Ratio of
-    // non-ASCII letters near zero AND length over a threshold means
-    // the server gave us back the English source (echo).
-    if (inst.length < 80) return false;
-    final nonAscii = RegExp(r'[^\u0000-\u007F]').allMatches(inst).length;
-    return nonAscii < 3;
-  }
 
   /// Сколько `lookup`-запросов держать в полёте параллельно при
   /// смене языка. Сервер LibreTranslate капнут на 6 одновременных

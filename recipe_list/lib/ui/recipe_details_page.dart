@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/api/recipe_api.dart';
+import '../data/translation_quality.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_bottom_nav_bar.dart';
@@ -32,6 +33,22 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
   late Recipe _recipe;
   AppLang _renderedLang = appLang.value;
 
+  /// `true`, пока идёт повторный fetch на смену языка. Поверх контента
+  /// показываем непрозрачный лоадер, чтобы пользователь не видел
+  /// «застывший» текст на старом языке и понимал, что переключение
+  /// действительно идёт. Гасим только когда рецепт реально пришёл
+  /// на новом языке (или ретраи исчерпаны).
+  bool _translating = false;
+
+  /// Монотонный счётчик запросов перевода — нужен, чтобы поздний
+  /// ответ от старого языка не перезаписал результат нового.
+  int _translateSeq = 0;
+
+  /// Сколько раз перезапрашивать lookup, если ответ всё ещё
+  /// выглядит непереведённым. Совпадает с `_residueRetryRounds`
+  /// в `recipe_list_loader.dart`.
+  static const int _residueRetryRounds = 3;
+
   @override
   void initState() {
     super.initState();
@@ -51,12 +68,30 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     _renderedLang = lang;
     final api = widget.api;
     if (api == null) return; // тесты без сети
+    final seq = ++_translateSeq;
+    if (mounted) setState(() => _translating = true);
     try {
-      final fetched = await api.lookup(_recipe.id, lang: lang);
-      if (!mounted) return;
-      if (fetched != null) setState(() => _recipe = fetched);
-    } on Object {
-      // оставляем старый язык, если сеть упала
+      Recipe? best;
+      for (var round = 0; round <= _residueRetryRounds; round++) {
+        final Recipe? fetched;
+        try {
+          fetched = await api.lookup(_recipe.id, lang: lang);
+        } on Object {
+          break;
+        }
+        if (seq != _translateSeq) return; // язык переключили ещё раз
+        if (fetched == null) break;
+        best = fetched;
+        if (!recipeLooksUntranslated(fetched, lang)) break;
+      }
+      if (!mounted || seq != _translateSeq) return;
+      setState(() {
+        if (best != null) _recipe = best;
+        _translating = false;
+      });
+    } catch (_) {
+      if (!mounted || seq != _translateSeq) return;
+      setState(() => _translating = false);
     }
   }
 
@@ -84,9 +119,11 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+        child: Stack(
           children: [
+            ListView(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+              children: [
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.pagePadding,
@@ -220,6 +257,19 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                 ],
               ),
             ),
+          ],
+            ),
+            if (_translating)
+              const Positioned.fill(
+                child: ColoredBox(
+                  color: Color(0xCCFFFFFF),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
