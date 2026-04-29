@@ -76,7 +76,11 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeArea => 'Кухня';
 	@override String get addRecipeInstructions => 'Инструкция';
 	@override String get addRecipeIngredientsLabel => 'Ингредиенты';
-	@override String get addRecipeIngredientsHelper => 'По одному в строке. Формат: название | мера (через вертикальную черту).';
+	@override String get addRecipeIngredientName => 'Название';
+	@override String get addRecipeIngredientQty => 'Кол-во';
+	@override String get addRecipeIngredientMeasure => 'Ед. изм.';
+	@override String get addRecipeIngredientAdd => 'Добавить ингредиент';
+	@override String get addRecipeIngredientRemove => 'Удалить ингредиент';
 	@override String get addRecipeSubmit => 'Сохранить рецепт';
 	@override String get addRecipeRequired => 'Обязательно';
 	@override String get addRecipeEnglishHint => 'Заполните на английском — переводы создадутся автоматически.';
@@ -147,7 +151,11 @@ extension on TranslationsRu {
 			'addRecipeArea' => 'Кухня',
 			'addRecipeInstructions' => 'Инструкция',
 			'addRecipeIngredientsLabel' => 'Ингредиенты',
-			'addRecipeIngredientsHelper' => 'По одному в строке. Формат: название | мера (через вертикальную черту).',
+			'addRecipeIngredientName' => 'Название',
+			'addRecipeIngredientQty' => 'Кол-во',
+			'addRecipeIngredientMeasure' => 'Ед. изм.',
+			'addRecipeIngredientAdd' => 'Добавить ингредиент',
+			'addRecipeIngredientRemove' => 'Удалить ингредиент',
 			'addRecipeSubmit' => 'Сохранить рецепт',
 			'addRecipeRequired' => 'Обязательно',
 			'addRecipeEnglishHint' => 'Заполните на английском — переводы создадутся автоматически.',

@@ -74,7 +74,11 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeArea => 'Cuisine';
 	@override String get addRecipeInstructions => 'Instructions';
 	@override String get addRecipeIngredientsLabel => 'Ingrédients';
-	@override String get addRecipeIngredientsHelper => 'Un par ligne. Format : nom | mesure (séparés par une barre verticale).';
+	@override String get addRecipeIngredientName => 'Nom';
+	@override String get addRecipeIngredientQty => 'Qté';
+	@override String get addRecipeIngredientMeasure => 'Unité';
+	@override String get addRecipeIngredientAdd => 'Ajouter un ingrédient';
+	@override String get addRecipeIngredientRemove => 'Supprimer l’ingrédient';
 	@override String get addRecipeSubmit => 'Enregistrer la recette';
 	@override String get addRecipeRequired => 'Obligatoire';
 	@override String get addRecipeEnglishHint => 'Saisissez en anglais — les traductions sont générées automatiquement.';
@@ -145,7 +149,11 @@ extension on TranslationsFr {
 			'addRecipeArea' => 'Cuisine',
 			'addRecipeInstructions' => 'Instructions',
 			'addRecipeIngredientsLabel' => 'Ingrédients',
-			'addRecipeIngredientsHelper' => 'Un par ligne. Format : nom | mesure (séparés par une barre verticale).',
+			'addRecipeIngredientName' => 'Nom',
+			'addRecipeIngredientQty' => 'Qté',
+			'addRecipeIngredientMeasure' => 'Unité',
+			'addRecipeIngredientAdd' => 'Ajouter un ingrédient',
+			'addRecipeIngredientRemove' => 'Supprimer l’ingrédient',
 			'addRecipeSubmit' => 'Enregistrer la recette',
 			'addRecipeRequired' => 'Obligatoire',
 			'addRecipeEnglishHint' => 'Saisissez en anglais — les traductions sont générées automatiquement.',

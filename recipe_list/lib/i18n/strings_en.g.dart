@@ -145,8 +145,20 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Ingredients'
 	String get addRecipeIngredientsLabel => 'Ingredients';
 
-	/// en: 'One per line. Format: name | measure (separated by a pipe).'
-	String get addRecipeIngredientsHelper => 'One per line. Format: name | measure (separated by a pipe).';
+	/// en: 'Name'
+	String get addRecipeIngredientName => 'Name';
+
+	/// en: 'Qty'
+	String get addRecipeIngredientQty => 'Qty';
+
+	/// en: 'Unit'
+	String get addRecipeIngredientMeasure => 'Unit';
+
+	/// en: 'Add ingredient'
+	String get addRecipeIngredientAdd => 'Add ingredient';
+
+	/// en: 'Remove ingredient'
+	String get addRecipeIngredientRemove => 'Remove ingredient';
 
 	/// en: 'Save recipe'
 	String get addRecipeSubmit => 'Save recipe';
@@ -241,7 +253,11 @@ extension on Translations {
 			'addRecipeArea' => 'Area / cuisine',
 			'addRecipeInstructions' => 'Instructions',
 			'addRecipeIngredientsLabel' => 'Ingredients',
-			'addRecipeIngredientsHelper' => 'One per line. Format: name | measure (separated by a pipe).',
+			'addRecipeIngredientName' => 'Name',
+			'addRecipeIngredientQty' => 'Qty',
+			'addRecipeIngredientMeasure' => 'Unit',
+			'addRecipeIngredientAdd' => 'Add ingredient',
+			'addRecipeIngredientRemove' => 'Remove ingredient',
 			'addRecipeSubmit' => 'Save recipe',
 			'addRecipeRequired' => 'Required',
 			'addRecipeEnglishHint' => 'Please enter in English — translations are generated automatically.',

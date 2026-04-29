@@ -43,7 +43,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
   final _category = TextEditingController();
   final _area = TextEditingController();
   final _instructions = TextEditingController();
-  final _ingredients = TextEditingController();
+  final List<_IngredientRow> _ingredientRows = [_IngredientRow()];
 
   bool _saving = false;
 
@@ -54,31 +54,41 @@ class _AddRecipePageState extends State<AddRecipePage> {
     _category.dispose();
     _area.dispose();
     _instructions.dispose();
-    _ingredients.dispose();
+    for (final r in _ingredientRows) {
+      r.dispose();
+    }
     super.dispose();
   }
 
-  /// Парсит textarea-вид «name | measure» в список
-  /// [RecipeIngredient]. Пустые строки игнорируются. Если
-  /// разделителя нет — вся строка идёт в `name`, `measure` пустой.
-  List<RecipeIngredient> _parseIngredients(String raw) {
-    final lines = raw.split('\n');
+  /// Новая строка ингредиента. Сервер канонизирует
+  /// `strIngredient1..20` — больше не пускаем.
+  void _addIngredientRow(int afterIndex) {
+    setState(() {
+      if (_ingredientRows.length >= 20) return;
+      _ingredientRows.insert(afterIndex + 1, _IngredientRow());
+    });
+  }
+
+  void _removeIngredientRow(int index) {
+    if (_ingredientRows.length <= 1) return;
+    setState(() {
+      _ingredientRows.removeAt(index).dispose();
+    });
+  }
+
+  /// Собирает [_IngredientRow]-ы в [RecipeIngredient]. `measure`
+  /// на сервере — единая строка, поэтому склеиваем
+  /// `"$qty $unit"` с разделителем-пробелом.
+  List<RecipeIngredient> _collectIngredients() {
     final out = <RecipeIngredient>[];
-    for (final l in lines) {
-      final t = l.trim();
-      if (t.isEmpty) continue;
-      final i = t.indexOf('|');
-      if (i < 0) {
-        out.add(RecipeIngredient(name: t, measure: ''));
-      } else {
-        out.add(
-          RecipeIngredient(
-            name: t.substring(0, i).trim(),
-            measure: t.substring(i + 1).trim(),
-          ),
-        );
-      }
-      if (out.length >= 20) break; // server canonicalizes 1..20
+    for (final r in _ingredientRows) {
+      final n = r.name.text.trim();
+      if (n.isEmpty) continue;
+      final q = r.qty.text.trim();
+      final u = r.unit.text.trim();
+      final parts = <String>[if (q.isNotEmpty) q, if (u.isNotEmpty) u];
+      out.add(RecipeIngredient(name: n, measure: parts.join(' ')));
+      if (out.length >= 20) break;
     }
     return out;
   }
@@ -105,7 +115,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
       instructions: _instructions.text.trim().isEmpty
           ? null
           : _instructions.text.trim(),
-      ingredients: _parseIngredients(_ingredients.text),
+      ingredients: _collectIngredients(),
     );
 
     try {
@@ -190,17 +200,35 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 minLines: 3,
               ),
               const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _ingredients,
-                decoration: InputDecoration(
-                  labelText: s.addRecipeIngredientsLabel,
-                  helperText: s.addRecipeIngredientsHelper,
-                  helperMaxLines: 3,
-                  alignLabelWithHint: true,
+              // Ингредиенты: динамический список строк [name|qty|unit].
+              // Справа от каждой строки — номер (1…20) и кнопка «+»,
+              // вставляющая новую строку ниже текущей. Сервер
+              // ожидает `strMeasureN` одной строкой, поэтому
+              // qty + unit склеиваются в [_collectIngredients].
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.xs,
+                  bottom: AppSpacing.sm,
                 ),
-                maxLines: 8,
-                minLines: 3,
+                child: Text(
+                  s.addRecipeIngredientsLabel,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppColors.primaryDark,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
+              for (var i = 0; i < _ingredientRows.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _IngredientRowField(
+                    row: _ingredientRows[i],
+                    index: i,
+                    showRemove: _ingredientRows.length > 1,
+                    onAdd: () => _addIngredientRow(i),
+                    onRemove: () => _removeIngredientRow(i),
+                  ),
+                ),
               const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: _saving ? null : _save,
@@ -210,6 +238,133 @@ class _AddRecipePageState extends State<AddRecipePage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Контроллеры одной строки ингредиента. Держим отдельно
+/// от [State], чтобы `setState(() => _ingredientRows.insert/removeAt)`
+/// не терял введённые значения в соседних строках.
+class _IngredientRow {
+  final TextEditingController name = TextEditingController();
+  final TextEditingController qty = TextEditingController();
+  final TextEditingController unit = TextEditingController();
+
+  void dispose() {
+    name.dispose();
+    qty.dispose();
+    unit.dispose();
+  }
+}
+
+/// Одна строка ингредиента: `name | qty | unit | № | +/−`.
+///
+/// Раскладка подобрана так, чтобы длинные локализации
+/// (немецкий, курдский) не переполнялись. Доли:
+///   * `name` — flex 5 (занимает половину).
+///   * `qty` — flex 2 (`keyboardType: numberWithOptions(decimal: true)`).
+///   * `unit` — flex 3.
+class _IngredientRowField extends StatelessWidget {
+  const _IngredientRowField({
+    required this.row,
+    required this.index,
+    required this.showRemove,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final _IngredientRow row;
+  final int index;
+  final bool showRemove;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 5,
+          child: TextFormField(
+            controller: row.name,
+            decoration: InputDecoration(
+              labelText: s.addRecipeIngredientName,
+              isDense: true,
+            ),
+            textInputAction: TextInputAction.next,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          flex: 2,
+          child: TextFormField(
+            controller: row.qty,
+            decoration: InputDecoration(
+              labelText: s.addRecipeIngredientQty,
+              isDense: true,
+            ),
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            textInputAction: TextInputAction.next,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          flex: 3,
+          child: TextFormField(
+            controller: row.unit,
+            decoration: InputDecoration(
+              labelText: s.addRecipeIngredientMeasure,
+              isDense: true,
+            ),
+            textInputAction: TextInputAction.next,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        // Номер строки 1…20, выравнян с серединой input-а
+        // (`isDense: true` → высота ~48). Используем фиксированный
+        // pad, чтобы лейблы инпутов не сбивали вертикаль.
+        Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: SizedBox(
+            width: 24,
+            child: Text(
+              '${index + 1}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+        // Кнопка «+» добавляет строку ниже текущей. Если
+        // строк больше одной, иконка `×` появляется слева.
+        if (showRemove)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: IconButton(
+              tooltip: s.addRecipeIngredientRemove,
+              icon: const Icon(Icons.close, size: 18),
+              color: AppColors.textSecondary,
+              visualDensity: VisualDensity.compact,
+              onPressed: onRemove,
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: IconButton(
+            tooltip: s.addRecipeIngredientAdd,
+            icon: const Icon(Icons.add_circle, size: 24),
+            color: AppColors.primaryDark,
+            visualDensity: VisualDensity.compact,
+            onPressed: onAdd,
+          ),
+        ),
+      ],
     );
   }
 }

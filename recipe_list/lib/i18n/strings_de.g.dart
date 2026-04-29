@@ -74,7 +74,11 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeArea => 'Küche';
 	@override String get addRecipeInstructions => 'Anleitung';
 	@override String get addRecipeIngredientsLabel => 'Zutaten';
-	@override String get addRecipeIngredientsHelper => 'Eine pro Zeile. Format: Name | Maß (durch senkrechten Strich getrennt).';
+	@override String get addRecipeIngredientName => 'Name';
+	@override String get addRecipeIngredientQty => 'Menge';
+	@override String get addRecipeIngredientMeasure => 'Einheit';
+	@override String get addRecipeIngredientAdd => 'Zutat hinzufügen';
+	@override String get addRecipeIngredientRemove => 'Zutat entfernen';
 	@override String get addRecipeSubmit => 'Rezept speichern';
 	@override String get addRecipeRequired => 'Pflichtfeld';
 	@override String get addRecipeEnglishHint => 'Bitte auf Englisch eingeben — Übersetzungen werden automatisch erstellt.';
@@ -145,7 +149,11 @@ extension on TranslationsDe {
 			'addRecipeArea' => 'Küche',
 			'addRecipeInstructions' => 'Anleitung',
 			'addRecipeIngredientsLabel' => 'Zutaten',
-			'addRecipeIngredientsHelper' => 'Eine pro Zeile. Format: Name | Maß (durch senkrechten Strich getrennt).',
+			'addRecipeIngredientName' => 'Name',
+			'addRecipeIngredientQty' => 'Menge',
+			'addRecipeIngredientMeasure' => 'Einheit',
+			'addRecipeIngredientAdd' => 'Zutat hinzufügen',
+			'addRecipeIngredientRemove' => 'Zutat entfernen',
 			'addRecipeSubmit' => 'Rezept speichern',
 			'addRecipeRequired' => 'Pflichtfeld',
 			'addRecipeEnglishHint' => 'Bitte auf Englisch eingeben — Übersetzungen werden automatisch erstellt.',

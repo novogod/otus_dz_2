@@ -74,7 +74,11 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeArea => 'Pêjgeh';
 	@override String get addRecipeInstructions => 'Talîmat';
 	@override String get addRecipeIngredientsLabel => 'Madde';
-	@override String get addRecipeIngredientsHelper => 'Her rêz yek. Forma: nav | pîvane (bi xêza vertîkal).';
+	@override String get addRecipeIngredientName => 'Nav';
+	@override String get addRecipeIngredientQty => 'În.';
+	@override String get addRecipeIngredientMeasure => 'Pîvane';
+	@override String get addRecipeIngredientAdd => 'Madde zêde bike';
+	@override String get addRecipeIngredientRemove => 'Madde rake';
 	@override String get addRecipeSubmit => 'Resipê tomar bike';
 	@override String get addRecipeRequired => 'Pêwîst';
 	@override String get addRecipeEnglishHint => 'Bi îngîlîzî binivîse — werger bixweber tê çêkirin.';
@@ -145,7 +149,11 @@ extension on TranslationsKu {
 			'addRecipeArea' => 'Pêjgeh',
 			'addRecipeInstructions' => 'Talîmat',
 			'addRecipeIngredientsLabel' => 'Madde',
-			'addRecipeIngredientsHelper' => 'Her rêz yek. Forma: nav | pîvane (bi xêza vertîkal).',
+			'addRecipeIngredientName' => 'Nav',
+			'addRecipeIngredientQty' => 'În.',
+			'addRecipeIngredientMeasure' => 'Pîvane',
+			'addRecipeIngredientAdd' => 'Madde zêde bike',
+			'addRecipeIngredientRemove' => 'Madde rake',
 			'addRecipeSubmit' => 'Resipê tomar bike',
 			'addRecipeRequired' => 'Pêwîst',
 			'addRecipeEnglishHint' => 'Bi îngîlîzî binivîse — werger bixweber tê çêkirin.',
