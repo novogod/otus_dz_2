@@ -1,5 +1,46 @@
 # Project Log
 
+## translation pipeline — strict sequential 4-tier contract + docs
+
+**Date:** 2026-04-28
+
+### Что сделано
+
+Канонизирован сквозной контракт перевода `app ↔ mahallem` ровно по
+схеме «in-app DB → mahallem.recipes.i18n → translation_cache →
+engines», без каскадов и без перезаписей.
+
+- На стороне сервера (`mahallem_ist@7fe530b8`):
+  - `cacheTranslation`: `INSERT … ON CONFLICT DO NOTHING` —
+    переводы пишутся ровно один раз и живут вечно.
+  - `translateBest`: 6-уровневый каскад схлопнут в 2 движка
+    (primary + Gemini fallback). MyMemory и публичный LibreTranslate
+    выкинуты — оба заквочены 429.
+  - Engine assignment: `ar/fa/ku → Gemini`, остальные →
+    локальный LibreTranslate, fallback Gemini только если primary
+    его уже не использовал.
+- На стороне приложения (`recipe_list/main`) дополнительных правок
+  не потребовалось — `RecipeRepository.lookupManyCached` + `lookup` +
+  `_LoadingScreen` уже соответствуют контракту.
+
+### Документация
+
+- [docs/translation-pipeline.md](translation-pipeline.md) —
+  end-to-end контракт «1→2→3→4» с ASCII-диаграммой и file-map.
+- [docs/translation-pipeline-analysis.md](translation-pipeline-analysis.md) —
+  пошаговый аудит реализации; deferred P3 hygiene items
+  (никакие из них не блокируют контракт).
+
+### Эмпирическая проверка
+
+| Шаг | Результат |
+| --- | --- |
+| iOS (iPhone 16e), cold install, lang=ru | `recipes.db` 884 KB, 219 ru-строк |
+| Android (Pixel 8 API 34), cold install, lang=ru | `recipes.db` 780 KB, 200 ru-строк |
+| 1-й `/recipes/lookup/52764?lang=ku` (нет `i18n.ku`) | HTTP 200 за 26.5 s, 34 Gemini-вызова, `i18n.ku` записан |
+| 2-й тот же запрос (должен взять `recipes.i18n.ku` напрямую) | HTTP 200 за **6.6 ms**, нулевые движки в логах |
+| Лог-доказательство движка | `🍳 translateBest [en→ku] via gemini: "olive oil" → "ڕۆنی زەیتوون"` |
+
 ## recipe_list — лоадер на смене языка + параллельный fetch промахов
 
 **Date:** 2026-04-28
