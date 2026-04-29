@@ -1,7 +1,7 @@
 # Translation buffer & cache topology
 
 > Status: 2026-04-29 — снимок текущей реализации + рекомендации по
-> расширению до запрошенного «1–1.5 GB FILO буфера» на сервере и его
+> расширению до запрошенного «1–1.5 GB LRU буфера» на сервере и его
 > прозрачной репликации в телефонную память на 500+ рецептов.
 
 ## 1. Что есть сейчас
@@ -34,8 +34,7 @@ Constraints:
   `docs/translation-pipeline.md`.
 * Эвикции **нет**. Таблица растёт.
 * Echo-guard: запись с `translated_text === source_text` отбрасывается на
-  чтении и удаляется (см. `getCachedTranslation` lines 100-130) —
-  поэтому "плохой" мусор всё-таки удаляется по-faktу, но это не FILO.
+  чтении и удаляется (см. `getCachedTranslation` lines 100-130).
 
 In-memory буфера перед БД нет. Каждый HIT — это `SELECT` + `UPDATE` к
 Postgres.
@@ -65,8 +64,8 @@ INDEX idx_recipes_last_used_at    (last_used_at)
 
 | Параметр              | Значение                  |
 |-----------------------|---------------------------|
-| `cap`                 | 2000 строк                |
-| `byteCap`             | 5 MB (`5 * 1024 * 1024`)  |
+| `cap`                 | 8000 строк                |
+| `byteCap`             | 64 MB (`64 * 1024 * 1024`)|
 | `cacheHitThreshold`   | 5 (для `searchByName`)    |
 | Эвикция               | LRU по `last_used_at`, batches по 32, сначала под byte budget, затем под row cap |
 
@@ -74,21 +73,16 @@ INDEX idx_recipes_last_used_at    (last_used_at)
 
 > The buffer memory for translation in mahallem (with following fetching
 > the phone app memory (of 500+ recipes translated) from this mahallem
-> buffer memory) may be 1 - 1.5 Gb, with "first in last out" when limit
-> is exceeded.
+> buffer memory) may be 1 - 1.5 Gb, with LRU eviction when limit is
+> exceeded.
 
 Расшифровка:
 
 * На сервере появляется **именованный буфер 1–1.5 GB**, в котором
   лежат уже-переведённые рецепты (а не отдельные строки переводов!).
-* Когда буфер переполняется, выкидываем по правилу **FILO** — то есть
-  «последним пришёл — первым ушёл» (это нестандартная формулировка;
-  обычно так делают «новые элементы вытесняют сами себя», что
-  бессмысленно. Скорее всего пользователь имеет в виду одну из:
-  - **FIFO**: первым пришёл — первым ушёл (классическая очередь);
-  - **LRU**: давно не использованный — на выход (то, что уже стоит на
-    клиенте).
-  Уточнено в §6).
+* При переполнении буфер вытесняет **LRU** — давно не читавшиеся
+  ключи. Это семантика `maxmemory-policy allkeys-lru` в Redis и
+  совпадает с тем, что уже делает клиент.
 * Телефон тянет 500+ рецептов из этого буфера — то есть протокол
   «один HTTP-запрос → пачка готовых переводов».
 
@@ -97,9 +91,9 @@ INDEX idx_recipes_last_used_at    (last_used_at)
 | Требование                                          | Статус сейчас           | Что не так                                                |
 |------------------------------------------------------|-------------------------|-----------------------------------------------------------|
 | Серверный буфер 1–1.5 GB                            | ❌ нет                  | `translation_cache` без cap, плюс это БД, а не «буфер».   |
-| FILO/FIFO eviction серверного буфера                | ❌ нет                  | Только echo-guard удаляет.                                 |
+| LRU eviction серверного буфера                      | ❌ нет                  | Только echo-guard удаляет.                                 |
 | Bulk endpoint «дай мне 500 рецептов одним выстрелом»| ⚠ частично             | `GET /recipes/filter?c=<cat>&lang=…&full=1` — по категориям; нет «отдай всё под язык». |
-| Клиентская память 500+ рецептов                     | ⚠ ограничено бюджетом   | 5 MB / 2000 строк суммарно по всем языкам; реально 200×10≈50 MB не помещается. |
+| Клиентская память 500+ рецептов                     | ✅ проходит по бюджету | 64 MB / 8000 строк (~600 рецептов х 10 языков). |
 | Eviction политика клиента                           | ✅ LRU                  | соответствует спеку.                                      |
 | Соответствие `docs/translation-pipeline.md`         | ✅ для cascade          | каскад остаётся: cache → glossary → MyMemory → public LT → local LT → Gemini. |
 
@@ -131,9 +125,8 @@ INDEX idx_recipes_last_used_at    (last_used_at)
 
 * Ключи `recipe:{id}:{lang}` хранят полный JSON одного рецепта на нужном
   языке (~10 KB). 1.5 GB / 10 KB ≈ 150 000 готовых рецептов.
-* Параметр Redis `maxmemory-policy allkeys-lru` обеспечит «давно не
-  читали — на выход». Это **не** ровно "FILO", но семантически ближе
-  всего к запросу пользователя; см. §6.
+* `maxmemory-policy allkeys-lru` обеспечивает «давно не читали — на
+  выход». Та же семантика, что у клиента.
 * Postgres-таблица `translation_cache` остаётся источником правды для
   отдельных переводов (echo-guard + бессмертие). Redis — это
   «материализованный вид» уровня готовых рецептов.
@@ -176,6 +169,7 @@ GET /recipes/page?lang=ru&offset=0&limit=500
 ```
 REDIS_URL=redis://mahallem-redis:6379/4
 RECIPES_REDIS_MAXMEMORY=1500mb       # docker compose настройка
+RECIPES_REDIS_POLICY=allkeys-lru
 RECIPES_BULK_PAGE_SIZE=500
 ```
 
@@ -186,35 +180,29 @@ RECIPES_BULK_PAGE_SIZE=500
   агрегаты (готовые рецепты), сами строки переводов в Postgres вечны.
 * Echo-guard остаётся в `cacheTranslation`/`getCachedTranslation`.
 
-## 6. Семантика «FILO»
+## 6. Eviction policy
 
-Технически FILO (LIFO) eviction означает «последним зашёл — первым
-вылетел», что используется для стеков, а не кэшей. Для memory-кэша
-осмысленные варианты:
+Единая политика на обоих уровнях кэша — **LRU** (least-recently-used):
 
-| Политика | Когда применять                                               |
-|----------|---------------------------------------------------------------|
-| **LRU**  | "Давно не читали" — лучше всего для recipe-кэша (рекомендация). |
-| **LFU**  | Когда читают редкие, но важные элементы много раз.            |
-| **FIFO** | Когда timestamp создания однозначно отражает «свежесть».      |
+| Уровень  | Реализация                                                  |
+|----------|-------------------------------------------------------------|
+| Сервер   | Redis `maxmemory 1500mb` + `maxmemory-policy allkeys-lru`.  |
+| Клиент   | `RecipeRepository._evict()` сортирует по `last_used_at ASC` и удаляет батчем по 32 до попадания в `byteCap`/`cap`. |
 
-В рекомендациях выше выбрана **LRU** как стандарт Redis и как наиболее
-близкая к ожиданиям «выкидываем то, что давно не нужно». Если
-пользователь имел в виду **FIFO** — `maxmemory-policy noeviction` +
-явный `LREM` на старейших ключах при превышении порога; код для этого
-существенно более громоздкий. Уточнить при принятии задачи.
+Постгрес-таблица `translation_cache` остаётся **без эвикции** —
+единственный источник правды для отдельных переводов.
 
 ## 7. План внедрения (можно частично)
 
 1. (P0, без сервера) Поднять клиентский `byteCap` до 64 MB и `cap` до
    8000. Один patch в `RecipeRepository`.
 2. (P1, сервер) Завести `mahallem-redis` сервис в docker-compose и
-   обернуть `routes/recipes.js` в L1-cache (`getOrSet(recipe:{id}:{lang})`).
+   обернуть `routes/recipes.js` в L1-cache (`getOrSet(recipe:{id}:{lang})`)
+   с `allkeys-lru`.
 3. (P1, сервер) Добавить `/recipes/page` endpoint поверх Redis.
 4. (P1, клиент) `_seedFromBulkPage` в `recipe_list_loader.dart` под
    feature flag.
 5. (P2, наблюдаемость) Логи hit-rate Redis в Prometheus / docker logs.
-6. (P2) Решить семантику FILO vs LRU/FIFO с продактом.
 
 ## 8. Текущая UX-кнопка «Reload»
 

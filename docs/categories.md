@@ -10,11 +10,56 @@
 * На каждом cold-start клиент случайно выбирает 10 из них и накапливает
   до 200 рецептов из mahallem-API через `/recipes/filter?c=<key>&lang=…`.
 * Локальная sqflite-БД работает как L1-кэш: рецепты живут "вечно" под
-  бюджетом 5 MB / 2000 строк, выкидывая LRU при переполнении.
+  бюджетом 64 MB / 8000 строк, выкидывая LRU при переполнении.
 * Кнопка ⟳ (Reload) в `AppPageBar.actions` рядом с языковой кнопкой
   принудительно перевыбирает 10 случайных категорий и тянет свежие
-  рецепты из API, минуя короткий путь "≥ 50 рецептов в кэше — отдаём
-  как есть".
+  рецепты **через тот же серверный путь, что и cold-start** — в
+  `mahallem-user-portal` (`GET /recipes/filter?c=<key>&lang=<lang>&full=1`),
+  где они проходят полный translation cascade и потом уже попадают в
+  локальный sqflite-кэш. Короткий путь "≥ 50 рецептов в кэше — отдаём
+  как есть" минуется (`forceReseed: true`).
+
+## Data flow кнопки Reload
+
+```
+┌──────────┐  reloadFeedTicker  ┌──────────────────┐
+│ Reload   │ ─────────────────► │ RecipeListLoader │
+│ button   │                    │ ._onReloadReq.   │
+└──────────┘                    └────────┬─────────┘
+                                         │ _runLoad(forceReseed:true)
+                                         ▼
+                                ┌──────────────────┐
+                                │ _seedFromCategor.│
+                                └────────┬─────────┘
+                                         │ /recipes/filter?c=<cat>&lang=<lang>&full=1
+                                         ▼
+                          ┌────────────────────────────┐
+                          │   mahallem-user-portal     │
+                          │   (Express, Docker)        │
+                          ├────────────────────────────┤
+                          │ 1. Redis L1 (см. план)     │
+                          │ 2. translation_cache (PG)  │
+                          │ 3. cascade:                │
+                          │    glossary → MyMemory →   │
+                          │    public LT → local LT →  │
+                          │    Gemini (off)            │
+                          └────────────┬───────────────┘
+                                       │ JSON: переведённые рецепты
+                                       ▼
+                          ┌────────────────────────────┐
+                          │ repo.upsertAll(batch, lang)│
+                          │ sqflite (LRU, 64 MB / 8000)│
+                          └────────────┬───────────────┘
+                                       ▼
+                          ┌────────────────────────────┐
+                          │ setState(_recipes = …)     │
+                          └────────────────────────────┘
+```
+
+Подробности слоёв и LRU-эвикции — в
+[docs/translation-buffer.md](./translation-buffer.md). Список tier-ов
+сервера и инвариант «переводы вечны» — в
+[docs/translation-pipeline.md](./translation-pipeline.md).
 
 ---
 
@@ -101,10 +146,28 @@ forced reload) пересеивает выбор. Раньше можно был
 с предыдущим запросом и зовёт `_runLoad(forceReseed: true)`. На время
 обновления показывается стандартный progress-stage из `_LoadingScreen`.
 
-Локальный sqflite-кэш не чистится — категории, у которых уже > порога
-рецептов, обслуживаются из БД, а недостающие догружаются по сети. Этим
-кнопка дешевле "Сбросить и перезагрузить с нуля", но обеспечивает свежий
-рандомный набор и подмешивает новые рецепты.
+Куда уходит запрос. `_runLoad(forceReseed: true)` идёт в тот же
+`_seedFromCategories`, что и cold-start: для каждой из 10 свежевыбранных
+категорий вызывает `widget.api.filterByCategory(cat)` →
+`GET https://mahallem.ist/recipes/filter?c=<cat>&lang=<lang>&full=1`. На
+сервере (`mahallem-user-portal`) запрос проходит штатный путь:
+
+1. Redis L1-буфер (когда §5 [translation-buffer.md](./translation-buffer.md)
+   будет внедрён) — сейчас отсутствует, миссы идут дальше.
+2. Postgres `translation_cache` — `getCachedTranslation` для каждого
+   поля карточки.
+3. Translation cascade `glossary → MyMemory → public LT → local LT →
+   Gemini` (Gemini временно off через `DISABLE_GEMINI=1`,
+   см. [translation-pipeline.md](./translation-pipeline.md)).
+4. Готовые переводы записываются в `translation_cache`
+   (`INSERT … ON CONFLICT DO NOTHING` — переводы вечны).
+
+Клиент получает уже переведённые JSON-карточки и сразу же кладёт их в
+sqflite через `repo.upsertAll(batch, lang)`. Локальный кэш не чистится:
+категории, у которых уже > порога рецептов, обслуживаются из БД, а
+недостающие догружаются по сети. Поэтому кнопка дешевле «сбросить и
+перезагрузить с нуля», но всё равно гарантирует свежий рандомный набор
+и подмешивает новые рецепты.
 
 ## 6. Почему зашитый список, а не `/recipes/categories`
 
@@ -133,13 +196,109 @@ Cold-start через категории остаётся в рамках спе
 | `_seedTarget`             | то же                        | 200      |
 | `_categoryCacheThreshold` | то же                        | 10       |
 | `_translateConcurrency`   | то же                        | 8        |
-| Sqflite cap (rows / bytes)| `recipe_repository.dart`     | 2000 / 5 MB |
+| Sqflite cap (rows / bytes)| `recipe_repository.dart`     | 8000 / 64 MB |
 
-## 9. Известные ограничения / TODO
+## 9. Известные ограничения / TODO + remedies
 
-* Сервер `mahallem-user-portal` всё ещё обслуживает первый «холодный»
-  язык за 30–90 секунд — пока просто бар прогресса, а не push-обновление.
-* Кэш-eviction по байтам сейчас фиксирован на 5 MB; 200 рецептов на 10
-  языках = до 50 MB; см. docs/translation-buffer.md, §«Recommendations».
-* Кнопка не дёрнет SourcePage / FavoritesPage — намеренно: она про
-  «обновить ленту», а не «обновить всё приложение».
+### 9.1 Холодный язык: 30–90 с на первом запросе
+
+**Приоритет:** P1.
+
+**Проблема.** Сервер `mahallem-user-portal` обслуживает первый запрос
+на новый язык 30–90 с — клиент видит только полосу прогресса.
+
+**Remedies:**
+
+- (a) Redis L1 (`allkeys-lru`, 1.5 GB) перед `translation_cache` —
+  см. [translation-buffer.md §5.1](./translation-buffer.md).
+- (b) Bulk endpoint `/recipes/page?lang=&offset=&limit=500` вместо
+  14 параллельных `/filter?c=…` — один HTTP, миссы cascade
+  распараллелены (там же §5.2).
+- (c) Прогрев: фоновый job запускает cascade на топ-200 рецептов
+  сразу после `npm start` для каждого активного языка.
+- (d) Потоковая отрисовка в UI: показывать карточки по мере приезда
+  первой категории, не ждать `_seedTarget=200`.
+
+---
+
+### 9.2 Клиентский `byteCap = 5 MB`
+
+**Приоритет:** P0 для (a), P2 для (b)/(c).
+
+**Проблема.** 200 × 10 языков ≈ 50 MB не помещается; эвиктор начинает
+выкидывать LRU уже на 4-м языке.
+
+**Remedies:**
+
+- (a) Поднять дефолты `RecipeRepository` до `byteCap = 64 * 1024 *
+  1024`, `cap = 8000` — комфортно ~600 рецептов × 10 языков.
+- (b) Партиционировать LRU per-language (отдельный budget на текущий
+  + soft-budget на остальные), чтобы свитч языка не выкидывал
+  «домашний» язык целиком.
+- (c) Не хранить большие поля (HTML инструкций) inline — отдельная
+  таблица + lazy-load в `getById`.
+
+---
+
+### 9.3 Reload не задевает SourcePage / FavoritesPage
+
+**Приоритет:** P3 (по запросу продакта).
+
+**Проблема.** Тап обновляет только ленту; избранное и источник не
+перечитываются. Это намеренно, но если понадобится глобальный refresh:
+
+**Remedy:** завести `appReloadTicker` (или вынести `reloadFeedTicker`
+на корневой `InheritedNotifier`) и подписать остальные страницы.
+
+---
+
+### 9.4 Магические константы `_seedTarget=200`, `_seedPickCount=10`
+
+**Приоритет:** P2.
+
+**Проблема.** Привязаны к коду, не к фактическому объёму API.
+
+**Remedy:** вынести в `lib/config/feed_config.dart` (или
+`--dart-define`); в перспективе — читать из remote-config.
+
+---
+
+### 9.5 RNG может повторить тот же набор категорий
+
+**Приоритет:** P2.
+
+**Проблема.** Подряд-нажатие Reload иногда возвращает почти тот же
+набор категорий.
+
+**Remedy:** хранить `_lastPickedCategories` в loader-state и
+исключать их из пула при следующем reload
+(`pool.removeWhere(_lastPickedCategories.contains)` до `shuffle()`).
+
+---
+
+### 9.6 Offline + Reload стирает текущую ленту
+
+**Приоритет:** P1.
+
+**Проблема.** При отсутствии сети `forceReseed: true` уходит в ошибку
+и показывает пустой стейт, перетерев старую ленту.
+
+**Remedy:** в `_onReloadRequested` проверять `connectivity.isOnline`
+(или ловить `DioException.connectionError`) и при offline показывать
+`SnackBar(s.offlineReloadUnavailable)`, оставляя текущую ленту.
+
+---
+
+### 9.7 Нет лёгкой обратной связи на тап Reload
+
+**Приоритет:** P2.
+
+**Проблема.** `_LoadingScreen` перекрывает всю ленту целиком — для
+короткого «обновить» это слишком тяжёлый стейт.
+
+**Remedy:**
+
+- `AnimatedRotation` 360° на иконке `Icons.refresh` пока
+  `_translating == true`.
+- `LinearProgressIndicator` в `AppPageBar.bottom` вместо full-screen
+  overlay (соответствует design-system token `motion.medium`).

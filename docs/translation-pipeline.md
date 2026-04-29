@@ -109,7 +109,7 @@ server is the immutable source of truth and never overwrites an
 already-cached translation (see §4), every refresh writes the same
 content. The "forever" rule on the user's contract concerns
 **expiration** — there is no TTL, no time-based eviction; rows only
-ever drop out of the local DB when the table exceeds 5 MB / 2000 rows
+ever drop out of the local DB when the table exceeds 64 MB / 8000 rows
 and the **least-recently-used** row gets bumped (`_evictIfOverCap`).
 
 ### 4. Mahallem cache miss → translate → store forever both sides
