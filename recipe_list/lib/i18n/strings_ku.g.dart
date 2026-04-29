@@ -67,6 +67,19 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 		other: '${n} پێکهاتە',
 	);
 	@override late final _TranslationsA11yKu a11y = _TranslationsA11yKu._(_root);
+	@override String get addRecipeTitle => 'Resipe zêde bike';
+	@override String get addRecipeName => 'Navê resipê';
+	@override String get addRecipePhoto => 'URLa wêneyê';
+	@override String get addRecipeCategory => 'Kategorî';
+	@override String get addRecipeArea => 'Pêjgeh';
+	@override String get addRecipeInstructions => 'Talîmat';
+	@override String get addRecipeIngredientsLabel => 'Madde (her rêz yek: nav | pîvane)';
+	@override String get addRecipeSubmit => 'Resipê tomar bike';
+	@override String get addRecipeRequired => 'Pêwîst';
+	@override String get addRecipeEnglishHint => 'Bi îngîlîzî binivîse — werger bixweber tê çêkirin.';
+	@override String get addRecipeSaving => 'Tê tomarkirin…';
+	@override String get addRecipeError => 'Resipe nehate tomarkirin. Dîsa biceribîne.';
+	@override String get addRecipeSuccess => 'Resipe hate zêdekirin!';
 }
 
 // Path: a11y
@@ -81,6 +94,7 @@ class _TranslationsA11yKu implements TranslationsA11yEn {
 	@override String flagOf({required Object label}) => 'ئاڵای ${label}';
 	@override String get offlineReloadUnavailable => 'دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.';
 	@override String get scrollToTop => 'گەڕانەوە بۆ سەرەوە';
+	@override String get addRecipe => 'Resipe zêde bike';
 }
 
 /// The flat map containing all translations for locale <ku>.
@@ -122,6 +136,20 @@ extension on TranslationsKu {
 			'a11y.flagOf' => ({required Object label}) => 'ئاڵای ${label}',
 			'a11y.offlineReloadUnavailable' => 'دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.',
 			'a11y.scrollToTop' => 'گەڕانەوە بۆ سەرەوە',
+			'a11y.addRecipe' => 'Resipe zêde bike',
+			'addRecipeTitle' => 'Resipe zêde bike',
+			'addRecipeName' => 'Navê resipê',
+			'addRecipePhoto' => 'URLa wêneyê',
+			'addRecipeCategory' => 'Kategorî',
+			'addRecipeArea' => 'Pêjgeh',
+			'addRecipeInstructions' => 'Talîmat',
+			'addRecipeIngredientsLabel' => 'Madde (her rêz yek: nav | pîvane)',
+			'addRecipeSubmit' => 'Resipê tomar bike',
+			'addRecipeRequired' => 'Pêwîst',
+			'addRecipeEnglishHint' => 'Bi îngîlîzî binivîse — werger bixweber tê çêkirin.',
+			'addRecipeSaving' => 'Tê tomarkirin…',
+			'addRecipeError' => 'Resipe nehate tomarkirin. Dîsa biceribîne.',
+			'addRecipeSuccess' => 'Resipe hate zêdekirin!',
 			_ => null,
 		};
 	}

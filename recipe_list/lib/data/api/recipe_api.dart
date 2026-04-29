@@ -103,6 +103,45 @@ class RecipeApi {
     return list.isEmpty ? null : list.first;
   }
 
+  /// mahallem-only: создать новый рецепт. Сервер выделит id из
+  /// диапазона ≥ 1_000_000 (см. `routes/recipes.js: createUserMeal`),
+  /// положит payload в `i18n.en` и вернёт сохранённый объект с
+  /// присвоенным id. Перевод на остальные локали подтянется лениво
+  /// через стандартный cascade на следующем `/recipes/lookup/:id?lang=…`.
+  ///
+  /// Бросает [StateError], если backend != mahallem (TheMealDB не
+  /// предоставляет публичного POST, см.
+  /// `docs/themealdb-add-recipe-investigation.md`).
+  Future<Recipe> createRecipe(Recipe draft) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      throw StateError('createRecipe requires the mahallem backend');
+    }
+    final meal = <String, dynamic>{
+      'strMeal': draft.name,
+      'strMealThumb': draft.photo,
+      if (draft.category != null) 'strCategory': draft.category,
+      if (draft.area != null) 'strArea': draft.area,
+      if (draft.tags.isNotEmpty) 'strTags': draft.tags.join(','),
+      if (draft.instructions != null) 'strInstructions': draft.instructions,
+      if (draft.youtubeUrl != null) 'strYoutube': draft.youtubeUrl,
+      if (draft.sourceUrl != null) 'strSource': draft.sourceUrl,
+      for (var i = 0; i < draft.ingredients.length && i < 20; i++) ...{
+        'strIngredient${i + 1}': draft.ingredients[i].name,
+        'strMeasure${i + 1}': draft.ingredients[i].measure,
+      },
+    };
+    final res = await _client.dio.post<Map<String, dynamic>>(
+      '',
+      data: {'meal': meal},
+    );
+    final data = res.data;
+    final stored = data?['meal'];
+    if (stored is! Map<String, dynamic>) {
+      throw StateError('createRecipe: malformed response');
+    }
+    return Recipe.fromMealDb(stored);
+  }
+
   Future<List<Recipe>> _filter(String key, String value) async {
     final mahallem = _client.backend == RecipeBackend.mahallem;
     final res = await _client.dio.get<Map<String, dynamic>>(

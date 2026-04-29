@@ -67,6 +67,19 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 		other: '${n} ماده اولیه',
 	);
 	@override late final _TranslationsA11yFa a11y = _TranslationsA11yFa._(_root);
+	@override String get addRecipeTitle => 'افزودن دستور';
+	@override String get addRecipeName => 'نام دستور';
+	@override String get addRecipePhoto => 'نشانی عکس';
+	@override String get addRecipeCategory => 'دسته';
+	@override String get addRecipeArea => 'آشپزی';
+	@override String get addRecipeInstructions => 'دستور پخت';
+	@override String get addRecipeIngredientsLabel => 'مواد (یکی در هر خط: نام | اندازه)';
+	@override String get addRecipeSubmit => 'ذخیرهٔ دستور';
+	@override String get addRecipeRequired => 'لازم';
+	@override String get addRecipeEnglishHint => 'لطفاً به انگلیسی وارد کنید — ترجمه‌ها خودکار ساخته می‌شوند.';
+	@override String get addRecipeSaving => 'در حال ذخیره…';
+	@override String get addRecipeError => 'ذخیرهٔ دستور ممکن نشد. دوباره تلاش کنید.';
+	@override String get addRecipeSuccess => 'دستور افزوده شد!';
 }
 
 // Path: a11y
@@ -81,6 +94,7 @@ class _TranslationsA11yFa implements TranslationsA11yEn {
 	@override String flagOf({required Object label}) => 'پرچم ${label}';
 	@override String get offlineReloadUnavailable => 'آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.';
 	@override String get scrollToTop => 'حرکت به بالا';
+	@override String get addRecipe => 'افزودن دستور';
 }
 
 /// The flat map containing all translations for locale <fa>.
@@ -122,6 +136,20 @@ extension on TranslationsFa {
 			'a11y.flagOf' => ({required Object label}) => 'پرچم ${label}',
 			'a11y.offlineReloadUnavailable' => 'آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.',
 			'a11y.scrollToTop' => 'حرکت به بالا',
+			'a11y.addRecipe' => 'افزودن دستور',
+			'addRecipeTitle' => 'افزودن دستور',
+			'addRecipeName' => 'نام دستور',
+			'addRecipePhoto' => 'نشانی عکس',
+			'addRecipeCategory' => 'دسته',
+			'addRecipeArea' => 'آشپزی',
+			'addRecipeInstructions' => 'دستور پخت',
+			'addRecipeIngredientsLabel' => 'مواد (یکی در هر خط: نام | اندازه)',
+			'addRecipeSubmit' => 'ذخیرهٔ دستور',
+			'addRecipeRequired' => 'لازم',
+			'addRecipeEnglishHint' => 'لطفاً به انگلیسی وارد کنید — ترجمه‌ها خودکار ساخته می‌شوند.',
+			'addRecipeSaving' => 'در حال ذخیره…',
+			'addRecipeError' => 'ذخیرهٔ دستور ممکن نشد. دوباره تلاش کنید.',
+			'addRecipeSuccess' => 'دستور افزوده شد!',
 			_ => null,
 		};
 	}

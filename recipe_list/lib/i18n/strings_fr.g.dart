@@ -67,6 +67,19 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 		other: '${n} ingrédients',
 	);
 	@override late final _TranslationsA11yFr a11y = _TranslationsA11yFr._(_root);
+	@override String get addRecipeTitle => 'Ajouter une recette';
+	@override String get addRecipeName => 'Nom de la recette';
+	@override String get addRecipePhoto => 'URL de la photo';
+	@override String get addRecipeCategory => 'Catégorie';
+	@override String get addRecipeArea => 'Cuisine';
+	@override String get addRecipeInstructions => 'Instructions';
+	@override String get addRecipeIngredientsLabel => 'Ingrédients (un par ligne : nom | mesure)';
+	@override String get addRecipeSubmit => 'Enregistrer la recette';
+	@override String get addRecipeRequired => 'Obligatoire';
+	@override String get addRecipeEnglishHint => 'Saisissez en anglais — les traductions sont générées automatiquement.';
+	@override String get addRecipeSaving => 'Enregistrement…';
+	@override String get addRecipeError => 'Impossible d\'enregistrer la recette. Réessayez.';
+	@override String get addRecipeSuccess => 'Recette ajoutée !';
 }
 
 // Path: a11y
@@ -81,6 +94,7 @@ class _TranslationsA11yFr implements TranslationsA11yEn {
 	@override String flagOf({required Object label}) => 'Drapeau de ${label}';
 	@override String get offlineReloadUnavailable => 'Hors ligne. Les recettes précédentes sont affichées.';
 	@override String get scrollToTop => 'Revenir en haut';
+	@override String get addRecipe => 'Ajouter une recette';
 }
 
 /// The flat map containing all translations for locale <fr>.
@@ -122,6 +136,20 @@ extension on TranslationsFr {
 			'a11y.flagOf' => ({required Object label}) => 'Drapeau de ${label}',
 			'a11y.offlineReloadUnavailable' => 'Hors ligne. Les recettes précédentes sont affichées.',
 			'a11y.scrollToTop' => 'Revenir en haut',
+			'a11y.addRecipe' => 'Ajouter une recette',
+			'addRecipeTitle' => 'Ajouter une recette',
+			'addRecipeName' => 'Nom de la recette',
+			'addRecipePhoto' => 'URL de la photo',
+			'addRecipeCategory' => 'Catégorie',
+			'addRecipeArea' => 'Cuisine',
+			'addRecipeInstructions' => 'Instructions',
+			'addRecipeIngredientsLabel' => 'Ingrédients (un par ligne : nom | mesure)',
+			'addRecipeSubmit' => 'Enregistrer la recette',
+			'addRecipeRequired' => 'Obligatoire',
+			'addRecipeEnglishHint' => 'Saisissez en anglais — les traductions sont générées automatiquement.',
+			'addRecipeSaving' => 'Enregistrement…',
+			'addRecipeError' => 'Impossible d\'enregistrer la recette. Réessayez.',
+			'addRecipeSuccess' => 'Recette ajoutée !',
 			_ => null,
 		};
 	}

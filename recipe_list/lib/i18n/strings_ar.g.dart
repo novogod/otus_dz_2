@@ -71,6 +71,19 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 		other: '${n} مكون',
 	);
 	@override late final _TranslationsA11yAr a11y = _TranslationsA11yAr._(_root);
+	@override String get addRecipeTitle => 'إضافة وصفة';
+	@override String get addRecipeName => 'اسم الوصفة';
+	@override String get addRecipePhoto => 'رابط الصورة';
+	@override String get addRecipeCategory => 'التصنيف';
+	@override String get addRecipeArea => 'المطبخ';
+	@override String get addRecipeInstructions => 'التعليمات';
+	@override String get addRecipeIngredientsLabel => 'المكوّنات (واحد لكل سطر: الاسم | المقدار)';
+	@override String get addRecipeSubmit => 'حفظ الوصفة';
+	@override String get addRecipeRequired => 'مطلوب';
+	@override String get addRecipeEnglishHint => 'أدخل بالإنجليزية — تُنشأ الترجمات تلقائيًا.';
+	@override String get addRecipeSaving => 'جارٍ الحفظ…';
+	@override String get addRecipeError => 'تعذّر حفظ الوصفة. حاول مرة أخرى.';
+	@override String get addRecipeSuccess => 'تمت إضافة الوصفة!';
 }
 
 // Path: a11y
@@ -85,6 +98,7 @@ class _TranslationsA11yAr implements TranslationsA11yEn {
 	@override String flagOf({required Object label}) => 'علم ${label}';
 	@override String get offlineReloadUnavailable => 'أنت غير متصل بالإنترنت. عرض الوصفات السابقة.';
 	@override String get scrollToTop => 'التمرير إلى الأعلى';
+	@override String get addRecipe => 'إضافة وصفة';
 }
 
 /// The flat map containing all translations for locale <ar>.
@@ -126,6 +140,20 @@ extension on TranslationsAr {
 			'a11y.flagOf' => ({required Object label}) => 'علم ${label}',
 			'a11y.offlineReloadUnavailable' => 'أنت غير متصل بالإنترنت. عرض الوصفات السابقة.',
 			'a11y.scrollToTop' => 'التمرير إلى الأعلى',
+			'a11y.addRecipe' => 'إضافة وصفة',
+			'addRecipeTitle' => 'إضافة وصفة',
+			'addRecipeName' => 'اسم الوصفة',
+			'addRecipePhoto' => 'رابط الصورة',
+			'addRecipeCategory' => 'التصنيف',
+			'addRecipeArea' => 'المطبخ',
+			'addRecipeInstructions' => 'التعليمات',
+			'addRecipeIngredientsLabel' => 'المكوّنات (واحد لكل سطر: الاسم | المقدار)',
+			'addRecipeSubmit' => 'حفظ الوصفة',
+			'addRecipeRequired' => 'مطلوب',
+			'addRecipeEnglishHint' => 'أدخل بالإنجليزية — تُنشأ الترجمات تلقائيًا.',
+			'addRecipeSaving' => 'جارٍ الحفظ…',
+			'addRecipeError' => 'تعذّر حفظ الوصفة. حاول مرة أخرى.',
+			'addRecipeSuccess' => 'تمت إضافة الوصفة!',
 			_ => null,
 		};
 	}

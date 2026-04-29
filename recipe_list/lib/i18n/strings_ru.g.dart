@@ -69,6 +69,19 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 		other: '${n} ингредиента',
 	);
 	@override late final _TranslationsA11yRu a11y = _TranslationsA11yRu._(_root);
+	@override String get addRecipeTitle => 'Добавить рецепт';
+	@override String get addRecipeName => 'Название рецепта';
+	@override String get addRecipePhoto => 'URL фотографии';
+	@override String get addRecipeCategory => 'Категория';
+	@override String get addRecipeArea => 'Кухня';
+	@override String get addRecipeInstructions => 'Инструкция';
+	@override String get addRecipeIngredientsLabel => 'Ингредиенты (по одному в строке: название | мера)';
+	@override String get addRecipeSubmit => 'Сохранить рецепт';
+	@override String get addRecipeRequired => 'Обязательно';
+	@override String get addRecipeEnglishHint => 'Заполните на английском — переводы создадутся автоматически.';
+	@override String get addRecipeSaving => 'Сохраняем…';
+	@override String get addRecipeError => 'Не удалось сохранить рецепт. Попробуйте ещё раз.';
+	@override String get addRecipeSuccess => 'Рецепт добавлен!';
 }
 
 // Path: a11y
@@ -83,6 +96,7 @@ class _TranslationsA11yRu implements TranslationsA11yEn {
 	@override String get reloadFeed => 'Обновить ленту';
 	@override String get offlineReloadUnavailable => 'Нет сети. Показываем прежние рецепты.';
 	@override String get scrollToTop => 'Наверх';
+	@override String get addRecipe => 'Добавить рецепт';
 }
 
 /// The flat map containing all translations for locale <ru>.
@@ -124,6 +138,20 @@ extension on TranslationsRu {
 			'a11y.reloadFeed' => 'Обновить ленту',
 			'a11y.offlineReloadUnavailable' => 'Нет сети. Показываем прежние рецепты.',
 			'a11y.scrollToTop' => 'Наверх',
+			'a11y.addRecipe' => 'Добавить рецепт',
+			'addRecipeTitle' => 'Добавить рецепт',
+			'addRecipeName' => 'Название рецепта',
+			'addRecipePhoto' => 'URL фотографии',
+			'addRecipeCategory' => 'Категория',
+			'addRecipeArea' => 'Кухня',
+			'addRecipeInstructions' => 'Инструкция',
+			'addRecipeIngredientsLabel' => 'Ингредиенты (по одному в строке: название | мера)',
+			'addRecipeSubmit' => 'Сохранить рецепт',
+			'addRecipeRequired' => 'Обязательно',
+			'addRecipeEnglishHint' => 'Заполните на английском — переводы создадутся автоматически.',
+			'addRecipeSaving' => 'Сохраняем…',
+			'addRecipeError' => 'Не удалось сохранить рецепт. Попробуйте ещё раз.',
+			'addRecipeSuccess' => 'Рецепт добавлен!',
 			_ => null,
 		};
 	}

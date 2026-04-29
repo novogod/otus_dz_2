@@ -33,6 +33,20 @@
     "flagOf": "${label} flag",
     "reloadFeed": "Reload feed",
     "offlineReloadUnavailable": "You're offline. Showing previous recipes.",
-    "scrollToTop": "Scroll to top"
-  }
+    "scrollToTop": "Scroll to top",
+    "addRecipe": "Add recipe"
+  },
+  "addRecipeTitle": "Add recipe",
+  "addRecipeName": "Recipe name",
+  "addRecipePhoto": "Photo URL",
+  "addRecipeCategory": "Category",
+  "addRecipeArea": "Area / cuisine",
+  "addRecipeInstructions": "Instructions",
+  "addRecipeIngredientsLabel": "Ingredients (one per line: name | measure)",
+  "addRecipeSubmit": "Save recipe",
+  "addRecipeRequired": "Required",
+  "addRecipeEnglishHint": "Please enter in English — translations are generated automatically.",
+  "addRecipeSaving": "Saving…",
+  "addRecipeError": "Couldn't save recipe. Try again.",
+  "addRecipeSuccess": "Recipe added!"
 }

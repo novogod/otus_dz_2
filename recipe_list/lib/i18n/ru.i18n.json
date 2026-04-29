@@ -35,6 +35,20 @@
     "flagOf": "Флаг ${label}",
     "reloadFeed": "Обновить ленту",
     "offlineReloadUnavailable": "Нет сети. Показываем прежние рецепты.",
-    "scrollToTop": "Наверх"
-  }
+    "scrollToTop": "Наверх",
+    "addRecipe": "Добавить рецепт"
+  },
+  "addRecipeTitle": "Добавить рецепт",
+  "addRecipeName": "Название рецепта",
+  "addRecipePhoto": "URL фотографии",
+  "addRecipeCategory": "Категория",
+  "addRecipeArea": "Кухня",
+  "addRecipeInstructions": "Инструкция",
+  "addRecipeIngredientsLabel": "Ингредиенты (по одному в строке: название | мера)",
+  "addRecipeSubmit": "Сохранить рецепт",
+  "addRecipeRequired": "Обязательно",
+  "addRecipeEnglishHint": "Заполните на английском — переводы создадутся автоматически.",
+  "addRecipeSaving": "Сохраняем…",
+  "addRecipeError": "Не удалось сохранить рецепт. Попробуйте ещё раз.",
+  "addRecipeSuccess": "Рецепт добавлен!"
 }

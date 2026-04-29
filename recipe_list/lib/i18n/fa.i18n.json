@@ -33,6 +33,20 @@
     "reloadFeed": "بارگذاری مجدد فهرست",
     "flagOf": "پرچم ${label}",
     "offlineReloadUnavailable": "آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.",
-    "scrollToTop": "حرکت به بالا"
-  }
+    "scrollToTop": "حرکت به بالا",
+    "addRecipe": "افزودن دستور"
+  },
+  "addRecipeTitle": "افزودن دستور",
+  "addRecipeName": "نام دستور",
+  "addRecipePhoto": "نشانی عکس",
+  "addRecipeCategory": "دسته",
+  "addRecipeArea": "آشپزی",
+  "addRecipeInstructions": "دستور پخت",
+  "addRecipeIngredientsLabel": "مواد (یکی در هر خط: نام | اندازه)",
+  "addRecipeSubmit": "ذخیرهٔ دستور",
+  "addRecipeRequired": "لازم",
+  "addRecipeEnglishHint": "لطفاً به انگلیسی وارد کنید — ترجمه‌ها خودکار ساخته می‌شوند.",
+  "addRecipeSaving": "در حال ذخیره…",
+  "addRecipeError": "ذخیرهٔ دستور ممکن نشد. دوباره تلاش کنید.",
+  "addRecipeSuccess": "دستور افزوده شد!"
 }

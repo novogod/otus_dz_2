@@ -33,6 +33,20 @@
     "reloadFeed": "Listeyi yenile",
     "flagOf": "${label} bayrağı",
     "offlineReloadUnavailable": "Çevrimdışısınız. Önceki tarifler gösteriliyor.",
-    "scrollToTop": "Yukarı kaydır"
-  }
+    "scrollToTop": "Yukarı kaydır",
+    "addRecipe": "Tarif ekle"
+  },
+  "addRecipeTitle": "Tarif ekle",
+  "addRecipeName": "Tarif adı",
+  "addRecipePhoto": "Fotoğraf URL’si",
+  "addRecipeCategory": "Kategori",
+  "addRecipeArea": "Mutfak",
+  "addRecipeInstructions": "Talimatlar",
+  "addRecipeIngredientsLabel": "Malzemeler (her satıra bir tane: ad | ölçü)",
+  "addRecipeSubmit": "Tarifi kaydet",
+  "addRecipeRequired": "Zorunlu",
+  "addRecipeEnglishHint": "Lütfen İngilizce girin — çeviriler otomatik oluşturulur.",
+  "addRecipeSaving": "Kaydediliyor…",
+  "addRecipeError": "Tarif kaydedilemedi. Tekrar deneyin.",
+  "addRecipeSuccess": "Tarif eklendi!"
 }

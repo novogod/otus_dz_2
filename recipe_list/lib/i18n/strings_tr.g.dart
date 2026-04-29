@@ -67,6 +67,19 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 		other: '${n} malzeme',
 	);
 	@override late final _TranslationsA11yTr a11y = _TranslationsA11yTr._(_root);
+	@override String get addRecipeTitle => 'Tarif ekle';
+	@override String get addRecipeName => 'Tarif adı';
+	@override String get addRecipePhoto => 'Fotoğraf URL’si';
+	@override String get addRecipeCategory => 'Kategori';
+	@override String get addRecipeArea => 'Mutfak';
+	@override String get addRecipeInstructions => 'Talimatlar';
+	@override String get addRecipeIngredientsLabel => 'Malzemeler (her satıra bir tane: ad | ölçü)';
+	@override String get addRecipeSubmit => 'Tarifi kaydet';
+	@override String get addRecipeRequired => 'Zorunlu';
+	@override String get addRecipeEnglishHint => 'Lütfen İngilizce girin — çeviriler otomatik oluşturulur.';
+	@override String get addRecipeSaving => 'Kaydediliyor…';
+	@override String get addRecipeError => 'Tarif kaydedilemedi. Tekrar deneyin.';
+	@override String get addRecipeSuccess => 'Tarif eklendi!';
 }
 
 // Path: a11y
@@ -81,6 +94,7 @@ class _TranslationsA11yTr implements TranslationsA11yEn {
 	@override String flagOf({required Object label}) => '${label} bayrağı';
 	@override String get offlineReloadUnavailable => 'Çevrimdışısınız. Önceki tarifler gösteriliyor.';
 	@override String get scrollToTop => 'Yukarı kaydır';
+	@override String get addRecipe => 'Tarif ekle';
 }
 
 /// The flat map containing all translations for locale <tr>.
@@ -122,6 +136,20 @@ extension on TranslationsTr {
 			'a11y.flagOf' => ({required Object label}) => '${label} bayrağı',
 			'a11y.offlineReloadUnavailable' => 'Çevrimdışısınız. Önceki tarifler gösteriliyor.',
 			'a11y.scrollToTop' => 'Yukarı kaydır',
+			'a11y.addRecipe' => 'Tarif ekle',
+			'addRecipeTitle' => 'Tarif ekle',
+			'addRecipeName' => 'Tarif adı',
+			'addRecipePhoto' => 'Fotoğraf URL’si',
+			'addRecipeCategory' => 'Kategori',
+			'addRecipeArea' => 'Mutfak',
+			'addRecipeInstructions' => 'Talimatlar',
+			'addRecipeIngredientsLabel' => 'Malzemeler (her satıra bir tane: ad | ölçü)',
+			'addRecipeSubmit' => 'Tarifi kaydet',
+			'addRecipeRequired' => 'Zorunlu',
+			'addRecipeEnglishHint' => 'Lütfen İngilizce girin — çeviriler otomatik oluşturulur.',
+			'addRecipeSaving' => 'Kaydediliyor…',
+			'addRecipeError' => 'Tarif kaydedilemedi. Tekrar deneyin.',
+			'addRecipeSuccess' => 'Tarif eklendi!',
 			_ => null,
 		};
 	}

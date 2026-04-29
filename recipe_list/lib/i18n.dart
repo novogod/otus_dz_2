@@ -241,6 +241,22 @@ class S {
   String get reloadFeed => _t.a11y.reloadFeed;
   String get offlineReloadUnavailable => _t.a11y.offlineReloadUnavailable;
   String get scrollToTop => _t.a11y.scrollToTop;
+  String get addRecipe => _t.a11y.addRecipe;
+
+  // Add-recipe page.
+  String get addRecipeTitle => _t.addRecipeTitle;
+  String get addRecipeName => _t.addRecipeName;
+  String get addRecipePhoto => _t.addRecipePhoto;
+  String get addRecipeCategory => _t.addRecipeCategory;
+  String get addRecipeArea => _t.addRecipeArea;
+  String get addRecipeInstructions => _t.addRecipeInstructions;
+  String get addRecipeIngredientsLabel => _t.addRecipeIngredientsLabel;
+  String get addRecipeSubmit => _t.addRecipeSubmit;
+  String get addRecipeRequired => _t.addRecipeRequired;
+  String get addRecipeEnglishHint => _t.addRecipeEnglishHint;
+  String get addRecipeSaving => _t.addRecipeSaving;
+  String get addRecipeError => _t.addRecipeError;
+  String get addRecipeSuccess => _t.addRecipeSuccess;
 
   // FAB label — derives from current AppLang, not from translations.
   String get langLabel => appLang.value.label;

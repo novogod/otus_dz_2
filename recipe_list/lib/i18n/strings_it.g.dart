@@ -67,6 +67,19 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 		other: '${n} ingredienti',
 	);
 	@override late final _TranslationsA11yIt a11y = _TranslationsA11yIt._(_root);
+	@override String get addRecipeTitle => 'Aggiungi ricetta';
+	@override String get addRecipeName => 'Nome della ricetta';
+	@override String get addRecipePhoto => 'URL della foto';
+	@override String get addRecipeCategory => 'Categoria';
+	@override String get addRecipeArea => 'Cucina';
+	@override String get addRecipeInstructions => 'Istruzioni';
+	@override String get addRecipeIngredientsLabel => 'Ingredienti (uno per riga: nome | misura)';
+	@override String get addRecipeSubmit => 'Salva ricetta';
+	@override String get addRecipeRequired => 'Obbligatorio';
+	@override String get addRecipeEnglishHint => 'Inserisci in inglese — le traduzioni vengono generate automaticamente.';
+	@override String get addRecipeSaving => 'Salvataggio…';
+	@override String get addRecipeError => 'Impossibile salvare la ricetta. Riprova.';
+	@override String get addRecipeSuccess => 'Ricetta aggiunta!';
 }
 
 // Path: a11y
@@ -81,6 +94,7 @@ class _TranslationsA11yIt implements TranslationsA11yEn {
 	@override String flagOf({required Object label}) => 'Bandiera di ${label}';
 	@override String get offlineReloadUnavailable => 'Sei offline. Vengono mostrate le ricette precedenti.';
 	@override String get scrollToTop => 'Torna su';
+	@override String get addRecipe => 'Aggiungi ricetta';
 }
 
 /// The flat map containing all translations for locale <it>.
@@ -122,6 +136,20 @@ extension on TranslationsIt {
 			'a11y.flagOf' => ({required Object label}) => 'Bandiera di ${label}',
 			'a11y.offlineReloadUnavailable' => 'Sei offline. Vengono mostrate le ricette precedenti.',
 			'a11y.scrollToTop' => 'Torna su',
+			'a11y.addRecipe' => 'Aggiungi ricetta',
+			'addRecipeTitle' => 'Aggiungi ricetta',
+			'addRecipeName' => 'Nome della ricetta',
+			'addRecipePhoto' => 'URL della foto',
+			'addRecipeCategory' => 'Categoria',
+			'addRecipeArea' => 'Cucina',
+			'addRecipeInstructions' => 'Istruzioni',
+			'addRecipeIngredientsLabel' => 'Ingredienti (uno per riga: nome | misura)',
+			'addRecipeSubmit' => 'Salva ricetta',
+			'addRecipeRequired' => 'Obbligatorio',
+			'addRecipeEnglishHint' => 'Inserisci in inglese — le traduzioni vengono generate automaticamente.',
+			'addRecipeSaving' => 'Salvataggio…',
+			'addRecipeError' => 'Impossibile salvare la ricetta. Riprova.',
+			'addRecipeSuccess' => 'Ricetta aggiunta!',
 			_ => null,
 		};
 	}

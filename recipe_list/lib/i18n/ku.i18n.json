@@ -33,6 +33,20 @@
     "reloadFeed": "نوێکردنەوەی لیست",
     "flagOf": "ئاڵای ${label}",
     "offlineReloadUnavailable": "دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.",
-    "scrollToTop": "گەڕانەوە بۆ سەرەوە"
-  }
+    "scrollToTop": "گەڕانەوە بۆ سەرەوە",
+    "addRecipe": "Resipe zêde bike"
+  },
+  "addRecipeTitle": "Resipe zêde bike",
+  "addRecipeName": "Navê resipê",
+  "addRecipePhoto": "URLa wêneyê",
+  "addRecipeCategory": "Kategorî",
+  "addRecipeArea": "Pêjgeh",
+  "addRecipeInstructions": "Talîmat",
+  "addRecipeIngredientsLabel": "Madde (her rêz yek: nav | pîvane)",
+  "addRecipeSubmit": "Resipê tomar bike",
+  "addRecipeRequired": "Pêwîst",
+  "addRecipeEnglishHint": "Bi îngîlîzî binivîse — werger bixweber tê çêkirin.",
+  "addRecipeSaving": "Tê tomarkirin…",
+  "addRecipeError": "Resipe nehate tomarkirin. Dîsa biceribîne.",
+  "addRecipeSuccess": "Resipe hate zêdekirin!"
 }

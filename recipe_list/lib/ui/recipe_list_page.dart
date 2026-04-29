@@ -7,6 +7,7 @@ import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../main.dart' show restartApp;
 import '../models/recipe.dart';
+import 'add_recipe_page.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
 import 'recipe_card.dart';
@@ -102,8 +103,8 @@ class _RecipeListPageState extends State<RecipeListPage> {
   }
 
   void _onScroll() {
-    final shouldShow = _scrollController.hasClients &&
-        _scrollController.offset > 1.0;
+    final shouldShow =
+        _scrollController.hasClients && _scrollController.offset > 1.0;
     if (shouldShow != _showScrollToTop) {
       setState(() => _showScrollToTop = shouldShow);
     }
@@ -323,6 +324,19 @@ class _RecipeListPageState extends State<RecipeListPage> {
                       ),
                     ),
                   ),
+                  // FAB «добавить рецепт» — зеркальный близнец
+                  // FAB-а «вверх», но привязан к левому нижнему
+                  // углу. Виден всегда (пользователь может добавить
+                  // рецепт независимо от позиции скролла). Дизайн —
+                  // тот же круг 56×56 / primary @ 0.85 / тень
+                  // navBar (см. design_system.md §9b/§9n).
+                  Positioned(
+                    left: AppSpacing.lg,
+                    bottom: AppSpacing.lg,
+                    child: _AddRecipeFab(
+                      onPressed: () => _openAddRecipe(context),
+                    ),
+                  ),
                   if (_showPredictions)
                     Positioned.fill(
                       child: SearchPredictions(
@@ -389,6 +403,23 @@ class _RecipeListPageState extends State<RecipeListPage> {
       _displayed = List<Recipe>.unmodifiable(_predictionRecipes);
     });
   }
+
+  /// Открывает экран добавления рецепта. По возвращении — если
+  /// пользователь сохранил рецепт — добавляем его в начало
+  /// текущего отображаемого списка, чтобы новинка была видна
+  /// без перезагрузки ленты.
+  Future<void> _openAddRecipe(BuildContext context) async {
+    final created = await Navigator.of(context).push<Recipe>(
+      MaterialPageRoute<Recipe>(
+        builder: (_) =>
+            AddRecipePage(api: widget.api, repository: widget.repository),
+      ),
+    );
+    if (created == null || !mounted) return;
+    setState(() {
+      _displayed = [created, ..._displayed];
+    });
+  }
 }
 
 /// FAB «к началу списка». Дизайн-система §8/§9b/§9n: круг 56×56,
@@ -430,6 +461,49 @@ class _ScrollToTopFab extends StatelessWidget {
                   size: 28,
                   color: AppColors.surface,
                 ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// FAB «добавить рецепт». Зеркальный близнец [_ScrollToTopFab]:
+/// тот же круг 56×56 / `AppColors.primary` @ 0.85 / тень
+/// `AppShadows.navBar`. Иконка `Icons.add` в белом.
+class _AddRecipeFab extends StatelessWidget {
+  const _AddRecipeFab({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  static const double _size = 56;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    return Semantics(
+      button: true,
+      label: s.addRecipe,
+      child: Tooltip(
+        message: s.addRecipe,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: AppShadows.navBar,
+          ),
+          child: Material(
+            color: AppColors.primary.withValues(alpha: 0.85),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onPressed,
+              child: const SizedBox(
+                width: _size,
+                height: _size,
+                child: Icon(Icons.add, size: 28, color: AppColors.surface),
               ),
             ),
           ),

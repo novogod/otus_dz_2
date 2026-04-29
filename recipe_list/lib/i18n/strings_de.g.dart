@@ -67,6 +67,19 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 		other: '${n} Zutaten',
 	);
 	@override late final _TranslationsA11yDe a11y = _TranslationsA11yDe._(_root);
+	@override String get addRecipeTitle => 'Rezept hinzufügen';
+	@override String get addRecipeName => 'Rezeptname';
+	@override String get addRecipePhoto => 'Foto-URL';
+	@override String get addRecipeCategory => 'Kategorie';
+	@override String get addRecipeArea => 'Küche';
+	@override String get addRecipeInstructions => 'Anleitung';
+	@override String get addRecipeIngredientsLabel => 'Zutaten (eine pro Zeile: Name | Maß)';
+	@override String get addRecipeSubmit => 'Rezept speichern';
+	@override String get addRecipeRequired => 'Pflichtfeld';
+	@override String get addRecipeEnglishHint => 'Bitte auf Englisch eingeben — Übersetzungen werden automatisch erstellt.';
+	@override String get addRecipeSaving => 'Speichert…';
+	@override String get addRecipeError => 'Rezept konnte nicht gespeichert werden. Versuche es erneut.';
+	@override String get addRecipeSuccess => 'Rezept hinzugefügt!';
 }
 
 // Path: a11y
@@ -81,6 +94,7 @@ class _TranslationsA11yDe implements TranslationsA11yEn {
 	@override String flagOf({required Object label}) => 'Flagge von ${label}';
 	@override String get offlineReloadUnavailable => 'Offline. Vorherige Rezepte werden angezeigt.';
 	@override String get scrollToTop => 'Nach oben scrollen';
+	@override String get addRecipe => 'Rezept hinzufügen';
 }
 
 /// The flat map containing all translations for locale <de>.
@@ -122,6 +136,20 @@ extension on TranslationsDe {
 			'a11y.flagOf' => ({required Object label}) => 'Flagge von ${label}',
 			'a11y.offlineReloadUnavailable' => 'Offline. Vorherige Rezepte werden angezeigt.',
 			'a11y.scrollToTop' => 'Nach oben scrollen',
+			'a11y.addRecipe' => 'Rezept hinzufügen',
+			'addRecipeTitle' => 'Rezept hinzufügen',
+			'addRecipeName' => 'Rezeptname',
+			'addRecipePhoto' => 'Foto-URL',
+			'addRecipeCategory' => 'Kategorie',
+			'addRecipeArea' => 'Küche',
+			'addRecipeInstructions' => 'Anleitung',
+			'addRecipeIngredientsLabel' => 'Zutaten (eine pro Zeile: Name | Maß)',
+			'addRecipeSubmit' => 'Rezept speichern',
+			'addRecipeRequired' => 'Pflichtfeld',
+			'addRecipeEnglishHint' => 'Bitte auf Englisch eingeben — Übersetzungen werden automatisch erstellt.',
+			'addRecipeSaving' => 'Speichert…',
+			'addRecipeError' => 'Rezept konnte nicht gespeichert werden. Versuche es erneut.',
+			'addRecipeSuccess' => 'Rezept hinzugefügt!',
 			_ => null,
 		};
 	}

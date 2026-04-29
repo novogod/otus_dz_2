@@ -33,6 +33,20 @@
     "reloadFeed": "Aggiorna lista",
     "flagOf": "Bandiera di ${label}",
     "offlineReloadUnavailable": "Sei offline. Vengono mostrate le ricette precedenti.",
-    "scrollToTop": "Torna su"
-  }
+    "scrollToTop": "Torna su",
+    "addRecipe": "Aggiungi ricetta"
+  },
+  "addRecipeTitle": "Aggiungi ricetta",
+  "addRecipeName": "Nome della ricetta",
+  "addRecipePhoto": "URL della foto",
+  "addRecipeCategory": "Categoria",
+  "addRecipeArea": "Cucina",
+  "addRecipeInstructions": "Istruzioni",
+  "addRecipeIngredientsLabel": "Ingredienti (uno per riga: nome | misura)",
+  "addRecipeSubmit": "Salva ricetta",
+  "addRecipeRequired": "Obbligatorio",
+  "addRecipeEnglishHint": "Inserisci in inglese — le traduzioni vengono generate automaticamente.",
+  "addRecipeSaving": "Salvataggio…",
+  "addRecipeError": "Impossibile salvare la ricetta. Riprova.",
+  "addRecipeSuccess": "Ricetta aggiunta!"
 }

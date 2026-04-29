@@ -123,6 +123,45 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	);
 
 	late final TranslationsA11yEn a11y = TranslationsA11yEn._(_root);
+
+	/// en: 'Add recipe'
+	String get addRecipeTitle => 'Add recipe';
+
+	/// en: 'Recipe name'
+	String get addRecipeName => 'Recipe name';
+
+	/// en: 'Photo URL'
+	String get addRecipePhoto => 'Photo URL';
+
+	/// en: 'Category'
+	String get addRecipeCategory => 'Category';
+
+	/// en: 'Area / cuisine'
+	String get addRecipeArea => 'Area / cuisine';
+
+	/// en: 'Instructions'
+	String get addRecipeInstructions => 'Instructions';
+
+	/// en: 'Ingredients (one per line: name | measure)'
+	String get addRecipeIngredientsLabel => 'Ingredients (one per line: name | measure)';
+
+	/// en: 'Save recipe'
+	String get addRecipeSubmit => 'Save recipe';
+
+	/// en: 'Required'
+	String get addRecipeRequired => 'Required';
+
+	/// en: 'Please enter in English — translations are generated automatically.'
+	String get addRecipeEnglishHint => 'Please enter in English — translations are generated automatically.';
+
+	/// en: 'Saving…'
+	String get addRecipeSaving => 'Saving…';
+
+	/// en: 'Couldn't save recipe. Try again.'
+	String get addRecipeError => 'Couldn\'t save recipe. Try again.';
+
+	/// en: 'Recipe added!'
+	String get addRecipeSuccess => 'Recipe added!';
 }
 
 // Path: a11y
@@ -147,6 +186,9 @@ class TranslationsA11yEn {
 
 	/// en: 'Scroll to top'
 	String get scrollToTop => 'Scroll to top';
+
+	/// en: 'Add recipe'
+	String get addRecipe => 'Add recipe';
 }
 
 /// The flat map containing all translations for locale <en>.
@@ -188,6 +230,20 @@ extension on Translations {
 			'a11y.reloadFeed' => 'Reload feed',
 			'a11y.offlineReloadUnavailable' => 'You\'re offline. Showing previous recipes.',
 			'a11y.scrollToTop' => 'Scroll to top',
+			'a11y.addRecipe' => 'Add recipe',
+			'addRecipeTitle' => 'Add recipe',
+			'addRecipeName' => 'Recipe name',
+			'addRecipePhoto' => 'Photo URL',
+			'addRecipeCategory' => 'Category',
+			'addRecipeArea' => 'Area / cuisine',
+			'addRecipeInstructions' => 'Instructions',
+			'addRecipeIngredientsLabel' => 'Ingredients (one per line: name | measure)',
+			'addRecipeSubmit' => 'Save recipe',
+			'addRecipeRequired' => 'Required',
+			'addRecipeEnglishHint' => 'Please enter in English — translations are generated automatically.',
+			'addRecipeSaving' => 'Saving…',
+			'addRecipeError' => 'Couldn\'t save recipe. Try again.',
+			'addRecipeSuccess' => 'Recipe added!',
 			_ => null,
 		};
 	}

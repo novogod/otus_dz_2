@@ -37,6 +37,20 @@
     "reloadFeed": "إعادة تحميل القائمة",
     "flagOf": "علم ${label}",
     "offlineReloadUnavailable": "أنت غير متصل بالإنترنت. عرض الوصفات السابقة.",
-    "scrollToTop": "التمرير إلى الأعلى"
-  }
+    "scrollToTop": "التمرير إلى الأعلى",
+    "addRecipe": "إضافة وصفة"
+  },
+  "addRecipeTitle": "إضافة وصفة",
+  "addRecipeName": "اسم الوصفة",
+  "addRecipePhoto": "رابط الصورة",
+  "addRecipeCategory": "التصنيف",
+  "addRecipeArea": "المطبخ",
+  "addRecipeInstructions": "التعليمات",
+  "addRecipeIngredientsLabel": "المكوّنات (واحد لكل سطر: الاسم | المقدار)",
+  "addRecipeSubmit": "حفظ الوصفة",
+  "addRecipeRequired": "مطلوب",
+  "addRecipeEnglishHint": "أدخل بالإنجليزية — تُنشأ الترجمات تلقائيًا.",
+  "addRecipeSaving": "جارٍ الحفظ…",
+  "addRecipeError": "تعذّر حفظ الوصفة. حاول مرة أخرى.",
+  "addRecipeSuccess": "تمت إضافة الوصفة!"
 }
