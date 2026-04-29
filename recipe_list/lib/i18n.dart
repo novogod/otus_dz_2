@@ -40,6 +40,21 @@ enum AppLang {
 /// Глобальное хранилище текущего языка.
 final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.ru);
 
+/// Глобальный «тикер» принудительной перезагрузки ленты. Кнопка
+/// «обновить» в [AppPageBar] инкрементирует значение; слушатель в
+/// [RecipeListLoader] отбрасывает локальный sqflite-кэш и заново
+/// перебирает случайные категории через mahallem-API, чтобы лента
+/// действительно обновилась (а не отдала те же 200 закэшированных
+/// строк). Сам кэш не чистим — он переиспользуется внутри
+/// `_seedFromCategories` для категорий, у которых уже >= порога.
+final ValueNotifier<int> reloadFeedTicker = ValueNotifier<int>(0);
+
+/// Запрашивает повторный seed ленты: новый случайный набор
+/// категорий и попытку дотянуть свежие рецепты из сети.
+void requestFeedReload() {
+  reloadFeedTicker.value = reloadFeedTicker.value + 1;
+}
+
 /// Переключает текущий язык на следующий из [AppLang].
 void cycleAppLang() {
   final next =
@@ -202,6 +217,7 @@ class S {
   String switchLanguageTo(String label) =>
       _t.a11y.switchLanguageTo(label: label);
   String flagOf(String label) => _t.a11y.flagOf(label: label);
+  String get reloadFeed => _t.a11y.reloadFeed;
 
   // FAB label — derives from current AppLang, not from translations.
   String get langLabel => appLang.value.label;

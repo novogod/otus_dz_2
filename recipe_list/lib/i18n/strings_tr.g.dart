@@ -77,6 +77,7 @@ class _TranslationsA11yTr implements TranslationsA11yEn {
 
 	// Translations
 	@override String switchLanguageTo({required Object label}) => 'Dili ${label} olarak değiştir';
+	@override String get reloadFeed => 'Listeyi yenile';
 	@override String flagOf({required Object label}) => '${label} bayrağı';
 }
 
@@ -115,6 +116,7 @@ extension on TranslationsTr {
 			'searchNoMatches' => 'Eşleşme yok',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n, one: '${n} malzeme', other: '${n} malzeme', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Dili ${label} olarak değiştir',
+			'a11y.reloadFeed' => 'Listeyi yenile',
 			'a11y.flagOf' => ({required Object label}) => '${label} bayrağı',
 			_ => null,
 		};

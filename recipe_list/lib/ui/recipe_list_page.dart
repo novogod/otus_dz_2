@@ -242,6 +242,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
         focusNode: _focusNode,
         onChanged: _onChanged,
         onSubmitted: _onSubmitted,
+        showReload: true,
         // «Назад» на списке = перезапуск всей splash-последовательности
         // (см. `restartApp` в main.dart). Maybe-pop здесь бесполезен,
         // т.к. список — корень навигатора.

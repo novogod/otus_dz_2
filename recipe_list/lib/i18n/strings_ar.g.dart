@@ -81,6 +81,7 @@ class _TranslationsA11yAr implements TranslationsA11yEn {
 
 	// Translations
 	@override String switchLanguageTo({required Object label}) => 'تغيير اللغة إلى ${label}';
+	@override String get reloadFeed => 'إعادة تحميل القائمة';
 	@override String flagOf({required Object label}) => 'علم ${label}';
 }
 
@@ -119,6 +120,7 @@ extension on TranslationsAr {
 			'searchNoMatches' => 'لا توجد نتائج مطابقة',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, zero: '${n} مكون', one: '${n} مكون', two: '${n} مكونان', few: '${n} مكونات', many: '${n} مكوناً', other: '${n} مكون', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'تغيير اللغة إلى ${label}',
+			'a11y.reloadFeed' => 'إعادة تحميل القائمة',
 			'a11y.flagOf' => ({required Object label}) => 'علم ${label}',
 			_ => null,
 		};

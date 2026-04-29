@@ -30,6 +30,7 @@
   },
   "a11y": {
     "switchLanguageTo": "Changer la langue pour ${label}",
+    "reloadFeed": "Actualiser la liste",
     "flagOf": "Drapeau de ${label}"
   }
 }

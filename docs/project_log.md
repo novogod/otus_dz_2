@@ -1,5 +1,70 @@
 # Project Log
 
+## Reload button + categories/translation-buffer docs
+
+**Date:** 2026-04-29
+
+### Что сделано
+
+1. В `AppPageBar.actions` появилась кнопка ⟳ «обновить ленту» слева от
+   языковой кнопки. Соответствует дизайн-системе (40 dp,
+   `CircleBorder`, фон `surfaceMuted`, иконка `Icons.refresh` цвета
+   `primaryDark`). Видна только на экране списка
+   (`SearchAppBar(showReload: true)` в `recipe_list_page.dart`); на
+   деталях не показывается.
+2. В `i18n.dart` добавлены глобальный `ValueNotifier<int>
+   reloadFeedTicker` и хелпер `requestFeedReload()`. Кнопка
+   инкрементирует тикер; `RecipeListLoader` слушает и зовёт
+   `_runLoad(forceReseed: true)`, который пропускает ранний выход «в
+   локальной БД ≥ 50 рецептов — отдай как есть» и снова прогоняет
+   `_seedFromCategories(...)` со свежим случайным отбором 10 категорий.
+   Запросы `/recipes/filter?c=<cat>&lang=…&full=1` идут к
+   `mahallem-user-portal`, который дальше работает по штатному
+   cascade `cache → glossary → MyMemory → public LT → local LT →
+   Gemini` (Gemini сейчас отключён через `DISABLE_GEMINI=1`).
+3. Локализация ключа `a11y.reloadFeed` для всех 10 локалей; slang
+   перегенерирован (`dart run slang`).
+4. Документация:
+   - `docs/categories.md` — как сейчас собирается список категорий
+     и что именно делает кнопка «обновить».
+   - `docs/translation-buffer.md` — слой кэшей сейчас (Postgres
+     `translation_cache` без ограничений + клиентский sqflite 5 MB / 2000
+     строк) и рекомендации по запрошенному 1–1.5 GB FILO-буферу
+     (Redis `allkeys-lru`, новый bulk endpoint `/recipes/page`,
+     поднятие клиентского `byteCap` до 64 MB).
+
+### Comprehensive check
+
+- `flutter analyze` → no issues.
+- `flutter test` → проходит 35/37; падают те же два теста, что были
+  и до правок (`cache hit at threshold`, `network error empty cache
+  offline=true`). К новой кнопке отношения не имеют.
+
+### Файлы
+
+- `recipe_list/lib/i18n.dart`
+- `recipe_list/lib/i18n/*.i18n.json` (10 файлов)
+- `recipe_list/lib/i18n/strings*.g.dart` (regenerated)
+- `recipe_list/lib/ui/app_page_bar.dart`
+- `recipe_list/lib/ui/search_app_bar.dart`
+- `recipe_list/lib/ui/recipe_list_page.dart`
+- `recipe_list/lib/ui/recipe_list_loader.dart`
+- `recipe_list/lib/ui/reload_icon_button.dart` (новый)
+- `docs/categories.md` (новый)
+- `docs/translation-buffer.md` (новый)
+
+### Сопутствующие правки (server-side, mahallem)
+
+В этот же rev попадают (в отдельном репозитории `mahallem_ist`):
+
+- `local_user_portal/utils/translate-recipe.js`: kill-switch
+  `DISABLE_GEMINI=1` — пропускает Gemini-tier и Gemini fallback,
+  оставляя `cache → glossary → MyMemory → public LT → local LT`.
+- `local_docker_admin_backend/docker-compose.yml`: env-переменная
+  `DISABLE_GEMINI: "1"` для контейнера `mahallem-user-portal`.
+
+---
+
 ## i18n plural resolvers, Android back-callback, details lookup timeout, server rate-limit raise
 
 **Date:** 2026-04-29

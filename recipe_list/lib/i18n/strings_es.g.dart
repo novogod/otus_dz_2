@@ -77,6 +77,7 @@ class _TranslationsA11yEs implements TranslationsA11yEn {
 
 	// Translations
 	@override String switchLanguageTo({required Object label}) => 'Cambiar idioma a ${label}';
+	@override String get reloadFeed => 'Recargar lista';
 	@override String flagOf({required Object label}) => 'Bandera de ${label}';
 }
 
@@ -115,6 +116,7 @@ extension on TranslationsEs {
 			'searchNoMatches' => 'No hay coincidencias',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '${n} ingrediente', other: '${n} ingredientes', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Cambiar idioma a ${label}',
+			'a11y.reloadFeed' => 'Recargar lista',
 			'a11y.flagOf' => ({required Object label}) => 'Bandera de ${label}',
 			_ => null,
 		};

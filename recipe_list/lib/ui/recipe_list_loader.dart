@@ -69,13 +69,47 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       return r;
     });
     appLang.addListener(_onLangChanged);
+    reloadFeedTicker.addListener(_onReloadRequested);
   }
 
   @override
   void dispose() {
     appLang.removeListener(_onLangChanged);
+    reloadFeedTicker.removeListener(_onReloadRequested);
     _stage.dispose();
     super.dispose();
+  }
+
+  /// Реакция на нажатие кнопки «обновить» в шапке. Полностью
+  /// перезапускает seed: новый случайный набор категорий +
+  /// попытка дотянуть свежие рецепты из mahallem-API. Кэш
+  /// SQLite не вычищаем (категории с >= [_categoryCacheThreshold]
+  /// строк по-прежнему обслуживаются локально), но «короткая
+  /// дорога» через `listCached(...)` минуется — иначе кнопка
+  /// возвращала бы те же 200 рецептов, что уже на экране.
+  void _onReloadRequested() {
+    if (!mounted) return;
+    final seq = ++_translateSeq;
+    setState(() {
+      _stage.value = const _LoadStage.initial();
+      _translating = true;
+      _future = _runLoad(forceReseed: true)
+          .then((r) {
+            if (seq != _translateSeq || !mounted) return r;
+            _lastResult = r;
+            setState(() => _translating = false);
+            return r;
+          })
+          .catchError((Object e, StackTrace st) {
+            if (seq != _translateSeq || !mounted) {
+              throw e;
+            }
+            // ignore: avoid_print
+            print('[reload] _runLoad failed: $e');
+            setState(() => _translating = false);
+            throw e;
+          });
+    });
   }
 
   /// На смене языка НЕ перезапускаем seed (это бы переcлучайно
@@ -275,7 +309,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
 
   static const int _seedTarget = 200;
 
-  Future<_LoadResult> _runLoad() async {
+  Future<_LoadResult> _runLoad({bool forceReseed = false}) async {
     final repo = await (widget.repositoryBuilder ?? _defaultRepoBuilder)(
       widget.api,
     );
@@ -293,21 +327,22 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     // вытеснение по 5 MB / 2000 строк, перевод не выкидывается,
     // пока не упрёмся в бюджет).
     if (widget.api.backend == RecipeBackend.mahallem) {
-      if (repo != null) {
+      if (repo != null && !forceReseed) {
         final cachedCount = await repo.countFor(lang);
         if (cachedCount >= 50) {
           final cached = await repo.listCached(lang, limit: _seedTarget);
           return _LoadResult(recipes: cached, repository: repo);
         }
       }
-      // Холодный язык — заводим ленту через категории.
+      // Холодный язык (или жывый reseed по кнопке «обновить») —
+      // заводим ленту через категории.
       final recipes = await _seedFromCategories(repo, lang);
       return _LoadResult(recipes: recipes, repository: repo);
     }
 
     // Cache-first для не-mahallem бэкендов: если в локальной БД уже
     // есть >=50 рецептов под текущий язык — показываем их сразу.
-    if (repo != null) {
+    if (repo != null && !forceReseed) {
       final cachedCount = await repo.countFor(lang);
       if (cachedCount >= 50) {
         final cached = await repo.listCached(lang, limit: _seedTarget);

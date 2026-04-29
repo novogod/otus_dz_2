@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../i18n.dart';
 import 'app_theme.dart';
 import 'lang_icon_button.dart';
+import 'reload_icon_button.dart';
 
 /// Унифицированный AppBar для всех экранов приложения. Реализует
 /// общий дизайн из `docs/design_system.md`: белый фон, тёмно-зелёный
@@ -32,12 +33,19 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
   /// `Navigator.maybePop`.
   final VoidCallback? onBack;
 
+  /// Показывать ли кнопку «обновить ленту» слева от переключателя
+  /// языка. По умолчанию `false` — экраны деталей и т.п. её не
+  /// показывают; список рецептов включает её явно. См.
+  /// docs/categories.md и docs/translation-buffer.md.
+  final bool showReload;
+
   const AppPageBar({
     super.key,
     required this.title,
     this.centerTitle = true,
     this.titleSpacing = NavigationToolbar.kMiddleSpacing,
     this.onBack,
+    this.showReload = false,
   });
 
   /// Удвоенный отступ от кнопки языка до правого края экрана.
@@ -64,9 +72,10 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: onBack ?? () => Navigator.of(context).maybePop(),
       ),
       title: title,
-      actions: const [
-        LangIconButton(),
-        SizedBox(width: _trailingGap),
+      actions: [
+        if (showReload) const ReloadIconButton(),
+        const LangIconButton(),
+        const SizedBox(width: _trailingGap),
       ],
     );
   }

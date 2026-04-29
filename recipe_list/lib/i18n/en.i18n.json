@@ -30,6 +30,7 @@
   },
   "a11y": {
     "switchLanguageTo": "Switch language to ${label}",
-    "flagOf": "${label} flag"
+    "flagOf": "${label} flag",
+    "reloadFeed": "Reload feed"
   }
 }

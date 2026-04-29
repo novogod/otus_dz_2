@@ -77,6 +77,7 @@ class _TranslationsA11yFa implements TranslationsA11yEn {
 
 	// Translations
 	@override String switchLanguageTo({required Object label}) => 'تغییر زبان به ${label}';
+	@override String get reloadFeed => 'بارگذاری مجدد فهرست';
 	@override String flagOf({required Object label}) => 'پرچم ${label}';
 }
 
@@ -115,6 +116,7 @@ extension on TranslationsFa {
 			'searchNoMatches' => 'موردی یافت نشد',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n, one: '${n} ماده اولیه', other: '${n} ماده اولیه', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'تغییر زبان به ${label}',
+			'a11y.reloadFeed' => 'بارگذاری مجدد فهرست',
 			'a11y.flagOf' => ({required Object label}) => 'پرچم ${label}',
 			_ => null,
 		};

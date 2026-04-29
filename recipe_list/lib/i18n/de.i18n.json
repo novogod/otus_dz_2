@@ -30,6 +30,7 @@
   },
   "a11y": {
     "switchLanguageTo": "Sprache wechseln zu ${label}",
+    "reloadFeed": "Liste aktualisieren",
     "flagOf": "Flagge von ${label}"
   }
 }

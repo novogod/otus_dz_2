@@ -34,6 +34,7 @@
   },
   "a11y": {
     "switchLanguageTo": "تغيير اللغة إلى ${label}",
+    "reloadFeed": "إعادة تحميل القائمة",
     "flagOf": "علم ${label}"
   }
 }

@@ -22,6 +22,11 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
   final ValueChanged<String> onSubmitted;
   final VoidCallback? onBack;
 
+  /// Показывать ли в шапке кнопку «обновить ленту» рядом с
+  /// переключателем языка. На экране списка `true`, на других
+  /// сценариях, где AppBar c поиском не используется, — не нужна.
+  final bool showReload;
+
   const SearchAppBar({
     super.key,
     required this.controller,
@@ -29,6 +34,7 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onChanged,
     required this.onSubmitted,
     this.onBack,
+    this.showReload = false,
   });
 
   @override
@@ -41,6 +47,7 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
       onBack: onBack,
       titleSpacing: 0,
       centerTitle: false,
+      showReload: showReload,
       title: Center(
         child: FractionallySizedBox(
           widthFactor: 0.85,

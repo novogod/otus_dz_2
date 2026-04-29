@@ -30,6 +30,7 @@
   },
   "a11y": {
     "switchLanguageTo": "Dili ${label} olarak değiştir",
+    "reloadFeed": "Listeyi yenile",
     "flagOf": "${label} bayrağı"
   }
 }

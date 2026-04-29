@@ -30,6 +30,7 @@
   },
   "a11y": {
     "switchLanguageTo": "تغییر زبان به ${label}",
+    "reloadFeed": "بارگذاری مجدد فهرست",
     "flagOf": "پرچم ${label}"
   }
 }

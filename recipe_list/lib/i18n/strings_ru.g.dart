@@ -80,6 +80,7 @@ class _TranslationsA11yRu implements TranslationsA11yEn {
 	// Translations
 	@override String switchLanguageTo({required Object label}) => 'Переключить язык на ${label}';
 	@override String flagOf({required Object label}) => 'Флаг ${label}';
+	@override String get reloadFeed => 'Обновить ленту';
 }
 
 /// The flat map containing all translations for locale <ru>.
@@ -118,6 +119,7 @@ extension on TranslationsRu {
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n, one: '${n} ингредиент', few: '${n} ингредиента', many: '${n} ингредиентов', other: '${n} ингредиента', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Переключить язык на ${label}',
 			'a11y.flagOf' => ({required Object label}) => 'Флаг ${label}',
+			'a11y.reloadFeed' => 'Обновить ленту',
 			_ => null,
 		};
 	}

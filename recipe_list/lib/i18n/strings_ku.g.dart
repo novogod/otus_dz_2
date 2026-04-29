@@ -77,6 +77,7 @@ class _TranslationsA11yKu implements TranslationsA11yEn {
 
 	// Translations
 	@override String switchLanguageTo({required Object label}) => 'گۆڕینی زمان بۆ ${label}';
+	@override String get reloadFeed => 'نوێکردنەوەی لیست';
 	@override String flagOf({required Object label}) => 'ئاڵای ${label}';
 }
 
@@ -115,6 +116,7 @@ extension on TranslationsKu {
 			'searchNoMatches' => 'هیچ گونجاوێک نییە',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n, one: '${n} پێکهاتە', other: '${n} پێکهاتە', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'گۆڕینی زمان بۆ ${label}',
+			'a11y.reloadFeed' => 'نوێکردنەوەی لیست',
 			'a11y.flagOf' => ({required Object label}) => 'ئاڵای ${label}',
 			_ => null,
 		};

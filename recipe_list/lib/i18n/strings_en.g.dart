@@ -138,6 +138,9 @@ class TranslationsA11yEn {
 
 	/// en: '${label} flag'
 	String flagOf({required Object label}) => '${label} flag';
+
+	/// en: 'Reload feed'
+	String get reloadFeed => 'Reload feed';
 }
 
 /// The flat map containing all translations for locale <en>.
@@ -176,6 +179,7 @@ extension on Translations {
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '${n} ingredient', other: '${n} ingredients', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Switch language to ${label}',
 			'a11y.flagOf' => ({required Object label}) => '${label} flag',
+			'a11y.reloadFeed' => 'Reload feed',
 			_ => null,
 		};
 	}
