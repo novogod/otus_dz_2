@@ -94,6 +94,34 @@ prod-redeploy (chunk 15) откладывается до явного запро
 + `nginx -s reload` (перезагрузка nginx без рестарта). Re-smoke
 плоским `curl -X POST` (без `--post301`) → 201 с публичным URL.
 
+**Follow-up: align object key with avatars/job-photos (mahallem `edd38526`):**
+
+Изначально я генерировал ключ как `recipes/<id>/<6-byte-hex>.jpg`,
+тогда как в проекте давно действует свой паттерн (см.
+`project_docs/AVATAR_PHOTOS_FLOW_DOCUMENTATION.md` и
+`project_docs/JOB_PHOTOS_FLOW_DOCUMENTATION.md`):
+
+```
+avatars/<userId>/avatar_<timestamp>_<random>.jpg
+job-photos/<jobId>/<role>_<timestamp>_<random>.jpg   # role=problem|resolution
+```
+
+Привёл `recipe-photos` к той же форме:
+
+```
+recipes/<id>/photo_<timestamp>_<random6>.<ext>
+```
+
+Что это даёт: tooling/audit-grep'ы по `_<ts>_<rand>` теперь ловят
+и recipe-photos; объекты сортируются по времени без джойна на
+`storage.objects.created_at`; role-префикс `photo_` оставляет
+место под `cover_`/`step1_` если в будущем понадобится несколько
+фото на рецепт. Cleanup-запрос подходил под bucket-уровень
+(`LIKE '%/recipe-photos/%'`) и переход не задел.
+
+Re-smoke: `POST https://mahallem.ist/recipes` → 201,
+`strMealThumb=/storage/v1/object/public/recipe-photos/recipes/1000000/photo_1777507021938_8b1018.jpg`.
+
 ## Add-recipe feature + Russian docs
 
 **Date:** 2026-04-29
