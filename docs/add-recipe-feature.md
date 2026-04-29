@@ -5,11 +5,17 @@
 > заполнил форму → рецепт сохранился и в локальной БД, и на сервере,
 > и виден остальным пользователям» в учебном проекте `recipe_list`.
 >
-> Сопроводительный документ:
-> [`themealdb-add-recipe-investigation.md`](./themealdb-add-recipe-investigation.md)
-> — разбор того, **почему** добавленный пользователем рецепт живёт
-> только в нашей Postgres + локальном sqflite, а не уходит в
-> «родной» TheMealDB.
+> Сопроводительные документы:
+>
+> - [`themealdb-add-recipe-investigation.md`](./themealdb-add-recipe-investigation.md)
+>   — разбор того, **почему** добавленный пользователем
+>   рецепт живёт только в нашей Postgres + локальном
+>   sqflite, а не уходит в «родной» TheMealDB.
+> - [`recipe-photo-upload.md`](./recipe-photo-upload.md) +
+>   [`todo/recipe_photo_upload.md`](./todo/recipe_photo_upload.md)
+>   — следующая фаза: загрузка фото файлом через
+>   `image_picker` + storage-api `mahallem_ist`. В текущем MVP
+>   форма берёт URL-строкой (см. §3.2).
 
 ---
 
@@ -125,7 +131,7 @@ Tooltip + `Semantics(button: true, label: …)`.
 | Поле | Обязательное | Куда мапится |
 |---|---|---|
 | Название | ✓ | `strMeal` |
-| URL фотографии | ✓ | `strMealThumb` (загрузка файлов вне MVP) |
+| URL фотографии | ✓ | `strMealThumb` (в MVP — URL-поле; загрузка файлом вынесена в отдельный план — см. [`recipe-photo-upload.md`](./recipe-photo-upload.md)) |
 | Категория | – | `strCategory` |
 | Кухня | – | `strArea` |
 | Инструкция | – | `strInstructions`, multi-line |
@@ -353,9 +359,9 @@ UI.
 
 | Что | Почему |
 |---|---|
-| Загрузка фото файлом | Нужны object storage (S3 / DO Spaces / Hostinger volumes) и signed-URL. Это самостоятельная подзадача. В MVP — поле URL. |
+| Загрузка фото файлом | Выделено в отдельную фазу: [`recipe-photo-upload.md`](./recipe-photo-upload.md) (дизайн) + [`todo/recipe_photo_upload.md`](./todo/recipe_photo_upload.md) (15-чанковый план). Инфраструктура (storage-api + imgproxy + buckets) уже есть в `mahallem_ist`. |
 | Редактирование/удаление рецепта | `POST /recipes` всегда выделяет новый id. `PUT` и `DELETE` пока не нужны. |
-| Публикация в TheMealDB upstream | Нет публичного POST-а, см. сопроводительный документ. |
+| Публикация в TheMealDB upstream | Нет публичного POST-а, см. [`themealdb-add-recipe-investigation.md`](./themealdb-add-recipe-investigation.md). |
 | Премодерация | Учебный проект — никакой queue нет. В реальном продукте надо ставить flag-колонку и админ-страницу. |
 
 ## 10. Чек-лист «пройти глазами в IDE»
@@ -370,4 +376,6 @@ UI.
 | Сервер | `mahallem_ist/local_user_portal/routes/recipes.js` | `createUserMeal`, `app.post('/recipes', …)` |
 | Тесты | `mahallem_ist/local_user_portal/tests/recipes.test.js` | `createUserMeal allocates id …`, `createUserMeal rejects payload …` |
 | Документация | `otus_dz/docs/add-recipe-feature.md` | этот файл |
-| Документация | `otus_dz/docs/themealdb-add-recipe-investigation.md` | сопроводительный |
+| Документация | `otus_dz/docs/themealdb-add-recipe-investigation.md` | почему не пишем в TheMealDB upstream |
+| Документация | `otus_dz/docs/recipe-photo-upload.md` | дизайн следующей фазы (фото файлом) |
+| TODO | `otus_dz/docs/todo/recipe_photo_upload.md` | 15-чанковый план под фото-загрузку |
