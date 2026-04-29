@@ -50,6 +50,12 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   /// (никакого re-seed + shuffle).
   _LoadResult? _lastResult;
 
+  /// `true`, пока идёт перевод ленты на новый язык. Используется
+  /// в `build`, чтобы принудительно показать `_LoadingScreen` с
+  /// прогресс-индикатором и НЕ мигать частично-переведённой лентой
+  /// до тех пор, пока все карточки не приедут из mahallem-кэша/MT.
+  bool _translating = false;
+
   @override
   void initState() {
     super.initState();
@@ -83,14 +89,17 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     );
     setState(() {
       _stage.value = const _LoadStage.initial();
+      _translating = true;
       if (last == null || last.recipes.isEmpty) {
         _future = _runLoad().then((r) {
           _lastResult = r;
+          if (mounted) setState(() => _translating = false);
           return r;
         });
       } else {
         _future = _retranslate(last, appLang.value).then((r) {
           _lastResult = r;
+          if (mounted) setState(() => _translating = false);
           return r;
         });
       }
@@ -113,13 +122,10 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         cached = const {};
       }
     }
+    // Не публикуем частичный результат в _lastResult — экрану нужен или
+    // фуллый перевод, или лоадер. Локальный буфер firstPass используем ниже,
+    // чтобы оригинальный порядок + кэш-хиты слились с mahallem.lookup.
     final firstPass = [for (final r in prev.recipes) cached[r.id] ?? r];
-    if (cached.isNotEmpty && mounted) {
-      final partial = _LoadResult(recipes: firstPass, repository: repo);
-      setState(() {
-        _lastResult = partial;
-      });
-    }
 
     _stage.value = _LoadStage.fetching(
       category: 'recipes',
@@ -129,44 +135,60 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       target: prev.recipes.length,
     );
 
-    // ШАГ 2 — добиваем промахи сетью. Перерисовываем по мере
-    // прихода каждой карточки, чтобы пользователь видел перевод сразу,
-    // а не ждал последовательный обход всех 200 рецептов.
+    // ШАГ 2 — добиваем промахи сетью ПАРАЛЛЕЛЬНО.
+    //
+    // Раньше тут был последовательный `for` с `await`, и при 150–200
+    // рецептах × ~1 c на LT-вызов перевод тянулся минутами; пользователь
+    // успевал решить, что кнопка флага «не работает». Теперь идём
+    // батчами по [_translateConcurrency] параллельных запросов —
+    // сервер уже капнут на 6 одновременных переводов
+    // (`local_user_portal/utils/lt-limit.js`), так что 8 клиентских
+    // запросов не перегружают LT, а UI обновляется заметно быстрее.
     final translated = [...firstPass];
+    final missed = <int>[
+      for (var i = 0; i < prev.recipes.length; i++)
+        if (!cached.containsKey(prev.recipes[i].id)) i,
+    ];
     int done = cached.length;
-    for (var i = 0; i < prev.recipes.length; i++) {
-      if (cached.containsKey(prev.recipes[i].id)) continue;
-      final original = prev.recipes[i];
-      try {
-        final got = repo != null
-            ? await repo.lookup(original.id, lang)
-            : await widget.api.lookup(original.id, lang: lang);
-        if (got != null) {
-          translated[i] = got;
-          if (mounted) {
-            final partial = _LoadResult(
-              recipes: List<Recipe>.from(translated),
-              repository: repo,
-            );
-            setState(() {
-              _lastResult = partial;
-            });
+    final total = prev.recipes.length;
+
+    for (var start = 0; start < missed.length; start += _translateConcurrency) {
+      final end = (start + _translateConcurrency).clamp(0, missed.length);
+      final batch = missed.sublist(start, end);
+      await Future.wait(
+        batch.map((idx) async {
+          final original = prev.recipes[idx];
+          try {
+            final got = repo != null
+                ? await repo.lookup(original.id, lang)
+                : await widget.api.lookup(original.id, lang: lang);
+            if (got != null) {
+              translated[idx] = got;
+            }
+          } on Object {
+            // одна карточка не приехала — оставляем оригинал
           }
-        }
-      } on Object {
-        // одна карточка не приехала — оставляем как есть
-      }
-      done++;
+        }),
+      );
+      done += batch.length;
+      // Список специально НЕ setState'им — _translating==true держит _LoadingScreen,
+      // результат показваем только когда все батчи завершатся.
       _stage.value = _LoadStage.fetching(
         category: 'recipes',
         done: done,
-        total: prev.recipes.length,
+        total: total,
         loaded: done,
-        target: prev.recipes.length,
+        target: total,
       );
     }
     return _LoadResult(recipes: translated, repository: repo);
   }
+
+  /// Сколько `lookup`-запросов держать в полёте параллельно при
+  /// смене языка. Сервер LibreTranslate капнут на 6 одновременных
+  /// переводов; 8 клиентских запросов даёт ровно «один в очереди» при
+  /// переводе через MyMemory/cache-путь и держит общую задержку низкой.
+  static const int _translateConcurrency = 8;
 
   /// Полный список категорий TheMealDB. При каждом открытии
   /// экрана берём случайные 10 (`_seedPickCount`) — это даёт
@@ -376,10 +398,13 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       // slang — без полноэкранного «Готовим коллекцию рецептов»).
       initialData: _lastResult,
       builder: (context, snapshot) {
-        // Во время инкрементальной перерисовки на смене языка
-        // `_lastResult` обновляется по мере прихода каждой карточки
-        // через setState. Берём его в приоритете, чтобы пользователь
-        // видел перевод сразу, не дожидаясь завершения всего future.
+        // While a language switch is in flight (`_translating == true`)
+        // we force the loading screen so the user never sees a
+        // partially-translated list. Progress comes via `_stage`
+        // updates from `_retranslate`.
+        if (_translating) {
+          return _LoadingScreen(stage: _stage);
+        }
         final live = _lastResult ?? snapshot.data;
         if (live == null && snapshot.connectionState != ConnectionState.done) {
           return _LoadingScreen(stage: _stage);

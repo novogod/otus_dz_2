@@ -1,5 +1,55 @@
 # Project Log
 
+## recipe_list — лоадер на смене языка + параллельный fetch промахов
+
+**Date:** 2026-04-28
+
+### Что было не так
+
+При тапе по языковой кнопке UI оставался на старой ленте и постепенно
+подменял карточки по мере прихода переводов из mahallem (`api.lookup`).
+Для языков с холодным кэшем (de, it, tr, fa, ku) это выглядело как
+«кнопка не работает» — новые карточки приезжали по одной за секунду
+и часть лежала старым языком минуту-другую.
+
+### Что сделано (Flutter, `lib/ui/recipe_list_loader.dart`)
+
+- Добавлен флаг `_translating`. Он включается в `_onLangChanged` и
+  выключается, когда `_retranslate` целиком резолвится. Пока
+  `_translating == true`, `build` принудительно возвращает
+  `_LoadingScreen` с прогресс-баром — никакой «частично переведённой»
+  ленты пользователь не видит.
+- `_retranslate` больше не публикует промежуточные `_lastResult` через
+  `setState` (это и было источником мигания). Прогресс отдаётся только
+  в `_stage` и считывается лоадером.
+- Промахи кэша добиваются батчами по `_translateConcurrency = 8` через
+  `Future.wait`. Сервер LibreTranslate капнут на 6 параллельных
+  переводов (`local_user_portal/utils/lt-limit.js`), 8 клиентских
+  запросов держат ровно «один в очереди» и не валят LT.
+
+### Серверный fallback (status check)
+
+`local_user_portal/utils/translate-recipe.js::translateBest` уже
+реализует цепочку:
+
+1. `getCachedTranslation` — `translation_cache` в Postgres.
+2. `getGlossaryTranslation` — ручная глоссарий-таблица.
+3. `Promise.allSettled([translateWithMyMemory, translateLT])` —
+   MyMemory параллельно с локальным LibreTranslate (LT-капнутый
+   контейнер `mahallem-translate`).
+4. `evaluateCandidate` + round-trip score; победитель кешируется,
+   проигравший выбраковывается.
+5. Echo-guard на `translateField` — если оба движка «эхом»
+   возвращают source (или для non-Latin target оставляют > 15 %
+   латиницы), вызывается `geminiTranslateText` как last-resort
+   fallback (gemini-2.5-flash).
+
+TODO (не делается этим коммитом, но просили): добавить
+`libretranslate.com` (публичный SaaS) между MyMemory и локальным LT,
+чтобы при exhausted MyMemory лимите сначала пробовать публичный
+SaaS, а локальный контейнер использовать как третью ступень.
+Сейчас локальный контейнер и MyMemory идут параллельно.
+
 ## recipe_list — mahallem по умолчанию + UX-полировка поиска и деталей
 
 **Date:** 2026-04-28
