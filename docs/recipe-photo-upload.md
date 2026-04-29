@@ -28,8 +28,11 @@
 2. В `routes/recipes.js` принимать `multipart/form-data` через
    `multer` (тот же конфиг, что в `routes/post-job.js`).
 3. После `INSERT` рецепта вызвать `uploadToStorage(file,
-   'recipe-photos', 'recipes/<id>/<hash>.<ext>', executeQuery)` и
-   вернуть публичный URL клиенту в `meal.strMealThumb`.
+   'recipe-photos', 'recipes/<id>/photo_<ts>_<rand6>.<ext>',
+   executeQuery)` и вернуть публичный URL клиенту в
+   `meal.strMealThumb`. Форма ключа — единый для всего
+   `mahallem_ist` паттерн `<role>_<unix-ms>_<random>.<ext>`,
+   см. §2.2.1.
 4. В клиенте `recipe_list` заменить поле «URL фотографии» на
    `image_picker` + `MultipartFile.fromPath(...)`. На превью
    подключить imgproxy для эконом-байтов на мобильнике.
@@ -214,10 +217,14 @@ app.post(
         // 1) сначала вставляем рецепт без strMealThumb — нам нужен id
         meal.strMealThumb = meal.strMealThumb || 'pending://upload';
         stored = await repo.createUserMeal(meal);
-        // 2) аплоадим файл по пути recipes/<id>/<hash>.<ext>
-        const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
-        const hash = crypto.randomBytes(6).toString('hex');
-        const key = `recipes/${stored.id}/${hash}${ext}`;
+        // 2) аплоадим файл по пути
+        //    recipes/<id>/photo_<unix-ms>_<rand6>.<ext>
+        //    — единый паттерн с avatars/job-photos, см. §2.2.1
+        const ext = (path.extname(req.file.originalname) || '.jpg').toLowerCase();
+        const safeExt = /^\.(jpe?g|png|webp)$/.test(ext) ? ext : '.jpg';
+        const ts = Date.now();
+        const rand = crypto.randomBytes(4).toString('hex').slice(0, 6);
+        const key = `recipes/${stored.id}/photo_${ts}_${rand}${safeExt}`;
         const publicUrl = await uploadToStorage(
           req.file, 'recipe-photos', key, executeQuery,
         );
@@ -261,6 +268,87 @@ async updateUserMealThumb(id, thumbUrl) {
 делать единственный INSERT. Но тогда теряется атомарность относительно
 `createUserMeal` и его id-allocation; делить логику на два шага
 проще и надёжнее.)
+
+#### 2.2.1. Форма ключа объекта (object-key convention)
+
+В `mahallem_ist` уже сложился сквозной паттерн именования
+объектов в storage-buckets. Recipe-photos подгоняется под него,
+чтобы tooling/audit-grep/cleanup-задачи не заводить отдельно
+под каждый bucket.
+
+```
+<bucket>/<entityId>/<role>_<unix-ms>_<random>.<ext>
+```
+
+| Bucket | Entity | Role | Пример полного ключа |
+|---|---|---|---|
+| `avatars` | `userId` | `avatar` | `avatars/42/avatar_1763659287632_93hnlq.jpeg` |
+| `job-photos` | `jobId` | `problem` \| `resolution` | `job-photos/17/problem_1764111000111_a1b2c3.jpg` |
+| `recipe-photos` | `recipeId` | `photo` | `recipes/1000000/photo_1777507021938_8b1018.jpg` |
+
+Источники конвенции — в `mahallem_ist/project_docs/`:
+- [`AVATAR_PHOTOS_FLOW_DOCUMENTATION.md`](../../mahallem_ist/project_docs/AVATAR_PHOTOS_FLOW_DOCUMENTATION.md)
+  (раздел про `avatar_<timestamp>_<random>.jpg`),
+- [`JOB_PHOTOS_FLOW_DOCUMENTATION.md`](../../mahallem_ist/project_docs/JOB_PHOTOS_FLOW_DOCUMENTATION.md)
+  (`problem_*` / `resolution_*`).
+
+**Поля ключа:**
+
+- `<entityId>` — primary key из соответствующей таблицы
+  (`auth.users.id`, `jobs.id`, `recipes.id`). Первый сегмент после
+  bucket — путь-префикс, RLS-политики при необходимости можно
+  завязывать на него (`storage.objects.name LIKE '<id>/%'`).
+- `<role>` — статический префикс. Сейчас у рецептов одна роль
+  (`photo`); запас под `cover_`, `step1_`, … оставлен сознательно —
+  парсер `<role>_<digits>_<hex>` не сломается при появлении новых
+  ролей.
+- `<unix-ms>` — `Date.now()`. Делает листинг `storage.objects` сам
+  по себе сортируемым по времени аплоада без джойна на
+  `created_at`; полезно при ручном расследовании инцидентов через
+  `psql` без доступа в storage-api.
+- `<random>` — 6 hex-символов (`crypto.randomBytes(4).toString('hex').slice(0, 6)`).
+  Защищает от коллизии в одну миллисекунду при бёрст-загрузках с
+  одного устройства; полная гарантия уникальности обеспечивается
+  не им, а тем, что `<entityId>` уже уникален per-recipe.
+- `<ext>` — нормализованный whitelist `.jpg|.jpeg|.png|.webp`, всё
+  остальное приводится к `.jpg`. Source of truth — multer
+  `fileFilter` + повторная проверка в `routes/recipes.js`.
+
+**Что это даёт:**
+
+- одинаковая «грамматика» для всех бакетов → один и тот же regex
+  `<role>_(\d{13})_([a-f0-9]{6})\.(jpe?g|png|webp)` ловит ключи во
+  всех трёх (полезно для audit-логов, retention-скриптов и
+  ручного `psql`-расследования);
+- timestamps читаемые «глазами» в листинге `storage.objects.name`;
+- role-префикс отделяет служебные (`upload-tmp_`,
+  `migration_`) от пользовательских — если когда-нибудь
+  понадобятся.
+
+**Что НЕ кладётся в ключ:**
+
+- никакой PII (имя пользователя, email, тайтл рецепта) — только
+  числовой `id`;
+- расширение всегда соответствует фактическому MIME-у; HEIC-файлы
+  с iPhone приходят уже сконвертированными в JPEG client-side
+  downscaler-ом (см. §2.4.1) — ключи `.heic` физически не
+  возникают.
+
+В коде это поднимается тремя строчками
+([`routes/recipes.js` ~ line 762](../../mahallem_ist/local_user_portal/routes/recipes.js)):
+
+```js
+const ts = Date.now();
+const rand = crypto.randomBytes(4).toString('hex').slice(0, 6);
+const key = `recipes/${id}/photo_${ts}_${rand}${safeExt}`;
+```
+
+`uploadToStorage(req.file, 'recipe-photos', key, executeQuery)`
+шлёт `POST /storage/v1/object/recipe-photos/<key>` под
+service-role-токеном; storage-api сам кладёт запись в
+`storage.objects` (`name = <key>`, `bucket_id = 'recipe-photos'`)
+и возвращает публичный URL `/storage/v1/object/public/recipe-photos/<key>`,
+который мы пишем в `recipes.i18n.en.strMealThumb`.
 
 ### 2.3. Контракт `POST /recipes` после изменений
 

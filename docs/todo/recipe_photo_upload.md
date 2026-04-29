@@ -139,7 +139,11 @@ imgproxy. Архитектура и обоснование — в
 
 **Acceptance:** `curl -F meal='{"strMeal":"x","strMealThumb":""}'
 -F photo=@./pic.jpg /recipes` отдаёт 201 с `strMealThumb`,
-указывающим на `/storage/v1/object/public/recipe-photos/recipes/<id>/<hex>.jpg`.
+указывающим на
+`/storage/v1/object/public/recipe-photos/recipes/<id>/photo_<unix-ms>_<rand6>.jpg`
+(паттерн ключа выровнен с `avatars/<userId>/avatar_<ts>_<rand>.jpg`
+и `job-photos/<jobId>/<role>_<ts>_<rand>.jpg`, см.
+[recipe-photo-upload.md §2.2.1](../recipe-photo-upload.md)).
 
 ## Чанк 6 — Rate limit для multipart
 
