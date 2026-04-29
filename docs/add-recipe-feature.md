@@ -35,30 +35,46 @@ TheMealDB-рецепты.
 
 ## 2. Архитектурная картинка
 
+Поток данных от тапа на «+» до снэкбара «Сохранено» (VS Code
+рендерит Mermaid-диаграммы во встроенном Markdown Preview):
+
+```mermaid
+sequenceDiagram
+    actor U as Пользователь
+    participant F as Flutter recipe_list
+    participant S as Express mahallem
+    participant P as Postgres
+
+    U->>F: тап на «+»
+    F->>F: открыть AddRecipePage (форма)
+    U->>F: заполнить и нажать «Сохранить»
+    F->>S: POST /recipes  {meal: {...}}
+    S->>S: RecipeRepository.createUserMeal(meal)
+    S->>P: SELECT next id (id ≥ 1_000_000)
+    P-->>S: next = 1_000_001
+    S->>P: INSERT INTO recipes
+    S->>S: _evictIfOverCap()
+    S-->>F: 201 {id, meal}
+    F->>F: upsertAll([meal], lang) → sqflite (recipes + recipe_bodies)
+    F->>F: Navigator.pop(meal)
+    F-->>U: снэкбар «Сохранено»
 ```
-[пользователь]      [Flutter recipe_list]              [Express mahallem]              [Postgres]
-       |                    |                                  |                              |
-       |  тап на «+»        |                                  |                              |
-       |------------------->|                                  |                              |
-       |                    |  AddRecipePage (форма)           |                              |
-       |  тап «Сохранить»   |                                  |                              |
-       |------------------->|  POST /recipes  {meal: {...}}    |                              |
-       |                    |--------------------------------->|                              |
-       |                    |                                  |  RecipeRepository            |
-       |                    |                                  |    .createUserMeal(meal)     |
-       |                    |                                  |  SELECT next id   ---------->|
-       |                    |                                  |                              |--> 1_000_001
-       |                    |                                  |  INSERT INTO recipes ------->|
-       |                    |                                  |  _evictIfOverCap()           |
-       |                    |        201 {id, meal}            |                              |
-       |                    |<---------------------------------|                              |
-       |                    |  upsertAll([meal], lang)         |                              |
-       |                    |   → sqflite: recipes +           |                              |
-       |                    |     recipe_bodies                |                              |
-       |                    |  Navigator.pop(meal)             |                              |
-       |  снэкбар «успех»   |                                  |                              |
-       |<-------------------|                                  |                              |
-```
+
+Если Mermaid в твоём Markdown Preview не включён, та же
+последовательность словами:
+
+1. Пользователь тапает FAB `+` → открывается `AddRecipePage`.
+2. Заполняет форму, тапает «Сохранить».
+3. Клиент шлёт `POST /recipes {meal: {...}}` на mahallem.
+4. Сервер вызывает `RecipeRepository.createUserMeal(meal)`,
+   выбирает следующий `id` из пользовательского диапазона
+   (`id ≥ 1_000_000`), делает `INSERT` и при необходимости
+   `_evictIfOverCap`.
+5. Возвращает `201 {id, meal}`.
+6. Клиент зеркалит рецепт в sqflite (`recipes` + `recipe_bodies`)
+   и закрывает форму через `Navigator.pop(meal)`.
+7. На главном экране показывается снэкбар «Сохранено», рецепт
+   встаёт в начало ленты.
 
 Ленивый перевод (через `_ensureLang`) происходит **позже**, на
 первом же `/recipes/lookup/:id?lang=ru` — это уже существующий
