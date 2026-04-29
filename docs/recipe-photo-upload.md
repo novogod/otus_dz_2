@@ -443,23 +443,29 @@ storage-api есть `STORAGE_BACKEND=s3` режим, его можно буде
 
 ## 4. Чек-лист внедрения
 
-| Слой | Файл | Что добавить |
-|---|---|---|
-| DB | `local_docker_admin_backend/database/migrations/20260429_create_recipe_photos_bucket.sql` | INSERT в `storage.buckets` + 3 RLS-политики |
-| DB | `local_docker_admin_backend/docker-compose.yml` (≈строка 185) | `- ./database/migrations/20260429_create_recipe_photos_bucket.sql:/docker-entrypoint-initdb.d/09.75-recipe-photos-bucket.sql:Z` |
-| Server | `local_user_portal/routes/recipes.js` | `multer` + `recipePhotoUpload.single('photo')` + ветка multipart в `app.post('/recipes', …)` |
-| Server | `local_user_portal/routes/recipes.js` (`RecipeRepository`) | метод `updateUserMealThumb(id, url)` |
-| Server | `local_user_portal/utils/storage-upload.js` | ветка `bucket === 'recipe-photos'` в `backupStorageObjectEntry` (если нужно отдельный backup-кэш) |
-| Server | `local_user_portal/utils/backup-service.js` | `backupRecipePhotoFile(buffer, url)` |
-| Server | `local_user_portal/tests/recipes.test.js` | 2 теста: multipart-upload путь (mock storage-api) + fallback на JSON-only |
-| Cron | `local_user_portal/jobs/cleanup-orphan-recipe-photos.js` (новый) | раз в неделю чистит файлы без ссылок из `recipes.i18n.en.strMealThumb` |
-| Client | `recipe_list/pubspec.yaml` | `image_picker: ^1.x` + `flutter_image_compress: ^2.x` (обязательный downscaler) |
-| Client | `recipe_list/lib/utils/photo_downscaler.dart` | `downscaleForUpload(XFile)` — 1600×1600, q80, EXIF strip |
-| Client | `recipe_list/lib/data/api/recipe_api.dart` | новый метод `createRecipeWithPhoto(Recipe, File)` (multipart) |
-| Client | `recipe_list/lib/ui/add_recipe_page.dart` | ImagePicker-кнопки + предпросмотр + multipart-вызов |
-| Client i18n | `recipe_list/lib/i18n/*.i18n.json` (10 шт.) | `addRecipePhotoFromGallery`, `addRecipePhotoFromCamera`, `addRecipePhotoRequired`, `addRecipePhotoRemove`, `addRecipePhotoSourceTitle`, `addRecipePhotoErrorAccessDenied`, `addRecipePhotoErrorTooLarge`, `a11y.addRecipePhotoPicker` |
-| Docs | `otus_dz/docs/recipe-photo-upload.md` | этот файл |
-| Docs | `otus_dz/docs/add-recipe-feature.md` (§9) | сослаться на этот документ — фича больше не «вне рамок» |
+> **Статус:** все пункты ниже реализованы (chunks 1–14 в
+> [`todo/recipe_photo_upload.md`](./todo/recipe_photo_upload.md)).
+> Прод-redeploy (chunk 15) — отдельным шагом, см. там же.
+
+| ✓ | Слой | Файл | Что добавить |
+|---|---|---|---|
+| ✅ | DB | `local_docker_admin_backend/database/migrations/20260429_create_recipe_photos_bucket.sql` | INSERT в `storage.buckets` + 3 RLS-политики |
+| ✅ | DB | `local_docker_admin_backend/docker-compose.yml` (≈строка 185) | `- ./database/migrations/20260429_create_recipe_photos_bucket.sql:/docker-entrypoint-initdb.d/09.76-recipe-photos-bucket.sql:Z` |
+| ✅ | Server | `local_user_portal/routes/recipes.js` | `multer` + `recipePhotoUpload.single('photo')` + ветка multipart в `app.post('/recipes', …)` |
+| ✅ | Server | `local_user_portal/routes/recipes.js` (`RecipeRepository`) | метод `updateUserMealThumb(id, url)` |
+| ✅ | Server | `local_user_portal/utils/storage-upload.js` | ветка `bucket === 'recipe-photos'` в `backupStorageObjectEntry` |
+| ✅ | Server | `local_user_portal/utils/backup-service.js` | `backupRecipePhotoFile(buffer, url)` |
+| ✅ | Server | `local_user_portal/tests/recipes.test.js` | 4 multipart-теста + repo-тест `updateUserMealThumb` |
+| ✅ | Cron | `local_user_portal/lib/jobs/cleanup-orphan-recipe-photos.js` | раз в неделю чистит файлы без ссылок из `recipes.i18n.en.strMealThumb` |
+| ✅ | Client | `recipe_list/pubspec.yaml` | `image_picker: ^1.0.7` + `flutter_image_compress: ^2.2.0` |
+| ✅ | Client | `recipe_list/lib/utils/photo_downscaler.dart` | `downscaleForUpload(XFile)` — 1600×1600, q80, EXIF strip |
+| ✅ | Client | `recipe_list/lib/utils/imgproxy.dart` | `imgproxyUrl(src, w, h)` — превью через imgproxy |
+| ✅ | Client | `recipe_list/lib/data/api/recipe_api.dart` | новый метод `createRecipeWithPhoto(Recipe, File)` (multipart) |
+| ✅ | Client | `recipe_list/lib/ui/add_recipe_page.dart` | `_PhotoPicker` + предпросмотр + multipart-вызов |
+| ✅ | Client | `recipe_list/lib/ui/recipe_card.dart`, `recipe_details_page.dart` | thumbnails через `imgproxyUrl` |
+| ✅ | Client i18n | `recipe_list/lib/i18n/*.i18n.json` (10 шт.) | `addRecipePhotoFromGallery`, `addRecipePhotoFromCamera`, `addRecipePhotoRequired`, `addRecipePhotoRemove`, `addRecipePhotoSourceTitle`, `addRecipePhotoErrorAccessDenied`, `addRecipePhotoErrorTooLarge`, `a11y.addRecipePhotoPicker` |
+| ✅ | Docs | `otus_dz/docs/recipe-photo-upload.md` | этот файл |
+| ✅ | Docs | `otus_dz/docs/add-recipe-feature.md` (§3.2, §9, §10) | секция «загрузка фото файлом» больше не вне рамок |
 
 ## 5. Что осознанно оставлено за рамками этой проработки
 

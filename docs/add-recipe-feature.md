@@ -13,9 +13,10 @@
 >   sqflite, а не уходит в «родной» TheMealDB.
 > - [`recipe-photo-upload.md`](./recipe-photo-upload.md) +
 >   [`todo/recipe_photo_upload.md`](./todo/recipe_photo_upload.md)
->   — следующая фаза: загрузка фото файлом через
->   `image_picker` + storage-api `mahallem_ist`. В текущем MVP
->   форма берёт URL-строкой (см. §3.2).
+>   — фаза «загрузка фото файлом» (image_picker → multipart
+>   `POST /recipes` → storage-api → imgproxy). Реализована
+>   и встроена в форму (см. §3.2); URL-вариант остался только
+>   как web-fallback.
 
 ---
 
@@ -131,7 +132,7 @@ Tooltip + `Semantics(button: true, label: …)`.
 | Поле | Обязательное | Куда мапится |
 |---|---|---|
 | Название | ✓ | `strMeal` |
-| URL фотографии | ✓ | `strMealThumb` (в MVP — URL-поле; загрузка файлом вынесена в отдельный план — см. [`recipe-photo-upload.md`](./recipe-photo-upload.md)) |
+| Фотография | ✓ | `strMealThumb` — пикер с камеры/галереи (160×160 dp превью + bottom-sheet); URL-ввод остаётся только в web-fallback. Реализация — в [`recipe-photo-upload.md`](./recipe-photo-upload.md) + [`todo/recipe_photo_upload.md`](./todo/recipe_photo_upload.md). |
 | Категория | – | `strCategory` |
 | Кухня | – | `strArea` |
 | Инструкция | – | `strInstructions`, multi-line |
@@ -359,8 +360,8 @@ UI.
 
 | Что | Почему |
 |---|---|
-| Загрузка фото файлом | Выделено в отдельную фазу: [`recipe-photo-upload.md`](./recipe-photo-upload.md) (дизайн) + [`todo/recipe_photo_upload.md`](./todo/recipe_photo_upload.md) (15-чанковый план). Инфраструктура (storage-api + imgproxy + buckets) уже есть в `mahallem_ist`. |
 | Редактирование/удаление рецепта | `POST /recipes` всегда выделяет новый id. `PUT` и `DELETE` пока не нужны. |
+| Несколько фото на рецепт | Требует отдельной таблицы `recipe_photos`; bucket и пикер сейчас рассчитаны на одну титульную. |
 | Публикация в TheMealDB upstream | Нет публичного POST-а, см. [`themealdb-add-recipe-investigation.md`](./themealdb-add-recipe-investigation.md). |
 | Премодерация | Учебный проект — никакой queue нет. В реальном продукте надо ставить flag-колонку и админ-страницу. |
 
@@ -369,13 +370,20 @@ UI.
 | Слой | Файл | Что искать |
 |---|---|---|
 | UI | `recipe_list/lib/ui/recipe_list_page.dart` | `_AddRecipeFab`, `_openAddRecipe`, второй `Positioned(left: …)` |
-| UI | `recipe_list/lib/ui/add_recipe_page.dart` | сама форма, `_parseIngredients`, `_save` |
-| API | `recipe_list/lib/data/api/recipe_api.dart` | `createRecipe` |
-| i18n | `recipe_list/lib/i18n/*.i18n.json` (10 шт.) | `a11y.addRecipe`, `addRecipe*` |
-| i18n-фасад | `recipe_list/lib/i18n.dart` | геттеры `addRecipe*` |
-| Сервер | `mahallem_ist/local_user_portal/routes/recipes.js` | `createUserMeal`, `app.post('/recipes', …)` |
-| Тесты | `mahallem_ist/local_user_portal/tests/recipes.test.js` | `createUserMeal allocates id …`, `createUserMeal rejects payload …` |
+| UI | `recipe_list/lib/ui/add_recipe_page.dart` | сама форма, `_PhotoPicker`, `_pickPhoto`, `_save` |
+| API | `recipe_list/lib/data/api/recipe_api.dart` | `createRecipe`, `createRecipeWithPhoto`, `_mealToJson` |
+| Photo | `recipe_list/lib/utils/photo_downscaler.dart` | `downscaleForUpload` (1600×1600 q80 JPEG, EXIF-strip) |
+| Photo | `recipe_list/lib/utils/imgproxy.dart` | `imgproxyUrl(src, w, h)` — thumbnail через imgproxy |
+| i18n | `recipe_list/lib/i18n/*.i18n.json` (10 шт.) | `a11y.addRecipe`, `a11y.addRecipePhotoPicker`, `addRecipe*`, `addRecipePhoto*` |
+| i18n-фасад | `recipe_list/lib/i18n.dart` | геттеры `addRecipe*` и `addRecipePhoto*` |
+| Сервер | `mahallem_ist/local_user_portal/routes/recipes.js` | `createUserMeal`, `updateUserMealThumb`, `recipePhotoUpload` (multer), `multipartLimiter`, `app.post('/recipes', …)` с multipart-веткой |
+| Сервер | `mahallem_ist/local_user_portal/lib/jobs/cleanup-orphan-recipe-photos.js` | еженедельный sweep орфан-файлов |
+| Сервер | `mahallem_ist/local_user_portal/utils/storage-upload.js` + `utils/backup-service.js` | ветка `recipe-photos` в `uploadToStorage` и `backupRecipePhotoFile` |
+| Миграция | `mahallem_ist/local_docker_admin_backend/database/migrations/20260429_create_recipe_photos_bucket.sql` | bucket + 3 RLS политики |
+| Compose | `mahallem_ist/local_docker_admin_backend/docker-compose.yml` | маунт `09.76-recipe-photos-bucket.sql` |
+| Тесты | `mahallem_ist/local_user_portal/tests/recipes.test.js` | `createUserMeal …`, `updateUserMealThumb …`, multipart-роут (4 теста) |
+| Тесты | `recipe_list/test/recipe_api_test.dart` | `createRecipeWithPhoto слепит multipart` |
 | Документация | `otus_dz/docs/add-recipe-feature.md` | этот файл |
 | Документация | `otus_dz/docs/themealdb-add-recipe-investigation.md` | почему не пишем в TheMealDB upstream |
-| Документация | `otus_dz/docs/recipe-photo-upload.md` | дизайн следующей фазы (фото файлом) |
-| TODO | `otus_dz/docs/todo/recipe_photo_upload.md` | 15-чанковый план под фото-загрузку |
+| Документация | `otus_dz/docs/recipe-photo-upload.md` | дизайн фазы photo-upload |
+| TODO | `otus_dz/docs/todo/recipe_photo_upload.md` | 15-чанковый план под фото-загрузку (1–14 сделаны) |

@@ -1,5 +1,58 @@
 # Project Log
 
+## Recipe photo upload (file picker → storage-api → imgproxy)
+
+**Date:** 2026-05-13
+
+Закрыта «следующая фаза» add-recipe: теперь форма принимает фото
+файлом (камера/галерея), а не URL-строкой. План — все 14 чанков
+из [`todo/recipe_photo_upload.md`](./todo/recipe_photo_upload.md);
+prod-redeploy (chunk 15) откладывается до явного запроса.
+
+**mahallem_ist (chunks 1–8):**
+
+- Миграция `20260429_create_recipe_photos_bucket.sql` — `storage.buckets`
+  row + 3 RLS-политики (public read, authenticated write/delete);
+  смонтирована в `local_docker_admin_backend/docker-compose.yml`
+  (`09.76-recipe-photos-bucket.sql`).
+- `utils/storage-upload.js`, `utils/backup-service.js` — ветка
+  `recipe-photos` в `backupStorageObjectEntry` + `backupRecipePhotoFile`,
+  чтобы новые файлы попадали в backup-кэш go-clean.
+- `routes/recipes.js`: `recipePhotoUpload` (multer disk-storage,
+  10 MB, jpeg/png/webp), `RecipeRepository.updateUserMealThumb`,
+  multipart-ветка `POST /recipes` (rollback-стратегия:
+  insert → upload → patch; при провале upload — оставляем
+  `pending://upload`-плейсхолдер и 502). `multipartLimiter` 5 req/min
+  отдельно от общего limiter (он раздут до 1200 req/min под list-loader).
+- DI-хук `opts.uploadToStorage` на `recipesRoute` — позволяет тестам
+  подменять storage без сети. Tests suite 18 / 2 baseline.
+- `lib/jobs/cleanup-orphan-recipe-photos.js` — еженедельный sweep
+  файлов без ссылок из `recipes.i18n.en.strMealThumb` (старше 24 ч),
+  hooked в `server.js` рядом с warmup. Disable
+  `RECIPES_PHOTOS_CLEANUP_DISABLED=1`.
+
+**otus_dz (chunks 9–13):**
+
+- `pubspec.yaml`: `image_picker ^1.0.7`, `flutter_image_compress ^2.2.0`.
+  iOS Info.plist + AndroidManifest permissions. `flutter pub get`.
+- `lib/utils/photo_downscaler.dart` — `downscaleForUpload(XFile)`:
+  1600×1600 q80 JPEG, EXIF strip; second pass 1280×1280 q60 если
+  >5 MB; кидает `StateError('photo_too_large')`.
+- `lib/data/api/recipe_api.dart` — `createRecipeWithPhoto(Recipe, File)`
+  собирает `FormData{meal: jsonEncode(_mealToJson), photo: MultipartFile}`
+  и слепит на тот же `''`-эндпоинт. JSON-only `createRecipe` остался
+  как fallback.
+- `lib/ui/add_recipe_page.dart` — `_PhotoPicker` (160×160 dp превью,
+  bottom-sheet «Камера / Галерея», SnackBar при denied/too-large).
+  `_save()` диспатчит на multipart, если `_pickedPhoto != null`. URL
+  TextField остался только под `kIsWeb`.
+- `lib/utils/imgproxy.dart` — `imgproxyUrl(src, w, h)`:
+  `<origin>/imgproxy/insecure/resize:fit:w:h:0/<base64url(src)>`.
+  Применён в `RecipeCard` (600×338) и `RecipeDetailsPage` (1200×675).
+- 7 новых i18n-ключей + `a11y.addRecipePhotoPicker` × 10 локалей,
+  slang regenerated. Tests `flutter test --no-pub`: 59 / 2 baseline,
+  `flutter analyze` чистый.
+
 ## Add-recipe feature + Russian docs
 
 **Date:** 2026-04-29
