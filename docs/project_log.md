@@ -71,6 +71,29 @@ prod-redeploy (chunk 15) откладывается до явного запро
   с исходником (124423 байт). Тестовая строка и файл удалены сразу
   после проверки.
 
+**Follow-up: nginx trailing-slash fix (mahallem `ca0c895b`):**
+
+В первичном smoke-тесте `POST https://mahallem.ist/recipes` уходил
+в 301 (`Location: http://mahallem.ist:4001/recipes/`) — проблема в
+двух-уровневом nginx: внешний (host) терминирует TLS и проксирует
+на `127.0.0.1:4001`; внутренний (`mahallem-nginx`, контейнер) имел
+`location /recipes/` со слешем, и nginx авто-301-ил `/recipes` →
+`/recipes/`. Клиенты по RFC 7231 даунгрейдят `POST → GET` на 301,
+плюс редирект собирался абсолютным URL'ом из внутреннего listener'а,
+светил `:4001` и сбрасывал scheme на `http`.
+
+Исправлено в `local_docker_admin_backend/nginx/conf.d/user-portal.conf`:
+
+- `location /recipes/` → `location /recipes` (без авто-редиректа,
+  по-прежнему ловит `/recipes/page`, `/recipes/lookup/:id` и пр.);
+- `absolute_redirect off; port_in_redirect off;` на server-scope —
+  любые будущие авто-редиректы будут относительными и сохранят
+  публичный TLS-хост.
+
+Деплой: `git pull` на хосте + `docker exec mahallem-nginx nginx -t`
++ `nginx -s reload` (перезагрузка nginx без рестарта). Re-smoke
+плоским `curl -X POST` (без `--post301`) → 201 с публичным URL.
+
 ## Add-recipe feature + Russian docs
 
 **Date:** 2026-04-29
