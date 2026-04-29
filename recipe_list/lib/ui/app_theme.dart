@@ -83,6 +83,61 @@ class AppSpacing {
   static const double pagePadding = 16;
 }
 
+/// Метрики экрана, зависящие от `MediaQuery`. Все размеры,
+/// которые могут переполняться при длинных переводах
+/// (например, на курдском или немецком), задавайте через
+/// `AppMetrics.of(context)`, а не магическими числами в виджетах.
+///
+/// Базовая ширина — 428 (Figma). Все производные значения
+/// масштабируются пропорционально текущей ширине экрана и
+/// ограничиваются разумным минимумом/максимумом.
+class AppMetrics {
+  /// Базовая ширина из Figma.
+  static const double baseWidth = 428;
+
+  final double screenWidth;
+  final double screenHeight;
+  final double textScale;
+  final EdgeInsets viewPadding;
+
+  const AppMetrics._({
+    required this.screenWidth,
+    required this.screenHeight,
+    required this.textScale,
+    required this.viewPadding,
+  });
+
+  factory AppMetrics.of(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    return AppMetrics._(
+      screenWidth: mq.size.width,
+      screenHeight: mq.size.height,
+      textScale: mq.textScaler.scale(1),
+      viewPadding: mq.viewPadding,
+    );
+  }
+
+  /// Коэффициент относительно базовой ширины Figma.
+  double get scale => screenWidth / baseWidth;
+
+  /// Боковые поля контента, масштабируемые от ширины экрана.
+  double get pagePadding => (screenWidth * 0.0374).clamp(12.0, 24.0);
+
+  /// Доступная ширина контента после боковых полей.
+  double get contentWidth => screenWidth - pagePadding * 2;
+
+  /// Ширина колонки «мера» в блоке ингредиентов. На базовом
+  /// 428-экране даёт ~96px (с запасом vs прежних 89px), на узких
+  /// экранах сжимается, на широких — увеличивается, чтобы курдские
+  /// и немецкие меры не выходили за границу.
+  double get measureColumnWidth => (contentWidth * 0.26).clamp(72.0, 140.0);
+
+  /// Размеры иконок (мелкая/средняя/крупная).
+  double get iconSm => (screenWidth * 0.0374).clamp(14.0, 20.0);
+  double get iconMd => (screenWidth * 0.056).clamp(20.0, 28.0);
+  double get iconLg => (screenWidth * 0.075).clamp(28.0, 40.0);
+}
+
 /// Тени.
 class AppShadows {
   AppShadows._();

@@ -1,5 +1,70 @@
 # Project Log
 
+## RTL/long-translation overflow on the list & details pages — added `AppMetrics` from `MediaQuery`
+
+**Date:** 2026-04-29
+
+### Симптом
+
+На курдском (и в меньшей мере немецком) Flutter ругался
+`A RenderFlex overflowed by 125/136 pixels on the right`:
+
+- В карточке списка `_Badges` рендерился через `Row` с явным
+  `SizedBox(width: AppSpacing.sm)` между чипами категории и кухни.
+  Длинная курдская комбинация (например, «خواردن لە دەریا» +
+  «ئیتالیایی») не помещалась в ширину карточки.
+- На странице рецепта блок ингредиентов держал колонку «мера»
+  фиксированной шириной `89` (`SizedBox(width: 89)`). Курдские
+  меры («کاشوویەک»/«قاشوویەک نان…») вылазили за правую границу.
+
+### Что нарушалось
+
+Дизайн-система задавала размеры константами в пикселях («Figma 428»),
+без учёта реальной ширины экрана и текстового масштабирования. Любой
+длинный перевод (RTL, немецкий, французский) ломал лэйаут.
+
+### Решение
+
+1. Добавил класс **`AppMetrics`** в `recipe_list/lib/ui/app_theme.dart`.
+   Источник правды — `MediaQuery.of(context)`. Поля:
+   - `screenWidth`, `screenHeight`, `textScale`, `viewPadding` (raw);
+   - `scale = screenWidth / 428` — коэффициент vs Figma-базовой;
+   - `pagePadding = (screenWidth * 0.0374).clamp(12, 24)`;
+   - `contentWidth = screenWidth - pagePadding * 2`;
+   - `measureColumnWidth = (contentWidth * 0.26).clamp(72, 140)`
+     — заменил магическое `89`. На 428-экране даёт ~96 px (с запасом),
+     на узких сжимается, на широких — расширяется;
+   - `iconSm/iconMd/iconLg` — пропорциональные доли с clamp.
+2. **`recipe_card.dart`** `_Badges`: `Row` → `Wrap`
+   (`spacing: sm`, `runSpacing: xs`). Длинные пары категория+кухня
+   переносятся на вторую строку вместо overflow.
+3. **`recipe_details_page.dart`** `_IngredientsBlock`:
+   `SizedBox(width: 89)` → `SizedBox(width: AppMetrics.of(context).measureColumnWidth)`,
+   `softWrap: true` на `Text(ing.measure)`. Курдские меры теперь
+   переносятся внутри своей колонки.
+4. **`test/recipe_repository_test.dart`** `_FakeApi.lookup`:
+   обновил сигнатуру до `{AppLang? lang, Duration? timeout}` под
+   текущий `RecipeApi.lookup` (стало required по invalid_override).
+
+### Гарантии
+
+- Все размеры, способные переполниться при длинных переводах,
+  читаются через `AppMetrics.of(context)`, а не магические числа.
+- `Wrap` гарантирует, что бейджи никогда не вызовут `RenderFlex
+  overflow`.
+- `clamp` ограничивает измерения разумными min/max — на iPad/больших
+  экранах ничего не «разъедется», на iPhone SE ничего не схлопнется
+  до нечитаемого.
+
+### Файлы
+
+- `recipe_list/lib/ui/app_theme.dart` — добавлен `AppMetrics`.
+- `recipe_list/lib/ui/recipe_card.dart` — `_Badges` через `Wrap`.
+- `recipe_list/lib/ui/recipe_details_page.dart` — `measureColumnWidth`.
+- `recipe_list/test/recipe_repository_test.dart` — fake-сигнатура.
+
+---
+
 ## Language switch hung minutes/forever — removed client residue retry, server read-side purge, added worker pool + deadline
 
 **Date:** 2026-04-29

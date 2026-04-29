@@ -24,7 +24,8 @@ class _FakeApi implements RecipeApi {
   }
 
   @override
-  Future<Recipe?> lookup(int id, {AppLang? lang}) async => null;
+  Future<Recipe?> lookup(int id, {AppLang? lang, Duration? timeout}) async =>
+      null;
 
   @override
   Future<Recipe?> random({AppLang? lang}) async => null;

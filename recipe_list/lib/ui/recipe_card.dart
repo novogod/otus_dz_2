@@ -187,13 +187,16 @@ class _Badges extends StatelessWidget {
       children.add(_Badge(label: recipe.category!));
     }
     if (recipe.area != null) {
-      if (children.isNotEmpty) {
-        children.add(const SizedBox(width: AppSpacing.sm));
-      }
       children.add(_Badge(label: recipe.area!));
     }
     if (children.isEmpty) return const SizedBox.shrink();
-    return Row(children: children);
+    // `Wrap` вместо `Row` — длинные переводы (курдский/немецкий)
+    // не должны вылетать за карточку.
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.xs,
+      children: children,
+    );
   }
 }
 

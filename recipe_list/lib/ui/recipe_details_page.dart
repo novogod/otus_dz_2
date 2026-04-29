@@ -319,6 +319,7 @@ class _IngredientsBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final metrics = AppMetrics.of(context);
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -339,10 +340,11 @@ class _IngredientsBlock extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 89,
+                    width: metrics.measureColumnWidth,
                     child: Text(
                       ing.measure,
                       style: AppTextStyles.ingredientQty,
+                      softWrap: true,
                     ),
                   ),
                   Expanded(
