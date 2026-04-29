@@ -413,24 +413,24 @@ runtime показывает новые лейблы.
 
 ## Чанк 15 — Production redeploy mahallem (отдельным шагом)
 
-- [ ] Step 0 sync prod uncommitted state на хост.
-- [ ] `git pull` на хосте.
-- [ ] Применить миграцию на проде:
+- [x] Step 0 sync prod uncommitted state на хост.
+- [x] `git pull` на хосте.
+- [x] Применить миграцию на проде:
   ```sh
   docker exec -i mahallem-db psql -U postgres < \
     local_docker_admin_backend/database/migrations/20260429_create_recipe_photos_bucket.sql
   ```
   (либо через rebuild compose с `--force-recreate db` если допустимо).
-- [ ] `docker compose up -d --build user-portal storage-api`.
-- [ ] Smoke-test:
+- [x] `docker compose up -d --build user-portal storage-api`.
+- [x] Smoke-test:
   ```sh
   curl -X POST https://mahallem.ist/recipes \
     -F meal='{"strMeal":"Smoke","strMealThumb":""}' \
     -F photo=@/path/to/test.jpg
   ```
   → 201 с `strMealThumb` на `/storage/v1/object/public/recipe-photos/...`.
-- [ ] Открыть URL картинки в браузере — отдаётся 200.
-- [ ] Удалить smoke-рецепт через `DELETE` (отдельный admin-flow)
+- [x] Открыть URL картинки в браузере — отдаётся 200.
+- [x] Удалить smoke-рецепт через `DELETE` (отдельный admin-flow)
   или оставить с пометкой.
 
 **Acceptance:** прод принимает multipart-загрузки, картинки

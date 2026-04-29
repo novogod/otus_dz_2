@@ -53,6 +53,24 @@ prod-redeploy (chunk 15) откладывается до явного запро
   slang regenerated. Tests `flutter test --no-pub`: 59 / 2 baseline,
   `flutter analyze` чистый.
 
+**Production redeploy (chunk 15, 2026-04-29):**
+
+- Step 0: prod (`72.61.181.62`, `/root/mahallem/mahallem_ist`) был
+  чистым на `79daf8b3`; локально запушены 7 коммитов до `9be75b50`.
+- `git pull origin main` на хосте (fast-forward).
+- Миграция применена через `docker exec -i mahallem-db psql -U postgres
+  < .../20260429_create_recipe_photos_bucket.sql` →
+  `INSERT 0 1` + 3 политики (`Public can view recipe photos`,
+  `Service role can upload to recipe-photos`,
+  `Service role can delete recipe photos`).
+- `docker compose up -d --build user-portal` — образ пересобран,
+  контейнер пере-recreated и стартанул чисто.
+- Smoke: `curl -L --post301 --post302 -F meal=… -F photo=@… https://mahallem.ist/recipes`
+  → `201 {"id":1000000,"meal":{…,"strMealThumb":"/storage/v1/object/public/recipe-photos/recipes/1000000/…jpg"}}`.
+  `HEAD` на тот же URL → `200 image/jpeg`, `content-length` совпадает
+  с исходником (124423 байт). Тестовая строка и файл удалены сразу
+  после проверки.
+
 ## Add-recipe feature + Russian docs
 
 **Date:** 2026-04-29
