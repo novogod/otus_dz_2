@@ -49,7 +49,8 @@ String? _mahallemOrigin() {
   if (base.isEmpty) return null;
   final uri = Uri.tryParse(base);
   if (uri == null || !uri.hasScheme || uri.host.isEmpty) return null;
-  final port = (uri.hasPort &&
+  final port =
+      (uri.hasPort &&
           !((uri.scheme == 'http' && uri.port == 80) ||
               (uri.scheme == 'https' && uri.port == 443)))
       ? ':${uri.port}'

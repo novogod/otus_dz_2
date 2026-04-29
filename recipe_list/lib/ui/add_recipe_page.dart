@@ -153,7 +153,8 @@ class _AddRecipePageState extends State<AddRecipePage> {
       if (!mounted) return;
       setState(() => _compressing = false);
       final code = e.code.toLowerCase();
-      final msg = (code.contains('access_denied') || code.contains('permission'))
+      final msg =
+          (code.contains('access_denied') || code.contains('permission'))
           ? s.addRecipePhotoErrorAccessDenied
           : s.addRecipeError;
       messenger
@@ -343,7 +344,10 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 child: _PhotoPicker(
                   picked: _pickedPhoto,
                   loading: _compressing,
-                  errorText: (_photoTouched && _pickedPhoto == null && !_allowUrlFallback)
+                  errorText:
+                      (_photoTouched &&
+                          _pickedPhoto == null &&
+                          !_allowUrlFallback)
                       ? s.addRecipePhotoRequired
                       : null,
                   onTap: _compressing ? null : _showPhotoSourceSheet,
