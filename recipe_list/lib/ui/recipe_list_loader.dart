@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../config/feed_config.dart';
 import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
@@ -28,12 +29,18 @@ class RecipeListLoader extends StatefulWidget {
   /// сюда передают `(_) async => null`, чтобы пропустить sqflite.
   final Future<RecipeRepository?> Function(RecipeApi api)? repositoryBuilder;
 
+  /// Tunables for the feed (seed target, pick count, etc.). Defaults
+  /// pick up `--dart-define` overrides. See [FeedConfig].
+  final FeedConfig config;
+
   RecipeListLoader({
     super.key,
     RecipeApi? api,
     this.loader,
     this.repositoryBuilder,
-  }) : api = api ?? RecipeApi();
+    FeedConfig? config,
+  }) : api = api ?? RecipeApi(),
+       config = config ?? FeedConfig.fromDartDefine();
 
   @override
   State<RecipeListLoader> createState() => _RecipeListLoaderState();
@@ -289,7 +296,9 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       }
     }
 
-    await Future.wait(List.generate(_translateConcurrency, (_) => worker()));
+    await Future.wait(
+      List.generate(widget.config.translateConcurrency, (_) => worker()),
+    );
 
     // Per docs/translation-pipeline.md: server-side `_isEchoTranslation`
     // + `evaluateCandidate` are authoritative. The client must not
@@ -301,14 +310,8 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     return _LoadResult(recipes: translated, repository: repo);
   }
 
-  /// Сколько `lookup`-запросов держать в полёте параллельно при
-  /// смене языка. Сервер LibreTranslate капнут на 6 одновременных
-  /// переводов; 8 клиентских запросов даёт ровно «один в очереди» при
-  /// переводе через MyMemory/cache-путь и держит общую задержку низкой.
-  static const int _translateConcurrency = 8;
-
   /// Полный список категорий TheMealDB. При каждом открытии
-  /// экрана берём случайные 10 (`_seedPickCount`) — это даёт
+  /// экрана берём случайные `widget.config.seedPickCount` — это даёт
   /// ротацию ленты вместо вечного Сикен.
   static const _allCategories = <String>[
     'Beef',
@@ -327,18 +330,13 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     'Vegetarian',
   ];
 
-  static const int _seedPickCount = 10;
-  static const int _categoryCacheThreshold = 10;
-
-  /// Берём [_seedPickCount] случайных категорий из [_allCategories],
-  /// сохраняя порядок рандома вызова. Разные открытия экрана
-  /// дают разные ленты.
-  static List<String> _pickCategories() {
+  /// Берём `widget.config.seedPickCount` случайных категорий из
+  /// [_allCategories], сохраняя порядок рандома вызова. Разные
+  /// открытия экрана дают разные ленты.
+  List<String> _pickCategories() {
     final pool = [..._allCategories]..shuffle();
-    return pool.take(_seedPickCount).toList(growable: false);
+    return pool.take(widget.config.seedPickCount).toList(growable: false);
   }
-
-  static const int _seedTarget = 200;
 
   Future<_LoadResult> _runLoad({bool forceReseed = false}) async {
     final repo = await (widget.repositoryBuilder ?? _defaultRepoBuilder)(
@@ -361,7 +359,10 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       if (repo != null && !forceReseed) {
         final cachedCount = await repo.countFor(lang);
         if (cachedCount >= 50) {
-          final cached = await repo.listCached(lang, limit: _seedTarget);
+          final cached = await repo.listCached(
+            lang,
+            limit: widget.config.seedTarget,
+          );
           return _LoadResult(recipes: cached, repository: repo);
         }
       }
@@ -376,7 +377,10 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     if (repo != null && !forceReseed) {
       final cachedCount = await repo.countFor(lang);
       if (cachedCount >= 50) {
-        final cached = await repo.listCached(lang, limit: _seedTarget);
+        final cached = await repo.listCached(
+          lang,
+          limit: widget.config.seedTarget,
+        );
         return _LoadResult(recipes: cached, repository: repo);
       }
     }
@@ -430,12 +434,12 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         done: i,
         total: categories.length,
         loaded: accumulator.length,
-        target: _seedTarget,
+        target: widget.config.seedTarget,
       );
 
       if (repo != null) {
         final localCount = await repo.countForCategory(cat, lang);
-        if (localCount >= _categoryCacheThreshold) continue;
+        if (localCount >= widget.config.categoryCacheThreshold) continue;
       }
 
       try {
@@ -460,9 +464,9 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         done: i + 1,
         total: categories.length,
         loaded: accumulator.length,
-        target: _seedTarget,
+        target: widget.config.seedTarget,
       );
-      if (accumulator.length >= _seedTarget) break;
+      if (accumulator.length >= widget.config.seedTarget) break;
     }
     // Перемешиваем итоговую выборку, чтобы лента не выглядела
     // «50 куриных, потом 50 говяжьих» — категории заходят
