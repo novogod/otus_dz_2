@@ -61,6 +61,21 @@ void requestFeedReload() {
   reloadFeedTicker.value = reloadFeedTicker.value + 1;
 }
 
+/// Глобальный «обновить всё» (todo/13) — ленту, избранное, страницу
+/// источника. По умолчанию никем не используется: обычная кнопка
+/// reload по-прежнему дёргает только ленту через
+/// [requestFeedReload]. Подписаться можно через `[ValueListenableBuilder]`
+/// или `addListener`/`removeListener` в `initState`/`dispose`.
+final ValueNotifier<int> appReloadTicker = ValueNotifier<int>(0);
+
+/// Поднимает [appReloadTicker]; листы, подписанные на него, должны
+/// перезапросить свои данные. Феед тоже инвалидируется через
+/// [requestFeedReload], чтобы единая кнопка двигала всё сразу.
+void requestAppReload() {
+  appReloadTicker.value = appReloadTicker.value + 1;
+  requestFeedReload();
+}
+
 /// Переключает текущий язык на следующий из [AppLang].
 void cycleAppLang() {
   final next =

@@ -12,7 +12,12 @@ import 'app_theme.dart';
 /// категории через mahallem-API (см. docs/categories.md и
 /// docs/translation-buffer.md).
 class ReloadIconButton extends StatefulWidget {
-  const ReloadIconButton({super.key});
+  /// When true, tap fires [requestAppReload] which fans out to feed,
+  /// favorites and the source page. Defaults to false (feed-only),
+  /// keeping the existing AppBar button untouched. See todo/13.
+  final bool global;
+
+  const ReloadIconButton({super.key, this.global = false});
 
   @override
   State<ReloadIconButton> createState() => _ReloadIconButtonState();
@@ -66,7 +71,7 @@ class _ReloadIconButtonState extends State<ReloadIconButton>
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
-              onTap: requestFeedReload,
+              onTap: widget.global ? requestAppReload : requestFeedReload,
               child: SizedBox(
                 width: 40,
                 height: 40,
