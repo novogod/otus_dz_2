@@ -168,6 +168,17 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     );
   }
 
+  /// Публикует частичный результат прямо в `_lastResult`, чтобы
+  /// `FutureBuilder` (через `live = _lastResult ?? snapshot.data`)
+  /// мгновенно перерисовал ленту с новой выборкой, не дожидаясь
+  /// завершения всего `_runLoad`. См. todo/06.
+  void _publishPartialFeed(List<Recipe> partial, RecipeRepository? repo) {
+    if (!mounted || partial.isEmpty) return;
+    setState(() {
+      _lastResult = _LoadResult(recipes: partial, repository: repo);
+    });
+  }
+
   /// На смене языка НЕ перезапускаем seed (это бы переcлучайно
   /// перетасовало карточки и подменило ленту). Берём текущий
   /// `_lastResult` и переводим каждый рецепт по id через
@@ -398,7 +409,11 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       }
       // Холодный язык (или жывый reseed по кнопке «обновить») —
       // заводим ленту через категории.
-      final recipes = await _seedFromCategories(repo, lang);
+      final recipes = await _seedFromCategories(
+        repo,
+        lang,
+        onPartial: (partial) => _publishPartialFeed(partial, repo),
+      );
       return _LoadResult(recipes: recipes, repository: repo);
     }
 
@@ -438,10 +453,17 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
 
   Future<List<Recipe>> _seedFromCategories(
     RecipeRepository? repo,
-    AppLang lang,
-  ) async {
+    AppLang lang, {
+    void Function(List<Recipe> partial)? onPartial,
+  }) async {
     final categories = _pickCategories();
     final accumulator = <int, Recipe>{};
+
+    void publish() {
+      if (onPartial == null || accumulator.isEmpty) return;
+      final snapshot = accumulator.values.toList(growable: false);
+      onPartial(snapshot);
+    }
 
     // 1) Первый проход — всё из локальной БД. UI оживает
     //    без сети, если кэш хотя бы частично покрывает выбранные категории.
@@ -452,6 +474,9 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
           accumulator[r.id] = r;
         }
       }
+      // Ранний показ кэша: пользователь видит карточки до первой
+      // сетевой выдачи (см. todo/06 и docs/categories.md §9.1d).
+      publish();
     }
 
     // 2) Второй проход — добираем недобранные категории из сети.
@@ -474,8 +499,11 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
 
       try {
         final batch = await widget.api.filterByCategory(cat);
+        var added = false;
         for (final r in batch) {
+          if (accumulator.containsKey(r.id)) continue;
           accumulator[r.id] = r;
+          added = true;
         }
         if (repo != null && batch.isNotEmpty) {
           try {
@@ -484,6 +512,10 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             // кэш не критичен
           }
         }
+        // Стримим частичный результат после каждой непустой
+        // категории — лента «оживает» с первой же ответившей
+        // категорией, не дожидаясь полного цикла.
+        if (added) publish();
       } on Object {
         // одна категория не приехала — пробуем следующую
       }

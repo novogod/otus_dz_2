@@ -57,21 +57,23 @@ void main() {
       expect(picked, hasLength(10));
     });
 
-    test('two consecutive picks are mostly disjoint', () {
+    test('two consecutive small picks are disjoint', () {
+      // 14 categories, picks of 4: after first pick, 10 remain; the
+      // second draw can avoid all four entirely.
       final first = RecipeListLoader.pickCategoriesFor(
-        count: 10,
+        count: 4,
         pool: pool,
         exclude: const [],
       );
       final second = RecipeListLoader.pickCategoriesFor(
-        count: 10,
+        count: 4,
         pool: pool,
         exclude: first,
       );
-      // 14 categories, after excluding first 10 only 4 remain, so
-      // fallback fills up to 10 — but the four "fresh" must appear.
-      final fresh = pool.toSet().difference(first.toSet());
-      expect(second.toSet().containsAll(fresh), isTrue);
+      expect(
+        first.toSet().intersection(second.toSet()),
+        isEmpty,
+      );
     });
   });
 }
