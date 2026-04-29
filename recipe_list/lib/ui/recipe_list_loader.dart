@@ -42,6 +42,24 @@ class RecipeListLoader extends StatefulWidget {
   }) : api = api ?? RecipeApi(),
        config = config ?? FeedConfig.fromDartDefine();
 
+  /// Чистая функция для unit-тестов: вернуть `count` случайных
+  /// категорий из `pool`, по возможности избегая совпадений с
+  /// `exclude`. Если оставшийся пул короче `count`, перетасовываем
+  /// весь `pool` целиком (см. todo/05).
+  @visibleForTesting
+  static List<String> pickCategoriesFor({
+    required int count,
+    required List<String> pool,
+    required List<String> exclude,
+  }) {
+    final remaining = pool.where((c) => !exclude.contains(c)).toList()
+      ..shuffle();
+    final base = remaining.length >= count
+        ? remaining
+        : ([...pool]..shuffle());
+    return base.take(count).toList(growable: false);
+  }
+
   @override
   State<RecipeListLoader> createState() => _RecipeListLoaderState();
 }
@@ -330,12 +348,24 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     'Vegetarian',
   ];
 
+  /// Категории, выбранные предыдущим вызовом `_pickCategories`.
+  /// Используются, чтобы две подряд перезагрузки не показывали
+  /// одну и ту же случайную выборку (см. todo/05 и
+  /// docs/categories.md §9.5).
+  List<String> _lastPickedCategories = const [];
+
   /// Берём `widget.config.seedPickCount` случайных категорий из
-  /// [_allCategories], сохраняя порядок рандома вызова. Разные
-  /// открытия экрана дают разные ленты.
+  /// [_allCategories], исключая последний набор. Если в пуле
+  /// осталось меньше требуемого — fallback на полный shuffle, чтобы
+  /// не зависнуть.
   List<String> _pickCategories() {
-    final pool = [..._allCategories]..shuffle();
-    return pool.take(widget.config.seedPickCount).toList(growable: false);
+    final picked = RecipeListLoader.pickCategoriesFor(
+      count: widget.config.seedPickCount,
+      pool: _allCategories,
+      exclude: _lastPickedCategories,
+    );
+    _lastPickedCategories = picked;
+    return picked;
   }
 
   Future<_LoadResult> _runLoad({bool forceReseed = false}) async {
