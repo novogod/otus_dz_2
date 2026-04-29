@@ -11,6 +11,32 @@ Failure definition: any deviation from the main task in exact formula as
 written in the prompt (no changes, no additions or extractions, no
 assumptions, exactly as written).
 
+### Quality contract (added 2026-04-28)
+
+The app must show **smooth, fully translated content for every language
+on every page**. The persisted DB on every layer must contain only
+**correct** translations. The exact rules:
+
+1. The 4-tier sequence in [translation-pipeline.md](../translation-pipeline.md)
+   is binding.
+2. Every translation produced by an engine MUST pass mahallem's scoring
+   system (`evaluateCandidate`: `isGarbageTranslation`,
+   `isWrongScriptTranslation`, `isLowQualityTranslation`) before being
+   written to `translation_cache` OR `recipes.i18n[lang]`.
+3. Long-instruction blobs MUST additionally pass an echo-ratio check —
+   sentence-level overlap with the English source above a threshold
+   means the row is treated as a failure and is **not** persisted.
+4. Paid translation APIs (Gemini) are invoked **only** when:
+   a) the DB has no entry for the (text, src, tgt) triple, OR
+   b) the existing entry's score is low / detected as wrong (echo,
+      script mismatch, latin residue ≥ threshold), OR
+   c) the existing `recipes.i18n[lang]` row is detected as poisoned
+      (re-evaluated on read; if it fails the gate it is purged and
+      re-translated).
+5. The loading page stays up — with progress reflecting `done/total` —
+   until every recipe on the seeded list is fully translated for the
+   current `appLang`. No partial flicker.
+
 Workflow loop until done:
 1. Pick the next locale not yet fully matching the language button.
 2. Identify the offending visible word's source.
@@ -172,3 +198,40 @@ is contained to:
 - `recipe_list/lib/ui/{recipe_list_page,recipe_list_loader,recipe_details_page,app_bottom_nav_bar,search_app_bar,lang_icon_button,app_page_bar,source_page}.dart`
 - `recipe_list/tool/translate_strings.dart`
 - `recipe_list/test/i18n_completeness_test.dart`
+
+## C11 — scoring-gated persistence + poison purge (2026-04-28) 🔴
+
+Verified poisoning on `2026-04-28` against
+`https://mahallem.ist/recipes/lookup/52772?lang=es`: title/category/area
+correctly Spanish, but `strInstructions` returned the English source
+verbatim because `_isEchoTranslation` only flags byte-equal blobs while
+the partial-Spanish output differs by whitespace. The English-leaked
+row was persisted into `recipes.i18n.es.strInstructions` and now
+short-circuits all subsequent reads.
+
+Tasks (binding, in order):
+
+- [ ] **Server (mahallem):** tighten `_isEchoTranslation` to use
+  sentence-overlap ratio (≥ ~30 % of source sentences identical, OR
+  latin-residue ratio ≥ 15 % in non-Latin targets, OR Jaccard with
+  source above threshold for Latin targets). On gate failure: serve
+  to caller, do NOT `UPDATE recipes SET i18n`.
+- [ ] **Server:** in `translateLongField`, do not cache joined output
+  via `cacheTranslation` when echo-ratio ≥ 0.3 even for Latin targets;
+  current behaviour caches partial-English under non-`isStillLatinResidue`
+  branch.
+- [ ] **Server:** add re-evaluation on read — when `_ensureLang` finds
+  an existing `row.i18n[lang]`, run the same gate; if it fails, drop
+  the key from `i18n` and fall through to the translate path.
+- [ ] **Server:** purge already-poisoned `recipes.i18n.{es,fr,de,it,tr,
+  ar,fa,ku,ru}` rows where `instructions` echoes English.
+- [ ] **Server deploy:** Go-Clean prod path per
+  `mahallem_ist/AI_instructions_and_guidelines/GO_CLEAN_PHILOSOPHY.md`.
+- [ ] **Client:** in `_retranslate`, when a returned recipe still
+  contains visible English residue for a non-en target, treat it as a
+  miss and retry once (bounded). Loading page stays up; counter
+  advances per resolved recipe; only flips to list page when **all**
+  recipes pass the residue check or the bounded retry budget is spent.
+- [ ] **Verify:** iOS + Android cold launch on every locale; capture
+  one screenshot per language; assert zero English residue on the
+  visible card content. Append findings to `docs/project_log.md`.

@@ -13,6 +13,17 @@
 >
 > During the entire process the loading page shows progress until every
 > recipe is translated; only then does it route to the list page.
+>
+> **Quality gate (added 2026-04-28).** A translation is only stored
+> "forever" if it passes mahallem's scoring system:
+> `evaluateCandidate` (round-trip / Jaccard / script + length sanity)
+> and the predicates `isGarbageTranslation`, `isWrongScriptTranslation`,
+> `isLowQualityTranslation`, plus a per-field echo-ratio check on long
+> instructions blobs. **Paid translation APIs (Gemini) are invoked
+> only when the DB has no entry, the stored entry's score is low, or
+> the entry is detected as wrong.** A row that fails the gate is
+> served once but **NOT** persisted to either `translation_cache` or
+> `recipes.i18n`, so the next request re-runs the engine pipeline.
 
 This document is the canonical contract for both client and server. The
 server-side internals are documented separately in
@@ -189,3 +200,11 @@ _translating = false)` runs does the page swap to `RecipeListPage`.
   immutable (`DO NOTHING`), MyMemory and public LT removed.
 - **2026-04-28 (b).** This document authored: end-to-end client+server
   contract is now canonical and mirrors the implementation 1:1.
+- **2026-04-28 (c).** Scoring gate made authoritative: persistence to
+  both `translation_cache` AND `recipes.i18n[lang]` is conditional on
+  passing `evaluateCandidate` + echo-ratio. Long-instruction fields
+  with mostly-English residue are no longer written to `recipes.i18n`,
+  preventing cache-poisoning. Paid APIs (Gemini) are invoked **only**
+  when the DB has no entry, score is low, or content is detected as
+  wrong (script mismatch, latin residue ≥ threshold, byte/sentence
+  echo of source).

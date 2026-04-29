@@ -181,7 +181,82 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         target: total,
       );
     }
+
+    // Bounded retry: per docs/todo/i18n_slang_gemini.md "Quality contract"
+    // and docs/translation-pipeline.md "Quality gate" — if a recipe still
+    // looks untranslated for the requested language (e.g. server's
+    // self-purge dropped a poisoned i18n[lang] row but the first read
+    // came back during/before the re-translate, OR a transient Gemini
+    // failure left strInstructions echoing English), re-fetch each
+    // offender up to [_residueRetryRounds] times. Keep _translating=true
+    // throughout so the loader stays up.
+    for (var round = 0; round < _residueRetryRounds; round++) {
+      final stale = <int>[
+        for (var i = 0; i < translated.length; i++)
+          if (_looksUntranslated(translated[i], lang)) i,
+      ];
+      if (stale.isEmpty) break;
+      // ignore: avoid_print
+      print(
+        '[lang] residue retry round=${round + 1} '
+        'stale=${stale.length}/${translated.length} lang=${lang.name}',
+      );
+      for (var s = 0; s < stale.length; s += _translateConcurrency) {
+        final batch = stale.sublist(
+          s,
+          (s + _translateConcurrency).clamp(0, stale.length),
+        );
+        await Future.wait(
+          batch.map((idx) async {
+            final original = prev.recipes[idx];
+            try {
+              final got = repo != null
+                  ? await repo.lookup(original.id, lang)
+                  : await widget.api.lookup(original.id, lang: lang);
+              if (got != null && !_looksUntranslated(got, lang)) {
+                translated[idx] = got;
+              }
+            } on Object {
+              // оставляем как есть
+            }
+          }),
+        );
+      }
+    }
     return _LoadResult(recipes: translated, repository: repo);
+  }
+
+  /// How many rounds of "residue retry" to attempt after the initial
+  /// parallel fetch. Each round only re-queries recipes that still
+  /// look untranslated for the active language. 3 rounds × 8 wide =
+  /// 24 sequential server calls in the worst case per stuck recipe;
+  /// in practice all rounds clear after #1 because the server
+  /// self-purges poisoned `i18n[lang]` on read.
+  static const int _residueRetryRounds = 3;
+
+  /// Heuristic: does this recipe still look like it has not been
+  /// translated to [lang]? Mirrors the server-side gate in
+  /// `local_user_portal/routes/recipes.js _isEchoTranslation` so the
+  /// client and server stay in sync. Returns false for English target.
+  bool _looksUntranslated(Recipe r, AppLang lang) {
+    if (lang == AppLang.en) return false;
+    final inst = r.instructions ?? '';
+    if (inst.isEmpty) return false;
+    const nonLatin = {AppLang.ru, AppLang.ar, AppLang.fa, AppLang.ku};
+    if (nonLatin.contains(lang)) {
+      // Non-Latin target: count Latin letters; >= 15 % is residue.
+      final latin = RegExp(r'[A-Za-z]').allMatches(inst).length;
+      final nonAscii = RegExp(r'[^\u0000-\u007F]').allMatches(inst).length;
+      final total = latin + nonAscii;
+      if (total == 0) return true;
+      return (latin / total) >= 0.15;
+    }
+    // Latin target: detect "almost-pure ASCII English". Ratio of
+    // non-ASCII letters near zero AND length over a threshold means
+    // the server gave us back the English source (echo).
+    if (inst.length < 80) return false;
+    final nonAscii = RegExp(r'[^\u0000-\u007F]').allMatches(inst).length;
+    return nonAscii < 3;
   }
 
   /// Сколько `lookup`-запросов держать в полёте параллельно при
