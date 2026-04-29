@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:path/path.dart' as p;
 
 import '../../i18n.dart';
 import '../../models/recipe.dart';
@@ -116,23 +120,9 @@ class RecipeApi {
     if (_client.backend != RecipeBackend.mahallem) {
       throw StateError('createRecipe requires the mahallem backend');
     }
-    final meal = <String, dynamic>{
-      'strMeal': draft.name,
-      'strMealThumb': draft.photo,
-      if (draft.category != null) 'strCategory': draft.category,
-      if (draft.area != null) 'strArea': draft.area,
-      if (draft.tags.isNotEmpty) 'strTags': draft.tags.join(','),
-      if (draft.instructions != null) 'strInstructions': draft.instructions,
-      if (draft.youtubeUrl != null) 'strYoutube': draft.youtubeUrl,
-      if (draft.sourceUrl != null) 'strSource': draft.sourceUrl,
-      for (var i = 0; i < draft.ingredients.length && i < 20; i++) ...{
-        'strIngredient${i + 1}': draft.ingredients[i].name,
-        'strMeasure${i + 1}': draft.ingredients[i].measure,
-      },
-    };
     final res = await _client.dio.post<Map<String, dynamic>>(
       '',
-      data: {'meal': meal},
+      data: {'meal': _mealToJson(draft)},
     );
     final data = res.data;
     final stored = data?['meal'];
@@ -141,6 +131,55 @@ class RecipeApi {
     }
     return Recipe.fromMealDb(stored);
   }
+
+  /// mahallem-only: создать рецепт + загрузить фото единым multipart
+  /// запросом. Используется когда пользователь выбрал файл через
+  /// `image_picker` (см. `add_recipe_page.dart`). Сервер вставляет
+  /// рецепт с placeholder-thumb, заливает фото в bucket
+  /// `recipe-photos`, патчит `i18n.en.strMealThumb` и возвращает
+  /// рецепт с публичным URL картинки.
+  ///
+  /// Бросает [StateError] если backend != mahallem.
+  Future<Recipe> createRecipeWithPhoto(Recipe draft, File photo) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      throw StateError('createRecipeWithPhoto requires the mahallem backend');
+    }
+    final form = FormData.fromMap({
+      'meal': jsonEncode(_mealToJson(draft)),
+      'photo': await MultipartFile.fromFile(
+        photo.path,
+        filename: p.basename(photo.path),
+      ),
+    });
+    final res = await _client.dio.post<Map<String, dynamic>>(
+      '',
+      data: form,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+    final data = res.data;
+    final stored = data?['meal'];
+    if (stored is! Map<String, dynamic>) {
+      throw StateError('createRecipeWithPhoto: malformed response');
+    }
+    return Recipe.fromMealDb(stored);
+  }
+
+  /// Сериализация черновика в TheMealDB-shape JSON, общая для
+  /// JSON- и multipart-вариантов `POST /recipes`.
+  Map<String, dynamic> _mealToJson(Recipe draft) => <String, dynamic>{
+    'strMeal': draft.name,
+    'strMealThumb': draft.photo,
+    if (draft.category != null) 'strCategory': draft.category,
+    if (draft.area != null) 'strArea': draft.area,
+    if (draft.tags.isNotEmpty) 'strTags': draft.tags.join(','),
+    if (draft.instructions != null) 'strInstructions': draft.instructions,
+    if (draft.youtubeUrl != null) 'strYoutube': draft.youtubeUrl,
+    if (draft.sourceUrl != null) 'strSource': draft.sourceUrl,
+    for (var i = 0; i < draft.ingredients.length && i < 20; i++) ...{
+      'strIngredient${i + 1}': draft.ingredients[i].name,
+      'strMeasure${i + 1}': draft.ingredients[i].measure,
+    },
+  };
 
   Future<List<Recipe>> _filter(String key, String value) async {
     final mahallem = _client.backend == RecipeBackend.mahallem;

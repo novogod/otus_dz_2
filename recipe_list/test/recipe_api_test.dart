@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:recipe_list/data/api/meal_db_client.dart';
 import 'package:recipe_list/data/api/recipe_api.dart';
 import 'package:recipe_list/data/api/recipe_api_config.dart';
 import 'package:recipe_list/i18n.dart';
+import 'package:recipe_list/models/recipe.dart';
 
 /// Подменяет HTTP-транспорт Dio: возвращает заранее заданные ответы по
 /// пути запроса. Достаточно для юнит-тестов парсинга `RecipeApi`.
@@ -154,5 +157,75 @@ void main() {
       expect(adapter.calls.single.path, '/search.php');
       expect(adapter.calls.single.queryParameters, {'s': 'a'});
     });
+
+    test(
+      'createRecipeWithPhoto sends multipart with meal JSON + photo file',
+      () async {
+        final adapter = _StubAdapter({
+          '': {
+            'id': 1000123,
+            'meal': {
+              'idMeal': '1000123',
+              'strMeal': 'Babushka Pirog',
+              'strMealThumb':
+                  '/storage/v1/object/public/recipe-photos/recipes/1000123/abcdef.jpg',
+            },
+          },
+        });
+        final api = makeApi(
+          const {},
+          backend: RecipeBackend.mahallem,
+          capture: adapter,
+        );
+
+        final tmp = await Directory.systemTemp.createTemp('recipe_api_test_');
+        final photo = File(p.join(tmp.path, 'pic.jpg'))
+          ..writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10]);
+        try {
+          final out = await api.createRecipeWithPhoto(
+            const Recipe(
+              id: 0,
+              name: 'Babushka Pirog',
+              photo: 'pending://upload',
+              instructions: 'Bake.',
+              category: 'Dessert',
+              area: 'Russian',
+              tags: [],
+              ingredients: [],
+            ),
+            photo,
+          );
+          expect(out.id, 1000123);
+          expect(
+            out.photo,
+            startsWith('/storage/v1/object/public/recipe-photos/'),
+          );
+
+          final call = adapter.calls.single;
+          expect(call.path, '');
+          expect(call.method, 'POST');
+          expect(
+            (call.contentType ?? '').toLowerCase(),
+            startsWith('multipart/form-data'),
+          );
+          expect(call.data, isA<FormData>());
+          final form = call.data as FormData;
+          final fieldNames = form.fields.map((e) => e.key).toSet();
+          expect(fieldNames, contains('meal'));
+          final mealField = form.fields
+              .firstWhere((e) => e.key == 'meal')
+              .value;
+          final decoded = jsonDecode(mealField) as Map<String, dynamic>;
+          expect(decoded['strMeal'], 'Babushka Pirog');
+          expect(decoded['strCategory'], 'Dessert');
+          expect(decoded['strArea'], 'Russian');
+          expect(decoded['strMealThumb'], 'pending://upload');
+          final photoNames = form.files.map((e) => e.key).toSet();
+          expect(photoNames, contains('photo'));
+        } finally {
+          await tmp.delete(recursive: true);
+        }
+      },
+    );
   });
 }
