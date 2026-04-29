@@ -1,5 +1,88 @@
 # Project Log
 
+## translation pipeline — gemini-2.5-flash-lite, cache purge, details lang switch
+
+**Date:** 2026-04-29
+
+### Контекст
+
+После канонизации 6-tier каскада (cache → glossary → MyMemory →
+public LibreTranslate → self-hosted LibreTranslate → Gemini) Gemini
+постоянно отдавал HTTP 429 на `gemini-2.5-flash` (RPM-капнут даже на
+платном плане). Параллельно поломалась смена языка на экране деталей —
+кнопка «не работала», а кэш `translation_cache` оказался отравлен
+сотнями echo-строк (English-for-French/Spanish/German/Italian/Turkish),
+которые держали страницу на исходном языке.
+
+### Что сделано
+
+#### Сервер (`mahallem_ist@0b32a998`)
+
+- `local_user_portal/utils/gemini-client.js` line 204: `TRANSLATE_URL`
+  переключён с `gemini-2.5-flash` на `gemini-2.5-flash-lite`.
+  Flash-lite имеет существенно более высокий RPD-потолок (на платном
+  ключе фактически unlimited) и в smoke-тесте на длинных рецептных
+  блоках выдаёт чистый персидский/арабский/курдский.
+- `docs/translation-pipeline.md`: модель в таблице engine assignment
+  обновлена.
+- Образ user-portal **пересобран** через `docker compose up -d --build
+  user-portal`. Без `--build` контейнер запускался от старого образа,
+  потому что исходники запекаются в image (а не bind-mount). Прежние
+  деплои с `--force-recreate` не подхватывали изменения.
+
+#### Чистка отравленного `translation_cache`
+
+```sql
+DELETE FROM translation_cache
+WHERE length(source_text) > 60
+  AND length(translated_text) > 60
+  AND left(translated_text, 40) = left(source_text, 40)
+  AND target_lang IN ('fr','es','de','it','tr','ru','ar','fa','ku');
+-- DELETE 235  (193 fr, 13 es, 12 de, 9 tr, 8 it)
+```
+
+После чистки рецепты заново прошли через flash-lite-каскад и
+страница `/recipes/lookup/52772?lang=fr` стала отдавать французский
+текст вместо английского эха.
+
+#### Клиент (`otus_dz@12baa67`)
+
+- `recipe_list/lib/data/translation_quality.dart` (новый): вынесена
+  shared-эвристика `recipeLooksUntranslated`, ровно ту же используют
+  и лоадер, и экран деталей — клиент и сервер видят одинаковый
+  «echo»-критерий.
+- `recipe_list/lib/ui/recipe_details_page.dart`:
+  - При смене `appLang` поверх контента поднимается полупрозрачный
+    `CircularProgressIndicator` overlay — пользователь видит, что
+    переключение реально идёт, и не наблюдает «застывший» текст
+    старого языка пока сервер фолбэчит между движками.
+  - Bounded retry (3 раунда) на `RecipeApi.lookup`, если ответ всё
+    ещё проходит `recipeLooksUntranslated`. Совпадает с
+    `_residueRetryRounds = 3` в `RecipeListLoader`.
+  - Монотонный `_translateSeq` отбрасывает поздние ответы старого
+    языка — двойной/быстрый клик по флагу больше не «возвращает»
+    предыдущий перевод.
+- `recipe_list/lib/ui/recipe_list_loader.dart`: убран приватный
+  `_looksUntranslated`, теперь делегирует в shared-helper.
+
+### Эмпирическая проверка
+
+| Шаг | Результат |
+| --- | --- |
+| `curl /recipes/lookup/52772?lang=fa` | `فر را روی دمای ۱۷۵ درجه سانتیگراد گرم کنید…` |
+| `curl /recipes/lookup/52772?lang=ar` | `سخن کردن فر تا دمای ۳۵۰ درجه فارنهایت…` |
+| `curl /recipes/lookup/52772?lang=ku` | `سەردانەکە گەرم بکە بۆ ٣٥٠° فهرنهایت…` |
+| `curl /recipes/lookup/52772?lang=fr` (после purge) | `préchauffer le four à 350° f…` |
+| 22 параллельных flash-lite-вызова | 0 × HTTP 429, все 200 OK |
+| Тап по флагу на details | overlay → текст в новом языке за ≤2 раунда |
+
+### Предупреждение для будущих деплоев
+
+`docker compose up -d --force-recreate user-portal` **не достаточен**:
+исходники запечены в `local_docker_admin_backend-user-portal:latest`,
+mount-ятся только `backups/` и `avatars/`. Любое изменение JS-кода
+требует `docker compose up -d --build user-portal`.
+
 ## translation pipeline — strict sequential 4-tier contract + docs
 
 **Date:** 2026-04-28
