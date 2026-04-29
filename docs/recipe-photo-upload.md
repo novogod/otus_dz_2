@@ -346,12 +346,19 @@ JPEG на 6–10 МБ. Один путь `downscaleForUpload(XFile) -> File`
 
 ### 2.5. i18n / a11y
 
-Добавятся 2 новых ключа в каждой из 10 локалей (en, ru, es, fr,
+Добавятся новые ключи в каждой из 10 локалей (en, ru, es, fr,
 de, it, tr, ar, fa, ku):
 
-- `addRecipePhotoFromGallery` — кнопка «Выбрать из галереи».
-- `addRecipePhotoFromCamera` — кнопка «Сделать снимок».
-- `a11y.addRecipePhotoPicker` — для `Semantics(button: true, …)`.
+- `addRecipePhotoFromGallery` — кнопка  «Выбрать из галереи».
+- `addRecipePhotoFromCamera` — кнопка  «Сделать снимок».
+- `addRecipePhotoRequired` —  «Прикрепите фотографию» (валидация).
+- `addRecipePhotoRemove` — tooltip крестика и пункт в bottom-sheet.
+- `addRecipePhotoSourceTitle` — заголовок bottom-sheet  «Откуда
+  взять фото?».
+- `addRecipePhotoErrorAccessDenied` и `addRecipePhotoErrorTooLarge`
+  — SnackBar-ы при PlatformException и при провале downscaler-а.
+- `a11y.addRecipePhotoPicker` — для `Semantics(button: true, …)`
+  на превью.
 
 Старый ключ `addRecipePhoto` (URL) остаётся как fallback-режим
 для случая когда `image_picker` недоступен (web-сборка).
@@ -450,7 +457,7 @@ storage-api есть `STORAGE_BACKEND=s3` режим, его можно буде
 | Client | `recipe_list/lib/utils/photo_downscaler.dart` | `downscaleForUpload(XFile)` — 1600×1600, q80, EXIF strip |
 | Client | `recipe_list/lib/data/api/recipe_api.dart` | новый метод `createRecipeWithPhoto(Recipe, File)` (multipart) |
 | Client | `recipe_list/lib/ui/add_recipe_page.dart` | ImagePicker-кнопки + предпросмотр + multipart-вызов |
-| Client i18n | `recipe_list/lib/i18n/*.i18n.json` (10 шт.) | `addRecipePhotoFromGallery`, `addRecipePhotoFromCamera`, `a11y.addRecipePhotoPicker` |
+| Client i18n | `recipe_list/lib/i18n/*.i18n.json` (10 шт.) | `addRecipePhotoFromGallery`, `addRecipePhotoFromCamera`, `addRecipePhotoRequired`, `addRecipePhotoRemove`, `addRecipePhotoSourceTitle`, `addRecipePhotoErrorAccessDenied`, `addRecipePhotoErrorTooLarge`, `a11y.addRecipePhotoPicker` |
 | Docs | `otus_dz/docs/recipe-photo-upload.md` | этот файл |
 | Docs | `otus_dz/docs/add-recipe-feature.md` (§9) | сослаться на этот документ — фича больше не «вне рамок» |
 
