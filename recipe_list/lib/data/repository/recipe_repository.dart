@@ -185,6 +185,25 @@ class RecipeRepository {
   Future<void> upsertAll(List<Recipe> recipes, AppLang lang) =>
       _upsertAll(recipes, lang);
 
+  /// Lazy-loads the heavy HTML instructions blob from `recipe_bodies`
+  /// (todo/12). Returns `null` when the row was evicted by the LRU or
+  /// the recipe was inserted lite (no instructions). Touches
+  /// `last_used_at` on the parent row so reading the body keeps the
+  /// recipe alive.
+  Future<String?> getInstructions(int id, AppLang lang) async {
+    final rows = await _db.query(
+      'recipe_bodies',
+      columns: ['instructions'],
+      where: 'id = ? AND lang = ?',
+      whereArgs: [id, lang.name],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    await _touch([id], lang);
+    final v = rows.first['instructions'];
+    return v is String ? v : null;
+  }
+
   Future<int> count() async {
     final rows = await _db.rawQuery('SELECT COUNT(*) AS c FROM recipes;');
     return (rows.first['c'] as int?) ?? 0;
@@ -265,6 +284,18 @@ class RecipeRepository {
         writeRecipe(r, lang: lang.name, lastUsedAt: ts),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+      // todo/12: persist heavy `instructions` blob in a sibling
+      // table so list-row reads stay light. We only insert when
+      // the recipe actually carries instructions; otherwise keep
+      // any existing body untouched (e.g. lite list-row payload
+      // shouldn't wipe the cached body).
+      if (r.instructions != null && r.instructions!.isNotEmpty) {
+        batch.insert(
+          'recipe_bodies',
+          writeRecipeBody(r, lang: lang.name),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
     }
     await batch.commit(noResult: true);
     await _evictIfOverCap(activeLang: lang);

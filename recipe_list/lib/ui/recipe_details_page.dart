@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/api/recipe_api.dart';
+import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_bottom_nav_bar.dart';
@@ -21,8 +22,14 @@ import 'source_page.dart';
 class RecipeDetailsPage extends StatefulWidget {
   final Recipe recipe;
   final RecipeApi? api;
+  final RecipeRepository? repository;
 
-  const RecipeDetailsPage({super.key, required this.recipe, this.api});
+  const RecipeDetailsPage({
+    super.key,
+    required this.recipe,
+    this.api,
+    this.repository,
+  });
 
   @override
   State<RecipeDetailsPage> createState() => _RecipeDetailsPageState();
@@ -204,6 +211,52 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                             height: 23 / 16,
                             color: AppColors.textPrimary,
                           ),
+                        ),
+                      ] else if (widget.repository != null) ...[
+                        // todo/12: when the recipe came from the cache,
+                        // its `instructions` field is null. Lazy-load
+                        // it from `recipe_bodies`. While loading, show
+                        // a slim shimmer block so the page height
+                        // stays stable.
+                        const SizedBox(height: AppSpacing.xl),
+                        Text(
+                          s.instructionsHeader,
+                          style: AppTextStyles.sectionTitle,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        FutureBuilder<String?>(
+                          future: widget.repository!.getInstructions(
+                            recipe.id,
+                            _renderedLang,
+                          ),
+                          builder: (ctx, snap) {
+                            if (snap.connectionState !=
+                                ConnectionState.done) {
+                              return Container(
+                                key: const ValueKey(
+                                    'instructions-shimmer'),
+                                height: 92,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceMuted,
+                                  borderRadius: AppRadii.cardAll,
+                                ),
+                              );
+                            }
+                            final body = snap.data;
+                            if (body == null || body.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return Text(
+                              body,
+                              style: const TextStyle(
+                                fontFamily: AppTextStyles.fontFamily,
+                                fontWeight: FontWeight.w400,
+                                fontSize: 16,
+                                height: 23 / 16,
+                                color: AppColors.textPrimary,
+                              ),
+                            );
+                          },
                         ),
                       ],
                       if (recipe.youtubeUrl != null ||

@@ -24,15 +24,15 @@ class _NopApi implements RecipeApi {
 }
 
 /// Build a recipe whose persisted byte_size will be ~`bytes`. The
-/// repository computes byte_size from the JSON length of the row, so
-/// padding the instructions field controls the size predictably.
+/// repository computes byte_size from name + photo + ingredients
+/// JSON (instructions live in the sibling table since todo/12), so
+/// padding the photo URL controls the size predictably.
 Recipe _bigRecipe(int id, {int bytes = 1024}) {
   final pad = 'x' * bytes;
   return Recipe(
     id: id,
     name: 'r$id',
-    photo: 'https://x/$id.jpg',
-    instructions: pad,
+    photo: 'https://x/$id/$pad.jpg',
   );
 }
 
