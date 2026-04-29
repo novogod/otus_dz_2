@@ -33,6 +33,7 @@
   "a11y": {
     "switchLanguageTo": "Переключить язык на ${label}",
     "flagOf": "Флаг ${label}",
-    "reloadFeed": "Обновить ленту"
+    "reloadFeed": "Обновить ленту",
+    "offlineReloadUnavailable": "Нет сети. Показываем прежние рецепты."
   }
 }

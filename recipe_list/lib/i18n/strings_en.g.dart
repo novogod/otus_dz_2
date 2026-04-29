@@ -141,6 +141,9 @@ class TranslationsA11yEn {
 
 	/// en: 'Reload feed'
 	String get reloadFeed => 'Reload feed';
+
+	/// en: 'You're offline. Showing previous recipes.'
+	String get offlineReloadUnavailable => 'You\'re offline. Showing previous recipes.';
 }
 
 /// The flat map containing all translations for locale <en>.
@@ -180,6 +183,7 @@ extension on Translations {
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Switch language to ${label}',
 			'a11y.flagOf' => ({required Object label}) => '${label} flag',
 			'a11y.reloadFeed' => 'Reload feed',
+			'a11y.offlineReloadUnavailable' => 'You\'re offline. Showing previous recipes.',
 			_ => null,
 		};
 	}

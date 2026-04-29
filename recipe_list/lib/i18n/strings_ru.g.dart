@@ -81,6 +81,7 @@ class _TranslationsA11yRu implements TranslationsA11yEn {
 	@override String switchLanguageTo({required Object label}) => 'Переключить язык на ${label}';
 	@override String flagOf({required Object label}) => 'Флаг ${label}';
 	@override String get reloadFeed => 'Обновить ленту';
+	@override String get offlineReloadUnavailable => 'Нет сети. Показываем прежние рецепты.';
 }
 
 /// The flat map containing all translations for locale <ru>.
@@ -120,6 +121,7 @@ extension on TranslationsRu {
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Переключить язык на ${label}',
 			'a11y.flagOf' => ({required Object label}) => 'Флаг ${label}',
 			'a11y.reloadFeed' => 'Обновить ленту',
+			'a11y.offlineReloadUnavailable' => 'Нет сети. Показываем прежние рецепты.',
 			_ => null,
 		};
 	}

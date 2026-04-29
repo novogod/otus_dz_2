@@ -90,6 +90,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   void _onReloadRequested() {
     if (!mounted) return;
     final seq = ++_translateSeq;
+    final previous = _lastResult;
     setState(() {
       _stage.value = const _LoadStage.initial();
       _translating = true;
@@ -106,10 +107,34 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             }
             // ignore: avoid_print
             print('[reload] _runLoad failed: $e');
+            // Keep previous feed on screen instead of crashing the page.
+            // Surface the offline state via a SnackBar.
+            if (previous != null) {
+              setState(() {
+                _translating = false;
+                _future = Future<_LoadResult>.value(previous);
+              });
+              _showOfflineReloadSnack();
+              return previous;
+            }
+            // No previous feed — let the FutureBuilder render its error
+            // state as before.
             setState(() => _translating = false);
             throw e;
           });
     });
+  }
+
+  void _showOfflineReloadSnack() {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(S.of(context).offlineReloadUnavailable),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   /// На смене языка НЕ перезапускаем seed (это бы переcлучайно

@@ -31,6 +31,7 @@
   "a11y": {
     "switchLanguageTo": "Dili ${label} olarak değiştir",
     "reloadFeed": "Listeyi yenile",
-    "flagOf": "${label} bayrağı"
+    "flagOf": "${label} bayrağı",
+    "offlineReloadUnavailable": "Çevrimdışısınız. Önceki tarifler gösteriliyor."
   }
 }

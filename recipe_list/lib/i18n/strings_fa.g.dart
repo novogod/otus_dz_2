@@ -79,6 +79,7 @@ class _TranslationsA11yFa implements TranslationsA11yEn {
 	@override String switchLanguageTo({required Object label}) => 'تغییر زبان به ${label}';
 	@override String get reloadFeed => 'بارگذاری مجدد فهرست';
 	@override String flagOf({required Object label}) => 'پرچم ${label}';
+	@override String get offlineReloadUnavailable => 'آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.';
 }
 
 /// The flat map containing all translations for locale <fa>.
@@ -118,6 +119,7 @@ extension on TranslationsFa {
 			'a11y.switchLanguageTo' => ({required Object label}) => 'تغییر زبان به ${label}',
 			'a11y.reloadFeed' => 'بارگذاری مجدد فهرست',
 			'a11y.flagOf' => ({required Object label}) => 'پرچم ${label}',
+			'a11y.offlineReloadUnavailable' => 'آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.',
 			_ => null,
 		};
 	}

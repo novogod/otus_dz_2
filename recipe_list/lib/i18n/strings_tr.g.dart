@@ -79,6 +79,7 @@ class _TranslationsA11yTr implements TranslationsA11yEn {
 	@override String switchLanguageTo({required Object label}) => 'Dili ${label} olarak değiştir';
 	@override String get reloadFeed => 'Listeyi yenile';
 	@override String flagOf({required Object label}) => '${label} bayrağı';
+	@override String get offlineReloadUnavailable => 'Çevrimdışısınız. Önceki tarifler gösteriliyor.';
 }
 
 /// The flat map containing all translations for locale <tr>.
@@ -118,6 +119,7 @@ extension on TranslationsTr {
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Dili ${label} olarak değiştir',
 			'a11y.reloadFeed' => 'Listeyi yenile',
 			'a11y.flagOf' => ({required Object label}) => '${label} bayrağı',
+			'a11y.offlineReloadUnavailable' => 'Çevrimdışısınız. Önceki tarifler gösteriliyor.',
 			_ => null,
 		};
 	}

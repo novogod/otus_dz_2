@@ -79,6 +79,7 @@ class _TranslationsA11yEs implements TranslationsA11yEn {
 	@override String switchLanguageTo({required Object label}) => 'Cambiar idioma a ${label}';
 	@override String get reloadFeed => 'Recargar lista';
 	@override String flagOf({required Object label}) => 'Bandera de ${label}';
+	@override String get offlineReloadUnavailable => 'Sin conexión. Mostrando recetas anteriores.';
 }
 
 /// The flat map containing all translations for locale <es>.
@@ -118,6 +119,7 @@ extension on TranslationsEs {
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Cambiar idioma a ${label}',
 			'a11y.reloadFeed' => 'Recargar lista',
 			'a11y.flagOf' => ({required Object label}) => 'Bandera de ${label}',
+			'a11y.offlineReloadUnavailable' => 'Sin conexión. Mostrando recetas anteriores.',
 			_ => null,
 		};
 	}

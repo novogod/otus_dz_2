@@ -31,6 +31,7 @@
   "a11y": {
     "switchLanguageTo": "گۆڕینی زمان بۆ ${label}",
     "reloadFeed": "نوێکردنەوەی لیست",
-    "flagOf": "ئاڵای ${label}"
+    "flagOf": "ئاڵای ${label}",
+    "offlineReloadUnavailable": "دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن."
   }
 }

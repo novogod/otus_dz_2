@@ -31,6 +31,7 @@
   "a11y": {
     "switchLanguageTo": "Switch language to ${label}",
     "flagOf": "${label} flag",
-    "reloadFeed": "Reload feed"
+    "reloadFeed": "Reload feed",
+    "offlineReloadUnavailable": "You're offline. Showing previous recipes."
   }
 }

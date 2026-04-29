@@ -31,6 +31,7 @@
   "a11y": {
     "switchLanguageTo": "Cambiar idioma a ${label}",
     "reloadFeed": "Recargar lista",
-    "flagOf": "Bandera de ${label}"
+    "flagOf": "Bandera de ${label}",
+    "offlineReloadUnavailable": "Sin conexión. Mostrando recetas anteriores."
   }
 }
