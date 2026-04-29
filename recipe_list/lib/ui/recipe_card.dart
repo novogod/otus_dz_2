@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../i18n.dart';
 import '../models/recipe.dart';
+import '../utils/imgproxy.dart';
 import 'app_theme.dart';
 
 /// Карточка рецепта TheMealDB.
@@ -98,7 +99,7 @@ class _Photo extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             Image.network(
-              _mediumUrl(recipe.photo),
+              _thumbUrl(recipe.photo),
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => Image.network(
                 recipe.photo,
@@ -135,8 +136,12 @@ class _Photo extends StatelessWidget {
   }
 
   /// TheMealDB поддерживает суффиксы `/preview`, `/small`, `/medium`,
-  /// `/large` для оптимизации трафика.
-  static String _mediumUrl(String url) {
+  /// `/large` для оптимизации трафика. Для recipe-photos из mahallem-стораджа
+  /// пропускаем URL через imgproxy: thumbnail 600×338 dp → ~80 КБ JPEG.
+  static String _thumbUrl(String url) {
+    if (url.startsWith('/storage/') || url.contains('/recipe-photos/')) {
+      return imgproxyUrl(url, 600, 338);
+    }
     if (url.endsWith('/medium') ||
         url.endsWith('/small') ||
         url.endsWith('/large') ||

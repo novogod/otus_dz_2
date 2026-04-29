@@ -5,6 +5,7 @@ import '../data/api/recipe_api.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
+import '../utils/imgproxy.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
@@ -135,7 +136,8 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                     child: AspectRatio(
                       aspectRatio: 396 / 220,
                       child: Image.network(
-                        recipe.photo,
+                        // Hero отдаём больше пикселей чем в карточке (1200x675).
+                        _detailsThumb(recipe.photo),
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => Container(
                           color: AppColors.surfaceMuted,
@@ -415,4 +417,14 @@ class _IngredientsBlock extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Hero-thumbnail для details page. Для recipe-photos в mahallem
+/// идём через imgproxy (1200×675 ≈ 250 КБ JPEG); для TheMealDB
+/// возвращаем оригинал — там и так уже 50–100 КБ.
+String _detailsThumb(String url) {
+  if (url.startsWith('/storage/') || url.contains('/recipe-photos/')) {
+    return imgproxyUrl(url, 1200, 675);
+  }
+  return url;
 }
