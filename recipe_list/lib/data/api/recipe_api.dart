@@ -46,6 +46,43 @@ class RecipeApi {
   Future<List<Recipe>> filterByIngredient(String ingredient) =>
       _filter('i', ingredient);
 
+  /// mahallem-only: одноразовый bulk-запрос за уже переведённой
+  /// страницей рецептов. Заменяет 14-кратный fan-out по категориям
+  /// на холодном старте. Если backend != mahallem или сервер вернул
+  /// что-то нестандартное — отдаём пустой список (вызывающий код
+  /// сам падает на legacy-путь). См. todo/07,08 и
+  /// docs/translation-buffer.md §5.2.
+  Future<RecipePage> fetchPage({
+    AppLang? lang,
+    int offset = 0,
+    int limit = 200,
+  }) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      return const RecipePage(recipes: [], nextOffset: null, total: 0);
+    }
+    final res = await _client.dio.get<Map<String, dynamic>>(
+      '/page',
+      queryParameters: {
+        'offset': offset.toString(),
+        'limit': limit.toString(),
+        ..._langParams(lang),
+      },
+    );
+    final data = res.data;
+    final list = (data?['recipes'] is List)
+        ? (data!['recipes'] as List)
+              .whereType<Map<String, dynamic>>()
+              .map(Recipe.fromMealDb)
+              .toList(growable: false)
+        : const <Recipe>[];
+    final next = data?['nextOffset'];
+    return RecipePage(
+      recipes: list,
+      nextOffset: next is int ? next : null,
+      total: data?['total'] is int ? data!['total'] as int : list.length,
+    );
+  }
+
   Future<Recipe?> lookup(int id, {AppLang? lang, Duration? timeout}) async {
     final mahallem = _client.backend == RecipeBackend.mahallem;
     final res = await _client.dio.get<Map<String, dynamic>>(
@@ -113,4 +150,17 @@ class RecipeApi {
         .map(Recipe.fromMealDb)
         .toList(growable: false);
   }
+}
+
+/// Результат `RecipeApi.fetchPage` — страница уже переведённых
+/// рецептов плюс курсор для следующей страницы. См. todo/08.
+class RecipePage {
+  final List<Recipe> recipes;
+  final int? nextOffset;
+  final int total;
+  const RecipePage({
+    required this.recipes,
+    required this.nextOffset,
+    required this.total,
+  });
 }

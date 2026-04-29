@@ -54,9 +54,7 @@ class RecipeListLoader extends StatefulWidget {
   }) {
     final remaining = pool.where((c) => !exclude.contains(c)).toList()
       ..shuffle();
-    final base = remaining.length >= count
-        ? remaining
-        : ([...pool]..shuffle());
+    final base = remaining.length >= count ? remaining : ([...pool]..shuffle());
     return base.take(count).toList(growable: false);
   }
 
@@ -409,6 +407,23 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       }
       // Холодный язык (или жывый reseed по кнопке «обновить») —
       // заводим ленту через категории.
+      // Cold-start fast path (todo/08): one bulk request to
+      // /recipes/page replaces 14× /filter fan-out. Reload still
+      // uses categories so the user sees a fresh random shuffle.
+      if (widget.config.useBulkPage && !forceReseed) {
+        try {
+          final page = await widget.api.fetchPage(
+            lang: lang,
+            limit: widget.config.seedTarget,
+          );
+          if (page.recipes.isNotEmpty) {
+            await _persist(repo, page.recipes, lang);
+            return _LoadResult(recipes: page.recipes, repository: repo);
+          }
+        } on Object {
+          // Bulk endpoint unavailable — fall through to legacy path.
+        }
+      }
       final recipes = await _seedFromCategories(
         repo,
         lang,

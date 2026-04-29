@@ -26,5 +26,12 @@ void main() {
       expect(c.categoryCacheThreshold, 10);
       expect(c.translateConcurrency, 8);
     });
+
+    test('useBulkPage defaults to false', () {
+      const c = FeedConfig();
+      expect(c.useBulkPage, isFalse);
+      final fromDefine = FeedConfig.fromDartDefine();
+      expect(fromDefine.useBulkPage, isFalse);
+    });
   });
 }

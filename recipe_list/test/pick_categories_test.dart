@@ -39,10 +39,7 @@ void main() {
       );
       expect(picked, hasLength(10));
       // 14 - 4 = 10 remaining, exact match → no overlap.
-      expect(
-        picked.toSet().intersection(exclude.toSet()),
-        isEmpty,
-      );
+      expect(picked.toSet().intersection(exclude.toSet()), isEmpty);
     });
 
     test('falls back to full shuffle when remaining pool too small', () {
@@ -70,10 +67,7 @@ void main() {
         pool: pool,
         exclude: first,
       );
-      expect(
-        first.toSet().intersection(second.toSet()),
-        isEmpty,
-      );
+      expect(first.toSet().intersection(second.toSet()), isEmpty);
     });
   });
 }
