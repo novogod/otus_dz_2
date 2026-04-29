@@ -18,7 +18,13 @@ const String kRecipeDbFileName = 'recipes.db';
 /// v3: add `byte_size` column so the cache can enforce a byte budget
 /// (≈5 MB) instead of a fixed row count, evicting the least-recently
 /// used heaviest cards first.
-const int kRecipeDbSchemaVersion = 3;
+/// v4: evict cached rows that may have been poisoned during the
+/// pre-`gemini-2.5-flash-lite` pipeline (notably Spanish content
+/// stuck under `lang='de'` because the cascade had previously
+/// echoed the wrong source language). Schema is unchanged; the
+/// upgrade just DROPs and recreates the table so the loader
+/// re-fetches every card via the corrected server.
+const int kRecipeDbSchemaVersion = 4;
 
 /// SQL-схема локального кэша рецептов.
 ///
