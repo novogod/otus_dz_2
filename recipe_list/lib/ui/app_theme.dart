@@ -337,5 +337,41 @@ class AppTheme {
     progressIndicatorTheme: const ProgressIndicatorThemeData(
       color: AppColors.primary,
     ),
+    // Поля формы (`AddRecipePage` и т.п.). Согласно
+    // `docs/design_system.md` §цвета: фон полей — белый
+    // (`surface #FFFFFF`), активные акценты — `primaryDark
+    // #165932` (бренд-зелёный достаточно тёмный, чтобы читался
+    // на белом). Светло-зелёный `primary #2ECC71` на сером
+    // `surfaceMuted #ECECEC` фоне scaffold-а имеет низкий
+    // контраст — поэтому inputDecorationTheme заставляет фон
+    // полей быть белым и подсвечивает фокус тёмно-зелёным.
+    inputDecorationTheme: const InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.surface,
+      labelStyle: TextStyle(color: AppColors.textSecondary),
+      floatingLabelStyle: TextStyle(
+        color: AppColors.primaryDark,
+        fontWeight: FontWeight.w500,
+      ),
+      helperStyle: TextStyle(
+        color: AppColors.textSecondary,
+        fontSize: 12,
+        height: 1.35,
+      ),
+      helperMaxLines: 3,
+      hintStyle: AppTextStyles.inputHint,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(AppRadii.input)),
+        borderSide: BorderSide(color: AppColors.textInactive),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(AppRadii.input)),
+        borderSide: BorderSide(color: AppColors.textInactive),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(AppRadii.input)),
+        borderSide: BorderSide(color: AppColors.primaryDark, width: 2),
+      ),
+    ),
   );
 }

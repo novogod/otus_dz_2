@@ -182,7 +182,10 @@ class _AddRecipePageState extends State<AddRecipePage> {
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _instructions,
-                decoration: InputDecoration(labelText: s.addRecipeInstructions),
+                decoration: InputDecoration(
+                  labelText: s.addRecipeInstructions,
+                  alignLabelWithHint: true,
+                ),
                 maxLines: 6,
                 minLines: 3,
               ),
@@ -191,6 +194,9 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 controller: _ingredients,
                 decoration: InputDecoration(
                   labelText: s.addRecipeIngredientsLabel,
+                  helperText: s.addRecipeIngredientsHelper,
+                  helperMaxLines: 3,
+                  alignLabelWithHint: true,
                 ),
                 maxLines: 8,
                 minLines: 3,

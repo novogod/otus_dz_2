@@ -73,7 +73,8 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeCategory => 'Kategorie';
 	@override String get addRecipeArea => 'Küche';
 	@override String get addRecipeInstructions => 'Anleitung';
-	@override String get addRecipeIngredientsLabel => 'Zutaten (eine pro Zeile: Name | Maß)';
+	@override String get addRecipeIngredientsLabel => 'Zutaten';
+	@override String get addRecipeIngredientsHelper => 'Eine pro Zeile. Format: Name | Maß (durch senkrechten Strich getrennt).';
 	@override String get addRecipeSubmit => 'Rezept speichern';
 	@override String get addRecipeRequired => 'Pflichtfeld';
 	@override String get addRecipeEnglishHint => 'Bitte auf Englisch eingeben — Übersetzungen werden automatisch erstellt.';
@@ -143,7 +144,8 @@ extension on TranslationsDe {
 			'addRecipeCategory' => 'Kategorie',
 			'addRecipeArea' => 'Küche',
 			'addRecipeInstructions' => 'Anleitung',
-			'addRecipeIngredientsLabel' => 'Zutaten (eine pro Zeile: Name | Maß)',
+			'addRecipeIngredientsLabel' => 'Zutaten',
+			'addRecipeIngredientsHelper' => 'Eine pro Zeile. Format: Name | Maß (durch senkrechten Strich getrennt).',
 			'addRecipeSubmit' => 'Rezept speichern',
 			'addRecipeRequired' => 'Pflichtfeld',
 			'addRecipeEnglishHint' => 'Bitte auf Englisch eingeben — Übersetzungen werden automatisch erstellt.',

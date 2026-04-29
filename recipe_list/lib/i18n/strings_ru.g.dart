@@ -75,7 +75,8 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeCategory => 'Категория';
 	@override String get addRecipeArea => 'Кухня';
 	@override String get addRecipeInstructions => 'Инструкция';
-	@override String get addRecipeIngredientsLabel => 'Ингредиенты (по одному в строке: название | мера)';
+	@override String get addRecipeIngredientsLabel => 'Ингредиенты';
+	@override String get addRecipeIngredientsHelper => 'По одному в строке. Формат: название | мера (через вертикальную черту).';
 	@override String get addRecipeSubmit => 'Сохранить рецепт';
 	@override String get addRecipeRequired => 'Обязательно';
 	@override String get addRecipeEnglishHint => 'Заполните на английском — переводы создадутся автоматически.';
@@ -145,7 +146,8 @@ extension on TranslationsRu {
 			'addRecipeCategory' => 'Категория',
 			'addRecipeArea' => 'Кухня',
 			'addRecipeInstructions' => 'Инструкция',
-			'addRecipeIngredientsLabel' => 'Ингредиенты (по одному в строке: название | мера)',
+			'addRecipeIngredientsLabel' => 'Ингредиенты',
+			'addRecipeIngredientsHelper' => 'По одному в строке. Формат: название | мера (через вертикальную черту).',
 			'addRecipeSubmit' => 'Сохранить рецепт',
 			'addRecipeRequired' => 'Обязательно',
 			'addRecipeEnglishHint' => 'Заполните на английском — переводы создадутся автоматически.',

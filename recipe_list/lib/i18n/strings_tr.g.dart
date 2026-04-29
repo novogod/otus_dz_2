@@ -73,7 +73,8 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeCategory => 'Kategori';
 	@override String get addRecipeArea => 'Mutfak';
 	@override String get addRecipeInstructions => 'Talimatlar';
-	@override String get addRecipeIngredientsLabel => 'Malzemeler (her satıra bir tane: ad | ölçü)';
+	@override String get addRecipeIngredientsLabel => 'Malzemeler';
+	@override String get addRecipeIngredientsHelper => 'Her satıra bir tane. Biçim: ad | ölçü (dikey çizgi ile).';
 	@override String get addRecipeSubmit => 'Tarifi kaydet';
 	@override String get addRecipeRequired => 'Zorunlu';
 	@override String get addRecipeEnglishHint => 'Lütfen İngilizce girin — çeviriler otomatik oluşturulur.';
@@ -143,7 +144,8 @@ extension on TranslationsTr {
 			'addRecipeCategory' => 'Kategori',
 			'addRecipeArea' => 'Mutfak',
 			'addRecipeInstructions' => 'Talimatlar',
-			'addRecipeIngredientsLabel' => 'Malzemeler (her satıra bir tane: ad | ölçü)',
+			'addRecipeIngredientsLabel' => 'Malzemeler',
+			'addRecipeIngredientsHelper' => 'Her satıra bir tane. Biçim: ad | ölçü (dikey çizgi ile).',
 			'addRecipeSubmit' => 'Tarifi kaydet',
 			'addRecipeRequired' => 'Zorunlu',
 			'addRecipeEnglishHint' => 'Lütfen İngilizce girin — çeviriler otomatik oluşturulur.',

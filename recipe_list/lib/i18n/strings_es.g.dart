@@ -73,7 +73,8 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeCategory => 'Categoría';
 	@override String get addRecipeArea => 'Cocina';
 	@override String get addRecipeInstructions => 'Instrucciones';
-	@override String get addRecipeIngredientsLabel => 'Ingredientes (uno por línea: nombre | medida)';
+	@override String get addRecipeIngredientsLabel => 'Ingredientes';
+	@override String get addRecipeIngredientsHelper => 'Uno por línea. Formato: nombre | medida (separados por una barra vertical).';
 	@override String get addRecipeSubmit => 'Guardar receta';
 	@override String get addRecipeRequired => 'Obligatorio';
 	@override String get addRecipeEnglishHint => 'Introduce en inglés — las traducciones se generan automáticamente.';
@@ -143,7 +144,8 @@ extension on TranslationsEs {
 			'addRecipeCategory' => 'Categoría',
 			'addRecipeArea' => 'Cocina',
 			'addRecipeInstructions' => 'Instrucciones',
-			'addRecipeIngredientsLabel' => 'Ingredientes (uno por línea: nombre | medida)',
+			'addRecipeIngredientsLabel' => 'Ingredientes',
+			'addRecipeIngredientsHelper' => 'Uno por línea. Formato: nombre | medida (separados por una barra vertical).',
 			'addRecipeSubmit' => 'Guardar receta',
 			'addRecipeRequired' => 'Obligatorio',
 			'addRecipeEnglishHint' => 'Introduce en inglés — las traducciones se generan automáticamente.',

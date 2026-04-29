@@ -73,7 +73,8 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeCategory => 'دسته';
 	@override String get addRecipeArea => 'آشپزی';
 	@override String get addRecipeInstructions => 'دستور پخت';
-	@override String get addRecipeIngredientsLabel => 'مواد (یکی در هر خط: نام | اندازه)';
+	@override String get addRecipeIngredientsLabel => 'مواد';
+	@override String get addRecipeIngredientsHelper => 'یکی در هر خط. قالب: نام | اندازه (با خط عمودی).';
 	@override String get addRecipeSubmit => 'ذخیرهٔ دستور';
 	@override String get addRecipeRequired => 'لازم';
 	@override String get addRecipeEnglishHint => 'لطفاً به انگلیسی وارد کنید — ترجمه‌ها خودکار ساخته می‌شوند.';
@@ -143,7 +144,8 @@ extension on TranslationsFa {
 			'addRecipeCategory' => 'دسته',
 			'addRecipeArea' => 'آشپزی',
 			'addRecipeInstructions' => 'دستور پخت',
-			'addRecipeIngredientsLabel' => 'مواد (یکی در هر خط: نام | اندازه)',
+			'addRecipeIngredientsLabel' => 'مواد',
+			'addRecipeIngredientsHelper' => 'یکی در هر خط. قالب: نام | اندازه (با خط عمودی).',
 			'addRecipeSubmit' => 'ذخیرهٔ دستور',
 			'addRecipeRequired' => 'لازم',
 			'addRecipeEnglishHint' => 'لطفاً به انگلیسی وارد کنید — ترجمه‌ها خودکار ساخته می‌شوند.',

@@ -77,7 +77,8 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeCategory => 'التصنيف';
 	@override String get addRecipeArea => 'المطبخ';
 	@override String get addRecipeInstructions => 'التعليمات';
-	@override String get addRecipeIngredientsLabel => 'المكوّنات (واحد لكل سطر: الاسم | المقدار)';
+	@override String get addRecipeIngredientsLabel => 'المكوّنات';
+	@override String get addRecipeIngredientsHelper => 'واحد لكل سطر. التنسيق: الاسم | المقدار (مفصول بشريط عمودي).';
 	@override String get addRecipeSubmit => 'حفظ الوصفة';
 	@override String get addRecipeRequired => 'مطلوب';
 	@override String get addRecipeEnglishHint => 'أدخل بالإنجليزية — تُنشأ الترجمات تلقائيًا.';
@@ -147,7 +148,8 @@ extension on TranslationsAr {
 			'addRecipeCategory' => 'التصنيف',
 			'addRecipeArea' => 'المطبخ',
 			'addRecipeInstructions' => 'التعليمات',
-			'addRecipeIngredientsLabel' => 'المكوّنات (واحد لكل سطر: الاسم | المقدار)',
+			'addRecipeIngredientsLabel' => 'المكوّنات',
+			'addRecipeIngredientsHelper' => 'واحد لكل سطر. التنسيق: الاسم | المقدار (مفصول بشريط عمودي).',
 			'addRecipeSubmit' => 'حفظ الوصفة',
 			'addRecipeRequired' => 'مطلوب',
 			'addRecipeEnglishHint' => 'أدخل بالإنجليزية — تُنشأ الترجمات تلقائيًا.',

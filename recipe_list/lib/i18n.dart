@@ -251,6 +251,7 @@ class S {
   String get addRecipeArea => _t.addRecipeArea;
   String get addRecipeInstructions => _t.addRecipeInstructions;
   String get addRecipeIngredientsLabel => _t.addRecipeIngredientsLabel;
+  String get addRecipeIngredientsHelper => _t.addRecipeIngredientsHelper;
   String get addRecipeSubmit => _t.addRecipeSubmit;
   String get addRecipeRequired => _t.addRecipeRequired;
   String get addRecipeEnglishHint => _t.addRecipeEnglishHint;
