@@ -46,6 +46,7 @@
   "addRecipeIngredientsLabel": "Zutaten",
   "addRecipeIngredientName": "Name",
   "addRecipeIngredientQty": "Menge",
+  "addRecipeIngredientQtyShort": "Menge",
   "addRecipeIngredientMeasure": "Einheit",
   "addRecipeIngredientAdd": "Zutat hinzufügen",
   "addRecipeIngredientRemove": "Zutat entfernen",

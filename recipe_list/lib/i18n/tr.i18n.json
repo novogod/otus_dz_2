@@ -46,6 +46,7 @@
   "addRecipeIngredientsLabel": "Malzemeler",
   "addRecipeIngredientName": "Ad",
   "addRecipeIngredientQty": "Miktar",
+  "addRecipeIngredientQtyShort": "Mik.",
   "addRecipeIngredientMeasure": "Birim",
   "addRecipeIngredientAdd": "Malzeme ekle",
   "addRecipeIngredientRemove": "Malzemeyi sil",

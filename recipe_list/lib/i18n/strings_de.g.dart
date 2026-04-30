@@ -76,6 +76,7 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeIngredientsLabel => 'Zutaten';
 	@override String get addRecipeIngredientName => 'Name';
 	@override String get addRecipeIngredientQty => 'Menge';
+	@override String get addRecipeIngredientQtyShort => 'Menge';
 	@override String get addRecipeIngredientMeasure => 'Einheit';
 	@override String get addRecipeIngredientAdd => 'Zutat hinzufügen';
 	@override String get addRecipeIngredientRemove => 'Zutat entfernen';
@@ -160,6 +161,7 @@ extension on TranslationsDe {
 			'addRecipeIngredientsLabel' => 'Zutaten',
 			'addRecipeIngredientName' => 'Name',
 			'addRecipeIngredientQty' => 'Menge',
+			'addRecipeIngredientQtyShort' => 'Menge',
 			'addRecipeIngredientMeasure' => 'Einheit',
 			'addRecipeIngredientAdd' => 'Zutat hinzufügen',
 			'addRecipeIngredientRemove' => 'Zutat entfernen',

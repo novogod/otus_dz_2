@@ -493,13 +493,19 @@ class _IngredientRowField extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
+        // Qty шире unit-а: на основной массе ингредиентов число
+        // («250», «1.5», «1/2») значимее единицы измерения («г»,
+        // «шт»), поэтому qty:unit = 7:3 (~2× в пользу qty).
+        // Под полем оставлена только короткая подпись «Кол.»;
+        // unit-поле без helperText — placeholder «г/шт/мл»
+        // подразумевается из контекста.
         Expanded(
-          flex: 2,
+          flex: 7,
           child: TextFormField(
             controller: row.qty,
             decoration: InputDecoration(
-              helperText: s.addRecipeIngredientQty,
-              helperMaxLines: 2,
+              helperText: s.addRecipeIngredientQtyShort,
+              helperMaxLines: 1,
               helperStyle: helperStyle,
               isDense: true,
             ),
@@ -512,12 +518,7 @@ class _IngredientRowField extends StatelessWidget {
           flex: 3,
           child: TextFormField(
             controller: row.unit,
-            decoration: InputDecoration(
-              helperText: s.addRecipeIngredientMeasure,
-              helperMaxLines: 2,
-              helperStyle: helperStyle,
-              isDense: true,
-            ),
+            decoration: const InputDecoration(isDense: true),
             textInputAction: TextInputAction.next,
           ),
         ),

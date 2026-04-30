@@ -46,6 +46,7 @@
   "addRecipeIngredientsLabel": "مواد",
   "addRecipeIngredientName": "نام",
   "addRecipeIngredientQty": "مقدار",
+  "addRecipeIngredientQtyShort": "مقد.",
   "addRecipeIngredientMeasure": "واحد",
   "addRecipeIngredientAdd": "افزودن ماده",
   "addRecipeIngredientRemove": "حذف ماده",

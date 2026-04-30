@@ -80,6 +80,7 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeIngredientsLabel => 'المكوّنات';
 	@override String get addRecipeIngredientName => 'الاسم';
 	@override String get addRecipeIngredientQty => 'الكمية';
+	@override String get addRecipeIngredientQtyShort => 'كم.';
 	@override String get addRecipeIngredientMeasure => 'الوحدة';
 	@override String get addRecipeIngredientAdd => 'إضافة مكوّن';
 	@override String get addRecipeIngredientRemove => 'حذف المكوّن';
@@ -164,6 +165,7 @@ extension on TranslationsAr {
 			'addRecipeIngredientsLabel' => 'المكوّنات',
 			'addRecipeIngredientName' => 'الاسم',
 			'addRecipeIngredientQty' => 'الكمية',
+			'addRecipeIngredientQtyShort' => 'كم.',
 			'addRecipeIngredientMeasure' => 'الوحدة',
 			'addRecipeIngredientAdd' => 'إضافة مكوّن',
 			'addRecipeIngredientRemove' => 'حذف المكوّن',

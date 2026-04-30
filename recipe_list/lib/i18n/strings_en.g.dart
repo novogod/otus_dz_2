@@ -151,6 +151,9 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Qty'
 	String get addRecipeIngredientQty => 'Qty';
 
+	/// en: 'Qty'
+	String get addRecipeIngredientQtyShort => 'Qty';
+
 	/// en: 'Unit'
 	String get addRecipeIngredientMeasure => 'Unit';
 
@@ -280,6 +283,7 @@ extension on Translations {
 			'addRecipeIngredientsLabel' => 'Ingredients',
 			'addRecipeIngredientName' => 'Name',
 			'addRecipeIngredientQty' => 'Qty',
+			'addRecipeIngredientQtyShort' => 'Qty',
 			'addRecipeIngredientMeasure' => 'Unit',
 			'addRecipeIngredientAdd' => 'Add ingredient',
 			'addRecipeIngredientRemove' => 'Remove ingredient',

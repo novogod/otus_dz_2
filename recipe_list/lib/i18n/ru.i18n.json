@@ -48,6 +48,7 @@
   "addRecipeIngredientsLabel": "Ингредиенты",
   "addRecipeIngredientName": "Название",
   "addRecipeIngredientQty": "Кол-во",
+  "addRecipeIngredientQtyShort": "Кол.",
   "addRecipeIngredientMeasure": "Ед. изм.",
   "addRecipeIngredientAdd": "Добавить ингредиент",
   "addRecipeIngredientRemove": "Удалить ингредиент",

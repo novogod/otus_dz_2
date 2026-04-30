@@ -46,6 +46,7 @@
   "addRecipeIngredientsLabel": "Ingredients",
   "addRecipeIngredientName": "Name",
   "addRecipeIngredientQty": "Qty",
+  "addRecipeIngredientQtyShort": "Qty",
   "addRecipeIngredientMeasure": "Unit",
   "addRecipeIngredientAdd": "Add ingredient",
   "addRecipeIngredientRemove": "Remove ingredient",

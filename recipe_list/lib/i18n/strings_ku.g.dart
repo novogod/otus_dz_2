@@ -76,6 +76,7 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeIngredientsLabel => 'Madde';
 	@override String get addRecipeIngredientName => 'Nav';
 	@override String get addRecipeIngredientQty => 'În.';
+	@override String get addRecipeIngredientQtyShort => 'În.';
 	@override String get addRecipeIngredientMeasure => 'Pîvane';
 	@override String get addRecipeIngredientAdd => 'Madde zêde bike';
 	@override String get addRecipeIngredientRemove => 'Madde rake';
@@ -160,6 +161,7 @@ extension on TranslationsKu {
 			'addRecipeIngredientsLabel' => 'Madde',
 			'addRecipeIngredientName' => 'Nav',
 			'addRecipeIngredientQty' => 'În.',
+			'addRecipeIngredientQtyShort' => 'În.',
 			'addRecipeIngredientMeasure' => 'Pîvane',
 			'addRecipeIngredientAdd' => 'Madde zêde bike',
 			'addRecipeIngredientRemove' => 'Madde rake',

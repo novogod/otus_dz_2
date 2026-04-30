@@ -50,6 +50,7 @@
   "addRecipeIngredientsLabel": "المكوّنات",
   "addRecipeIngredientName": "الاسم",
   "addRecipeIngredientQty": "الكمية",
+  "addRecipeIngredientQtyShort": "كم.",
   "addRecipeIngredientMeasure": "الوحدة",
   "addRecipeIngredientAdd": "إضافة مكوّن",
   "addRecipeIngredientRemove": "حذف المكوّن",
