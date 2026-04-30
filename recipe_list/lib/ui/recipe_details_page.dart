@@ -9,6 +9,7 @@ import '../utils/imgproxy.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
+import 'recipe_card.dart' show FavoriteBadge;
 import 'source_page.dart';
 
 /// Глобальный счётчик активных страниц деталей рецепта.
@@ -167,19 +168,32 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                     borderRadius: AppRadii.cardAll,
                     child: AspectRatio(
                       aspectRatio: 396 / 220,
-                      child: Image.network(
-                        // Hero отдаём больше пикселей чем в карточке (1200x675).
-                        _detailsThumb(recipe.photo),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Container(
-                          color: AppColors.surfaceMuted,
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.restaurant,
-                            size: 48,
-                            color: AppColors.textSecondary,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Image.network(
+                              // Hero отдаём больше пикселей чем в карточке (1200x675).
+                              _detailsThumb(recipe.photo),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => Container(
+                                color: AppColors.surfaceMuted,
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.restaurant,
+                                  size: 48,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          // Бейдж избранного — top-right, симметрично
+                          // карточке списка (chunk C todo/15).
+                          Positioned(
+                            top: AppSpacing.sm,
+                            right: AppSpacing.sm,
+                            child: FavoriteBadge(recipeId: recipe.id),
+                          ),
+                        ],
                       ),
                     ),
                   ),
