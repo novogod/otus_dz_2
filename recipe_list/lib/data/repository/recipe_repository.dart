@@ -43,7 +43,7 @@ class RecipeSearchResult {
 /// Фасад между UI и слоями данных:
 ///
 /// 1. Локальный sqflite-кэш с LRU-вытеснением по двум лимитам:
-///    количество строк `cap` (8000) и суммарный размер `byteCap` (64 MB).
+///    количество строк `cap` (20000) и суммарный размер `byteCap` (256 MB).
 /// 2. [RecipeApi] поверх TheMealDB / mahallem.
 ///
 /// Логика поиска:
@@ -56,11 +56,18 @@ class RecipeSearchResult {
 /// * Если сеть упала и в кэше нашлось `0` — возвращаем пустой
 ///   список и `offline=true`.
 class RecipeRepository {
-  /// 64 MB — бюджет локального кэша по дефолту. При превышении
+  /// 256 MB — бюджет локального кэша по дефолту. При превышении
   /// вытесняем LRU-редко используемые карточки, пока сумма
-  /// `byte_size` не вернётся под лимит. Расчёт: ≈600 рецептов х 10
-  /// языков х ≈7 KB ≈ 42 MB — влезает без эвикции.
-  static const int kDefaultByteCap = 64 * 1024 * 1024;
+  /// `byte_size` не вернётся под лимит. Расчёт: при росте ленты
+  /// (~600 рецептов на 10 языках × ~15 KB с инструкциями + переводы
+  /// в `recipe_bodies`) набирается ~90 MB; +хвост из ранее
+  /// просмотренных рецептов и избранного — упираться в потолок
+  /// должно происходить редко, а не на каждом ребуте. До бампа
+  /// были 64 MB / 8000 rows: при включении favorites (доп. строки
+  /// сохраняются «вечно») кэш быстрее вытесняется по LRU, ленту
+  /// в текущем языке режет ниже порога `categoryCacheThreshold`,
+  /// и reload сваливается в дорогой fan-out по категориям.
+  static const int kDefaultByteCap = 256 * 1024 * 1024;
 
   final Database _db;
   final RecipeApi _api;
@@ -72,7 +79,7 @@ class RecipeRepository {
   RecipeRepository({
     required Database db,
     required RecipeApi api,
-    this.cap = 8000,
+    this.cap = 20000,
     this.byteCap = kDefaultByteCap,
     this.cacheHitThreshold = 5,
     DateTime Function()? now,

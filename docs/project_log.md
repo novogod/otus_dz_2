@@ -1,5 +1,43 @@
 # Project Log
 
+## Reload «висит навсегда»: timeout, whenComplete, расширенные кэш-капы
+
+**Date:** 2026-04-30
+
+После релиза favorites пользователь сообщил: «нажимаю reload в
+шапке — спиннер крутится 5+ минут». Подробный разбор —
+`docs/reload-hang-after-favorites.md`.
+
+* **Не виновата favorites:** диф `7b478ec..27b862e` показал,
+  что сама фича reload-пайплайн не трогает. Корень — три
+  совпавших фактора: (а) аддитивная миграция v5→v6 теперь
+  сохраняет кэш между релизами, (б) LRU-эвикция выгрызает
+  «дыры» в `recipes` ниже `categoryCacheThreshold` и reload
+  проваливается в `_seedFromCategories` → 14 последовательных
+  `/filter/c?lang=ru&full=1`, (в) production-сервер деградировал
+  по переводам (Gemini timeout, publicLT 429), отвечает по 30–60 c
+  на категорию.
+* **Фикс reload-пайплайна** в `recipe_list_loader.dart`:
+  - `_runLoad(forceReseed: true).timeout(Duration(seconds: 60))`
+    — общий бюджет на reload.
+  - `.whenComplete(() => reloadingFeed.value = false)` —
+    спиннер гарантированно тухнет в любом исходе. Раньше сброс
+    был только в `.then`/`.catchError`; если future не
+    разрешался — спиннер крутился вечно.
+  - `widget.api.filterByCategory(cat).timeout(Duration(seconds: 12))`
+    в `_seedFromCategories`: одна медленная категория не
+    утаскивает весь бюджет.
+* **Кэш-капы** в `recipe_repository.dart`:
+  - `kDefaultByteCap`: 64 MB → 256 MB,
+  - `cap` (rows): 8000 → 20 000.
+  С аддитивной миграцией кэш живёт постоянно; старый бюджет
+  64 MB вытесняется слишком быстро, оставляя категории ниже
+  порога. С новыми капами полная лента в 10 языках +
+  избранное + хвост ранее просмотренных укладывается без
+  частой эвикции, и reload отвечает из кэша.
+* **Тесты:** 5 favorites-survival + reload-ticker зелёные;
+  `default caps` обновлён под новые значения.
+
 ## Избранное: бейдж сердца, страница favorites, локальный поиск
 
 **Date:** 2026-05-02

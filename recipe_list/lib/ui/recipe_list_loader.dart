@@ -138,6 +138,15 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   /// строк по-прежнему обслуживаются локально), но «короткая
   /// дорога» через `listCached(...)` минуется — иначе кнопка
   /// возвращала бы те же 200 рецептов, что уже на экране.
+  ///
+  /// Жёсткие гарантии:
+  /// * `reloadingFeed.value = false` сбрасывается в `whenComplete`,
+  ///   даже если `_runLoad` упал/застрял — иначе спиннер «крутится
+  ///   вечно» (наблюдалось в production: при деградации Gemini/LT
+  ///   сервер отвечает на `/filter/c` ~30–60 c, 14 категорий
+  ///   последовательно складываются в 5–14 минут).
+  /// * Общий бюджет на reload — 60 c. По истечении показываем
+  ///   предыдущую ленту + snackbar и завершаем future c TimeoutError.
   void _onReloadRequested() {
     if (!mounted) return;
     final seq = ++_translateSeq;
@@ -150,21 +159,19 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     setState(() {
       _stage.value = const _LoadStage.initial();
       _future = _runLoad(forceReseed: true)
+          .timeout(const Duration(seconds: 60))
           .then((r) {
             if (seq != _translateSeq || !mounted) return r;
             _lastResult = r;
-            reloadingFeed.value = false;
             setState(() {});
             return r;
           })
           .catchError((Object e, StackTrace st) {
             if (seq != _translateSeq || !mounted) {
-              reloadingFeed.value = false;
               throw e;
             }
             // ignore: avoid_print
             print('[reload] _runLoad failed: $e');
-            reloadingFeed.value = false;
             // Keep previous feed on screen instead of crashing the page.
             // Surface the offline state via a SnackBar.
             if (previous != null) {
@@ -178,6 +185,16 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             // state as before.
             setState(() {});
             throw e;
+          })
+          .whenComplete(() {
+            // Спиннер должен потухнуть всегда: и в success, и в
+            // error, и при stale-seq, и при `!mounted`. Раньше
+            // сброс делался только в `.then` / `.catchError`;
+            // если `_runLoad` повисал на сетевом ожидании внутри
+            // `_seedFromCategories`, спиннер крутился сколь угодно.
+            if (seq == _translateSeq) {
+              reloadingFeed.value = false;
+            }
           });
     });
   }
@@ -597,7 +614,15 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       }
 
       try {
-        final batch = await widget.api.filterByCategory(cat);
+        // Per-category client cap: при деградации Gemini/LT сервер
+        // отвечает на `/filter/c?lang=ru&full=1` ~30–60 c. Без
+        // клиентского таймаута 14 категорий последовательно складываются
+        // в 5–14 минут и спиннер reload «висит». Скипаем медленную
+        // категорию и идём дальше; общий бюджет reload — 60 c (см.
+        // `.timeout` в `_onReloadRequested`).
+        final batch = await widget.api
+            .filterByCategory(cat)
+            .timeout(const Duration(seconds: 12));
         var added = false;
         for (final r in batch) {
           if (accumulator.containsKey(r.id)) continue;

@@ -204,12 +204,12 @@ void main() {
       expect(res.offline, isTrue);
     });
 
-    test('default caps are 8000 rows / 64 MB (chunk 01)', () {
+    test('default caps are 20000 rows / 256 MB', () {
       final api = _FakeApi((_) => const []);
       final repo = RecipeRepository(db: db, api: api);
-      expect(repo.cap, 8000);
-      expect(repo.byteCap, 64 * 1024 * 1024);
-      expect(RecipeRepository.kDefaultByteCap, 64 * 1024 * 1024);
+      expect(repo.cap, 20000);
+      expect(repo.byteCap, 256 * 1024 * 1024);
+      expect(RecipeRepository.kDefaultByteCap, 256 * 1024 * 1024);
     });
   });
 }
