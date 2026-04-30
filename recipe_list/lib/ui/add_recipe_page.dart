@@ -317,7 +317,13 @@ class _AddRecipePageState extends State<AddRecipePage> {
   Widget build(BuildContext context) {
     final s = S.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(s.addRecipeTitle)),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: AppBar(title: Text(s.addRecipeTitle)),
+        ),
+      ),
       body: AbsorbPointer(
         absorbing: _saving,
         child: Form(
