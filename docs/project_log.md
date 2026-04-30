@@ -1,5 +1,52 @@
 # Project Log
 
+## Owner edit/delete + бэкап рецептов на mahallem
+
+**Date:** 2026-04-30
+
+Владелец рецепта (создавший его на этом устройстве) теперь видит
+две круглые кнопки в левом верхнем углу фотографии на
+`RecipeDetailsPage`: 🗑 — удалить, ✏ — редактировать. Полный разбор —
+[docs/owner-edit-delete.md](owner-edit-delete.md).
+
+* **Flutter** (`otus_dz_2`, commit `72f595f`): таблица
+  `owned_recipes` (sqflite v6→v7) + `OwnedRecipesStore`; шина
+  `recipeDeletedNotifier` / `recipeUpdatedNotifier`; `RecipeApi`
+  получил `updateRecipe` / `updateRecipeWithPhoto` / `deleteRecipe`;
+  `AddRecipePage` поддерживает режим редактирования (prefill +
+  `PUT /recipes/:id`); `RecipeListPage` и `FavoritesPage` слушают
+  шину и обновляют свои списки; удаление снимает рецепт из
+  избранного во всех локалях.
+* **Backend** (`mahallem_ist`):
+  * `88074a61` — `PUT`/`DELETE /recipes/:id` с floor-id guard
+    (`id >= RECIPES_USER_MEAL_ID_FLOOR`), multipart-фото грузится
+    в bucket `recipe-photos`.
+  * `d45c8c2b` — `RECIPES_USER_MEAL_ID_FLOOR` объявлен в
+    `docker-compose.yml` (default `1000000`).
+  * `ca7d3b04` — бэкап/рестор пользовательских рецептов, чтобы
+    они переживали `go-clean`: `backupRecipe()` пишет в
+    `/app/backups/realtime/recipes.jsonl` на каждый POST/PUT/DELETE;
+    `restoreRecipes()` + `restoreRecipePhotos()` подняты в
+    `restoreAll()` админ-контейнера (по образцу
+    `restoreReviews` + `restoreJobPhotos`); `exportStorageObjects`
+    в `snapshot-export-service.js` теперь включает bucket
+    `recipe-photos`, чтобы 3-часовые снапшоты покрывали и
+    метаданные `storage.objects` для фото рецептов.
+
+**Догон-фиксы UI:**
+* `OwnedRecipesStore.ensureLoaded()` бэкфилит реестр всеми
+  существующими записями `recipes` с `id >= 1_000_000` — иначе
+  рецепты, созданные до v7-миграции, не получали owner-кнопок.
+* `FavoritesStore.idsForLang()` лениво триггерит `ensureLoaded()`
+  для запрошенного языка, плюс `RecipeListLoader` прогревает
+  избранное для текущего `appLang.value` сразу после открытия
+  БД — чтобы при старте бейджи рисовали залитое сердце на
+  ранее сохранённых карточках, а не контурное.
+
+**Тесты:** `flutter analyze` — без issues; `flutter test` —
+прежние две unrelated regressions в `recipe_repository_test.dart`
+остаются (флаки от порядка тестов, не связаны с фичей).
+
 ## AddRecipePage: догон-фикс safe-area при добавлении ингредиента
 
 **Date:** 2026-04-30

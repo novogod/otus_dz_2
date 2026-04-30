@@ -28,10 +28,41 @@ class OwnedRecipesStore {
   final ValueNotifier<Set<int>> ids = ValueNotifier<Set<int>>({});
   bool _loaded = false;
 
+  /// Floor id, ниже которого рецепт считается импортированным из
+  /// TheMealDB и владельцем по определению быть не может. Должен
+  /// совпадать с `RECIPES_USER_MEAL_ID_FLOOR` на бэкенде
+  /// (см. docs/owner-edit-delete.md).
+  static const int userMealIdFloor = 1000000;
+
   Future<Set<int>> ensureLoaded() async {
     if (_loaded) return ids.value;
-    final rows = await _db.query('owned_recipes', columns: const ['id']);
-    ids.value = {for (final r in rows) r['id']! as int};
+    // Бэкфил: до v7-миграции таблица `owned_recipes` не существовала,
+    // но сами пользовательские рецепты уже могли быть созданы (их id
+    // ≥ [userMealIdFloor]). Один раз при первой загрузке заносим
+    // такие записи в реестр, чтобы owner-кнопки появились на ранее
+    // созданных рецептах.
+    final ownedRows = await _db.query('owned_recipes', columns: const ['id']);
+    final existing = {for (final r in ownedRows) r['id']! as int};
+    final candidateRows = await _db.query(
+      'recipes',
+      columns: const ['id'],
+      where: 'id >= ?',
+      whereArgs: [userMealIdFloor],
+    );
+    final candidates = {for (final r in candidateRows) r['id']! as int};
+    final missing = candidates.difference(existing);
+    if (missing.isNotEmpty) {
+      final batch = _db.batch();
+      final nowMs = _now().millisecondsSinceEpoch;
+      for (final id in missing) {
+        batch.insert('owned_recipes', {
+          'id': id,
+          'created_at': nowMs,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+      await batch.commit(noResult: true);
+    }
+    ids.value = existing.union(candidates);
     _loaded = true;
     return ids.value;
   }

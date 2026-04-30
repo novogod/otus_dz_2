@@ -46,8 +46,18 @@ class FavoritesStore {
 
   /// Возвращает живой [ValueListenable] множества id, отмеченных
   /// в данном языке. Виджет-сердце слушает его и перерисовывается
-  /// при добавлении / удалении.
-  ValueListenable<Set<int>> idsForLang(AppLang lang) => _ensureNotifier(lang);
+  /// при добавлении / удалении. Если язык ещё не загружался,
+  /// триггерит фоновую загрузку из БД (fire-and-forget) — иначе
+  /// при смене языка бейджи на список секунду рисовали бы
+  /// контурные сердца до первого захода в /favorites.
+  ValueListenable<Set<int>> idsForLang(AppLang lang) {
+    final notifier = _ensureNotifier(lang);
+    if (!_loadedLangs.contains(lang)) {
+      // Не блокируем UI: подгрузим и обновим notifier, когда БД ответит.
+      ensureLoaded(lang);
+    }
+    return notifier;
+  }
 
   /// Текущий снимок множества (без подписки).
   Set<int> snapshotForLang(AppLang lang) =>

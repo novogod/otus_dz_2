@@ -684,6 +684,16 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       // todo/15). Карточка/страница деталей слушают
       // [favoritesStoreNotifier] и перерисовываются при toggle.
       favoritesStoreNotifier.value ??= FavoritesStore(db: db);
+      // Прогреваем избранное для текущего языка, иначе сразу после
+      // старта `FavoriteBadge` слушает пустой нотифаер и рисует
+      // контурное сердце для уже сохранённых рецептов до тех пор,
+      // пока пользователь не зайдёт в /favorites (где вызовется
+      // ensureLoaded).
+      try {
+        await favoritesStoreNotifier.value!.ensureLoaded(appLang.value);
+      } on Object {
+        // прогрев не критичен — fallback нарисует контурное сердце
+      }
       // Стор  owned-рецептов живёт в той же БД;
       //  [RecipeDetailsPage] слушает [ownedRecipesStoreNotifier],
       //  чтобы рисовать кнопки edit/delete только
