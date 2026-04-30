@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import '../config/feed_config.dart';
 import '../data/api/recipe_api.dart';
@@ -129,7 +130,18 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     _pendingBackgroundLang = null;
     // Detail page popped, language still differs — run the deferred
     // retranslate now that the foreground is the list again.
-    _onLangChanged();
+    //
+    // Этот колбэк часто прилетает прямо из `RecipeDetailsPage.dispose`
+    // (когда пользователь нажал назад: декремент `activeDetailsCount`
+    // случается, пока widget tree «locked» — фаза unmount). Если
+    // вызвать `_onLangChanged()` синхронно — внутри он дёрнет
+    // `setState`, и фреймворк бросит «setState() called when widget
+    // tree was locked». Откладываем до следующего микротаска: к этому
+    // моменту dispose-фаза завершится и tree снова будет writable.
+    scheduleMicrotask(() {
+      if (!mounted) return;
+      _onLangChanged();
+    });
   }
 
   /// Реакция на нажатие кнопки «обновить» в шапке. Полностью
