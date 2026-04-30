@@ -43,6 +43,7 @@
     "addRecipePhotoPicker": "اختيار صورة الوصفة"
   },
   "addRecipeTitle": "إضافة وصفة",
+  "editRecipeTitle": "تعديل الوصفة",
   "addRecipeName": "اسم الوصفة",
   "addRecipePhoto": "رابط الصورة",
   "addRecipeCategory": "التصنيف",
@@ -60,7 +61,6 @@
   "addRecipeIngredientRemove": "حذف المكوّن",
   "addRecipeSubmit": "حفظ الوصفة",
   "addRecipeRequired": "مطلوب",
-  "addRecipeEnglishHint": "أدخل بالإنجليزية — تُنشأ الترجمات تلقائيًا.",
   "addRecipeSaving": "جارٍ الحفظ…",
   "addRecipeError": "تعذّر حفظ الوصفة. حاول مرة أخرى.",
   "addRecipeSuccess": "تمت إضافة الوصفة!",

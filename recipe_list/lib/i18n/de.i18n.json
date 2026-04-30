@@ -39,6 +39,7 @@
     "addRecipePhotoPicker": "Rezept-Fotoauswahl"
   },
   "addRecipeTitle": "Rezept hinzufügen",
+  "editRecipeTitle": "Rezept bearbeiten",
   "addRecipeName": "Rezeptname",
   "addRecipePhoto": "Foto-URL",
   "addRecipeCategory": "Kategorie",
@@ -56,7 +57,6 @@
   "addRecipeIngredientRemove": "Zutat entfernen",
   "addRecipeSubmit": "Rezept speichern",
   "addRecipeRequired": "Pflichtfeld",
-  "addRecipeEnglishHint": "Bitte auf Englisch eingeben — Übersetzungen werden automatisch erstellt.",
   "addRecipeSaving": "Speichert…",
   "addRecipeError": "Rezept konnte nicht gespeichert werden. Versuche es erneut.",
   "addRecipeSuccess": "Rezept hinzugefügt!",

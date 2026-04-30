@@ -69,6 +69,7 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	);
 	@override late final _TranslationsA11yFa a11y = _TranslationsA11yFa._(_root);
 	@override String get addRecipeTitle => 'افزودن دستور';
+	@override String get editRecipeTitle => 'ویرایش دستور';
 	@override String get addRecipeName => 'نام دستور';
 	@override String get addRecipePhoto => 'نشانی عکس';
 	@override String get addRecipeCategory => 'دسته';
@@ -86,7 +87,6 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeIngredientRemove => 'حذف ماده';
 	@override String get addRecipeSubmit => 'ذخیرهٔ دستور';
 	@override String get addRecipeRequired => 'لازم';
-	@override String get addRecipeEnglishHint => 'لطفاً به انگلیسی وارد کنید — ترجمه‌ها خودکار ساخته می‌شوند.';
 	@override String get addRecipeSaving => 'در حال ذخیره…';
 	@override String get addRecipeError => 'ذخیرهٔ دستور ممکن نشد. دوباره تلاش کنید.';
 	@override String get addRecipeSuccess => 'دستور افزوده شد!';
@@ -158,6 +158,7 @@ extension on TranslationsFa {
 			'a11y.addRecipe' => 'افزودن دستور',
 			'a11y.addRecipePhotoPicker' => 'انتخاب عکس دستور',
 			'addRecipeTitle' => 'افزودن دستور',
+			'editRecipeTitle' => 'ویرایش دستور',
 			'addRecipeName' => 'نام دستور',
 			'addRecipePhoto' => 'نشانی عکس',
 			'addRecipeCategory' => 'دسته',
@@ -175,7 +176,6 @@ extension on TranslationsFa {
 			'addRecipeIngredientRemove' => 'حذف ماده',
 			'addRecipeSubmit' => 'ذخیرهٔ دستور',
 			'addRecipeRequired' => 'لازم',
-			'addRecipeEnglishHint' => 'لطفاً به انگلیسی وارد کنید — ترجمه‌ها خودکار ساخته می‌شوند.',
 			'addRecipeSaving' => 'در حال ذخیره…',
 			'addRecipeError' => 'ذخیرهٔ دستور ممکن نشد. دوباره تلاش کنید.',
 			'addRecipeSuccess' => 'دستور افزوده شد!',

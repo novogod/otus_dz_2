@@ -69,6 +69,7 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	);
 	@override late final _TranslationsA11yKu a11y = _TranslationsA11yKu._(_root);
 	@override String get addRecipeTitle => 'Resipe zêde bike';
+	@override String get editRecipeTitle => 'Resipê biguherîne';
 	@override String get addRecipeName => 'Navê resipê';
 	@override String get addRecipePhoto => 'URLa wêneyê';
 	@override String get addRecipeCategory => 'Kategorî';
@@ -86,7 +87,6 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeIngredientRemove => 'Madde rake';
 	@override String get addRecipeSubmit => 'Resipê tomar bike';
 	@override String get addRecipeRequired => 'Pêwîst';
-	@override String get addRecipeEnglishHint => 'Bi îngîlîzî binivîse — werger bixweber tê çêkirin.';
 	@override String get addRecipeSaving => 'Tê tomarkirin…';
 	@override String get addRecipeError => 'Resipe nehate tomarkirin. Dîsa biceribîne.';
 	@override String get addRecipeSuccess => 'Resipe hate zêdekirin!';
@@ -158,6 +158,7 @@ extension on TranslationsKu {
 			'a11y.addRecipe' => 'Resipe zêde bike',
 			'a11y.addRecipePhotoPicker' => 'Hilbijêrê wêneyê reçeteyê',
 			'addRecipeTitle' => 'Resipe zêde bike',
+			'editRecipeTitle' => 'Resipê biguherîne',
 			'addRecipeName' => 'Navê resipê',
 			'addRecipePhoto' => 'URLa wêneyê',
 			'addRecipeCategory' => 'Kategorî',
@@ -175,7 +176,6 @@ extension on TranslationsKu {
 			'addRecipeIngredientRemove' => 'Madde rake',
 			'addRecipeSubmit' => 'Resipê tomar bike',
 			'addRecipeRequired' => 'Pêwîst',
-			'addRecipeEnglishHint' => 'Bi îngîlîzî binivîse — werger bixweber tê çêkirin.',
 			'addRecipeSaving' => 'Tê tomarkirin…',
 			'addRecipeError' => 'Resipe nehate tomarkirin. Dîsa biceribîne.',
 			'addRecipeSuccess' => 'Resipe hate zêdekirin!',

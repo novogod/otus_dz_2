@@ -436,7 +436,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
         child: Directionality(
           textDirection: TextDirection.ltr,
           child: AppBar(
-            title: Text(_isEdit ? 'Edit Recipe' : s.addRecipeTitle),
+            title: Text(_isEdit ? s.editRecipeTitle : s.addRecipeTitle),
           ),
         ),
       ),
@@ -463,11 +463,6 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
               ),
               children: [
-                Text(
-                  s.addRecipeEnglishHint,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: AppSpacing.lg),
                 TextFormField(
                   controller: _name,
                   decoration: InputDecoration(labelText: s.addRecipeName),

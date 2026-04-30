@@ -130,6 +130,9 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Add recipe'
 	String get addRecipeTitle => 'Add recipe';
 
+	/// en: 'Edit recipe'
+	String get editRecipeTitle => 'Edit recipe';
+
 	/// en: 'Recipe name'
 	String get addRecipeName => 'Recipe name';
 
@@ -180,9 +183,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// en: 'Required'
 	String get addRecipeRequired => 'Required';
-
-	/// en: 'Please enter in English — translations are generated automatically.'
-	String get addRecipeEnglishHint => 'Please enter in English — translations are generated automatically.';
 
 	/// en: 'Saving…'
 	String get addRecipeSaving => 'Saving…';
@@ -288,6 +288,7 @@ extension on Translations {
 			'a11y.addRecipe' => 'Add recipe',
 			'a11y.addRecipePhotoPicker' => 'Recipe photo picker',
 			'addRecipeTitle' => 'Add recipe',
+			'editRecipeTitle' => 'Edit recipe',
 			'addRecipeName' => 'Recipe name',
 			'addRecipePhoto' => 'Photo URL',
 			'addRecipeCategory' => 'Category',
@@ -305,7 +306,6 @@ extension on Translations {
 			'addRecipeIngredientRemove' => 'Remove ingredient',
 			'addRecipeSubmit' => 'Save recipe',
 			'addRecipeRequired' => 'Required',
-			'addRecipeEnglishHint' => 'Please enter in English — translations are generated automatically.',
 			'addRecipeSaving' => 'Saving…',
 			'addRecipeError' => 'Couldn\'t save recipe. Try again.',
 			'addRecipeSuccess' => 'Recipe added!',

@@ -248,6 +248,7 @@ class S {
 
   // Add-recipe page.
   String get addRecipeTitle => _t.addRecipeTitle;
+  String get editRecipeTitle => _t.editRecipeTitle;
   String get addRecipeName => _t.addRecipeName;
   String get addRecipePhoto => _t.addRecipePhoto;
   String get addRecipeCategory => _t.addRecipeCategory;
@@ -266,7 +267,6 @@ class S {
   String get addRecipeIngredientRemove => _t.addRecipeIngredientRemove;
   String get addRecipeSubmit => _t.addRecipeSubmit;
   String get addRecipeRequired => _t.addRecipeRequired;
-  String get addRecipeEnglishHint => _t.addRecipeEnglishHint;
   String get addRecipeSaving => _t.addRecipeSaving;
   String get addRecipeError => _t.addRecipeError;
   String get addRecipeSuccess => _t.addRecipeSuccess;

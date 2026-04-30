@@ -39,6 +39,7 @@
     "addRecipePhotoPicker": "Sélecteur de photo de recette"
   },
   "addRecipeTitle": "Ajouter une recette",
+  "editRecipeTitle": "Modifier la recette",
   "addRecipeName": "Nom de la recette",
   "addRecipePhoto": "URL de la photo",
   "addRecipeCategory": "Catégorie",
@@ -56,7 +57,6 @@
   "addRecipeIngredientRemove": "Supprimer l’ingrédient",
   "addRecipeSubmit": "Enregistrer la recette",
   "addRecipeRequired": "Obligatoire",
-  "addRecipeEnglishHint": "Saisissez en anglais — les traductions sont générées automatiquement.",
   "addRecipeSaving": "Enregistrement…",
   "addRecipeError": "Impossible d'enregistrer la recette. Réessayez.",
   "addRecipeSuccess": "Recette ajoutée !",

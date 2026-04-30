@@ -69,6 +69,7 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	);
 	@override late final _TranslationsA11yTr a11y = _TranslationsA11yTr._(_root);
 	@override String get addRecipeTitle => 'Tarif ekle';
+	@override String get editRecipeTitle => 'Tarifi düzenle';
 	@override String get addRecipeName => 'Tarif adı';
 	@override String get addRecipePhoto => 'Fotoğraf URL’si';
 	@override String get addRecipeCategory => 'Kategori';
@@ -86,7 +87,6 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeIngredientRemove => 'Malzemeyi sil';
 	@override String get addRecipeSubmit => 'Tarifi kaydet';
 	@override String get addRecipeRequired => 'Zorunlu';
-	@override String get addRecipeEnglishHint => 'Lütfen İngilizce girin — çeviriler otomatik oluşturulur.';
 	@override String get addRecipeSaving => 'Kaydediliyor…';
 	@override String get addRecipeError => 'Tarif kaydedilemedi. Tekrar deneyin.';
 	@override String get addRecipeSuccess => 'Tarif eklendi!';
@@ -158,6 +158,7 @@ extension on TranslationsTr {
 			'a11y.addRecipe' => 'Tarif ekle',
 			'a11y.addRecipePhotoPicker' => 'Tarif fotoğraf seçici',
 			'addRecipeTitle' => 'Tarif ekle',
+			'editRecipeTitle' => 'Tarifi düzenle',
 			'addRecipeName' => 'Tarif adı',
 			'addRecipePhoto' => 'Fotoğraf URL’si',
 			'addRecipeCategory' => 'Kategori',
@@ -175,7 +176,6 @@ extension on TranslationsTr {
 			'addRecipeIngredientRemove' => 'Malzemeyi sil',
 			'addRecipeSubmit' => 'Tarifi kaydet',
 			'addRecipeRequired' => 'Zorunlu',
-			'addRecipeEnglishHint' => 'Lütfen İngilizce girin — çeviriler otomatik oluşturulur.',
 			'addRecipeSaving' => 'Kaydediliyor…',
 			'addRecipeError' => 'Tarif kaydedilemedi. Tekrar deneyin.',
 			'addRecipeSuccess' => 'Tarif eklendi!',

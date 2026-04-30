@@ -71,6 +71,7 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	);
 	@override late final _TranslationsA11yRu a11y = _TranslationsA11yRu._(_root);
 	@override String get addRecipeTitle => 'Добавить рецепт';
+	@override String get editRecipeTitle => 'Редактировать рецепт';
 	@override String get addRecipeName => 'Название рецепта';
 	@override String get addRecipePhoto => 'URL фотографии';
 	@override String get addRecipeCategory => 'Категория';
@@ -88,7 +89,6 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeIngredientRemove => 'Удалить ингредиент';
 	@override String get addRecipeSubmit => 'Сохранить рецепт';
 	@override String get addRecipeRequired => 'Обязательно';
-	@override String get addRecipeEnglishHint => 'Заполните на английском — переводы создадутся автоматически.';
 	@override String get addRecipeSaving => 'Сохраняем…';
 	@override String get addRecipeError => 'Не удалось сохранить рецепт. Попробуйте ещё раз.';
 	@override String get addRecipeSuccess => 'Рецепт добавлен!';
@@ -160,6 +160,7 @@ extension on TranslationsRu {
 			'a11y.addRecipe' => 'Добавить рецепт',
 			'a11y.addRecipePhotoPicker' => 'Выбор фото рецепта',
 			'addRecipeTitle' => 'Добавить рецепт',
+			'editRecipeTitle' => 'Редактировать рецепт',
 			'addRecipeName' => 'Название рецепта',
 			'addRecipePhoto' => 'URL фотографии',
 			'addRecipeCategory' => 'Категория',
@@ -177,7 +178,6 @@ extension on TranslationsRu {
 			'addRecipeIngredientRemove' => 'Удалить ингредиент',
 			'addRecipeSubmit' => 'Сохранить рецепт',
 			'addRecipeRequired' => 'Обязательно',
-			'addRecipeEnglishHint' => 'Заполните на английском — переводы создадутся автоматически.',
 			'addRecipeSaving' => 'Сохраняем…',
 			'addRecipeError' => 'Не удалось сохранить рецепт. Попробуйте ещё раз.',
 			'addRecipeSuccess' => 'Рецепт добавлен!',

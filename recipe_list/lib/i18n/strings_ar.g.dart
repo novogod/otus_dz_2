@@ -73,6 +73,7 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	);
 	@override late final _TranslationsA11yAr a11y = _TranslationsA11yAr._(_root);
 	@override String get addRecipeTitle => 'إضافة وصفة';
+	@override String get editRecipeTitle => 'تعديل الوصفة';
 	@override String get addRecipeName => 'اسم الوصفة';
 	@override String get addRecipePhoto => 'رابط الصورة';
 	@override String get addRecipeCategory => 'التصنيف';
@@ -90,7 +91,6 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeIngredientRemove => 'حذف المكوّن';
 	@override String get addRecipeSubmit => 'حفظ الوصفة';
 	@override String get addRecipeRequired => 'مطلوب';
-	@override String get addRecipeEnglishHint => 'أدخل بالإنجليزية — تُنشأ الترجمات تلقائيًا.';
 	@override String get addRecipeSaving => 'جارٍ الحفظ…';
 	@override String get addRecipeError => 'تعذّر حفظ الوصفة. حاول مرة أخرى.';
 	@override String get addRecipeSuccess => 'تمت إضافة الوصفة!';
@@ -162,6 +162,7 @@ extension on TranslationsAr {
 			'a11y.addRecipe' => 'إضافة وصفة',
 			'a11y.addRecipePhotoPicker' => 'اختيار صورة الوصفة',
 			'addRecipeTitle' => 'إضافة وصفة',
+			'editRecipeTitle' => 'تعديل الوصفة',
 			'addRecipeName' => 'اسم الوصفة',
 			'addRecipePhoto' => 'رابط الصورة',
 			'addRecipeCategory' => 'التصنيف',
@@ -179,7 +180,6 @@ extension on TranslationsAr {
 			'addRecipeIngredientRemove' => 'حذف المكوّن',
 			'addRecipeSubmit' => 'حفظ الوصفة',
 			'addRecipeRequired' => 'مطلوب',
-			'addRecipeEnglishHint' => 'أدخل بالإنجليزية — تُنشأ الترجمات تلقائيًا.',
 			'addRecipeSaving' => 'جارٍ الحفظ…',
 			'addRecipeError' => 'تعذّر حفظ الوصفة. حاول مرة أخرى.',
 			'addRecipeSuccess' => 'تمت إضافة الوصفة!',

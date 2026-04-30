@@ -41,6 +41,7 @@
     "addRecipePhotoPicker": "Выбор фото рецепта"
   },
   "addRecipeTitle": "Добавить рецепт",
+  "editRecipeTitle": "Редактировать рецепт",
   "addRecipeName": "Название рецепта",
   "addRecipePhoto": "URL фотографии",
   "addRecipeCategory": "Категория",
@@ -58,7 +59,6 @@
   "addRecipeIngredientRemove": "Удалить ингредиент",
   "addRecipeSubmit": "Сохранить рецепт",
   "addRecipeRequired": "Обязательно",
-  "addRecipeEnglishHint": "Заполните на английском — переводы создадутся автоматически.",
   "addRecipeSaving": "Сохраняем…",
   "addRecipeError": "Не удалось сохранить рецепт. Попробуйте ещё раз.",
   "addRecipeSuccess": "Рецепт добавлен!",

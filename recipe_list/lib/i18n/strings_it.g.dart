@@ -69,6 +69,7 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 	);
 	@override late final _TranslationsA11yIt a11y = _TranslationsA11yIt._(_root);
 	@override String get addRecipeTitle => 'Aggiungi ricetta';
+	@override String get editRecipeTitle => 'Modifica ricetta';
 	@override String get addRecipeName => 'Nome della ricetta';
 	@override String get addRecipePhoto => 'URL della foto';
 	@override String get addRecipeCategory => 'Categoria';
@@ -86,7 +87,6 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeIngredientRemove => 'Rimuovi ingrediente';
 	@override String get addRecipeSubmit => 'Salva ricetta';
 	@override String get addRecipeRequired => 'Obbligatorio';
-	@override String get addRecipeEnglishHint => 'Inserisci in inglese — le traduzioni vengono generate automaticamente.';
 	@override String get addRecipeSaving => 'Salvataggio…';
 	@override String get addRecipeError => 'Impossibile salvare la ricetta. Riprova.';
 	@override String get addRecipeSuccess => 'Ricetta aggiunta!';
@@ -158,6 +158,7 @@ extension on TranslationsIt {
 			'a11y.addRecipe' => 'Aggiungi ricetta',
 			'a11y.addRecipePhotoPicker' => 'Selezione foto ricetta',
 			'addRecipeTitle' => 'Aggiungi ricetta',
+			'editRecipeTitle' => 'Modifica ricetta',
 			'addRecipeName' => 'Nome della ricetta',
 			'addRecipePhoto' => 'URL della foto',
 			'addRecipeCategory' => 'Categoria',
@@ -175,7 +176,6 @@ extension on TranslationsIt {
 			'addRecipeIngredientRemove' => 'Rimuovi ingrediente',
 			'addRecipeSubmit' => 'Salva ricetta',
 			'addRecipeRequired' => 'Obbligatorio',
-			'addRecipeEnglishHint' => 'Inserisci in inglese — le traduzioni vengono generate automaticamente.',
 			'addRecipeSaving' => 'Salvataggio…',
 			'addRecipeError' => 'Impossibile salvare la ricetta. Riprova.',
 			'addRecipeSuccess' => 'Ricetta aggiunta!',
