@@ -287,8 +287,13 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     ];
     int done = cached.length;
     final total = prev.recipes.length;
-    final deadline = DateTime.now().add(const Duration(seconds: 120));
-    const perCallTimeout = Duration(seconds: 12);
+    // Bumped from 120s/12s after diagnosing "Italian residue under TR"
+    // (project_log 2026-04-29). With ~50% of TR recipes needing fresh
+    // Gemini translation at 2–8s avg under 8-way parallel load, the
+    // 12s per-call cap turned spikes into hard misses → user saw the
+    // previous-language copy for the rest of the session.
+    final deadline = DateTime.now().add(const Duration(seconds: 240));
+    const perCallTimeout = Duration(seconds: 25);
 
     var cursor = 0;
     Future<void> worker() async {
@@ -298,19 +303,42 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         if (i >= missed.length) return;
         final idx = missed[i];
         final original = prev.recipes[idx];
+        Recipe? got;
         try {
-          final got = repo != null
+          got = repo != null
               ? await repo.lookup(original.id, lang, timeout: perCallTimeout)
               : await widget.api.lookup(
                   original.id,
                   lang: lang,
                   timeout: perCallTimeout,
                 );
-          if (got != null) {
-            translated[idx] = got;
-          }
         } on Object {
-          // одна карточка не приехала — оставляем оригинал
+          got = null;
+        }
+        // Fallback: target-language lookup failed (timeout / 5xx / null).
+        // Showing English under the new flag is far less confusing
+        // than leaving the previous-language copy on screen — the user
+        // explicitly asked for a different language. English is 100%
+        // covered server-side, so this lookup almost never fails.
+        if (got == null && lang != AppLang.en) {
+          try {
+            got = repo != null
+                ? await repo.lookup(
+                    original.id,
+                    AppLang.en,
+                    timeout: perCallTimeout,
+                  )
+                : await widget.api.lookup(
+                    original.id,
+                    lang: AppLang.en,
+                    timeout: perCallTimeout,
+                  );
+          } on Object {
+            got = null;
+          }
+        }
+        if (got != null) {
+          translated[idx] = got;
         }
         done++;
         _stage.value = _LoadStage.fetching(
