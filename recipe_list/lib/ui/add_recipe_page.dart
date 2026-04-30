@@ -480,7 +480,7 @@ class _IngredientRowField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          flex: 5,
+          flex: 11,
           child: TextFormField(
             controller: row.name,
             decoration: InputDecoration(
@@ -493,14 +493,15 @@ class _IngredientRowField extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        // Qty шире unit-а: на основной массе ингредиентов число
-        // («250», «1.5», «1/2») значимее единицы измерения («г»,
-        // «шт»), поэтому qty:unit = 7:3 (~2× в пользу qty).
-        // Под полем оставлена только короткая подпись «Кол.»;
+        // Qty намеренно узкое: типичные значения — «250», «1.5»,
+        // «1/2» — укладываются в 3-4 глифа, нет смысла отдавать
+        // полю половину строки. Раскладка name:qty:unit = 11:2:3
+        // (qty в 4 раза уже предыдущего варианта 11:7:3, освобождённая
+        // ширина ушла в name). Под полем — короткая подпись «Кол.»;
         // unit-поле без helperText — placeholder «г/шт/мл»
         // подразумевается из контекста.
         Expanded(
-          flex: 7,
+          flex: 2,
           child: TextFormField(
             controller: row.qty,
             decoration: InputDecoration(
