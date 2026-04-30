@@ -93,14 +93,9 @@ class RecipeRepository {
     // Стреляем в локальный кэш и в API одновременно — без short-circuit'а
     // «достаточно кэша». Так пользователь всегда получает максимум
     // совпадений: и то, что уже было оффлайн, и свежак с сервера.
-    final cacheFuture = _localPrefix(p, lang);
+    final cacheFuture = _localSubstring(p, lang);
     final apiFuture = _api
         .searchByName(query: prefix, lang: lang)
-        .then<List<Recipe>>(
-          (fetched) => fetched
-              .where((r) => r.name.toLowerCase().startsWith(p))
-              .toList(growable: false),
-        )
         .catchError((Object _) => const <Recipe>[]);
 
     final cacheHits = await cacheFuture;
@@ -303,15 +298,15 @@ class RecipeRepository {
 
   Future<void> _upsert(Recipe r, AppLang lang) => _upsertAll([r], lang);
 
-  Future<List<Recipe>> _localPrefix(String prefixLower, AppLang lang) async {
-    final escaped = prefixLower
+  Future<List<Recipe>> _localSubstring(String needleLower, AppLang lang) async {
+    final escaped = needleLower
         .replaceAll(r'\', r'\\')
         .replaceAll('%', r'\%')
         .replaceAll('_', r'\_');
     final rows = await _db.query(
       'recipes',
       where: r"lang = ? AND name_lower LIKE ? ESCAPE '\'",
-      whereArgs: [lang.name, '$escaped%'],
+      whereArgs: [lang.name, '%$escaped%'],
       orderBy: 'name_lower ASC',
     );
     return rows.map(readRecipe).toList(growable: false);
