@@ -21,10 +21,7 @@ Future<Database> _openInMemoryDb() async {
 }
 
 Future<void> _seedRecipe(Database db, Recipe r, AppLang lang) async {
-  await db.insert(
-    'recipes',
-    writeRecipe(r, lang: lang.name, lastUsedAt: 0),
-  );
+  await db.insert('recipes', writeRecipe(r, lang: lang.name, lastUsedAt: 0));
 }
 
 void main() {

@@ -6,6 +6,17 @@ import '../../models/recipe.dart';
 import '../api/recipe_api.dart';
 import '../local/recipe_db.dart';
 
+/// Глобальный держатель текущего [FavoritesStore]. Заполняется
+/// фабрикой репозитория (`RecipeListLoader._defaultRepoBuilder`)
+/// после открытия БД и читается виджетами карточки и страницы
+/// деталей. До инициализации `value == null` — в этом случае UI
+/// рендерит контурное сердце и тап ничего не делает.
+///
+/// В тестах можно подсунуть готовый стор:
+/// `favoritesStoreNotifier.value = FavoritesStore(db: testDb);`.
+final ValueNotifier<FavoritesStore?> favoritesStoreNotifier =
+    ValueNotifier<FavoritesStore?>(null);
+
 /// Стор избранного: тонкая обёртка вокруг таблицы `favorites` плюс
 /// кэш id-шников по языкам в памяти, чтобы UI (бейдж сердца на
 /// карточке) перерисовывался без лишних обращений к БД.
@@ -36,8 +47,7 @@ class FavoritesStore {
   /// Возвращает живой [ValueListenable] множества id, отмеченных
   /// в данном языке. Виджет-сердце слушает его и перерисовывается
   /// при добавлении / удалении.
-  ValueListenable<Set<int>> idsForLang(AppLang lang) =>
-      _ensureNotifier(lang);
+  ValueListenable<Set<int>> idsForLang(AppLang lang) => _ensureNotifier(lang);
 
   /// Текущий снимок множества (без подписки).
   Set<int> snapshotForLang(AppLang lang) =>
@@ -150,8 +160,5 @@ class FavoritesStore {
   }
 
   ValueNotifier<Set<int>> _ensureNotifier(AppLang lang) =>
-      _idsByLang.putIfAbsent(
-        lang,
-        () => ValueNotifier<Set<int>>(<int>{}),
-      );
+      _idsByLang.putIfAbsent(lang, () => ValueNotifier<Set<int>>(<int>{}));
 }

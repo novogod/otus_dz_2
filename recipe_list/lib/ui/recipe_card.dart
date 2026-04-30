@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/repository/favorites_store.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import '../utils/imgproxy.dart';
@@ -129,6 +131,11 @@ class _Photo extends StatelessWidget {
                 bottom: AppSpacing.sm,
                 child: _YoutubeBadge(url: recipe.youtubeUrl!),
               ),
+            Positioned(
+              right: AppSpacing.sm,
+              top: AppSpacing.sm,
+              child: FavoriteBadge(recipeId: recipe.id),
+            ),
           ],
         ),
       ),
@@ -174,6 +181,78 @@ class _YoutubeBadge extends StatelessWidget {
         child: const Padding(
           padding: EdgeInsets.all(AppSpacing.sm),
           child: Icon(Icons.play_arrow, color: Colors.white, size: 24),
+        ),
+      ),
+    );
+  }
+}
+
+/// Бейдж-сердце в правом верхнем углу карточки. Зеркалит размер и
+/// визуальный вес [_YoutubeBadge]: круг 40×40, полупрозрачный
+/// чёрный фон, белый/зелёный глиф.
+///
+/// Слушает [favoritesStoreNotifier] и нотифаер по текущему языку
+/// (`appLang`), чтобы перерисоваться при добавлении/удалении из
+/// любого экрана. Если стор ещё не инициализирован
+/// (БД не открыта), рендерит контурное сердце и no-op на тап.
+class FavoriteBadge extends StatelessWidget {
+  final int recipeId;
+
+  const FavoriteBadge({super.key, required this.recipeId});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<FavoritesStore?>(
+      valueListenable: favoritesStoreNotifier,
+      builder: (context, store, _) {
+        return ValueListenableBuilder<AppLang>(
+          valueListenable: appLang,
+          builder: (context, lang, _) {
+            if (store == null) {
+              return _FavoriteBadgeView(isFavorite: false, onTap: null);
+            }
+            return ValueListenableBuilder<Set<int>>(
+              valueListenable: store.idsForLang(lang),
+              builder: (context, ids, _) {
+                final isFav = ids.contains(recipeId);
+                return _FavoriteBadgeView(
+                  isFavorite: isFav,
+                  onTap: () async {
+                    HapticFeedback.lightImpact();
+                    await store.toggle(recipeId, lang);
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _FavoriteBadgeView extends StatelessWidget {
+  final bool isFavorite;
+  final VoidCallback? onTap;
+
+  const _FavoriteBadgeView({required this.isFavorite, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withValues(alpha: 0.65),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Icon(
+            isFavorite ? Icons.favorite : Icons.favorite_border,
+            color: isFavorite ? AppColors.primary : Colors.white,
+            size: 24,
+            semanticLabel: isFavorite ? 'favorite-on' : 'favorite-off',
+          ),
         ),
       ),
     );

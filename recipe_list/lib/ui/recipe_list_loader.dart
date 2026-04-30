@@ -5,6 +5,7 @@ import '../config/feed_config.dart';
 import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
+import '../data/repository/favorites_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
@@ -653,6 +654,10 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   static Future<RecipeRepository?> _defaultRepoBuilder(RecipeApi api) async {
     try {
       final db = await openRecipeDatabase();
+      // Глобальный стор избранного шарит ту же БД (chunk A/B
+      // todo/15). Карточка/страница деталей слушают
+      // [favoritesStoreNotifier] и перерисовываются при toggle.
+      favoritesStoreNotifier.value ??= FavoritesStore(db: db);
       return RecipeRepository(db: db, api: api);
     } on Object {
       return null;
