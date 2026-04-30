@@ -202,7 +202,17 @@ class _FavoritesPageState extends State<FavoritesPage> {
   void _openDetails(BuildContext context, Recipe recipe) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => RecipeDetailsPage(recipe: recipe),
+        // Пробрасываем api/repository, иначе на странице деталей
+        // lazy-load `instructions` из `recipe_bodies` не сработает
+        // (FutureBuilder живёт в ветке `widget.repository != null`),
+        // и из избранного открывался бы рецепт без инструкций —
+        // FavoritesStore.list джойнит только `recipes`, тело
+        // подгружается лениво уже на странице деталей.
+        builder: (_) => RecipeDetailsPage(
+          recipe: recipe,
+          api: widget.api,
+          repository: widget.repository,
+        ),
       ),
     );
   }
