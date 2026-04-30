@@ -409,7 +409,6 @@ class _AddRecipePageState extends State<AddRecipePage> {
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: _IngredientRowField(
                     row: _ingredientRows[i],
-                    index: i,
                     showRemove: _ingredientRows.length > 1,
                     onAdd: () => _addIngredientRow(i),
                     onRemove: () => _removeIngredientRow(i),
@@ -443,24 +442,25 @@ class _IngredientRow {
   }
 }
 
-/// Одна строка ингредиента: `name | qty | unit | № | +/−`.
+/// Одна строка ингредиента: `name | qty | unit | +/−`.
 ///
 /// Раскладка подобрана так, чтобы длинные локализации
-/// (немецкий, курдский) не переполнялись. Доли:
+/// (немецкий, курдский) не переполнялись. Поля без `labelText`
+/// (плавающий лейбл съедал место и обрезался троеточием на
+/// узких полях qty/unit) — вместо этого названия идут мелким
+/// шрифтом подписью под полем (`helperText`). Доли:
 ///   * `name` — flex 5 (занимает половину).
 ///   * `qty` — flex 2 (`keyboardType: numberWithOptions(decimal: true)`).
 ///   * `unit` — flex 3.
 class _IngredientRowField extends StatelessWidget {
   const _IngredientRowField({
     required this.row,
-    required this.index,
     required this.showRemove,
     required this.onAdd,
     required this.onRemove,
   });
 
   final _IngredientRow row;
-  final int index;
   final bool showRemove;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
@@ -476,7 +476,8 @@ class _IngredientRowField extends StatelessWidget {
           child: TextFormField(
             controller: row.name,
             decoration: InputDecoration(
-              labelText: s.addRecipeIngredientName,
+              helperText: s.addRecipeIngredientName,
+              helperMaxLines: 2,
               isDense: true,
             ),
             textInputAction: TextInputAction.next,
@@ -488,7 +489,8 @@ class _IngredientRowField extends StatelessWidget {
           child: TextFormField(
             controller: row.qty,
             decoration: InputDecoration(
-              labelText: s.addRecipeIngredientQty,
+              helperText: s.addRecipeIngredientQty,
+              helperMaxLines: 2,
               isDense: true,
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -501,30 +503,14 @@ class _IngredientRowField extends StatelessWidget {
           child: TextFormField(
             controller: row.unit,
             decoration: InputDecoration(
-              labelText: s.addRecipeIngredientMeasure,
+              helperText: s.addRecipeIngredientMeasure,
+              helperMaxLines: 2,
               isDense: true,
             ),
             textInputAction: TextInputAction.next,
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        // Номер строки 1…20, выравнян с серединой input-а
-        // (`isDense: true` → высота ~48). Используем фиксированный
-        // pad, чтобы лейблы инпутов не сбивали вертикаль.
-        Padding(
-          padding: const EdgeInsets.only(top: 14),
-          child: SizedBox(
-            width: 24,
-            child: Text(
-              '${index + 1}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
         // Кнопка «+» добавляет строку ниже текущей. Если
         // строк больше одной, иконка `×` появляется слева.
         if (showRemove)
