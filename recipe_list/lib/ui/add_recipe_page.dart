@@ -384,6 +384,21 @@ class _AddRecipePageState extends State<AddRecipePage> {
             ? await api.createRecipeWithPhoto(draft, _pickedPhoto!)
             : await api.createRecipe(draft);
       }
+      // POST/PUT возвращают рецепт после трансляции в `i18n.en`
+      // (см. routes/recipes.js: cascade detect→translate→store), то
+      // есть текстовые поля приходят на английском вне зависимости
+      // от языка ввода. Чтобы локальный кэш и список рецептов на
+      // том же экране сразу показали оригинал на языке UI
+      // (например, рецепт, введённый на русском, остался на
+      // русском), заново загружаем сохранённый рецепт с
+      // `?lang=<UI>` — сервер развернёт нужную локаль из i18n.
+      // Если lookup упал (offline/timeout) — деградируем до
+      // ответа POST/PUT.
+      Recipe localized = saved;
+      try {
+        final fetched = await api.lookup(saved.id, lang: appLang.value);
+        if (fetched != null) localized = fetched;
+      } catch (_) {}
       // Mirror server-assigned row into the local cache so the new
       // recipe survives a cold start. Best-effort — failure here
       // doesn't roll back the server insert. В edit-режиме сначала
@@ -391,28 +406,28 @@ class _AddRecipePageState extends State<AddRecipePage> {
       // показывался поверх свежего payload.
       try {
         if (existing != null) {
-          await widget.repository?.deleteById(saved.id);
+          await widget.repository?.deleteById(localized.id);
         }
-        await widget.repository?.upsertAll([saved], appLang.value);
+        await widget.repository?.upsertAll([localized], appLang.value);
       } catch (_) {}
       if (existing == null) {
         // Авто-добавление в избранное только при создании.
         // При edit пользователь сам решает, оставлять ли сердце.
         try {
-          await favoritesStoreNotifier.value?.add(saved.id, appLang.value);
+          await favoritesStoreNotifier.value?.add(localized.id, appLang.value);
         } catch (_) {}
         try {
-          await ownedRecipesStoreNotifier.value?.add(saved.id);
+          await ownedRecipesStoreNotifier.value?.add(localized.id);
         } catch (_) {}
-        newRecipeCreatedNotifier.value = saved;
+        newRecipeCreatedNotifier.value = localized;
       } else {
-        recipeUpdatedNotifier.value = saved;
+        recipeUpdatedNotifier.value = localized;
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text(s.addRecipeSuccess)));
-      Navigator.of(context).pop(saved);
+      Navigator.of(context).pop(localized);
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
