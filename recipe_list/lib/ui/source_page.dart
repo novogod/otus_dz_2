@@ -82,55 +82,61 @@ class _SourcePageState extends State<SourcePage> {
     final s = S.of(context);
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.primaryDark,
-        elevation: 0,
-        leading: IconButton(
-          tooltip: s.back,
-          icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              s.source,
-              style: const TextStyle(
-                fontFamily: AppTextStyles.fontFamily,
-                fontWeight: FontWeight.w400,
-                fontSize: 20,
-                height: 23 / 20,
-                color: AppColors.primaryDark,
-              ),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight + (_loading ? 2 : 0)),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: AppBar(
+            backgroundColor: AppColors.surface,
+            foregroundColor: AppColors.primaryDark,
+            elevation: 0,
+            leading: IconButton(
+              tooltip: s.back,
+              icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
+              onPressed: () => Navigator.of(context).maybePop(),
             ),
-            if (_hostLabel.isNotEmpty)
-              Text(
-                _hostLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: AppTextStyles.fontFamily,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 11,
-                  height: 13 / 11,
-                  color: AppColors.textSecondary,
+            title: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  s.source,
+                  style: const TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 20,
+                    height: 23 / 20,
+                    color: AppColors.primaryDark,
+                  ),
                 ),
-              ),
-          ],
+                if (_hostLabel.isNotEmpty)
+                  Text(
+                    _hostLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 11,
+                      height: 13 / 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
+            centerTitle: true,
+            actions: const [LangIconButton()],
+            bottom: _loading
+                ? PreferredSize(
+                    preferredSize: const Size.fromHeight(2),
+                    child: LinearProgressIndicator(
+                      value: _progress == 0 ? null : _progress,
+                      minHeight: 2,
+                      backgroundColor: AppColors.surfaceMuted,
+                    ),
+                  )
+                : null,
+          ),
         ),
-        centerTitle: true,
-        actions: const [LangIconButton()],
-        bottom: _loading
-            ? PreferredSize(
-                preferredSize: const Size.fromHeight(2),
-                child: LinearProgressIndicator(
-                  value: _progress == 0 ? null : _progress,
-                  minHeight: 2,
-                  backgroundColor: AppColors.surfaceMuted,
-                ),
-              )
-            : null,
       ),
       body: WebViewWidget(controller: _controller),
       bottomNavigationBar: const AppBottomNavBar(current: AppNavTab.recipes),

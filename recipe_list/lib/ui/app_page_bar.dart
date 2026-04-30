@@ -65,26 +65,34 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    return AppBar(
-      backgroundColor: AppColors.surface,
-      foregroundColor: AppColors.primaryDark,
-      elevation: 0,
-      titleSpacing: titleSpacing,
-      centerTitle: centerTitle,
-      leading: IconButton(
-        tooltip: s.back,
-        icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
-        onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+    // Шапка всегда раскладывается слева-направо, даже на ar/fa/ku.
+    // По дизайну back живёт слева, переключатель языка — справа,
+    // и при переходе на RTL мы НЕ хотим, чтобы Material зеркалил
+    // эти позиции. Текстовое содержимое (заголовки, hint поиска)
+    // продолжает определять direction само по своему контенту.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: AppBar(
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.primaryDark,
+        elevation: 0,
+        titleSpacing: titleSpacing,
+        centerTitle: centerTitle,
+        leading: IconButton(
+          tooltip: s.back,
+          icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
+          onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+        ),
+        title: title,
+        actions: [
+          if (showReload) const ReloadIconButton(),
+          const LangIconButton(),
+          const SizedBox(width: _trailingGap),
+        ],
+        bottom: showReload
+            ? const _ReloadProgressBar(height: _kReloadProgressHeight)
+            : null,
       ),
-      title: title,
-      actions: [
-        if (showReload) const ReloadIconButton(),
-        const LangIconButton(),
-        const SizedBox(width: _trailingGap),
-      ],
-      bottom: showReload
-          ? const _ReloadProgressBar(height: _kReloadProgressHeight)
-          : null,
     );
   }
 }
