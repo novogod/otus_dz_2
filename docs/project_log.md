@@ -1,5 +1,34 @@
 # Project Log
 
+## AppBar polish: equal 40×40 circles for back / reload / flag / lang
+
+**Date:** 2026-04-30
+
+UI cleanup of the shared `AppPageBar`. All four header actions now
+share one visual vocabulary: 40×40 circles with `AppSpacing.sm` (8 px)
+between them.
+
+* `recipe_list/lib/ui/lang_icon_button.dart`: flag is now a 40×40
+  `ClipOval` with `BoxFit.cover` (was 24×16 ClipRRect with rounded-2
+  corners) so it visually pairs with the lang circle. Stripped the
+  outer horizontal padding so the inter-button gap is governed by the
+  parent `Row`/AppBar.
+* `recipe_list/lib/ui/reload_icon_button.dart`: stripped the outer
+  padding; added `BorderSide(width: 1, color: Colors.black)` on the
+  `CircleBorder` so the muted-surface circle has a defined edge.
+* `recipe_list/lib/ui/app_page_bar.dart`:
+  * Replaced the default `IconButton` back chevron with the same
+    40×40 `Material` + bordered `CircleBorder` + `surfaceMuted` fill
+    + `chevron_left` glyph as the reload button. `leadingWidth = 56`
+    pads the circle by `AppSpacing.sm` from the screen edge.
+  * Added `SizedBox(width: AppSpacing.sm)` between reload and lang
+    when both are visible, so the trailing trio (reload · flag ·
+    lang) is evenly spaced.
+
+`flutter analyze` clean.
+
+---
+
 ## Details-page lang cycle: bound latency, short-circuit dead tiers, defer background retranslate
 
 **Date:** 2026-04-30

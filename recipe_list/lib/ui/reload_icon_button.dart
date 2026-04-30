@@ -56,32 +56,28 @@ class _ReloadIconButtonState extends State<ReloadIconButton>
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs,
-        vertical: AppSpacing.xs,
-      ),
-      child: Semantics(
-        button: true,
-        label: s.reloadFeed,
-        child: Tooltip(
-          message: s.reloadFeed,
-          child: Material(
-            color: AppColors.surfaceMuted,
-            shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: widget.global ? requestAppReload : requestFeedReload,
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: RotationTransition(
-                  turns: _spin,
-                  child: const Icon(
-                    Icons.refresh,
-                    size: 22,
-                    color: AppColors.primaryDark,
-                  ),
+    return Semantics(
+      button: true,
+      label: s.reloadFeed,
+      child: Tooltip(
+        message: s.reloadFeed,
+        child: Material(
+          color: AppColors.surfaceMuted,
+          shape: const CircleBorder(
+            side: BorderSide(width: 1, color: Colors.black),
+          ),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: widget.global ? requestAppReload : requestFeedReload,
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: RotationTransition(
+                turns: _spin,
+                child: const Icon(
+                  Icons.refresh,
+                  size: 22,
+                  color: AppColors.primaryDark,
                 ),
               ),
             ),

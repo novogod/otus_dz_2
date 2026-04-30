@@ -78,14 +78,42 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
         elevation: 0,
         titleSpacing: titleSpacing,
         centerTitle: centerTitle,
-        leading: IconButton(
-          tooltip: s.back,
-          icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
-          onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: AppSpacing.sm),
+          child: Center(
+            child: Semantics(
+              button: true,
+              label: s.back,
+              child: Tooltip(
+                message: s.back,
+                child: Material(
+                  color: AppColors.surfaceMuted,
+                  shape: const CircleBorder(
+                    side: BorderSide(width: 1, color: Colors.black),
+                  ),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: onBack ?? () => Navigator.of(context).maybePop(),
+                    child: const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Icon(
+                        Icons.chevron_left,
+                        size: 22,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
+        leadingWidth: 40 + AppSpacing.sm + AppSpacing.sm,
         title: title,
         actions: [
           if (showReload) const ReloadIconButton(),
+          if (showReload) const SizedBox(width: AppSpacing.sm),
           const LangIconButton(),
           const SizedBox(width: _trailingGap),
         ],

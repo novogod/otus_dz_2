@@ -26,23 +26,22 @@ class LangIconButton extends StatelessWidget {
         final next =
             AppLang.values[(current.index + 1) % AppLang.values.length];
         return Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.xs,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
           child: Semantics(
             button: true,
             label: s.switchLanguageTo(next.label),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Флаг слева от кнопки. 24×16 — пропорция 3:2,
-                // совпадает с оригинальными SVG из mahallem_flutter.
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
+                // Флаг слева от кнопки. Круглая 40×40-обрезка SVG
+                // под cover, чтобы заполнить тот же круг, что и
+                // соседняя кнопка-«RU/EN/…» — флаг и кнопка
+                // зрительно выровнены как пара одинаковых
+                // кружков.
+                ClipOval(
                   child: SizedBox(
-                    width: 24,
-                    height: 16,
+                    width: 40,
+                    height: 40,
                     child: SvgPicture.asset(
                       current.flagAsset,
                       fit: BoxFit.cover,
