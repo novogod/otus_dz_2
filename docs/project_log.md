@@ -138,6 +138,34 @@ Re-smoke: `POST https://mahallem.ist/recipes` → 201,
 вспоминать. В `docs/todo/recipe_photo_upload.md` чанк 5 acceptance
 example обновлён под новый формат URL и ссылается на §2.2.1.
 
+## Add-recipe: fix overflowing ingredient row labels (otus `b3ddf3a`)
+
+**Date:** 2026-04-29
+
+Симптом, увиденный на боевом устройстве: в форме «+ рецепт»
+строка ингредиента (`name | qty | unit | № | +/−`) на узких
+экранах сжимала qty/unit до ~80–100 dp; плавающий
+Material-`labelText` («Кол-во», «Мера») не помещался и
+обрезался троеточием, поле де-факто становилось безымянным.
+
+Что сделал в [`_IngredientRowField`](../recipe_list/lib/ui/add_recipe_page.dart):
+
+1. **Убрал колонку с номером строки** (целое 1…20). Сервер
+   и так упорядочивает ингредиенты по индексу массива
+   `i18n.<lang>.ingredients[]` — UI-номер ничего не нёс,
+   только съедал ~24 dp ширины и мешал глазу.
+2. **Перенёс подписи из `labelText` в `helperText`**
+   (`helperMaxLines: 2`). Подпись стала мелким текстом *под*
+   полем, не конкурирует за ширину инпута и спокойно
+   переносится в две строки на длинных локализациях
+   (немецкий, курдский). ARB-ключи
+   (`addRecipeIngredientName/Qty/Measure`) переиспользованы
+   как есть, без правок локалей.
+3. Удалил неиспользуемый параметр `index` конструктора
+   `_IngredientRowField` и его прокидку из `build()`.
+
+`flutter analyze lib/ui/add_recipe_page.dart` → No issues.
+
 ## Add-recipe feature + Russian docs
 
 **Date:** 2026-04-29
