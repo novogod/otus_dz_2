@@ -321,7 +321,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                         opacity: _showScrollToTop ? 1.0 : 0.0,
                         duration: const Duration(milliseconds: 180),
                         curve: Curves.easeOut,
-                        child: _ScrollToTopFab(onPressed: _scrollToTop),
+                        child: ScrollToTopFab(onPressed: _scrollToTop),
                       ),
                     ),
                   ),
@@ -334,7 +334,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                   Positioned(
                     left: AppSpacing.lg,
                     bottom: AppSpacing.lg,
-                    child: _AddRecipeFab(
+                    child: AddRecipeFab(
                       onPressed: () => _openAddRecipe(context),
                     ),
                   ),
@@ -364,9 +364,14 @@ class _RecipeListPageState extends State<RecipeListPage> {
   void _onNavTap(BuildContext context, AppNavTab tab) {
     if (tab == AppNavTab.recipes) return;
     if (tab == AppNavTab.favorites) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => const FavoritesPage()));
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => FavoritesPage(
+            api: widget.api,
+            repository: widget.repository,
+          ),
+        ),
+      );
       return;
     }
     final s = S.of(context);
@@ -433,8 +438,11 @@ class _RecipeListPageState extends State<RecipeListPage> {
 /// фон `AppColors.primary`, тень `AppShadows.navBar`. Прозрачность
 /// 0.85 — так под FAB-ом видно фон ленты, и кнопка не давит на
 /// контент. Иконка — `Icons.keyboard_arrow_up` (chevron) в белом.
-class _ScrollToTopFab extends StatelessWidget {
-  const _ScrollToTopFab({required this.onPressed});
+///
+/// Public, чтобы переиспользовать на странице «Избранное»
+/// (см. [FavoritesPage]).
+class ScrollToTopFab extends StatelessWidget {
+  const ScrollToTopFab({super.key, required this.onPressed});
 
   final VoidCallback onPressed;
 
@@ -477,11 +485,14 @@ class _ScrollToTopFab extends StatelessWidget {
   }
 }
 
-/// FAB «добавить рецепт». Зеркальный близнец [_ScrollToTopFab]:
+/// FAB «добавить рецепт». Зеркальный близнец [ScrollToTopFab]:
 /// тот же круг 56×56 / `AppColors.primary` @ 0.85 / тень
 /// `AppShadows.navBar`. Иконка `Icons.add` в белом.
-class _AddRecipeFab extends StatelessWidget {
-  const _AddRecipeFab({required this.onPressed});
+///
+/// Public, чтобы переиспользовать на странице «Избранное»
+/// (см. [FavoritesPage]).
+class AddRecipeFab extends StatelessWidget {
+  const AddRecipeFab({super.key, required this.onPressed});
 
   final VoidCallback onPressed;
 

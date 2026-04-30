@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../data/api/recipe_api.dart';
 import '../data/repository/favorites_store.dart';
+import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
+import 'add_recipe_page.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
 import 'recipe_card.dart';
 import 'recipe_details_page.dart';
+import 'recipe_list_page.dart';
 import 'search_app_bar.dart';
 
 /// Экран «Избранное» (chunk D из todo/15).
@@ -21,7 +25,15 @@ import 'search_app_bar.dart';
 ///   кликаемы, чтобы не уводить пользователя со «своих рецептов»
 ///   в чужой язык, где избранное другое.
 class FavoritesPage extends StatefulWidget {
-  const FavoritesPage({super.key});
+  /// API и репозиторий прокидываются из [RecipeListPage], чтобы
+  /// FAB «добавить рецепт» мог открыть [AddRecipePage]
+  /// с тем же бэкендом, что и главная лента. Оба поля
+  /// nullable — в тестах / в «холодном» режиме (без API)
+  /// FAB добавления просто не рендерится.
+  final RecipeApi? api;
+  final RecipeRepository? repository;
+
+  const FavoritesPage({super.key, this.api, this.repository});
 
   @override
   State<FavoritesPage> createState() => _FavoritesPageState();
@@ -30,10 +42,38 @@ class FavoritesPage extends StatefulWidget {
 class _FavoritesPageState extends State<FavoritesPage> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
   String _query = '';
+  bool _showScrollToTop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final shouldShow = _scrollController.hasClients
+        ? _scrollController.offset > 200
+        : false;
+    if (shouldShow != _showScrollToTop) {
+      setState(() => _showScrollToTop = shouldShow);
+    }
+  }
+
+  Future<void> _scrollToTop() async {
+    if (!_scrollController.hasClients) return;
+    await _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -53,52 +93,85 @@ class _FavoritesPageState extends State<FavoritesPage> {
       body: SafeArea(
         top: false,
         bottom: false,
-        child: ValueListenableBuilder<FavoritesStore?>(
-          valueListenable: favoritesStoreNotifier,
-          builder: (context, store, _) {
-            if (store == null) {
-              return const _FavoritesEmpty();
-            }
-            return ValueListenableBuilder<AppLang>(
-              valueListenable: appLang,
-              builder: (context, lang, _) {
-                return ValueListenableBuilder<Set<int>>(
-                  valueListenable: store.idsForLang(lang),
-                  builder: (context, _, _) {
-                    return FutureBuilder<List<Recipe>>(
-                      future: store.list(lang),
-                      builder: (context, snap) {
-                        if (!snap.hasData) {
-                          return const SizedBox.shrink();
-                        }
-                        final all = snap.data!;
-                        if (all.isEmpty) {
-                          return const _FavoritesEmpty();
-                        }
-                        final filtered = _filter(all, _query);
-                        if (filtered.isEmpty) {
-                          return const _NoMatches();
-                        }
-                        return ListView.builder(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.sm,
-                          ),
-                          itemCount: filtered.length,
-                          itemBuilder: (context, i) {
-                            final recipe = filtered[i];
-                            return RecipeCard(
-                              recipe: recipe,
-                              onTap: () => _openDetails(context, recipe),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            );
-          },
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: ValueListenableBuilder<FavoritesStore?>(
+                valueListenable: favoritesStoreNotifier,
+                builder: (context, store, _) {
+                  if (store == null) {
+                    return const _FavoritesEmpty();
+                  }
+                  return ValueListenableBuilder<AppLang>(
+                    valueListenable: appLang,
+                    builder: (context, lang, _) {
+                      return ValueListenableBuilder<Set<int>>(
+                        valueListenable: store.idsForLang(lang),
+                        builder: (context, _, _) {
+                          return FutureBuilder<List<Recipe>>(
+                            future: store.list(lang),
+                            builder: (context, snap) {
+                              if (!snap.hasData) {
+                                return const SizedBox.shrink();
+                              }
+                              final all = snap.data!;
+                              if (all.isEmpty) {
+                                return const _FavoritesEmpty();
+                              }
+                              final filtered = _filter(all, _query);
+                              if (filtered.isEmpty) {
+                                return const _NoMatches();
+                              }
+                              return ListView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.sm,
+                                ),
+                                itemCount: filtered.length,
+                                itemBuilder: (context, i) {
+                                  final recipe = filtered[i];
+                                  return RecipeCard(
+                                    recipe: recipe,
+                                    onTap: () => _openDetails(context, recipe),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            // FAB «к началу списка» — те же координаты и поведение,
+            // что и на главной (см. RecipeListPage).
+            Positioned(
+              right: AppSpacing.lg,
+              bottom: AppSpacing.lg,
+              child: IgnorePointer(
+                ignoring: !_showScrollToTop,
+                child: AnimatedOpacity(
+                  opacity: _showScrollToTop ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  child: ScrollToTopFab(onPressed: _scrollToTop),
+                ),
+              ),
+            ),
+            // FAB «добавить рецепт» — виден только если страница
+            // получила api/repository (как и на главной ленте).
+            // В тестах без бэкенда FAB просто не появляется.
+            if (widget.api != null)
+              Positioned(
+                left: AppSpacing.lg,
+                bottom: AppSpacing.lg,
+                child: AddRecipeFab(
+                  onPressed: () => _openAddRecipe(context),
+                ),
+              ),
+          ],
         ),
       ),
       bottomNavigationBar: AppBottomNavBar(
@@ -122,6 +195,20 @@ class _FavoritesPageState extends State<FavoritesPage> {
         builder: (_) => RecipeDetailsPage(recipe: recipe),
       ),
     );
+  }
+
+  Future<void> _openAddRecipe(BuildContext context) async {
+    final api = widget.api;
+    if (api == null) return;
+    await Navigator.of(context).push<Recipe>(
+      MaterialPageRoute<Recipe>(
+        builder: (_) =>
+            AddRecipePage(api: api, repository: widget.repository),
+      ),
+    );
+    // Новый рецепт не попадает автоматически в избранное — список
+    // обновится сам через `favoritesStoreNotifier`, когда
+    // пользователь нажмёт сердце на странице деталей.
   }
 
   void _onNavTap(BuildContext context, AppNavTab tab) {
