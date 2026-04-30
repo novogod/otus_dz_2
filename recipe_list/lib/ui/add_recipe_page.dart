@@ -452,9 +452,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
             title: null,
             flexibleSpace: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: kToolbarHeight,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: kToolbarHeight),
                 child: Center(
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
@@ -463,12 +461,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
                       _isEdit ? s.editRecipeTitle : s.addRecipeTitle,
                       maxLines: 1,
                       softWrap: false,
-                      // textTheme.titleLarge в нашей теме —
-                      // `brandTitle` (белый, для login-экрана),
-                      // на белом AppBar он невидим. Берём
-                      // `pageTitle` (24/black) — соответствует
-                      // дизайн-токену AppBar-заголовка.
-                      style: AppTextStyles.pageTitle,
+                      // `flexibleSpace` \u043d\u0435 \u043f\u043e\u0434\u0445\u0432\u0430\u0442\u044b\u0432\u0430\u0435\u0442 toolbar-\u044b\u0439\n                      // DefaultTextStyle, \u043f\u043e\u044d\u0442\u043e\u043c\u0443 \u0432\u044b\u043d\u0438\u043c\u0430\u0435\u043c\n                      // page-title-\u0442\u043e\u043a\u0435\u043d \u0438\u0437 \u0442\u0435\u043c\u044b \u0432\u0440\u0443\u0447\u043d\u0443\u044e\n                      // (docs/design_system.md \u00abPage title\u00bb \u2014\n                      // Roboto 500/24/22 `#000000`).\n                      style: Theme.of(context).appBarTheme.titleTextStyle,
                     ),
                   ),
                 ),

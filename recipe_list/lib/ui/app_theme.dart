@@ -325,6 +325,12 @@ class AppTheme {
       foregroundColor: AppColors.textPrimary,
       elevation: 0,
       centerTitle: true,
+      // Заголовок страницы — docs/design_system.md §типографика
+      // «Page title» (Roboto 500/24/22 `#000000`). Регистрируем
+      // в теме целиком, чтобы экраны не пробрасывали
+      // `style:` вручную и брали токен через Theme-канал.
+      titleTextStyle: AppTextStyles.pageTitle,
+      toolbarTextStyle: AppTextStyles.pageTitle,
     ),
     textTheme: const TextTheme(
       titleLarge: AppTextStyles.brandTitle,
