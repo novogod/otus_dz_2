@@ -463,8 +463,12 @@ class _AddRecipePageState extends State<AddRecipePage> {
                       _isEdit ? s.editRecipeTitle : s.addRecipeTitle,
                       maxLines: 1,
                       softWrap: false,
-                      style: Theme.of(context).appBarTheme.titleTextStyle ??
-                          Theme.of(context).textTheme.titleLarge,
+                      // textTheme.titleLarge в нашей теме —
+                      // `brandTitle` (белый, для login-экрана),
+                      // на белом AppBar он невидим. Берём
+                      // `pageTitle` (24/black) — соответствует
+                      // дизайн-токену AppBar-заголовка.
+                      style: AppTextStyles.pageTitle,
                     ),
                   ),
                 ),
