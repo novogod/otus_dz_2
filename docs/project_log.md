@@ -1,5 +1,55 @@
 # Project Log
 
+## Turkish residue: drop `tr` from echo gate, English fallback on lookup miss
+
+**Date:** 2026-04-29
+
+Bug: при переключении на турецкий лента почти всегда оставалась
+итальянской (последний посещённый язык). Воспроизводилось каждый
+раз, не «иногда».
+
+**Root cause #1 — `tr` в LATIN_TARGET echo gate (server).**
+`_isEchoTranslation` в
+[`mahallem_ist/local_user_portal/routes/recipes.js`](https://github.com/novogod/mahallem_ist/commit/004d473b)
+для языков `LATIN_TARGET = {es, fr, de, it, tr}` отбрасывал перевод,
+если в нём встречался любой word-boundary англизм из списка
+(`turn|stir|combine|...`). Турецкий MT-вывод регулярно содержит эти
+маркеры даже когда 90% текста переведено корректно (живой пример:
+`52765` → «turn enchilada caserole on…» — `turn` ловится).
+Перевод **отдаётся клиенту, но не персистится** — следующий заход
+снова идёт в Gemini (2–8 c). Кэш никогда не прогревается.
+
+Фактическое покрытие до фикса: tr=311/599 (52%) против en=599 (100%),
+de=573 (96%). Половина ленты на каждом заходе требовала свежего
+перевода.
+
+**Root cause #2 — таймауты + previous-language fallback (client).**
+`_retranslate` в [`recipe_list/lib/ui/recipe_list_loader.dart`](https://github.com/AndreyProkhorov/otus_dz/commit/47c942c)
+имел `perCallTimeout = 12s` и `deadline = 120s` при concurrency 8.
+При spike-латенции Gemini под параллельной нагрузкой отдельные
+рецепты упирались в 12-секундный таймаут → в массиве `translated[]`
+оставалась карточка из `prev.recipes` (Italian). Пользователь видел
+ровно «остаток предыдущего языка».
+
+**Fix:**
+- Server (`004d473b`): `LATIN_TARGET = {es, fr, de, it}` — `tr`
+  убран. Перевод с английскими маркерами теперь персистится и в
+  следующий раз отдаётся из кэша мгновенно. Ожидаемое покрытие
+  через день браузинга — ≥95%.
+- Client (`47c942c`): после неудачного `lookup(id, target_lang)`
+  пробуем `lookup(id, en)` и подставляем английский. Английский
+  100%-покрыт серверно, fallback почти никогда не падает.
+  Также `perCallTimeout: 12s → 25s`, `deadline: 120s → 240s`.
+
+**Verified live:** `id=52765` (раньше отвергался) персистится после
+одного `/lookup`. Покрытие сразу нудьнуло 311 → 317 на проверочном
+трафике.
+
+**Deploy hiccup:** первая попытка перезапуска контейнера через `docker
+run` упала на отсутствующем `.env`. Откатились на `docker compose up
+-d --build user-portal` из `local_docker_admin_backend/` — service
+был недоступен ~30 c.
+
 ## Recipe search: substring across locales, always upstream
 
 **Date:** 2026-04-29
