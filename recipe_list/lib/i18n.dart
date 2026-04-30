@@ -252,9 +252,13 @@ class S {
   String get addRecipeInstructions => _t.addRecipeInstructions;
   String get addRecipeIngredientsLabel => _t.addRecipeIngredientsLabel;
   String get addRecipeIngredientName => _t.addRecipeIngredientName;
+  String get addRecipeIngredientNameHint => _t.addRecipeIngredientNameHint;
   String get addRecipeIngredientQty => _t.addRecipeIngredientQty;
   String get addRecipeIngredientQtyShort => _t.addRecipeIngredientQtyShort;
+  String get addRecipeIngredientQtyHint => _t.addRecipeIngredientQtyHint;
   String get addRecipeIngredientMeasure => _t.addRecipeIngredientMeasure;
+  String get addRecipeIngredientMeasureHint =>
+      _t.addRecipeIngredientMeasureHint;
   String get addRecipeIngredientAdd => _t.addRecipeIngredientAdd;
   String get addRecipeIngredientRemove => _t.addRecipeIngredientRemove;
   String get addRecipeSubmit => _t.addRecipeSubmit;

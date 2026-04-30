@@ -75,9 +75,12 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeInstructions => 'دستور پخت';
 	@override String get addRecipeIngredientsLabel => 'مواد';
 	@override String get addRecipeIngredientName => 'نام';
+	@override String get addRecipeIngredientNameHint => 'شکر';
 	@override String get addRecipeIngredientQty => 'مقدار';
 	@override String get addRecipeIngredientQtyShort => 'مقد.';
+	@override String get addRecipeIngredientQtyHint => '100';
 	@override String get addRecipeIngredientMeasure => 'واحد';
+	@override String get addRecipeIngredientMeasureHint => 'گ';
 	@override String get addRecipeIngredientAdd => 'افزودن ماده';
 	@override String get addRecipeIngredientRemove => 'حذف ماده';
 	@override String get addRecipeSubmit => 'ذخیرهٔ دستور';
@@ -160,9 +163,12 @@ extension on TranslationsFa {
 			'addRecipeInstructions' => 'دستور پخت',
 			'addRecipeIngredientsLabel' => 'مواد',
 			'addRecipeIngredientName' => 'نام',
+			'addRecipeIngredientNameHint' => 'شکر',
 			'addRecipeIngredientQty' => 'مقدار',
 			'addRecipeIngredientQtyShort' => 'مقد.',
+			'addRecipeIngredientQtyHint' => '100',
 			'addRecipeIngredientMeasure' => 'واحد',
+			'addRecipeIngredientMeasureHint' => 'گ',
 			'addRecipeIngredientAdd' => 'افزودن ماده',
 			'addRecipeIngredientRemove' => 'حذف ماده',
 			'addRecipeSubmit' => 'ذخیرهٔ دستور',

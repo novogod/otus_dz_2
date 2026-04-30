@@ -79,9 +79,12 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeInstructions => 'التعليمات';
 	@override String get addRecipeIngredientsLabel => 'المكوّنات';
 	@override String get addRecipeIngredientName => 'الاسم';
+	@override String get addRecipeIngredientNameHint => 'سكر';
 	@override String get addRecipeIngredientQty => 'الكمية';
 	@override String get addRecipeIngredientQtyShort => 'كم.';
+	@override String get addRecipeIngredientQtyHint => '100';
 	@override String get addRecipeIngredientMeasure => 'الوحدة';
+	@override String get addRecipeIngredientMeasureHint => 'غ';
 	@override String get addRecipeIngredientAdd => 'إضافة مكوّن';
 	@override String get addRecipeIngredientRemove => 'حذف المكوّن';
 	@override String get addRecipeSubmit => 'حفظ الوصفة';
@@ -164,9 +167,12 @@ extension on TranslationsAr {
 			'addRecipeInstructions' => 'التعليمات',
 			'addRecipeIngredientsLabel' => 'المكوّنات',
 			'addRecipeIngredientName' => 'الاسم',
+			'addRecipeIngredientNameHint' => 'سكر',
 			'addRecipeIngredientQty' => 'الكمية',
 			'addRecipeIngredientQtyShort' => 'كم.',
+			'addRecipeIngredientQtyHint' => '100',
 			'addRecipeIngredientMeasure' => 'الوحدة',
+			'addRecipeIngredientMeasureHint' => 'غ',
 			'addRecipeIngredientAdd' => 'إضافة مكوّن',
 			'addRecipeIngredientRemove' => 'حذف المكوّن',
 			'addRecipeSubmit' => 'حفظ الوصفة',

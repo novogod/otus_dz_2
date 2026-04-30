@@ -480,10 +480,11 @@ class _IngredientRowField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          flex: 11,
+          flex: 10,
           child: TextFormField(
             controller: row.name,
             decoration: InputDecoration(
+              hintText: s.addRecipeIngredientNameHint,
               helperText: s.addRecipeIngredientName,
               helperMaxLines: 2,
               helperStyle: helperStyle,
@@ -493,18 +494,17 @@ class _IngredientRowField extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        // Qty намеренно узкое: типичные значения — «250», «1.5»,
-        // «1/2» — укладываются в 3-4 глифа, нет смысла отдавать
-        // полю половину строки. Раскладка name:qty:unit = 11:2:3
-        // (qty в 4 раза уже предыдущего варианта 11:7:3, освобождённая
-        // ширина ушла в name). Под полем — короткая подпись «Кол.»;
-        // unit-поле без helperText — placeholder «г/шт/мл»
-        // подразумевается из контекста.
+        // Qty и unit равны по ширине (flex 3 каждое); placeholder
+        // в каждом поле даёт живой пример формата ввода
+        // («Сахар» / «100» / «г»). Под qty — короткая подпись
+        // «Кол.»; unit — без helperText, контекст и placeholder
+        // достаточны.
         Expanded(
-          flex: 2,
+          flex: 3,
           child: TextFormField(
             controller: row.qty,
             decoration: InputDecoration(
+              hintText: s.addRecipeIngredientQtyHint,
               helperText: s.addRecipeIngredientQtyShort,
               helperMaxLines: 1,
               helperStyle: helperStyle,
@@ -519,7 +519,10 @@ class _IngredientRowField extends StatelessWidget {
           flex: 3,
           child: TextFormField(
             controller: row.unit,
-            decoration: const InputDecoration(isDense: true),
+            decoration: InputDecoration(
+              hintText: s.addRecipeIngredientMeasureHint,
+              isDense: true,
+            ),
             textInputAction: TextInputAction.next,
           ),
         ),

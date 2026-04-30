@@ -77,9 +77,12 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeInstructions => 'Инструкция';
 	@override String get addRecipeIngredientsLabel => 'Ингредиенты';
 	@override String get addRecipeIngredientName => 'Название';
+	@override String get addRecipeIngredientNameHint => 'Сахар';
 	@override String get addRecipeIngredientQty => 'Кол-во';
 	@override String get addRecipeIngredientQtyShort => 'Кол.';
+	@override String get addRecipeIngredientQtyHint => '100';
 	@override String get addRecipeIngredientMeasure => 'Ед. изм.';
+	@override String get addRecipeIngredientMeasureHint => 'г';
 	@override String get addRecipeIngredientAdd => 'Добавить ингредиент';
 	@override String get addRecipeIngredientRemove => 'Удалить ингредиент';
 	@override String get addRecipeSubmit => 'Сохранить рецепт';
@@ -162,9 +165,12 @@ extension on TranslationsRu {
 			'addRecipeInstructions' => 'Инструкция',
 			'addRecipeIngredientsLabel' => 'Ингредиенты',
 			'addRecipeIngredientName' => 'Название',
+			'addRecipeIngredientNameHint' => 'Сахар',
 			'addRecipeIngredientQty' => 'Кол-во',
 			'addRecipeIngredientQtyShort' => 'Кол.',
+			'addRecipeIngredientQtyHint' => '100',
 			'addRecipeIngredientMeasure' => 'Ед. изм.',
+			'addRecipeIngredientMeasureHint' => 'г',
 			'addRecipeIngredientAdd' => 'Добавить ингредиент',
 			'addRecipeIngredientRemove' => 'Удалить ингредиент',
 			'addRecipeSubmit' => 'Сохранить рецепт',

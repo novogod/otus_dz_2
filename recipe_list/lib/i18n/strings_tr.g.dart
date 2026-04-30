@@ -75,9 +75,12 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipeInstructions => 'Talimatlar';
 	@override String get addRecipeIngredientsLabel => 'Malzemeler';
 	@override String get addRecipeIngredientName => 'Ad';
+	@override String get addRecipeIngredientNameHint => 'Şeker';
 	@override String get addRecipeIngredientQty => 'Miktar';
 	@override String get addRecipeIngredientQtyShort => 'Mik.';
+	@override String get addRecipeIngredientQtyHint => '100';
 	@override String get addRecipeIngredientMeasure => 'Birim';
+	@override String get addRecipeIngredientMeasureHint => 'g';
 	@override String get addRecipeIngredientAdd => 'Malzeme ekle';
 	@override String get addRecipeIngredientRemove => 'Malzemeyi sil';
 	@override String get addRecipeSubmit => 'Tarifi kaydet';
@@ -160,9 +163,12 @@ extension on TranslationsTr {
 			'addRecipeInstructions' => 'Talimatlar',
 			'addRecipeIngredientsLabel' => 'Malzemeler',
 			'addRecipeIngredientName' => 'Ad',
+			'addRecipeIngredientNameHint' => 'Şeker',
 			'addRecipeIngredientQty' => 'Miktar',
 			'addRecipeIngredientQtyShort' => 'Mik.',
+			'addRecipeIngredientQtyHint' => '100',
 			'addRecipeIngredientMeasure' => 'Birim',
+			'addRecipeIngredientMeasureHint' => 'g',
 			'addRecipeIngredientAdd' => 'Malzeme ekle',
 			'addRecipeIngredientRemove' => 'Malzemeyi sil',
 			'addRecipeSubmit' => 'Tarifi kaydet',

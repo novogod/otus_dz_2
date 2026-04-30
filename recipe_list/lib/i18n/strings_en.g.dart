@@ -148,14 +148,23 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Name'
 	String get addRecipeIngredientName => 'Name';
 
+	/// en: 'Sugar'
+	String get addRecipeIngredientNameHint => 'Sugar';
+
 	/// en: 'Qty'
 	String get addRecipeIngredientQty => 'Qty';
 
 	/// en: 'Qty'
 	String get addRecipeIngredientQtyShort => 'Qty';
 
+	/// en: '100'
+	String get addRecipeIngredientQtyHint => '100';
+
 	/// en: 'Unit'
 	String get addRecipeIngredientMeasure => 'Unit';
+
+	/// en: 'g'
+	String get addRecipeIngredientMeasureHint => 'g';
 
 	/// en: 'Add ingredient'
 	String get addRecipeIngredientAdd => 'Add ingredient';
@@ -282,9 +291,12 @@ extension on Translations {
 			'addRecipeInstructions' => 'Instructions',
 			'addRecipeIngredientsLabel' => 'Ingredients',
 			'addRecipeIngredientName' => 'Name',
+			'addRecipeIngredientNameHint' => 'Sugar',
 			'addRecipeIngredientQty' => 'Qty',
 			'addRecipeIngredientQtyShort' => 'Qty',
+			'addRecipeIngredientQtyHint' => '100',
 			'addRecipeIngredientMeasure' => 'Unit',
+			'addRecipeIngredientMeasureHint' => 'g',
 			'addRecipeIngredientAdd' => 'Add ingredient',
 			'addRecipeIngredientRemove' => 'Remove ingredient',
 			'addRecipeSubmit' => 'Save recipe',
