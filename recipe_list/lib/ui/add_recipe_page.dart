@@ -53,6 +53,13 @@ class _AddRecipePageState extends State<AddRecipePage> {
   final _instructions = TextEditingController();
   final List<_IngredientRow> _ingredientRows = [_IngredientRow()];
 
+  /// Контроллер ListView-а формы. Нужен, чтобы после добавления
+  /// новой строки ингредиента прокрутить ленту вниз — иначе новая
+  /// строка появляется ниже viewport-а (или под клавиатурой)
+  /// и пользователь её не видит — визуально это выглядит как
+  /// «form уехала за safe-area» (см. docs/add-recipe-visibility.md).
+  final ScrollController _scrollController = ScrollController();
+
   bool _saving = false;
   bool _compressing = false;
   bool _photoTouched = false; // user pressed Save → show "required" error
@@ -73,6 +80,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
     for (final r in _ingredientRows) {
       r.dispose();
     }
+    _scrollController.dispose();
     _disposePickedPhoto();
     super.dispose();
   }
@@ -95,6 +103,18 @@ class _AddRecipePageState extends State<AddRecipePage> {
     setState(() {
       if (_ingredientRows.length >= 20) return;
       _ingredientRows.insert(afterIndex + 1, _IngredientRow());
+    });
+    // После вставки ListView вырастает; без принудительного
+    // скролла новая строка рисуется ниже видимой области и
+    //  выглядит как баг «form уходит за safe-area» (пользователь
+    // не понимает, что список просто нужно докрутить).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
     });
   }
 
@@ -349,7 +369,17 @@ class _AddRecipePageState extends State<AddRecipePage> {
           child: Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              controller: _scrollController,
+              // Нижний padding учитывает клавиатуру (`viewInsets.bottom`)
+              // — без этого новая строка ингредиента, добавленная
+              // из-под открытой клавы, ложится под неё и пользователь
+              // воспринимает это как «form провалилась за safe-area».
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
+              ),
               children: [
                 Text(
                   s.addRecipeEnglishHint,

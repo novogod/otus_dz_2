@@ -1,5 +1,33 @@
 # Project Log
 
+## AddRecipePage: догон-фикс safe-area при добавлении ингредиента
+
+**Date:** 2026-04-30
+
+После первого фикса (`SafeArea(top: false)` + auto-favorite,
+commit `1a20e05`) пользователь сообщил, что safe-area-баг не
+полностью устранён: при нажатии «+» в строке ингредиента новая
+строка появляется ниже viewport-а, а кнопка «Сохранить» уходит
+под клавиатуру.
+
+Корни — два, оба про скролл:
+* ListView не подкручивался после `setState` — новая строка
+  оставалась за нижним краем.
+* `padding` был статическим (`EdgeInsets.all(AppSpacing.lg)`) и
+  не учитывал `MediaQuery.viewInsets.bottom`. `SafeArea` покрывает
+  `viewPadding`, но не `viewInsets` клавиатуры — отсюда «форма
+  убегает под клавиши».
+
+Фикс в [recipe_list/lib/ui/add_recipe_page.dart](../recipe_list/lib/ui/add_recipe_page.dart):
+* `ScrollController _scrollController` пробрасывается в `ListView`.
+* После `_addIngredientRow` `addPostFrameCallback` → `animateTo(
+  maxScrollExtent, 220ms, easeOut)`.
+* Bottom padding ListView-а считается как
+  `AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom`.
+
+Подробности — [docs/add-recipe-visibility.md](add-recipe-visibility.md)
+(раздел «Догон-фикс»).
+
 ## AddRecipePage: SafeArea + видимость нового рецепта
 
 **Date:** 2026-04-30
