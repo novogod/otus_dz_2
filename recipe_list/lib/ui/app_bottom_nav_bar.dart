@@ -49,18 +49,27 @@ class AppBottomNavBar extends StatelessWidget {
           top: false,
           child: SizedBox(
             height: 84,
-            child: Row(
-              children: [
-                for (final item in _items)
-                  Expanded(
-                    child: _Tab(
-                      icon: item.icon,
-                      label: _label(item.tab, s),
-                      active: item.tab == current,
-                      onTap: onTap == null ? null : () => onTap!(item.tab),
+            // Закрепляем порядок вкладок слева-направо даже в RTL-локалях
+            // (ar/fa/ku). Дизайн-система §6 описывает фиксированную
+            // последовательность Recipes → Fridge → Favorites → Profile;
+            // зеркалить её под направление текста было бы дезориентирующе
+            // (иконки не несут текстовой семантики). Локальная
+            // Directionality.ltr не влияет на остальной интерфейс.
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Row(
+                children: [
+                  for (final item in _items)
+                    Expanded(
+                      child: _Tab(
+                        icon: item.icon,
+                        label: _label(item.tab, s),
+                        active: item.tab == current,
+                        onTap: onTap == null ? null : () => onTap!(item.tab),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
