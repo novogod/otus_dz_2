@@ -489,6 +489,18 @@ class _AddRecipePageState extends State<AddRecipePage> {
           // (`textPrimary`), сохраняя остальной theme.
           child: Theme(
             data: Theme.of(context).copyWith(
+              // Цвет вводимого текста (input-style) Flutter берёт из
+              // `textTheme.bodyLarge` (или `subtitle1` в M2). В нашей
+              // глобальной теме `bodyLarge` замаплен на
+              // `AppTextStyles.recipeMeta` — а это светло-зелёный
+              // `AppColors.primary` для метаданных карточки. На белом
+              // fill-е поля он почти не читается, поэтому локально
+              // переопределяем bodyLarge на чёрный textPrimary.
+              textTheme: Theme.of(context).textTheme.copyWith(
+                bodyLarge: AppTextStyles.recipeMeta.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
               inputDecorationTheme: Theme.of(context).inputDecorationTheme
                   .copyWith(
                     labelStyle: const TextStyle(color: AppColors.textPrimary),
