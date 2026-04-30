@@ -1,5 +1,71 @@
 # Project Log
 
+## Полировка UI редактирования рецепта + Favorites/Details
+
+**Date:** 2026-04-30
+
+Серия мелких UX-фиксов поверх owner-edit/delete фичи.
+
+* **Flutter** (`otus_dz_2`):
+  * `df9d808` — заголовок `AddRecipePage` (`flexibleSpace`) был
+    невидим (textTheme.titleLarge → `brandTitle` белым на белом).
+    Перешли на токен `AppTextStyles.pageTitle` (24sp, чёрный).
+  * `0d7456d` — зарегистрировали тот же токен в
+    `appBarTheme.titleTextStyle` / `toolbarTextStyle`, чтобы все
+    AppBar-ы тянули его из темы, а не из локального хардкода.
+  * `063eac9` — на форме add/edit перекрыли локальной `Theme`
+    `inputDecorationTheme.{label,floatingLabel,helper,hint}Style`
+    цветом `textPrimary`: на сером скаффолде глобальные
+    `textSecondary`/`primaryDark` были серо-зелёные и
+    нечитабельные.
+  * `1c9f61b` — токены теней: `cardShadow` 0x1A→0x24,
+    `navBarShadow` 0x40→0x5A (×1.4 темнее); подняли elevation
+    в `appBarTheme` (4 + scrolledUnder 4), новый `cardTheme`
+    (4), `floatingActionButtonTheme` (6/6/8/12),
+    `bottomNavigationBarTheme` / `navigationBarTheme` (8). Сняли
+    лишние локальные `elevation: 0` с SourcePage и AppPageBar.
+  * `19345b3` — text-color самого инпута на форме: глобальный
+    `textTheme.bodyLarge` мапится в `recipeMeta` (светло-зелёный
+    `AppColors.primary`), и набираемый текст почти исчезал; в
+    локальной `Theme` принудительно ставим `textPrimary`.
+  * `057040b` — после POST/PUT сервер возвращает рецепт уже
+    переведённым в `i18n.en`. Добавили дополнительный
+    `api.lookup(id, lang: appLang.value)`, чтобы кэш и
+    `recipeUpdatedNotifier` получили локализованный вариант
+    (если lookup упал — деградируем до ответа POST/PUT).
+  * `1444b93` — `_splitMeasure(raw)` режет серверный `measure`
+    на префиксное число (`1`, `1.5`, `1,5`, `1/2`,
+    `\u00BC`–`\u215E`) и хвост-единицу — раньше всё уходило в
+    `unit`, а `qty` в режиме edit оставался пустой.
+  * `43562df` — `FavoritesPage` теперь форвардит `api` /
+    `repository` в `RecipeDetailsPage`. `FavoritesStore.list`
+    джойнит только лёгкую `recipes`, инструкции лежат в
+    `recipe_bodies` и тянутся ленивым `getInstructions` уже на
+    деталях; без репозитория FutureBuilder инструкций
+    проваливался и блок «Instructions» пропадал.
+  * `af3e5a9` — `RecipeListLoader` ловил `setState() called when
+    widget tree was locked`. Виноват был
+    `_onActiveDetailsChanged` — `activeDetailsCount` декрементится
+    из `RecipeDetailsPage.dispose` (фаза unmount), а listener
+    синхронно дёргал `_onLangChanged` → `setState`. Завернули
+    отложенный retranslate в `scheduleMicrotask`.
+  * `13db16f` — `RecipeDetailsPage` принимает `originTab` (по
+    умолчанию `AppNavTab.recipes`); `FavoritesPage._openDetails`
+    передаёт `AppNavTab.favorites`, чтобы при открытии рецепта
+    из «Избранного» в нижней навигации подсвечивался именно
+    favorites-таб.
+
+* **Backend** (`mahallem_ist`, commit `248a646c`): при edit с
+  загрузкой нового фото из неанглийского UI маршрут пишет
+  одновременно `i18n.en` и `i18n[sourceLang]` с placeholder-ом
+  `pending://upload` в `strMealThumb`, после чего грузит файл и
+  патчит thumbnail через `updateUserMealThumb`. Раньше хелпер
+  обновлял только `i18n.en.strMealThumb`, и `lookup?lang=ru`
+  отдавал русскую локаль с placeholder-ом — на сохранённом
+  рецепте фото пропадало. `updateUserMealThumb` переписан так,
+  что новый URL раскатывается по всем ключам `i18n`, а не
+  только по `SOURCE_LANG`.
+
 ## Автоопределение языка нового рецепта + i18n заголовка «Edit recipe»
 
 **Date:** 2026-04-30
