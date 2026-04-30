@@ -85,6 +85,25 @@ class _AddRecipePageState extends State<AddRecipePage> {
     _category.text = src.category ?? '';
     _area.text = src.area ?? '';
     _instructions.text = src.instructions ?? '';
+    // Список / детали часто отдают рецепт в "lite"-варианте
+    // (без `instructions` — тяжёлая HTML-инструкция лежит в
+    // `recipe_bodies` и подгружается лениво, см.
+    // RecipeRepository.getInstructions). Если поле пустое и есть
+    // репозиторий, добиваем его из локального кэша, чтобы юзер
+    // не потерял текст инструкции при сохранении.
+    if ((src.instructions ?? '').isEmpty && widget.repository != null) {
+      // ignore: discarded_futures — фоновой подгрузке достаточно
+      // финального setState, ошибки безмолвно игнорируем.
+      widget.repository!
+          .getInstructions(src.id, appLang.value)
+          .then((value) {
+            if (!mounted) return;
+            if (value == null || value.isEmpty) return;
+            if (_instructions.text.isNotEmpty) return; // юзер уже ввёл
+            setState(() => _instructions.text = value);
+          })
+          .catchError((_) {});
+    }
     if (src.ingredients.isNotEmpty) {
       _ingredientRows
         ..first.dispose()
@@ -462,10 +481,12 @@ class _AddRecipePageState extends State<AddRecipePage> {
                   label: s.addRecipePhotoPicker,
                   child: _PhotoPicker(
                     picked: _pickedPhoto,
+                    existingUrl: widget.existing?.photo,
                     loading: _compressing,
                     errorText:
                         (_photoTouched &&
                             _pickedPhoto == null &&
+                            (widget.existing?.photo.isEmpty ?? true) &&
                             !_allowUrlFallback)
                         ? s.addRecipePhotoRequired
                         : null,
@@ -690,6 +711,7 @@ class _PhotoPicker extends StatelessWidget {
     required this.errorText,
     required this.onTap,
     required this.onClear,
+    this.existingUrl,
   });
 
   final File? picked;
@@ -697,6 +719,11 @@ class _PhotoPicker extends StatelessWidget {
   final String? errorText;
   final VoidCallback? onTap;
   final VoidCallback? onClear;
+
+  /// URL уже сохранённого фото (edit-режим). Показывается, если
+  /// пользователь ещё не выбрал новый файл. Тап по картинке
+  /// открывает sheet выбора и заменяет фото на новое.
+  final String? existingUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -735,6 +762,18 @@ class _PhotoPicker extends StatelessWidget {
                       borderRadius: radius,
                       child: picked != null
                           ? Image.file(picked!, fit: BoxFit.cover)
+                          : (existingUrl != null && existingUrl!.isNotEmpty)
+                          ? Image.network(
+                              existingUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 40,
+                                  color: AppColors.primaryDark,
+                                ),
+                              ),
+                            )
                           : Center(
                               child: Icon(
                                 Icons.add_a_photo_outlined,
