@@ -223,7 +223,9 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     // entirely. The details page issues its own focused `/lookup`
     // and the user can't see the list anyway. Defer until the
     // details page pops. See docs/details-lang-cycle-504.md.
-    if (activeDetailsCount.value > 0 && last != null && last.recipes.isNotEmpty) {
+    if (activeDetailsCount.value > 0 &&
+        last != null &&
+        last.recipes.isNotEmpty) {
       _pendingBackgroundLang = appLang.value;
       // ignore: avoid_print
       print(
