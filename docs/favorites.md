@@ -30,9 +30,17 @@ recipe list is wiped by the reload button — favorites must NOT be).
 * Renders a `RecipeListPage`-shaped grid of the saved recipes in
   reverse-chronological order (most recently added first).
 * Empty state: localised "No favorites yet" hint.
-* The reload button in the AppBar is **hidden** on this screen
-  (`AppPageBar.showReload = false`) — favorites are user-curated,
-  not seeded.
+* AppBar uses the same `SearchAppBar` shell as the Recipes tab,
+  but with the **language** and **reload** icon buttons rendered
+  faded (~38% opacity) and non-interactive (`onPressed: null` /
+  `IgnorePointer`). They are visible for layout consistency but
+  inert: language is irrelevant (favorites are pinned to the lang
+  they were saved in) and there is nothing to reload.
+* Search field is **active** and filters the favorites list locally
+  (client-side substring match against `recipe.name` of the rows
+  returned by `FavoritesStore.list(appLang.value)`). It does NOT
+  call the network search API and does NOT search outside the
+  favorites set.
 * Tapping a card opens the existing `RecipeDetailsPage`. The heart
   badge stays interactive there and round-trips state through the
   same store.

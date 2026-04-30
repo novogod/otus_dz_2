@@ -90,7 +90,14 @@ own commit, with tests that pass before moving on.
     `FavoritesStore.list(appLang.value)`.
   * Empty state: localised hint via `s.favoritesEmpty`.
   * Reuses `RecipeCard`.
-  * AppBar: `AppPageBar(title: s.tabFavorites, showReload: false)`.
+  * AppBar: reuse `SearchAppBar` shell. Add a flag (e.g.
+    `disableLangAndReload: true`) or render the favorites variant
+    that wraps the lang + reload icons in `Opacity(0.38) +
+    IgnorePointer` — they stay visible for layout parity but are
+    inert.
+  * Search field is local-only: filter the in-memory list by
+    case-folded substring match on `recipe.name`. No network call,
+    no `searchByName` invocation.
 * `recipe_list/lib/main.dart` (or wherever the bottom-nav router
   lives): wire `AppNavTab.favorites` → `FavoritesPage`.
 * `recipe_list/lib/i18n/strings_*.g.dart`: add `favoritesEmpty`
@@ -102,9 +109,14 @@ own commit, with tests that pass before moving on.
   * Empty store → empty-state hint visible.
   * Two saved → grid renders 2 cards in `saved_at DESC` order.
   * Switching `appLang` mid-test refreshes content.
+  * Lang + reload icons present but tap is a no-op (verify via
+    `IgnorePointer` ancestor or null `onPressed`).
+  * Type a substring in the search field → only matching favorites
+    remain; no network call (mock API expects zero hits).
 
 ### Acceptance
-* Tapping nav heart navigates to the screen; reload button absent.
+* Tapping nav heart navigates to the screen; lang + reload icons
+  faded and inert; search filters favorites locally only.
 
 ---
 
