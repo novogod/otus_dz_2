@@ -153,7 +153,11 @@ class AppShadows {
   /// blur 14) даёт чёткую подсветку снизу; амбиент (offset
   /// 0/2, blur 4) выделяет карточку по всему периметру.
   static const List<BoxShadow> card = [
-    BoxShadow(color: AppColors.cardShadow, offset: Offset(0, 6), blurRadius: 14),
+    BoxShadow(
+      color: AppColors.cardShadow,
+      offset: Offset(0, 6),
+      blurRadius: 14,
+    ),
     BoxShadow(color: Color(0x33000000), offset: Offset(0, 2), blurRadius: 4),
   ];
 
@@ -166,11 +170,7 @@ class AppShadows {
       offset: Offset(0, 0),
       blurRadius: 16,
     ),
-    BoxShadow(
-      color: Color(0x66000000),
-      offset: Offset(0, -2),
-      blurRadius: 6,
-    ),
+    BoxShadow(color: Color(0x66000000), offset: Offset(0, -2), blurRadius: 6),
   ];
 }
 
