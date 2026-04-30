@@ -24,6 +24,7 @@
   "searchHint": "Tarif ara",
   "searchClear": "Temizle",
   "searchNoMatches": "Eşleşme yok",
+  "favoritesEmpty": "Henüz favori yok",
   "ingredientCount": {
     "one": "${n} malzeme",
     "other": "${n} malzeme"

@@ -24,6 +24,7 @@
   "searchHint": "ابحث عن وصفة",
   "searchClear": "مسح",
   "searchNoMatches": "لا توجد نتائج مطابقة",
+  "favoritesEmpty": "لا توجد مفضلات بعد",
   "ingredientCount": {
     "zero": "${n} مكون",
     "one": "${n} مكون",

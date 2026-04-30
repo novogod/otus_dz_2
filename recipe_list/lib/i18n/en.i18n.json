@@ -24,6 +24,7 @@
   "searchHint": "Search recipe",
   "searchClear": "Clear",
   "searchNoMatches": "No matches",
+  "favoritesEmpty": "No favorites yet",
   "ingredientCount": {
     "one": "${n} ingredient",
     "other": "${n} ingredients"

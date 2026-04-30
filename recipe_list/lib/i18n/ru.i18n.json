@@ -24,6 +24,7 @@
   "searchHint": "Поиск рецепта",
   "searchClear": "Очистить",
   "searchNoMatches": "Совпадений не найдено",
+  "favoritesEmpty": "Пока ничего не добавлено",
   "ingredientCount": {
     "one": "${n} ингредиент",
     "few": "${n} ингредиента",

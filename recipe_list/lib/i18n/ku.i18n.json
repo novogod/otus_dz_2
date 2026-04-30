@@ -24,6 +24,7 @@
   "searchHint": "گەڕان بەدوای ڕێچەتە",
   "searchClear": "پاککردنەوە",
   "searchNoMatches": "هیچ گونجاوێک نییە",
+  "favoritesEmpty": "هێشتا هیچ بەدڵبووەکێک نییە",
   "ingredientCount": {
     "one": "${n} پێکهاتە",
     "other": "${n} پێکهاتە"

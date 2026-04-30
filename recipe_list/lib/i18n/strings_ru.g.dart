@@ -62,6 +62,7 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchHint => 'Поиск рецепта';
 	@override String get searchClear => 'Очистить';
 	@override String get searchNoMatches => 'Совпадений не найдено';
+	@override String get favoritesEmpty => 'Пока ничего не добавлено';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n,
 		one: '${n} ингредиент',
 		few: '${n} ингредиента',
@@ -149,6 +150,7 @@ extension on TranslationsRu {
 			'searchHint' => 'Поиск рецепта',
 			'searchClear' => 'Очистить',
 			'searchNoMatches' => 'Совпадений не найдено',
+			'favoritesEmpty' => 'Пока ничего не добавлено',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n, one: '${n} ингредиент', few: '${n} ингредиента', many: '${n} ингредиентов', other: '${n} ингредиента', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Переключить язык на ${label}',
 			'a11y.flagOf' => ({required Object label}) => 'Флаг ${label}',

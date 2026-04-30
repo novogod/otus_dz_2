@@ -24,6 +24,7 @@
   "searchHint": "جستجوی دستور پخت",
   "searchClear": "پاک کردن",
   "searchNoMatches": "موردی یافت نشد",
+  "favoritesEmpty": "هنوز موردی به علاقه‌مندی‌ها افزوده نشده",
   "ingredientCount": {
     "one": "${n} ماده اولیه",
     "other": "${n} ماده اولیه"

@@ -62,6 +62,7 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchHint => 'جستجوی دستور پخت';
 	@override String get searchClear => 'پاک کردن';
 	@override String get searchNoMatches => 'موردی یافت نشد';
+	@override String get favoritesEmpty => 'هنوز موردی به علاقه‌مندی‌ها افزوده نشده';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n,
 		one: '${n} ماده اولیه',
 		other: '${n} ماده اولیه',
@@ -147,6 +148,7 @@ extension on TranslationsFa {
 			'searchHint' => 'جستجوی دستور پخت',
 			'searchClear' => 'پاک کردن',
 			'searchNoMatches' => 'موردی یافت نشد',
+			'favoritesEmpty' => 'هنوز موردی به علاقه‌مندی‌ها افزوده نشده',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n, one: '${n} ماده اولیه', other: '${n} ماده اولیه', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'تغییر زبان به ${label}',
 			'a11y.reloadFeed' => 'بارگذاری مجدد فهرست',

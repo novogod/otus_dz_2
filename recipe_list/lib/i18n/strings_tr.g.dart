@@ -62,6 +62,7 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchHint => 'Tarif ara';
 	@override String get searchClear => 'Temizle';
 	@override String get searchNoMatches => 'Eşleşme yok';
+	@override String get favoritesEmpty => 'Henüz favori yok';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n,
 		one: '${n} malzeme',
 		other: '${n} malzeme',
@@ -147,6 +148,7 @@ extension on TranslationsTr {
 			'searchHint' => 'Tarif ara',
 			'searchClear' => 'Temizle',
 			'searchNoMatches' => 'Eşleşme yok',
+			'favoritesEmpty' => 'Henüz favori yok',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n, one: '${n} malzeme', other: '${n} malzeme', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Dili ${label} olarak değiştir',
 			'a11y.reloadFeed' => 'Listeyi yenile',

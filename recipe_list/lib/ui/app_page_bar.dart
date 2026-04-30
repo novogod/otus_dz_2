@@ -39,6 +39,13 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
   /// docs/categories.md и docs/translation-buffer.md.
   final bool showReload;
 
+  /// Если `true` — кнопки переключения языка и `reload` отрисовываются
+  /// faded (Opacity 0.38) и не реагируют на тапы (IgnorePointer). Нужно
+  /// для табов, на которых смена языка/полная перезагрузка ленты
+  /// бессмысленна — в первую очередь страница избранного (todo/15,
+  /// chunk D).
+  final bool disableLangAndReload;
+
   const AppPageBar({
     super.key,
     required this.title,
@@ -46,6 +53,7 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
     this.titleSpacing = NavigationToolbar.kMiddleSpacing,
     this.onBack,
     this.showReload = false,
+    this.disableLangAndReload = false,
   });
 
   /// Удвоенный отступ от кнопки языка до правого края экрана.
@@ -112,10 +120,27 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
         leadingWidth: 40 + AppSpacing.sm + AppSpacing.sm,
         title: title,
         actions: [
-          if (showReload) const ReloadIconButton(),
-          if (showReload) const SizedBox(width: AppSpacing.sm),
-          const LangIconButton(),
-          const SizedBox(width: _trailingGap),
+          if (disableLangAndReload)
+            IgnorePointer(
+              child: Opacity(
+                opacity: 0.38,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showReload) const ReloadIconButton(),
+                    if (showReload) const SizedBox(width: AppSpacing.sm),
+                    const LangIconButton(),
+                    const SizedBox(width: _trailingGap),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            if (showReload) const ReloadIconButton(),
+            if (showReload) const SizedBox(width: AppSpacing.sm),
+            const LangIconButton(),
+            const SizedBox(width: _trailingGap),
+          ],
         ],
         bottom: showReload
             ? const _ReloadProgressBar(height: _kReloadProgressHeight)

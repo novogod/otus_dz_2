@@ -27,6 +27,11 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// сценариях, где AppBar c поиском не используется, — не нужна.
   final bool showReload;
 
+  /// Если `true` — кнопки смены языка / `reload` отрисовываются
+  /// faded и не кликаются. Используется на табе избранного
+  /// (todo/15, chunk D).
+  final bool disableLangAndReload;
+
   const SearchAppBar({
     super.key,
     required this.controller,
@@ -35,6 +40,7 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onSubmitted,
     this.onBack,
     this.showReload = false,
+    this.disableLangAndReload = false,
   });
 
   @override
@@ -48,6 +54,7 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 0,
       centerTitle: false,
       showReload: showReload,
+      disableLangAndReload: disableLangAndReload,
       title: Center(
         child: FractionallySizedBox(
           widthFactor: 0.85,

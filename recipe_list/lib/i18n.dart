@@ -231,6 +231,9 @@ class S {
   String get searchClear => _t.searchClear;
   String get searchNoMatches => _t.searchNoMatches;
 
+  // Favorites page (todo/15, chunk D).
+  String get favoritesEmpty => _t.favoritesEmpty;
+
   // Card ingredient count (CLDR plural).
   String ingredientCount(int n) => _t.ingredientCount(n: n);
 

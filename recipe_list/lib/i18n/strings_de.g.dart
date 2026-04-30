@@ -62,6 +62,7 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchHint => 'Rezept suchen';
 	@override String get searchClear => 'Löschen';
 	@override String get searchNoMatches => 'Keine Treffer';
+	@override String get favoritesEmpty => 'Noch keine Favoriten';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n,
 		one: '${n} Zutat',
 		other: '${n} Zutaten',
@@ -147,6 +148,7 @@ extension on TranslationsDe {
 			'searchHint' => 'Rezept suchen',
 			'searchClear' => 'Löschen',
 			'searchNoMatches' => 'Keine Treffer',
+			'favoritesEmpty' => 'Noch keine Favoriten',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n, one: '${n} Zutat', other: '${n} Zutaten', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Sprache wechseln zu ${label}',
 			'a11y.reloadFeed' => 'Liste aktualisieren',

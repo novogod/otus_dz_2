@@ -116,6 +116,9 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'No matches'
 	String get searchNoMatches => 'No matches';
 
+	/// en: 'No favorites yet'
+	String get favoritesEmpty => 'No favorites yet';
+
 	/// en: '(one) {${n} ingredient} (other) {${n} ingredients}'
 	String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n,
 		one: '${n} ingredient',
@@ -275,6 +278,7 @@ extension on Translations {
 			'searchHint' => 'Search recipe',
 			'searchClear' => 'Clear',
 			'searchNoMatches' => 'No matches',
+			'favoritesEmpty' => 'No favorites yet',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '${n} ingredient', other: '${n} ingredients', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Switch language to ${label}',
 			'a11y.flagOf' => ({required Object label}) => '${label} flag',

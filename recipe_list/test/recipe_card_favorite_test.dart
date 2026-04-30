@@ -44,9 +44,7 @@ void main() {
       appLang.value = AppLang.ru;
       // HapticFeedback.lightImpact() в карточке ходит в method
       // channel; в headless-тестах он висит без ответа платформы.
-      TestDefaultBinaryMessengerBinding
-          .instance
-          .defaultBinaryMessenger
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, (call) async {
             if (call.method == 'HapticFeedback.vibrate') return null;
             return null;
@@ -55,9 +53,7 @@ void main() {
 
     tearDown(() async {
       favoritesStoreNotifier.value = null;
-      TestDefaultBinaryMessengerBinding
-          .instance
-          .defaultBinaryMessenger
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, null);
       await db.close();
     });
