@@ -1,5 +1,43 @@
 # Project Log
 
+## Favorites: добавлены FAB-ы прокрутки наверх и «новый рецепт»
+
+**Date:** 2026-04-30
+
+Запрос: «can you add the same fabs as on the main list to the
+favorites list?». На главной ленте уже есть две плавающих кнопки —
+scroll-to-top (справа) и add-recipe (слева). На странице
+`FavoritesPage` их не было; пользователю приходилось скроллить
+длинный список руками и возвращаться на главную, чтобы добавить
+рецепт.
+
+* `recipe_list_page.dart`: классы `_ScrollToTopFab` и `_AddRecipeFab`
+  стали публичными (`ScrollToTopFab`, `AddRecipeFab`), чтобы
+  переиспользовать их без копипасты. Все колл-сайты обновлены.
+* `recipe_list_page.dart`: при переходе на вкладку «Избранное»
+  теперь пробрасываются `api` и `repository`
+  (`FavoritesPage(api: widget.api, repository: widget.repository)`),
+  без `const`.
+* `favorites_page.dart`: конструктор принимает опциональные
+  `RecipeApi? api` и `RecipeRepository? repository` — это
+  обратно совместимо с тестами, которые конструируют
+  `FavoritesPage()` без аргументов.
+* `favorites_page.dart`: `ScrollController _scrollController`,
+  слушатель `_onScroll` показывает/прячет FAB при `offset > 200`,
+  тело страницы обёрнуто в `Stack` с `Positioned.fill` контентом
+  и двумя FAB-ами в нижних углах с отступом `AppSpacing.lg`.
+  `AddRecipeFab` рендерится только когда `widget.api != null`
+  (в холодных юнит-тестах api не пробрасывается).
+* `_openAddRecipe(context)` — push `AddRecipePage(api, repository)`,
+  возврат рецепта не нужен: `favoritesStoreNotifier` сам перерисует
+  список, когда пользователь поставит сердце на странице деталей.
+
+**Тесты:** `favorites_page_test.dart` + `favorites_survives_reload_test.dart`
+проходят (6/6) — благодаря необязательным параметрам
+конструктора `FavoritesPage()` совместимость не сломана.
+
+**Commit:** `691e93b`.
+
 ## Reload «висит навсегда»: timeout, whenComplete, расширенные кэш-капы
 
 **Date:** 2026-04-30
