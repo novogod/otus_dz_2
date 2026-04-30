@@ -122,6 +122,22 @@ recipes/<id>/photo_<timestamp>_<random6>.<ext>
 Re-smoke: `POST https://mahallem.ist/recipes` → 201,
 `strMealThumb=/storage/v1/object/public/recipe-photos/recipes/1000000/photo_1777507021938_8b1018.jpg`.
 
+**Docs catch-up (otus_dz `3bddcee`):**
+
+`docs/recipe-photo-upload.md` приведён в соответствие с задеплоенным
+кодом — оригинальный draft показывал `recipes/<id>/<hex>.jpg`,
+теперь TL;DR-шаг 3 и пример в §2.2 описывают актуальную форму
+ключа (`Date.now()` + 6-hex random + `safeExt` allowlist).
+
+Добавлен новый §2.2.1 «Форма ключа объекта (object-key convention)»
+с кросс-bucket-таблицей (avatars / job-photos / recipe-photos),
+полевым разбором (`<entityId>`, `<role>`, `<unix-ms>`, `<random>`,
+`<ext>`), что **не** кладётся в ключ (PII, HEIC) и зачем — это
+канонический ответ на вопрос «как мы именуем объекты в storage»,
+чтобы при добавлении следующего bucket не пришлось снова всё
+вспоминать. В `docs/todo/recipe_photo_upload.md` чанк 5 acceptance
+example обновлён под новый формат URL и ссылается на §2.2.1.
+
 ## Add-recipe feature + Russian docs
 
 **Date:** 2026-04-29
