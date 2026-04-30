@@ -112,12 +112,17 @@ class _AddRecipePageState extends State<AddRecipePage> {
       for (final ing in src.ingredients.take(20)) {
         final row = _IngredientRow();
         row.name.text = ing.name;
-        // Сервер хранит measure одной строкой; в форме у нас два
-        // поля (qty/unit). Не пытаемся парсить — кладём всё в unit,
-        // qty оставляем пустым. При повторном сохранении строка
-        // склеится обратно как `'' + ' ' + measure` → trim() в
-        // _collectIngredients вернёт исходное значение.
-        row.unit.text = ing.measure;
+        // Сервер хранит measure одной строкой ("100 g", "1/2 cup",
+        // "2 ст.л.", "по вкусу"); в форме у нас два поля qty/unit.
+        // Пытаемся вытащить ведущее число (целое, дробное, или
+        // простую дробь) — если получилось, кладём его в qty,
+        // остаток в unit. Если числа нет (например, "по вкусу") —
+        // вся строка идёт в unit, qty пустой. При повторном
+        // сохранении [_collectIngredients] склеит их обратно
+        // через пробел, поэтому round-trip сохраняется.
+        final (qty, unit) = _splitMeasure(ing.measure);
+        row.qty.text = qty;
+        row.unit.text = unit;
         _ingredientRows.add(row);
       }
       if (_ingredientRows.isEmpty) {
@@ -201,6 +206,29 @@ class _AddRecipePageState extends State<AddRecipePage> {
       if (out.length >= 20) break;
     }
     return out;
+  }
+
+  /// Разбирает серверную `measure`-строку на (qty, unit). Сервер
+  /// хранит одной строкой ("100 g", "1/2 cup", "2.5 ст.л.",
+  /// "по вкусу", "100г"), а в форме у нас два поля. Поддержанные
+  /// форматы количества:
+  ///   * целое: `100`
+  ///   * десятичное с `.` или `,`: `2.5`, `2,5`
+  ///   * простая дробь: `1/2`, `3/4`
+  ///   * unicode-дроби типа `½`/`¼` — оставляем как есть в qty.
+  /// Если префикс не распознан, всё уходит в unit, qty пустой
+  /// (например, для «по вкусу»). Round-trip с `_collectIngredients`
+  /// сохраняется: сборка склеит части обратно через пробел.
+  static (String qty, String unit) _splitMeasure(String raw) {
+    final m = raw.trim();
+    if (m.isEmpty) return ('', '');
+    // [целое][.,/целое]?  плюс необязательная unicode-дробь.
+    final re = RegExp(r'^(\d+(?:[.,/]\d+)?|[\u00BC-\u00BE\u2150-\u215E])');
+    final match = re.firstMatch(m);
+    if (match == null) return ('', m);
+    final qty = match.group(0)!;
+    final unit = m.substring(match.end).trimLeft();
+    return (qty, unit);
   }
 
   /// Выбор фото с указанного источника (камера / галерея).
