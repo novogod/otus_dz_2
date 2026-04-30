@@ -1,5 +1,99 @@
 # Project Log
 
+## Recipe search: substring across locales, always upstream
+
+**Date:** 2026-04-29
+
+Bug: пользователь видит «Polish Chicken Soup» в ленте, набирает
+`soup` в search-баре — автокомплит пуст и в локальном кэше, и в
+ответе сервера. Две причины, обе закрыты одним проходом.
+
+**Root cause #1 — server SQL prefix-only + lang-gated.**
+`RecipeRepository.searchByName` в [`mahallem_ist/local_user_portal/routes/recipes.js`](https://github.com/novogod/mahallem_ist/commit/b1f02b11)
+выбирал `LOWER(i18n->'<langKey>'->>'strMeal') LIKE 'q%'`. Для
+русского клиента `langKey='ru'`, а у TheMealDB-рецепта, который ещё
+никто не открывал на ru, `i18n.ru` отсутствует → выражение даёт
+NULL → строка отфильтровывается **до** того, как `_ensureLang`
+успевает перевести.
+
+**Root cause #2 — upstream только при cache miss.**
+TheMealDB опрашивался только если локальный кэш вернул `<5` рядов;
+свежие upstream-only рецепты не попадали в подсказки.
+
+**Fix server (mahallem_ist `b1f02b11`):**
+
+```sql
+SELECT id, i18n FROM recipes
+ WHERE EXISTS (
+   SELECT 1 FROM jsonb_object_keys(i18n) k
+   WHERE LOWER(i18n->k->>'strMeal') LIKE $1 ESCAPE '\'
+ )
+ ORDER BY popularity DESC, fetched_at DESC LIMIT 20
+```
+
+- `LIKE '%q%'` (substring) вместо `LIKE 'q%'` (prefix).
+- `EXISTS` по `jsonb_object_keys(i18n)` — матч по любой
+  сохранённой локали, так что английский рецепт находится при
+  русском UI и наоборот.
+- Upstream `search.php` теперь дёргается **всегда** (TheMealDB
+  English-only, для не-латиницы просто вернётся пусто — безвредно).
+- `tests/recipes.test.js`: фейк-БД получил handler для нового SQL,
+  два кейса `searchByName` обновлены под always-upstream + substring
+  фикстуры. 18/20 (пара echo-gate baseline остаётся).
+
+**Fix client (otus_dz `5f49577`):**
+
+`lib/ui/recipe_list_page.dart`: убран post-фильтр
+`startsWith(prefix)` поверх ответа сервера — доверяем серверной
+выборке. Локальный fallback `_localPrefix` теперь использует
+`contains` вместо `startsWith` (имя оставлено для совместимости).
+
+**Deploy & smoke:**
+
+```text
+$ ssh prod 'git pull && docker compose up -d --build user-portal'
+$ curl -s 'https://mahallem.ist/recipes/search?q=soup&lang=ru' | jq
+hits=20
+  - Красный гороховый суп
+  - Росол (польский куриный суп)   ← Polish Chicken Soup
+  - …
+```
+
+## Gemini re-enable on prod
+
+**Date:** 2026-04-29
+
+В `local_docker_admin_backend/docker-compose.yml` сервис
+`user-portal` имел `DISABLE_GEMINI: "1"` как kill-switch на время
+квотных проблем. Снят (`mahallem_ist 1ea0eef5`), `GEMINI_API_KEY`
+оставлен как есть; `docker compose up -d user-portal` на проде,
+проверка `docker exec` показала `DISABLE_GEMINI=[]` и
+`GEMINI_API_KEY=<set>`, в логах нет kill-switch warning. Tier-6
+переводы снова работают для нелатинских локалей.
+
+## Add-recipe form: ingredient row UX polish
+
+**Date:** 2026-04-29
+
+Серия мелких правок строки ингредиента в
+`recipe_list/lib/ui/add_recipe_page.dart`, чтобы placeholder /
+helperText не переполняли узкие колонки на телефонах.
+
+- `b3ddf3a`: helperText layout fix — overflow ellipsis вместо
+  visual overflow.
+- `f1600d0`: helper-стиль уменьшен до 10 sp, height 1.2,
+  `AppColors.textSecondary`.
+- `4438c20`: `qty:unit = 7:3`, новый ARB-ключ
+  `addRecipeIngredientQtyShort` (10 локалей, ru: «Кол.»).
+- `cdfe418`: количество ужато ×4 (`name flex 11`, qty `flex 3`,
+  чтобы соответствовать realistic input «100»).
+- `4fe6c73`: финальная форма `name:qty:unit = 10:3:3` с
+  hintText на всех трёх (`Sugar/100/g`-style examples), helperText
+  только на name (full label) и qty («Кол.»). 3 новых ARB-ключа
+  (`addRecipeIngredientNameHint`, `addRecipeIngredientQtyHint`,
+  `addRecipeIngredientMeasureHint`) во все 10 локалей; slang
+  пере-сгенерирован.
+
 ## Recipe photo upload (file picker → storage-api → imgproxy)
 
 **Date:** 2026-05-13
