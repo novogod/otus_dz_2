@@ -1,5 +1,30 @@
 # Project Log
 
+## RTL-порядок вкладок + усиленные тени/elevation
+
+**Date:** 2026-04-30
+
+* `677588d` — `AppBottomNavBar` оборачивает Row вкладок в
+  `Directionality(textDirection: ltr)`. В ar/fa/ku порядок
+  Recipes → Fridge → Favorites → Profile теперь не зеркалится:
+  иконки не несут текстовой семантики, а §6 дизайн-системы
+  фиксирует последовательность.
+* `3ac549e` — тема: предыдущая правка теней (alpha 0x1A→0x24,
+  0x40→0x5A) была почти неразличима на сером scaffold.
+  Перешли на двухслойные key + ambient тени и подняли
+  Material-elevation:
+  * `AppColors.cardShadow` 0x24959292 → 0x66000000 (~0.40
+    чёрного), `navBarShadow` 0x5A000000 → 0x80000000 (~0.50).
+  * `AppShadows.card` теперь key-light (0/6, blur 14) + ambient
+    (0/2, blur 4); `AppShadows.navBar` — umbra (0/0, blur 16) +
+    верхний акцент (0/−2, blur 6).
+  * `appBarTheme` elevation 4→8, `scrolledUnderElevation` 4→10;
+    `cardTheme` 4→8; FAB 6/6/8/12 → 12/12/14/18;
+    `bottomNavigationBarTheme` / `navigationBarTheme` 8→16.
+  * `RecipeCard`, `AppBottomNavBar`, pinned-header и оба FAB
+    `RecipeListPage` уже читают `AppShadows.*`, так что
+    подхватили новые значения без правки экранов.
+
 ## Полировка UI редактирования рецепта + Favorites/Details
 
 **Date:** 2026-04-30
