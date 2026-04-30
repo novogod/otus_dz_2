@@ -167,9 +167,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
               Positioned(
                 left: AppSpacing.lg,
                 bottom: AppSpacing.lg,
-                child: AddRecipeFab(
-                  onPressed: () => _openAddRecipe(context),
-                ),
+                child: AddRecipeFab(onPressed: () => _openAddRecipe(context)),
               ),
           ],
         ),
@@ -202,8 +200,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     if (api == null) return;
     await Navigator.of(context).push<Recipe>(
       MaterialPageRoute<Recipe>(
-        builder: (_) =>
-            AddRecipePage(api: api, repository: widget.repository),
+        builder: (_) => AddRecipePage(api: api, repository: widget.repository),
       ),
     );
     // Новый рецепт не попадает автоматически в избранное — список

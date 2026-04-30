@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
+import '../data/recipe_events.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../main.dart' show restartApp;
@@ -101,6 +102,24 @@ class _RecipeListPageState extends State<RecipeListPage> {
     _focusNode.addListener(_onFocusChange);
     _controller.addListener(_onTextChanged);
     _scrollController.addListener(_onScroll);
+    newRecipeCreatedNotifier.addListener(_onNewRecipeCreated);
+  }
+
+  /// id последнего рецепта, с которым отработал слушатель
+  /// [newRecipeCreatedNotifier]. Нужен, чтобы не вставлять ту же
+  /// карточку дважды при ребилде или повторном вызове listener-а.
+  int? _lastConsumedNewRecipeId;
+
+  void _onNewRecipeCreated() {
+    final created = newRecipeCreatedNotifier.value;
+    if (created == null) return;
+    if (_lastConsumedNewRecipeId == created.id) return;
+    _lastConsumedNewRecipeId = created.id;
+    if (!mounted) return;
+    if (_displayed.any((r) => r.id == created.id)) return;
+    setState(() {
+      _displayed = [created, ..._displayed];
+    });
   }
 
   void _onScroll() {
@@ -143,6 +162,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
     _controller.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    newRecipeCreatedNotifier.removeListener(_onNewRecipeCreated);
     super.dispose();
   }
 
@@ -366,10 +386,8 @@ class _RecipeListPageState extends State<RecipeListPage> {
     if (tab == AppNavTab.favorites) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => FavoritesPage(
-            api: widget.api,
-            repository: widget.repository,
-          ),
+          builder: (_) =>
+              FavoritesPage(api: widget.api, repository: widget.repository),
         ),
       );
       return;
@@ -420,17 +438,19 @@ class _RecipeListPageState extends State<RecipeListPage> {
   /// пользователь сохранил рецепт — добавляем его в начало
   /// текущего отображаемого списка, чтобы новинка была видна
   /// без перезагрузки ленты.
+  /// Открывает экран добавления рецепта. Результат push-а
+  /// игнорируем — вставку карточки в ленту делает
+  /// [_onNewRecipeCreated], подписанный на глобальный
+  /// [newRecipeCreatedNotifier]. Это позволяет ленте обновляться
+  /// и в том случае, когда [AddRecipePage] был открыт из
+  /// «Избранного» (тогда этот метод вообще не вызывается).
   Future<void> _openAddRecipe(BuildContext context) async {
-    final created = await Navigator.of(context).push<Recipe>(
+    await Navigator.of(context).push<Recipe>(
       MaterialPageRoute<Recipe>(
         builder: (_) =>
             AddRecipePage(api: widget.api, repository: widget.repository),
       ),
     );
-    if (created == null || !mounted) return;
-    setState(() {
-      _displayed = [created, ..._displayed];
-    });
   }
 }
 

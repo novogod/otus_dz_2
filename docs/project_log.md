@@ -1,5 +1,36 @@
 # Project Log
 
+## AddRecipePage: SafeArea + видимость нового рецепта
+
+**Date:** 2026-04-30
+
+Два дефекта по фидбеку пользователя; полный разбор —
+[docs/add-recipe-visibility.md](add-recipe-visibility.md).
+
+* **Safe-area:** body `AddRecipePage` уезжал под home-indicator на
+  iPhone — кнопка «Сохранить» и поле Instructions срезались
+  системным жестом. Фикс: обернули body в `SafeArea(top: false, …)`
+  (AppBar уже занимает верхний inset). Боковые inset-ы тоже
+  включены — для landscape с notch.
+* **Видимость нового рецепта:** после сохранения карточка
+  появлялась только на главной (через `Navigator.pop` результат)
+  и только при сохранении из главной; в избранном её не было
+  никогда. Сервер исправно записывал рецепт и запускал ленивый
+  translation-cascade, но UI этого не показывал. Фикс: ввели
+  глобальную шину `newRecipeCreatedNotifier` (новый файл
+  `lib/data/recipe_events.dart`), `AddRecipePage._save` после
+  успешного `createRecipe(...)` дополнительно: (а) авто-помечает
+  рецепт избранным в текущем языке через
+  `favoritesStoreNotifier.value?.add(...)` — `saved_at = now()`
+  кладёт карточку наверх вкладки «Избранное», (б) публикует
+  событие в шину. `RecipeListPage` слушает шину и вставляет
+  карточку в начало `_displayed` независимо от того, с какой
+  страницы был открыт `AddRecipePage`.
+
+**Тесты:** `flutter test` — те же 79 проходят, две прежние
+unrelated regressions в `recipe_repository_test.dart`
+(см. предыдущую запись) остаются.
+
 ## Favorites: добавлены FAB-ы прокрутки наверх и «новый рецепт»
 
 **Date:** 2026-04-30
