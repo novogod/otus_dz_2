@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
+import '../data/recipe_events.dart';
 import '../data/repository/favorites_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
@@ -50,6 +51,15 @@ class _FavoritesPageState extends State<FavoritesPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    recipeDeletedNotifier.addListener(_onRecipeChanged);
+    recipeUpdatedNotifier.addListener(_onRecipeChanged);
+  }
+
+  /// Owner-flow: перерисовываем избранное при удалении
+  /// или редактировании, чтобы FutureBuilder подхватил
+  /// свежие данные из sqflite (см. docs/owner-edit-delete.md).
+  void _onRecipeChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onScroll() {
@@ -76,6 +86,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
     _scrollController.dispose();
     _controller.dispose();
     _focusNode.dispose();
+    recipeDeletedNotifier.removeListener(_onRecipeChanged);
+    recipeUpdatedNotifier.removeListener(_onRecipeChanged);
     super.dispose();
   }
 

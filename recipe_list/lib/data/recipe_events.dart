@@ -24,3 +24,16 @@ import '../models/recipe.dart';
 final ValueNotifier<Recipe?> newRecipeCreatedNotifier = ValueNotifier<Recipe?>(
   null,
 );
+
+/// Глобальная шина «рецепт удалён владельцем». Эмитится из
+/// [RecipeDetailsPage] после успешного `DELETE /recipes/:id` и
+/// очистки локального кэша. Списки (главная / избранное) убирают
+/// карточку из своих `_displayed` / refetch-ов.
+final ValueNotifier<int?> recipeDeletedNotifier = ValueNotifier<int?>(null);
+
+/// Глобальная шина «рецепт отредактирован владельцем». Эмитится
+/// из [AddRecipePage] в edit-mode после успешного PUT. Слушатели
+/// заменяют существующую карточку с тем же id.
+final ValueNotifier<Recipe?> recipeUpdatedNotifier = ValueNotifier<Recipe?>(
+  null,
+);

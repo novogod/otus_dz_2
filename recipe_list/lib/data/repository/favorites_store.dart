@@ -112,6 +112,23 @@ class FavoritesStore {
     }
   }
 
+  /// Удаляет рецепт из избранного во всех языках. Используется
+  /// owner-delete-flow-ом: рецепт исчез с сервера → не должен
+  /// висеть в избранном ни на одной локали.
+  Future<void> removeAcrossLangs(int recipeId) async {
+    await _db.delete(
+      'favorites',
+      where: 'recipe_id = ?',
+      whereArgs: [recipeId],
+    );
+    for (final entry in _idsByLang.entries) {
+      if (entry.value.value.contains(recipeId)) {
+        final next = {...entry.value.value}..remove(recipeId);
+        entry.value.value = next;
+      }
+    }
+  }
+
   /// Переключает состояние избранного: если рецепт был — удаляет,
   /// иначе добавляет. Возвращает новое состояние (`true` = в
   /// избранном).

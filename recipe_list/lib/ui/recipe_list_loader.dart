@@ -6,6 +6,7 @@ import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
 import '../data/repository/favorites_store.dart';
+import '../data/repository/owned_recipes_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
@@ -683,6 +684,15 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       // todo/15). Карточка/страница деталей слушают
       // [favoritesStoreNotifier] и перерисовываются при toggle.
       favoritesStoreNotifier.value ??= FavoritesStore(db: db);
+      // Стор  owned-рецептов живёт в той же БД;
+      //  [RecipeDetailsPage] слушает [ownedRecipesStoreNotifier],
+      //  чтобы рисовать кнопки edit/delete только
+      //  владельцу (см. docs/owner-edit-delete.md).
+      if (ownedRecipesStoreNotifier.value == null) {
+        final store = OwnedRecipesStore(db: db);
+        await store.ensureLoaded();
+        ownedRecipesStoreNotifier.value = store;
+      }
       return RecipeRepository(db: db, api: api);
     } on Object {
       return null;

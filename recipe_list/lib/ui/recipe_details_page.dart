@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/api/recipe_api.dart';
+import '../data/recipe_events.dart';
+import '../data/repository/favorites_store.dart';
+import '../data/repository/owned_recipes_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import '../utils/imgproxy.dart';
+import 'add_recipe_page.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
@@ -67,14 +71,29 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     super.initState();
     _recipe = widget.recipe;
     appLang.addListener(_onLangChanged);
+    recipeUpdatedNotifier.addListener(_onRecipeUpdated);
     activeDetailsCount.value = activeDetailsCount.value + 1;
   }
 
   @override
   void dispose() {
     appLang.removeListener(_onLangChanged);
+    recipeUpdatedNotifier.removeListener(_onRecipeUpdated);
     activeDetailsCount.value = activeDetailsCount.value - 1;
     super.dispose();
+  }
+
+  /// Если на [AddRecipePage] (edit-режим) сохранили этот же
+  /// рецепт — пересоберём экран с новым payload-ом, чтобы
+  /// пользователь сразу видел внесённые изменения, не возвращаясь
+  /// на список. См. docs/owner-edit-delete.md.
+  void _onRecipeUpdated() {
+    final updated = recipeUpdatedNotifier.value;
+    if (updated == null || updated.id != _recipe.id || !mounted) return;
+    setState(() {
+      _recipe = updated;
+      _renderedLang = appLang.value;
+    });
   }
 
   Future<void> _onLangChanged() async {
@@ -192,6 +211,19 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                             top: AppSpacing.sm,
                             right: AppSpacing.sm,
                             child: FavoriteBadge(recipeId: recipe.id),
+                          ),
+                          // Owner-actions (delete + edit) — top-left.
+                          // Видны только если рецепт помечен как
+                          // «свой» в [ownedRecipesStoreNotifier]
+                          // (см. docs/owner-edit-delete.md).
+                          Positioned(
+                            top: AppSpacing.sm,
+                            left: AppSpacing.sm,
+                            child: _OwnerActions(
+                              recipe: recipe,
+                              api: widget.api,
+                              repository: widget.repository,
+                            ),
                           ),
                         ],
                       ),
@@ -473,4 +505,147 @@ String _detailsThumb(String url) {
     return imgproxyUrl(url, 1200, 675);
   }
   return url;
+}
+
+/// Овнер-блок в left-top hero-фото: «удалить» + «редактировать».
+/// Виден только если рецепт лежит в [ownedRecipesStoreNotifier]
+/// (создан владельцем устройства). Сервер дополнительно фильтрует
+/// PUT/DELETE по floor-id ≥ 1_000_000 — даже если клиент случайно
+/// пометит как «свой» базу TheMealDB, он получит 404.
+/// См. docs/owner-edit-delete.md.
+class _OwnerActions extends StatelessWidget {
+  const _OwnerActions({
+    required this.recipe,
+    required this.api,
+    required this.repository,
+  });
+
+  final Recipe recipe;
+  final RecipeApi? api;
+  final RecipeRepository? repository;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<OwnedRecipesStore?>(
+      valueListenable: ownedRecipesStoreNotifier,
+      builder: (context, store, _) {
+        if (store == null) return const SizedBox.shrink();
+        return ValueListenableBuilder<Set<int>>(
+          valueListenable: store.ids,
+          builder: (context, ids, _) {
+            if (!ids.contains(recipe.id)) return const SizedBox.shrink();
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _CircleIconButton(
+                  icon: Icons.delete_outline,
+                  tooltip: 'Delete',
+                  onPressed: () => _confirmAndDelete(context),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                _CircleIconButton(
+                  icon: Icons.edit,
+                  tooltip: 'Edit',
+                  onPressed: () => _openEdit(context),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmAndDelete(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete recipe?'),
+        content: const Text('This will remove the recipe for everyone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final apiRef = api;
+    if (apiRef == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Cannot delete: offline')),
+      );
+      return;
+    }
+    try {
+      await apiRef.deleteRecipe(recipe.id);
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Failed to delete recipe')),
+      );
+      return;
+    }
+    // Best-effort локальные cleanup-ы. Падение любого из них не
+    // должно мешать пользователю уйти со страницы — сервер уже
+    // подтвердил удаление.
+    try {
+      await repository?.deleteById(recipe.id);
+    } catch (_) {}
+    try {
+      await favoritesStoreNotifier.value?.removeAcrossLangs(recipe.id);
+    } catch (_) {}
+    try {
+      await ownedRecipesStoreNotifier.value?.remove(recipe.id);
+    } catch (_) {}
+    recipeDeletedNotifier.value = recipe.id;
+    if (navigator.canPop()) navigator.pop();
+  }
+
+  Future<void> _openEdit(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            AddRecipePage(api: api, repository: repository, existing: recipe),
+      ),
+    );
+  }
+}
+
+class _CircleIconButton extends StatelessWidget {
+  const _CircleIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black54,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: Tooltip(
+          message: tooltip,
+          child: SizedBox(
+            width: 36,
+            height: 36,
+            child: Icon(icon, size: 20, color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
 }

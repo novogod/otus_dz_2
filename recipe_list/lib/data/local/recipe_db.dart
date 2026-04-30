@@ -30,7 +30,11 @@ const String kRecipeDbFileName = 'recipes.db';
 /// v6: add `favorites` table for the per-language favorites feature
 /// (todo/15). Additive migration — `recipes` / `recipe_bodies` are
 /// preserved when upgrading from v5.
-const int kRecipeDbSchemaVersion = 6;
+/// v7: add `owned_recipes` table — marks recipe ids that were
+/// created on this device, so the details page can show
+/// edit/delete buttons only to the creator (see
+/// docs/owner-edit-delete.md).
+const int kRecipeDbSchemaVersion = 7;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -90,6 +94,18 @@ CREATE TABLE favorites (
 );
 ''';
 
+/// v7: device-local set of recipe ids the user created via
+/// [AddRecipePage]. Persisted across reloads so edit/delete
+/// buttons keep showing after the app restarts. We deliberately
+/// don't store any per-user identity — this is a single-user
+/// demo app, the server has no auth (see docs/owner-edit-delete.md).
+const String _kOwnedRecipesSchema = '''
+CREATE TABLE owned_recipes (
+  id INTEGER PRIMARY KEY,
+  created_at INTEGER NOT NULL
+);
+''';
+
 const List<String> _kIndexes = [
   'CREATE INDEX idx_recipes_lang_name_lower ON recipes(lang, name_lower);',
   'CREATE INDEX idx_recipes_last_used_at ON recipes(last_used_at);',
@@ -101,9 +117,20 @@ Future<void> applyRecipeSchema(Database db) async {
   await db.execute(_kBodySchema);
   await db.execute(_kBodyCascadeTrigger);
   await db.execute(_kFavoritesSchema);
+  await db.execute(_kOwnedRecipesSchema);
   for (final stmt in _kIndexes) {
     await db.execute(stmt);
   }
+}
+
+/// Idempotent v6 → v7 migration: only adds `owned_recipes`.
+/// Existing favorites/recipes/recipe_bodies are preserved.
+Future<void> applyOwnedRecipesSchema(Database db) async {
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS owned_recipes ('
+    'id INTEGER PRIMARY KEY, '
+    'created_at INTEGER NOT NULL)',
+  );
 }
 
 /// Идемпотентное создание `favorites` (+ индекса) для миграции
@@ -148,6 +175,11 @@ Future<Database> openRecipeDatabase() async {
       // существующие кэши не трогаем.
       if (oldVersion < 6) {
         await applyFavoritesSchema(db);
+      }
+      // v6 → v7: добавляем owned_recipes — избранное и кэш
+      // сохраняются.
+      if (oldVersion < 7) {
+        await applyOwnedRecipesSchema(db);
       }
     },
   );

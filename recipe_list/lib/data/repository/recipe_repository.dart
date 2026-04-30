@@ -187,6 +187,14 @@ class RecipeRepository {
   Future<void> upsertAll(List<Recipe> recipes, AppLang lang) =>
       _upsertAll(recipes, lang);
 
+  /// Удаляет все локали рецепта из локального кэша. Триггер
+  /// [_kBodyCascadeTrigger] подберёт `recipe_bodies`, поэтому
+  /// явный delete из тела не нужен. Используется owner-flow-ом,
+  /// см. docs/owner-edit-delete.md.
+  Future<void> deleteById(int id) async {
+    await _db.delete('recipes', where: 'id = ?', whereArgs: [id]);
+  }
+
   /// Lazy-loads the heavy HTML instructions blob from `recipe_bodies`
   /// (todo/12). Returns `null` when the row was evicted by the LRU or
   /// the recipe was inserted lite (no instructions). Touches

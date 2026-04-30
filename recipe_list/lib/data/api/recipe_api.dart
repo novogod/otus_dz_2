@@ -181,6 +181,60 @@ class RecipeApi {
     },
   };
 
+  /// mahallem-only: PUT /recipes/:id. Заменяет `i18n.en` — сервер
+  /// чистит остальные локали, чтобы cascade перевёл заново при
+  /// следующем `/lookup`. Owner-flow, см. docs/owner-edit-delete.md.
+  Future<Recipe> updateRecipe(Recipe draft) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      throw StateError('updateRecipe requires the mahallem backend');
+    }
+    final res = await _client.dio.put<Map<String, dynamic>>(
+      '/${draft.id}',
+      data: {'meal': _mealToJson(draft)},
+    );
+    final stored = res.data?['meal'];
+    if (stored is! Map<String, dynamic>) {
+      throw StateError('updateRecipe: malformed response');
+    }
+    return Recipe.fromMealDb(stored);
+  }
+
+  /// mahallem-only: PUT /recipes/:id с новой фотографией.
+  /// Если `photo == null` — серверная картинка остаётся прежней
+  /// (отправляется обычный JSON-PUT).
+  Future<Recipe> updateRecipeWithPhoto(Recipe draft, File? photo) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      throw StateError('updateRecipeWithPhoto requires the mahallem backend');
+    }
+    if (photo == null) return updateRecipe(draft);
+    final form = FormData.fromMap({
+      'meal': jsonEncode(_mealToJson(draft)),
+      'photo': await MultipartFile.fromFile(
+        photo.path,
+        filename: p.basename(photo.path),
+      ),
+    });
+    final res = await _client.dio.put<Map<String, dynamic>>(
+      '/${draft.id}',
+      data: form,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+    final stored = res.data?['meal'];
+    if (stored is! Map<String, dynamic>) {
+      throw StateError('updateRecipeWithPhoto: malformed response');
+    }
+    return Recipe.fromMealDb(stored);
+  }
+
+  /// mahallem-only: DELETE /recipes/:id. Сервер допускает удаление
+  /// только пользовательских записей (id ≥ USER_MEAL_ID_FLOOR).
+  Future<void> deleteRecipe(int id) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      throw StateError('deleteRecipe requires the mahallem backend');
+    }
+    await _client.dio.delete<void>('/$id');
+  }
+
   Future<List<Recipe>> _filter(String key, String value) async {
     final mahallem = _client.backend == RecipeBackend.mahallem;
     final res = await _client.dio.get<Map<String, dynamic>>(

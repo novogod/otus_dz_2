@@ -103,6 +103,8 @@ class _RecipeListPageState extends State<RecipeListPage> {
     _controller.addListener(_onTextChanged);
     _scrollController.addListener(_onScroll);
     newRecipeCreatedNotifier.addListener(_onNewRecipeCreated);
+    recipeDeletedNotifier.addListener(_onRecipeDeleted);
+    recipeUpdatedNotifier.addListener(_onRecipeUpdated);
   }
 
   /// id последнего рецепта, с которым отработал слушатель
@@ -119,6 +121,32 @@ class _RecipeListPageState extends State<RecipeListPage> {
     if (_displayed.any((r) => r.id == created.id)) return;
     setState(() {
       _displayed = [created, ..._displayed];
+    });
+  }
+
+  /// Owner-flow: при удалении рецепта вычищаем карточку из ленты,
+  /// чтобы пользователь не видел «битый» элемент. Сервер уже
+  /// подтвердил DELETE — см. docs/owner-edit-delete.md.
+  void _onRecipeDeleted() {
+    final id = recipeDeletedNotifier.value;
+    if (id == null || !mounted) return;
+    if (!_displayed.any((r) => r.id == id)) return;
+    setState(() {
+      _displayed = _displayed.where((r) => r.id != id).toList(growable: false);
+    });
+  }
+
+  /// Owner-flow: при редактировании заменяем карточку in-place,
+  /// сохраняя позицию в ленте.
+  void _onRecipeUpdated() {
+    final updated = recipeUpdatedNotifier.value;
+    if (updated == null || !mounted) return;
+    final idx = _displayed.indexWhere((r) => r.id == updated.id);
+    if (idx < 0) return;
+    final next = List<Recipe>.from(_displayed);
+    next[idx] = updated;
+    setState(() {
+      _displayed = next;
     });
   }
 
@@ -163,6 +191,8 @@ class _RecipeListPageState extends State<RecipeListPage> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     newRecipeCreatedNotifier.removeListener(_onNewRecipeCreated);
+    recipeDeletedNotifier.removeListener(_onRecipeDeleted);
+    recipeUpdatedNotifier.removeListener(_onRecipeUpdated);
     super.dispose();
   }
 

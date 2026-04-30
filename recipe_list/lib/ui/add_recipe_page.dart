@@ -9,6 +9,7 @@ import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/recipe_events.dart';
 import '../data/repository/favorites_store.dart';
+import '../data/repository/owned_recipes_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
@@ -35,10 +36,17 @@ import 'app_theme.dart';
 /// Если backend == TheMealDB или сеть недоступна — показываем
 /// snackbar с ошибкой и НЕ пишем в локальный кэш (нет id).
 class AddRecipePage extends StatefulWidget {
-  const AddRecipePage({super.key, this.api, this.repository});
+  const AddRecipePage({super.key, this.api, this.repository, this.existing});
 
   final RecipeApi? api;
   final RecipeRepository? repository;
+
+  /// Если не null — страница открыта в режиме «редактировать»
+  /// (owner-flow, см. docs/owner-edit-delete.md). Поля формы
+  /// предзаполняются, save идёт через PUT, новый id не
+  /// выделяется. Режим изменяет только заголовок + логику
+  /// внутри _save — визуал формы тот же.
+  final Recipe? existing;
 
   @override
   State<AddRecipePage> createState() => _AddRecipePageState();
@@ -64,6 +72,39 @@ class _AddRecipePageState extends State<AddRecipePage> {
   bool _compressing = false;
   bool _photoTouched = false; // user pressed Save → show "required" error
   File? _pickedPhoto;
+
+  bool get _isEdit => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final src = widget.existing;
+    if (src == null) return;
+    _name.text = src.name;
+    _photo.text = src.photo;
+    _category.text = src.category ?? '';
+    _area.text = src.area ?? '';
+    _instructions.text = src.instructions ?? '';
+    if (src.ingredients.isNotEmpty) {
+      _ingredientRows
+        ..first.dispose()
+        ..clear();
+      for (final ing in src.ingredients.take(20)) {
+        final row = _IngredientRow();
+        row.name.text = ing.name;
+        // Сервер хранит measure одной строкой; в форме у нас два
+        // поля (qty/unit). Не пытаемся парсить — кладём всё в unit,
+        // qty оставляем пустым. При повторном сохранении строка
+        // склеится обратно как `'' + ' ' + measure` → trim() в
+        // _collectIngredients вернёт исходное значение.
+        row.unit.text = ing.measure;
+        _ingredientRows.add(row);
+      }
+      if (_ingredientRows.isEmpty) {
+        _ingredientRows.add(_IngredientRow());
+      }
+    }
+  }
 
   /// Web-сборка не поддерживает `image_picker` через нативный путь —
   /// оставляем URL-fallback. На mobile/desktop URL-поле скрыто:
@@ -278,10 +319,13 @@ class _AddRecipePageState extends State<AddRecipePage> {
       return;
     }
     // Photo validation: на mobile нужен picked file; на web допустим
-    // URL-fallback (см. [_allowUrlFallback]).
+    // URL-fallback (см. [_allowUrlFallback]). В edit-режиме фото
+    // переиспользуется из существующего рецепта, если новое не
+    // выбрано.
     final hasPicked = _pickedPhoto != null;
     final hasUrl = _photo.text.trim().isNotEmpty;
-    if (!hasPicked && !(_allowUrlFallback && hasUrl)) {
+    final existing = widget.existing;
+    if (!hasPicked && !(_allowUrlFallback && hasUrl) && existing == null) {
       setState(() => _photoTouched = true);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -290,13 +334,17 @@ class _AddRecipePageState extends State<AddRecipePage> {
     }
     setState(() => _saving = true);
 
-    // Build draft. id is a placeholder — server assigns the real one.
+    // Build draft. В create-режиме id == 0 (сервер выдаст), в
+    // edit-режиме сохраняем тот же id, что у `existing`.
     final draft = Recipe(
-      id: 0,
+      id: existing?.id ?? 0,
       name: _name.text.trim(),
       // Server replaces strMealThumb after upload. Use placeholder
-      // when uploading a file; send URL as-is on web fallback.
-      photo: hasPicked ? 'pending://upload' : _photo.text.trim(),
+      // when uploading a file; в edit без нового фото отдаём URL
+      // существующей картинки, чтобы сервер не очистил его.
+      photo: hasPicked
+          ? 'pending://upload'
+          : (hasUrl ? _photo.text.trim() : (existing?.photo ?? '')),
       category: _category.text.trim().isEmpty ? null : _category.text.trim(),
       area: _area.text.trim().isEmpty ? null : _area.text.trim(),
       instructions: _instructions.text.trim().isEmpty
@@ -306,27 +354,40 @@ class _AddRecipePageState extends State<AddRecipePage> {
     );
 
     try {
-      final saved = hasPicked
-          ? await api.createRecipeWithPhoto(draft, _pickedPhoto!)
-          : await api.createRecipe(draft);
+      final Recipe saved;
+      if (existing != null) {
+        saved = hasPicked
+            ? await api.updateRecipeWithPhoto(draft, _pickedPhoto)
+            : await api.updateRecipe(draft);
+      } else {
+        saved = hasPicked
+            ? await api.createRecipeWithPhoto(draft, _pickedPhoto!)
+            : await api.createRecipe(draft);
+      }
       // Mirror server-assigned row into the local cache so the new
       // recipe survives a cold start. Best-effort — failure here
-      // doesn't roll back the server insert.
+      // doesn't roll back the server insert. В edit-режиме сначала
+      // удаляем все локали из кэша, чтобы старый перевод не
+      // показывался поверх свежего payload.
       try {
+        if (existing != null) {
+          await widget.repository?.deleteById(saved.id);
+        }
         await widget.repository?.upsertAll([saved], appLang.value);
       } catch (_) {}
-      // Авто-добавление в избранное в текущем языке: пользователь
-      // ожидает, что только что созданный рецепт окажется на
-      // вершине вкладки «Избранное» (см.
-      // docs/add-recipe-visibility.md). saved_at = now() ⇒ строка
-      // встаёт первой по `ORDER BY saved_at DESC`.
-      try {
-        await favoritesStoreNotifier.value?.add(saved.id, appLang.value);
-      } catch (_) {}
-      // Эмитим в глобальную шину, чтобы [RecipeListPage] подхватил
-      // карточку независимо от того, с какой страницы был открыт
-      // AddRecipePage (главная или избранное).
-      newRecipeCreatedNotifier.value = saved;
+      if (existing == null) {
+        // Авто-добавление в избранное только при создании.
+        // При edit пользователь сам решает, оставлять ли сердце.
+        try {
+          await favoritesStoreNotifier.value?.add(saved.id, appLang.value);
+        } catch (_) {}
+        try {
+          await ownedRecipesStoreNotifier.value?.add(saved.id);
+        } catch (_) {}
+        newRecipeCreatedNotifier.value = saved;
+      } else {
+        recipeUpdatedNotifier.value = saved;
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -355,7 +416,9 @@ class _AddRecipePageState extends State<AddRecipePage> {
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: Directionality(
           textDirection: TextDirection.ltr,
-          child: AppBar(title: Text(s.addRecipeTitle)),
+          child: AppBar(
+            title: Text(_isEdit ? 'Edit Recipe' : s.addRecipeTitle),
+          ),
         ),
       ),
       body: SafeArea(
