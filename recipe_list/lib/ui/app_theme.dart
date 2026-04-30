@@ -41,15 +41,17 @@ class AppColors {
   static const Color textInactive = Color(0xFFC2C2C2);
 
   /// Тень карточки рецепта. Базовый Figma-токен —
-  /// `rgba(149,146,146,0.10)` (alpha 0x1A); для лучшей
-  /// читаемости на сером scaffold-фоне затемняем в 1.4×
-  /// → alpha 0x24 (≈ 0.14).
-  static const Color cardShadow = Color(0x24959292);
+  /// `rgba(149,146,146,0.10)` (alpha 0x1A). На сером scaffold-фоне
+  /// базовый вариант почти не различим, поэтому на
+  /// основном слое берём чёрный с alpha 0x66 (≈0.40), а
+  /// амбиент собираем отдельным key-light’ом в [AppShadows.card].
+  static const Color cardShadow = Color(0x66000000);
 
   /// Тень нижнего навбара / FAB. Базовый Figma-токен —
-  /// `rgba(0,0,0,0.25)` (alpha 0x40); затемнён в 1.4×
-  /// → alpha 0x5A (≈ 0.35) для большей выраженности тени.
-  static const Color navBarShadow = Color(0x5A000000);
+  /// `rgba(0,0,0,0.25)` (alpha 0x40); затемнён до alpha 0x80
+  /// (≈0.50), чтобы явно читался по верхней кромке навбара
+  /// и вокруг FAB.
+  static const Color navBarShadow = Color(0x80000000);
 }
 
 /// Радиусы скруглений.
@@ -147,17 +149,27 @@ class AppMetrics {
 class AppShadows {
   AppShadows._();
 
-  /// Тень карточки рецепта (Figma: blur 4, offset 0/4, alpha 0.10).
+  /// Тень карточки рецепта. Основной key-light (offset 0/6,
+  /// blur 14) даёт чёткую подсветку снизу; амбиент (offset
+  /// 0/2, blur 4) выделяет карточку по всему периметру.
   static const List<BoxShadow> card = [
-    BoxShadow(color: AppColors.cardShadow, offset: Offset(0, 4), blurRadius: 4),
+    BoxShadow(color: AppColors.cardShadow, offset: Offset(0, 6), blurRadius: 14),
+    BoxShadow(color: Color(0x33000000), offset: Offset(0, 2), blurRadius: 4),
   ];
 
-  /// Тень нижнего навбара (Figma: blur 8, offset 0/0, alpha 0.25).
+  /// Тень нижнего навбара / FAB / pinned-header. Key-light
+  /// (offset 0/-2, blur 12) для навбара «вверх» + фоновый
+  /// blur 16 вокруг.
   static const List<BoxShadow> navBar = [
     BoxShadow(
       color: AppColors.navBarShadow,
       offset: Offset(0, 0),
-      blurRadius: 8,
+      blurRadius: 16,
+    ),
+    BoxShadow(
+      color: Color(0x66000000),
+      offset: Offset(0, -2),
+      blurRadius: 6,
     ),
   ];
 }
@@ -333,8 +345,8 @@ class AppTheme {
       // AppBar-ом есть прокручиваемый контент, иначе — статичный
       // elevation. shadowColor берём из дизайн-системы
       // (`navBarShadow` × 1.4).
-      elevation: 4,
-      scrolledUnderElevation: 4,
+      elevation: 8,
+      scrolledUnderElevation: 10,
       shadowColor: AppColors.navBarShadow,
       surfaceTintColor: AppColors.surface,
       centerTitle: true,
@@ -350,7 +362,7 @@ class AppTheme {
     cardTheme: const CardThemeData(
       color: AppColors.surface,
       surfaceTintColor: AppColors.surface,
-      elevation: 4,
+      elevation: 8,
       shadowColor: AppColors.cardShadow,
       shape: RoundedRectangleBorder(borderRadius: AppRadii.cardAll),
       margin: EdgeInsets.zero,
@@ -360,10 +372,10 @@ class AppTheme {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: AppColors.primary,
       foregroundColor: AppColors.surface,
-      elevation: 6,
-      focusElevation: 6,
-      hoverElevation: 8,
-      highlightElevation: 12,
+      elevation: 12,
+      focusElevation: 12,
+      hoverElevation: 14,
+      highlightElevation: 18,
       shape: CircleBorder(),
     ),
     // BottomNavigationBar (Material 2 API) — тень тёмная,
@@ -371,7 +383,7 @@ class AppTheme {
     // на уровне виджета (см. `AppBottomNavBar`).
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: AppColors.surface,
-      elevation: 8,
+      elevation: 16,
       type: BottomNavigationBarType.fixed,
     ),
     // NavigationBar (Material 3) — на случай миграции.
@@ -379,7 +391,7 @@ class AppTheme {
       backgroundColor: AppColors.surface,
       surfaceTintColor: AppColors.surface,
       shadowColor: AppColors.navBarShadow,
-      elevation: 8,
+      elevation: 16,
     ),
     textTheme: const TextTheme(
       titleLarge: AppTextStyles.brandTitle,
