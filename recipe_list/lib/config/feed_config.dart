@@ -17,6 +17,13 @@ class FeedConfig {
   /// Max concurrent `/lookup` requests during retranslate.
   final int translateConcurrency;
 
+  /// Max concurrent `/lookup` requests during retranslate when the
+  /// list page is NOT on top of the Navigator stack (e.g. user is on
+  /// recipe details). 8 → 2 prevents the background retranslate from
+  /// saturating the server while the foreground details page is
+  /// waiting on its own `/lookup`. See docs/details-lang-cycle-504.md.
+  final int translateConcurrencyBackground;
+
   /// When true, cold-start uses the bulk `/recipes/page` endpoint
   /// instead of the 14-category fan-out. Reload (forceReseed)
   /// always uses category-based seeding for randomisation. See
@@ -28,6 +35,7 @@ class FeedConfig {
     this.seedPickCount = 10,
     this.categoryCacheThreshold = 10,
     this.translateConcurrency = 8,
+    this.translateConcurrencyBackground = 2,
     this.useBulkPage = false,
   });
 
@@ -46,6 +54,10 @@ class FeedConfig {
     translateConcurrency: int.fromEnvironment(
       'FEED_TRANSLATE_CONCURRENCY',
       defaultValue: 8,
+    ),
+    translateConcurrencyBackground: int.fromEnvironment(
+      'FEED_TRANSLATE_CONCURRENCY_BG',
+      defaultValue: 2,
     ),
     useBulkPage: bool.fromEnvironment('USE_BULK_PAGE', defaultValue: false),
   );

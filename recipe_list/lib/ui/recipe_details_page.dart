@@ -11,6 +11,16 @@ import 'app_page_bar.dart';
 import 'app_theme.dart';
 import 'source_page.dart';
 
+/// Глобальный счётчик активных страниц деталей рецепта.
+///
+/// Поднимается в `initState`, опускается в `dispose`. Используется
+/// `RecipeListLoader._onLangChanged`, чтобы не запускать тяжёлый
+/// `_retranslate` всей ленты, пока пользователь сидит на экране
+/// деталей и не видит список — это разгружает сервер и оставляет
+/// пропускную способность для одного фокусного `/lookup` со страницы
+/// деталей. См. docs/details-lang-cycle-504.md.
+final ValueNotifier<int> activeDetailsCount = ValueNotifier<int>(0);
+
 /// Экран деталей рецепта. Реализует разметку из `docs/design_system.md`
 /// §9l: белый фон, hero-фото 396×220, заголовок страницы 24/#000,
 /// секционные подзаголовки 16/#165932, белый блок ингредиентов с
@@ -56,11 +66,13 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     super.initState();
     _recipe = widget.recipe;
     appLang.addListener(_onLangChanged);
+    activeDetailsCount.value = activeDetailsCount.value + 1;
   }
 
   @override
   void dispose() {
     appLang.removeListener(_onLangChanged);
+    activeDetailsCount.value = activeDetailsCount.value - 1;
     super.dispose();
   }
 
@@ -78,6 +90,13 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     // screen until that one call resolves. If the call fails, the
     // previous-language copy stays visible (doc §"What the contract
     // guarantees" → "Offline tolerance").
+    //
+    // Exception: when the target-lang lookup throws (typically a 504
+    // when the server is saturated by a concurrent list-page
+    // _retranslate — see docs/details-lang-cycle-504.md), retry once
+    // in English so the page reflects the new flag with coherent
+    // content rather than leaving stale Italian/etc. residue under a
+    // Turkish UI. Mirrors the loader fallback added in 47c942c.
     Recipe? fetched;
     try {
       fetched = await api.lookup(
@@ -89,6 +108,19 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
       // ignore: avoid_print
       print('[lang] details lookup failed: $e');
       fetched = null;
+    }
+    if (fetched == null && lang != AppLang.en) {
+      try {
+        fetched = await api.lookup(
+          _recipe.id,
+          lang: AppLang.en,
+          timeout: const Duration(seconds: 30),
+        );
+      } on Object catch (e) {
+        // ignore: avoid_print
+        print('[lang] details EN fallback failed: $e');
+        fetched = null;
+      }
     }
     if (!mounted || seq != _translateSeq) return;
     final got = fetched;

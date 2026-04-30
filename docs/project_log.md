@@ -1,5 +1,68 @@
 # Project Log
 
+## Details-page lang cycle: bound latency, short-circuit dead tiers, defer background retranslate
+
+**Date:** 2026-04-30
+
+Bug: открыть рецепт (например, Borscht) с UI на итальянском, нажать
+флаг турецкого на странице деталей. Спиннер крутится 3–4 минуты,
+затем страница рендерится с турецким UI и **итальянским контентом**.
+Flutter logs: `DioException ... status code 504`.
+
+**Root cause.** При смене `appLang.value` срабатывают два слушателя
+одновременно: `RecipeDetailsPage._onLangChanged` (фокусный
+`/lookup` одного рецепта) и `RecipeListLoader._onLangChanged`
+(`_retranslate` всей ленты, ~200 рецептов, 8-way parallel). Под
+капотом обоих — один Node-процесс. Когда MyMemory и публичный
+LibreTranslate в 429-burst (типично в проде), каждое предложение
+проваливается в локальный self-hosted LibreTranslate, который
+CPU-насыщается выше ~2 in flight (видели ~170s/sentence). Пока ~100
+list-feed lookup'ов крутят очередь локального LT, фокусный
+details-`/lookup` ждёт коннекта; nginx режет апстрим по
+`proxy_read_timeout` и возвращает 504. Подробности в
+[docs/details-lang-cycle-504.md](details-lang-cycle-504.md).
+
+**Семь скоординированных правок** (см. todo/14):
+
+Server (`mahallem_ist@ded65274`):
+1. `translateLongField`: жёсткий 25 s-deadline на всё поле; по
+   таймауту возвращаем исходник uncached.
+2. `translateLongField`: `pLimit(2)` на fan-out предложений
+   (был `Promise.all`). Локальный LT перестаёт CPU-душиться.
+3. MyMemory + публичный LibreTranslate: 60-секундный cool-down
+   после первого 429/403/5xx — следующий вызов в окне отдаёт
+   `exhausted` за O(1), не платя 10/12 s timeout.
+4. nginx `proxy_read_timeout` 240 → 300 s для `/recipes`
+   (defense-in-depth позади (1)).
+
+Client (`recipe_list`):
+5. `RecipeDetailsPage._onLangChanged`: при провале фокусного
+   `/lookup` повторяем запрос на `en` — пользователь видит
+   когерентный английский под новым флагом, а не «застывший»
+   итальянский. Зеркалит fallback из `_retranslate` (47c942c).
+6. Глобальный `activeDetailsCount: ValueNotifier<int>`,
+   инкремент/декремент в details `initState`/`dispose`.
+   `RecipeListLoader._onLangChanged` пропускает
+   `_retranslate` целиком, если `activeDetailsCount > 0` —
+   откладывает в `_pendingBackgroundLang`. Когда счётчик падает
+   до нуля и язык всё ещё расходится — добивает retranslate.
+7. `feed_config.dart`: `translateConcurrencyBackground = 2`.
+   Воркеры `_retranslate` дополнительно проверяют счётчик и
+   выходят, если пользователь толкнул details mid-run.
+
+**Что НЕ покрыто** (латентные риски): TheMealDB outage; Gemini
+quota fully exhausted; локальный LT OOM; гонка двух одновременных
+lookup'ов одного и того же id. Зафиксировано в docs/details-lang-cycle-504.md.
+
+**Validated:** `flutter analyze` clean; node tests 18/20 baseline
+сохранена.
+
+**Deploy:** `mahallem_ist@ded65274` — pending
+`docker compose up -d --build user-portal` + `nginx -s reload`
+на 72.61.181.62.
+
+---
+
 ## Turkish residue: drop `tr` from echo gate, English fallback on lookup miss
 
 **Date:** 2026-04-29

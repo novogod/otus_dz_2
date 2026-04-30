@@ -9,6 +9,7 @@ import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'app_theme.dart';
+import 'recipe_details_page.dart' show activeDetailsCount;
 import 'recipe_list_page.dart';
 
 /// Загружает список рецептов и поднимает локальный кэш.
@@ -84,6 +85,15 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   /// доехала, последний результат не должен перезаписать новый.
   int _translateSeq = 0;
 
+  /// Язык, на который надо будет перевести ленту, как только
+  /// пользователь вернётся со страницы деталей. Если пользователь
+  /// сменил язык, сидя в деталях, мы НЕ запускаем `_retranslate`
+  /// прямо сейчас (он бы засатурировал сервер и `/lookup`
+  /// деталей упал бы по 504 — см. docs/details-lang-cycle-504.md).
+  /// Запоминаем язык и запускаем `_retranslate`, когда счётчик
+  /// `activeDetailsCount` опускается до нуля.
+  AppLang? _pendingBackgroundLang;
+
   @override
   void initState() {
     super.initState();
@@ -92,15 +102,32 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       return r;
     });
     appLang.addListener(_onLangChanged);
+    activeDetailsCount.addListener(_onActiveDetailsChanged);
     reloadFeedTicker.addListener(_onReloadRequested);
   }
 
   @override
   void dispose() {
     appLang.removeListener(_onLangChanged);
+    activeDetailsCount.removeListener(_onActiveDetailsChanged);
     reloadFeedTicker.removeListener(_onReloadRequested);
     _stage.dispose();
     super.dispose();
+  }
+
+  void _onActiveDetailsChanged() {
+    if (!mounted) return;
+    if (activeDetailsCount.value > 0) return;
+    final pending = _pendingBackgroundLang;
+    if (pending == null) return;
+    if (pending != appLang.value) {
+      _pendingBackgroundLang = null;
+      return;
+    }
+    _pendingBackgroundLang = null;
+    // Detail page popped, language still differs — run the deferred
+    // retranslate now that the foreground is the list again.
+    _onLangChanged();
   }
 
   /// Реакция на нажатие кнопки «обновить» в шапке. Полностью
@@ -192,6 +219,19 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       '[lang] _onLangChanged -> ${appLang.value.name} '
       '(last=${last == null ? "null" : "${last.recipes.length} recipes"})',
     );
+    // (6) If a recipe-details page is on top, skip the retranslate
+    // entirely. The details page issues its own focused `/lookup`
+    // and the user can't see the list anyway. Defer until the
+    // details page pops. See docs/details-lang-cycle-504.md.
+    if (activeDetailsCount.value > 0 && last != null && last.recipes.isNotEmpty) {
+      _pendingBackgroundLang = appLang.value;
+      // ignore: avoid_print
+      print(
+        '[lang] _onLangChanged deferred — details page on top '
+        '(activeDetailsCount=${activeDetailsCount.value})',
+      );
+      return;
+    }
     setState(() {
       _stage.value = const _LoadStage.initial();
       _translating = true;
@@ -299,6 +339,14 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     Future<void> worker() async {
       while (true) {
         if (DateTime.now().isAfter(deadline)) return;
+        // (6+7) If user pushed a details page mid-retranslate, exit
+        // workers so the foreground `/lookup` has the server to
+        // itself. The deferred lang is recorded by `_onLangChanged`
+        // → `_pendingBackgroundLang` and resumed on details pop.
+        if (activeDetailsCount.value > 0) {
+          _pendingBackgroundLang = lang;
+          return;
+        }
         final i = cursor++;
         if (i >= missed.length) return;
         final idx = missed[i];
@@ -352,7 +400,12 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     }
 
     await Future.wait(
-      List.generate(widget.config.translateConcurrency, (_) => worker()),
+      List.generate(
+        activeDetailsCount.value > 0
+            ? widget.config.translateConcurrencyBackground
+            : widget.config.translateConcurrency,
+        (_) => worker(),
+      ),
     );
 
     // Per docs/translation-pipeline.md: server-side `_isEchoTranslation`
