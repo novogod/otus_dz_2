@@ -468,6 +468,14 @@ class _IngredientRowField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    // Подпись под полем — мельче дефолтного helperStyle (~12 sp),
+    // чтобы caption-метка не отбирала визуального веса у самого
+    // ввода и спокойно ложилась в две строки на длинных локалях.
+    const helperStyle = TextStyle(
+      fontSize: 10,
+      height: 1.2,
+      color: AppColors.textSecondary,
+    );
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -478,6 +486,7 @@ class _IngredientRowField extends StatelessWidget {
             decoration: InputDecoration(
               helperText: s.addRecipeIngredientName,
               helperMaxLines: 2,
+              helperStyle: helperStyle,
               isDense: true,
             ),
             textInputAction: TextInputAction.next,
@@ -491,6 +500,7 @@ class _IngredientRowField extends StatelessWidget {
             decoration: InputDecoration(
               helperText: s.addRecipeIngredientQty,
               helperMaxLines: 2,
+              helperStyle: helperStyle,
               isDense: true,
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -505,6 +515,7 @@ class _IngredientRowField extends StatelessWidget {
             decoration: InputDecoration(
               helperText: s.addRecipeIngredientMeasure,
               helperMaxLines: 2,
+              helperStyle: helperStyle,
               isDense: true,
             ),
             textInputAction: TextInputAction.next,
