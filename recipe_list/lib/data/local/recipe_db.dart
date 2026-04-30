@@ -27,7 +27,10 @@ const String kRecipeDbFileName = 'recipes.db';
 /// v5: split `recipes.instructions` into a sibling table
 /// `recipe_bodies` (todo/12). The list-row payload drops the
 /// heaviest column; details screen lazy-loads it on demand.
-const int kRecipeDbSchemaVersion = 5;
+/// v6: add `favorites` table for the per-language favorites feature
+/// (todo/15). Additive migration — `recipes` / `recipe_bodies` are
+/// preserved when upgrading from v5.
+const int kRecipeDbSchemaVersion = 6;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -75,18 +78,49 @@ BEGIN
 END;
 ''';
 
+/// v6: per-language favorites set. Only stores membership —
+/// the displayable body lives in `recipe_bodies` (or is fetched
+/// via `RecipeApi.lookup` if the cache row was evicted).
+const String _kFavoritesSchema = '''
+CREATE TABLE favorites (
+  recipe_id INTEGER NOT NULL,
+  lang TEXT NOT NULL,
+  saved_at INTEGER NOT NULL,
+  PRIMARY KEY (recipe_id, lang)
+);
+''';
+
 const List<String> _kIndexes = [
   'CREATE INDEX idx_recipes_lang_name_lower ON recipes(lang, name_lower);',
   'CREATE INDEX idx_recipes_last_used_at ON recipes(last_used_at);',
+  'CREATE INDEX idx_favorites_lang_saved_at ON favorites(lang, saved_at DESC);',
 ];
 
 Future<void> applyRecipeSchema(Database db) async {
   await db.execute(_kSchema);
   await db.execute(_kBodySchema);
   await db.execute(_kBodyCascadeTrigger);
+  await db.execute(_kFavoritesSchema);
   for (final stmt in _kIndexes) {
     await db.execute(stmt);
   }
+}
+
+/// Идемпотентное создание `favorites` (+ индекса) для миграции
+/// v5 → v6: апгрейд не трогает `recipes` / `recipe_bodies`,
+/// только добавляет новую таблицу.
+Future<void> applyFavoritesSchema(Database db) async {
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS favorites ('
+    'recipe_id INTEGER NOT NULL, '
+    'lang TEXT NOT NULL, '
+    'saved_at INTEGER NOT NULL, '
+    'PRIMARY KEY (recipe_id, lang))',
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_favorites_lang_saved_at '
+    'ON favorites(lang, saved_at DESC)',
+  );
 }
 
 /// Открывает persistent БД в `getApplicationSupportDirectory()`.
@@ -100,11 +134,21 @@ Future<Database> openRecipeDatabase() async {
     version: kRecipeDbSchemaVersion,
     onCreate: (db, _) => applyRecipeSchema(db),
     onUpgrade: (db, oldVersion, newVersion) async {
-      // No additive migrations: drop everything and let the loader
-      // re-fetch with the new translation pipeline.
-      await db.execute('DROP TABLE IF EXISTS recipes');
-      await db.execute('DROP TABLE IF EXISTS recipe_bodies');
-      await applyRecipeSchema(db);
+      // v<5 апгрейды по-прежнему destructive: новый перевод-пайплайн
+      // делает старые кэшированные строки невалидными. Избранного
+      // там ещё не существовало, терять нечего.
+      if (oldVersion < 5) {
+        await db.execute('DROP TABLE IF EXISTS recipes');
+        await db.execute('DROP TABLE IF EXISTS recipe_bodies');
+        await db.execute('DROP TABLE IF EXISTS favorites');
+        await applyRecipeSchema(db);
+        return;
+      }
+      // v5 → v6: только дополняем схему таблицей favorites,
+      // существующие кэши не трогаем.
+      if (oldVersion < 6) {
+        await applyFavoritesSchema(db);
+      }
     },
   );
 }
