@@ -40,11 +40,20 @@ class RecipeDetailsPage extends StatefulWidget {
   final RecipeApi? api;
   final RecipeRepository? repository;
 
+  /// Вкладка нижней навигации, которая должна подсвечиваться,
+  /// пока открыт этот экран деталей. По умолчанию — `recipes`
+  /// (главная лента), но при открытии из «Избранного» сюда
+  /// прокидывается `favorites`, чтобы пользователь не видел
+  /// «перепрыгивания» активной вкладки и оставался в логике
+  /// своего исходного раздела.
+  final AppNavTab originTab;
+
   const RecipeDetailsPage({
     super.key,
     required this.recipe,
     this.api,
     this.repository,
+    this.originTab = AppNavTab.recipes,
   });
 
   @override
@@ -169,7 +178,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
         ),
       ),
       bottomNavigationBar: AppBottomNavBar(
-        current: AppNavTab.recipes,
+        current: widget.originTab,
         onTap: (_) => Navigator.of(context).maybePop(),
       ),
       body: SafeArea(

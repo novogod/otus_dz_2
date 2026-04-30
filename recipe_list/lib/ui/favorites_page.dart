@@ -212,6 +212,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
           recipe: recipe,
           api: widget.api,
           repository: widget.repository,
+          originTab: AppNavTab.favorites,
         ),
       ),
     );
