@@ -192,8 +192,9 @@ class _RecipeListPageState extends State<RecipeListPage> {
     _focusNode.unfocus();
   }
 
-  /// Дёргает API и отфильтровывает результат по началу имени
-  /// (TheMealDB их отдаёт по подстроке, берём строже — startsWith).
+  /// Дёргает API и фильтрует результат по подстроке имени.
+  /// Сервер уже делает substring-поиск по всем локалям; здесь оставляем
+  /// тот же предикат, чтобы локальный фолбэк (тесты / offline) совпадал.
   /// Если [api] = null (тесты), фильтрует локальный [widget.recipes].
   Future<void> _runPredictionQuery(
     String prefix, {
@@ -220,9 +221,8 @@ class _RecipeListPageState extends State<RecipeListPage> {
       bool offline;
       if (repo != null) {
         final res = await repo.searchByName(prefix, appLang.value);
-        hits = res.recipes
-            .where((r) => r.name.toLowerCase().startsWith(prefix.toLowerCase()))
-            .toList(growable: false);
+        // Сервер уже фильтрует по подстроке во всех локалях — отдаём как есть.
+        hits = res.recipes;
         offline = res.offline;
       } else {
         final fetched = await api!.searchByName(
@@ -257,7 +257,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
   static List<Recipe> _localPrefix(List<Recipe> source, String prefix) {
     final p = prefix.toLowerCase();
     return source
-        .where((r) => r.name.toLowerCase().startsWith(p))
+        .where((r) => r.name.toLowerCase().contains(p))
         .toList(growable: false);
   }
 
