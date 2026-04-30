@@ -1,31 +1,31 @@
 # Project Log
 
-## AppBar polish: equal 40×40 circles for back / reload / flag / lang
+## Шапка экрана: единый стиль 40×40 для back / reload / flag / lang
 
 **Date:** 2026-04-30
 
-UI cleanup of the shared `AppPageBar`. All four header actions now
-share one visual vocabulary: 40×40 circles with `AppSpacing.sm` (8 px)
-between them.
+Косметика общего `AppPageBar`. Все четыре действия в шапке теперь
+делят один визуальный язык: круги 40×40 с шагом `AppSpacing.sm`
+(8 px) между ними.
 
-* `recipe_list/lib/ui/lang_icon_button.dart`: flag is now a 40×40
-  `ClipOval` with `BoxFit.cover` (was 24×16 ClipRRect with rounded-2
-  corners) so it visually pairs with the lang circle. Stripped the
-  outer horizontal padding so the inter-button gap is governed by the
-  parent `Row`/AppBar.
-* `recipe_list/lib/ui/reload_icon_button.dart`: stripped the outer
-  padding; added `BorderSide(width: 1, color: Colors.black)` on the
-  `CircleBorder` so the muted-surface circle has a defined edge.
+* `recipe_list/lib/ui/lang_icon_button.dart`: флаг теперь круглый
+  40×40 (`ClipOval` + `BoxFit.cover`) вместо прежнего 24×16
+  `ClipRRect` со скруглением 2 px — флаг визуально парный с
+  лейбл-кружком языка. Внешний горизонтальный padding снят: зазор
+  между кнопками задаёт родительский `Row`/`AppBar`.
+* `recipe_list/lib/ui/reload_icon_button.dart`: внешний padding
+  снят, добавлен `BorderSide(width: 1, color: Colors.black)` на
+  `CircleBorder` — у muted-кружка теперь явная граница.
 * `recipe_list/lib/ui/app_page_bar.dart`:
-  * Replaced the default `IconButton` back chevron with the same
-    40×40 `Material` + bordered `CircleBorder` + `surfaceMuted` fill
-    + `chevron_left` glyph as the reload button. `leadingWidth = 56`
-    pads the circle by `AppSpacing.sm` from the screen edge.
-  * Added `SizedBox(width: AppSpacing.sm)` between reload and lang
-    when both are visible, so the trailing trio (reload · flag ·
-    lang) is evenly spaced.
+  * Стандартный `IconButton` со «стрелкой назад» заменён на тот же
+    40×40 `Material` + `CircleBorder` 1 px чёрный + `surfaceMuted`
+    fill + глиф `chevron_left`, что и у reload. `leadingWidth = 56`
+    отбивает кружок от края экрана на `AppSpacing.sm`.
+  * Между reload и lang добавлен `SizedBox(width: AppSpacing.sm)`,
+    когда оба видимы, — итоговая тройка справа (reload · flag ·
+    lang) идёт с равным шагом.
 
-`flutter analyze` clean.
+`flutter analyze` без замечаний.
 
 ---
 
