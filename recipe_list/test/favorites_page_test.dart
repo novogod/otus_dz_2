@@ -89,7 +89,10 @@ void main() {
       await tester.pump();
 
       expect(find.byType(RecipeCard, skipOffstage: false), findsNWidgets(2));
-      expect(find.text('Pizza', skipOffstage: false), findsNothing); // EN — скрыто.
+      expect(
+        find.text('Pizza', skipOffstage: false),
+        findsNothing,
+      ); // EN — скрыто.
       // Самый свежий (_ru2) должен быть первым.
       final cards = tester
           .widgetList<RecipeCard>(find.byType(RecipeCard, skipOffstage: false))

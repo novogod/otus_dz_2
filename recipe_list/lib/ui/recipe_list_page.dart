@@ -10,9 +10,9 @@ import '../models/recipe.dart';
 import 'add_recipe_page.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
+import 'favorites_page.dart';
 import 'recipe_card.dart';
 import 'recipe_details_page.dart';
-import 'favorites_page.dart';
 import 'search_app_bar.dart';
 
 /// Страница со списком рецептов. Принимает готовый список через конструктор —
@@ -364,11 +364,9 @@ class _RecipeListPageState extends State<RecipeListPage> {
   void _onNavTap(BuildContext context, AppNavTab tab) {
     if (tab == AppNavTab.recipes) return;
     if (tab == AppNavTab.favorites) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const FavoritesPage(),
-        ),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const FavoritesPage()));
       return;
     }
     final s = S.of(context);

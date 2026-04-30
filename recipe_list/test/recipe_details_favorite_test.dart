@@ -52,9 +52,7 @@ void main() {
     });
 
     testWidgets('hero image hosts FavoriteBadge top-right', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const RecipeDetailsPage(recipe: _recipe)),
-      );
+      await tester.pumpWidget(_wrap(const RecipeDetailsPage(recipe: _recipe)));
       await tester.pump();
 
       expect(find.byType(FavoriteBadge), findsOneWidget);
@@ -70,9 +68,7 @@ void main() {
     testWidgets('tap on details badge toggles persist & re-renders filled', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _wrap(const RecipeDetailsPage(recipe: _recipe)),
-      );
+      await tester.pumpWidget(_wrap(const RecipeDetailsPage(recipe: _recipe)));
       await tester.pump();
 
       await tester.runAsync(() async {
