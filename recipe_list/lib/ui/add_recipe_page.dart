@@ -13,6 +13,7 @@ import '../data/repository/owned_recipes_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
+import '../utils/imgproxy.dart';
 import '../utils/photo_downscaler.dart';
 import 'app_theme.dart';
 
@@ -436,7 +437,22 @@ class _AddRecipePageState extends State<AddRecipePage> {
         child: Directionality(
           textDirection: TextDirection.ltr,
           child: AppBar(
-            title: Text(_isEdit ? s.editRecipeTitle : s.addRecipeTitle),
+            // `Редактировать рецепт` (ru), `Resipê biguherîne` (ku)
+            // и пр. перевешивают доступную ширину title-слота на
+            // узких экранах и обрезаются троеточием. FittedBox с
+            // `scaleDown` сохраняет typography-токен из темы и
+            // только уменьшает шрифт ровно настолько, чтобы
+            // строка влезла целиком — соответствует подходу
+            // адаптивных метрик из `AppMetrics` в app_theme.dart.
+            title: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.center,
+              child: Text(
+                _isEdit ? s.editRecipeTitle : s.addRecipeTitle,
+                maxLines: 1,
+                softWrap: false,
+              ),
+            ),
           ),
         ),
       ),
@@ -759,7 +775,12 @@ class _PhotoPicker extends StatelessWidget {
                           ? Image.file(picked!, fit: BoxFit.cover)
                           : (existingUrl != null && existingUrl!.isNotEmpty)
                           ? Image.network(
-                              existingUrl!,
+                              // existingUrl может быть относительным
+                              // `/storage/v1/...` (mahallem-бэкенд),
+                              // а Image.network требует абсолютный
+                              // URL. imgproxyUrl приклеивает origin
+                              // и заодно отдаёт уменьшенную версию.
+                              imgproxyUrl(existingUrl!, 320, 320),
                               fit: BoxFit.cover,
                               errorBuilder: (_, _, _) => Center(
                                 child: Icon(
