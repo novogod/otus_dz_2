@@ -1,148 +1,163 @@
-# 15 — Favorites: per-language local persistence
+# 15 — Избранное: локальное хранение по языкам
 
-**Refs:** [docs/favorites.md](../docs/favorites.md). **Priority:** P1.
-**Scope:** `[client]` only — no server changes.
+**См.:** [docs/favorites.md](../docs/favorites.md). **Приоритет:** P1.
+**Scope:** только `[client]`, серверных правок нет.
 
-Goal: persist user-marked favorite recipes per language in sqflite,
-expose via heart badge on the card / details, and the bottom-nav
-"Favorites" tab.
+Цель: сохранять отмеченные пользователем избранные рецепты по языкам
+в sqflite, давать к ним доступ через бейдж-сердце на карточке и
+странице деталей и через вкладку «Избранное» в нижней навигации.
 
-Implementation is split into **5 chunks**. Each chunk lands as its
-own commit, with tests that pass before moving on.
+Реализация делится на **5 чанков**. Каждый чанк ложится отдельным
+коммитом, тесты проходят перед переходом к следующему.
 
 ---
 
-## Chunk A — DB schema + store (no UI)
+## Чанк A — Схема БД и стор (без UI)
 
-### Changes
+### Изменения
 * `recipe_list/lib/data/local/recipe_db.dart`:
-  * Bump `kRecipeDbSchemaVersion` 5 → 6.
-  * Append to `applyRecipeSchema`: `CREATE TABLE favorites (...)`,
+  * Поднять `kRecipeDbSchemaVersion` с 5 до 6.
+  * Дополнить `applyRecipeSchema`: `CREATE TABLE favorites (...)`,
     `CREATE INDEX favorites_by_lang_savedAt`.
-  * `onUpgrade(5 → 6)`: same `CREATE TABLE` / index, idempotent.
-* `recipe_list/lib/data/repository/favorites_store.dart` (new):
-  * `class FavoritesStore` with the API in
-    [docs/favorites.md](../docs/favorites.md) §"State management".
-  * Internal `Map<AppLang, ValueNotifier<Set<int>>>` + sqflite
-    backing.
+  * `onUpgrade(5 → 6)`: тот же `CREATE TABLE` / индекс,
+    идемпотентно.
+* `recipe_list/lib/data/repository/favorites_store.dart` (новый):
+  * `class FavoritesStore` с API из
+    [docs/favorites.md](../docs/favorites.md), раздел «Управление
+    состоянием».
+  * Внутри — `Map<AppLang, ValueNotifier<Set<int>>>` плюс sqflite
+    как backing store.
 
-### Tests
+### Тесты
 * `recipe_list/test/data/favorites_store_test.dart`:
-  * `add` → `isFavorite` → `remove` round-trip.
-  * Per-lang isolation: `add(id, en)` does not surface in `idsForLang(tr)`.
-  * `list(lang)` returns rows in `saved_at DESC` order.
+  * Round-trip `add` → `isFavorite` → `remove`.
+  * Изоляция по языкам: `add(id, en)` не видна в
+    `idsForLang(tr)`.
+  * `list(lang)` возвращает строки в порядке `saved_at DESC`.
 * `recipe_list/test/data/recipe_db_migration_test.dart`:
-  * Open with schema 5 fixture, expect upgrade to 6, `favorites`
-    table present and empty.
+  * Открыть фикстуру со схемой 5, ожидать апгрейд до 6, таблица
+    `favorites` присутствует и пуста.
 
-### Acceptance
-* `flutter test test/data/` green.
+### Приёмка
+* `flutter test test/data/` зелёный.
 
 ---
 
-## Chunk B — Heart badge on recipe card
+## Чанк B — Бейдж сердца на карточке рецепта
 
-### Changes
+### Изменения
 * `recipe_list/lib/ui/recipe_card.dart`:
-  * Add `_FavoriteBadge` mirror of `_YoutubeBadge`: same size /
-    position (top-right of image), translucent black background.
-  * Outlined heart (`Icons.favorite_border`, white) when not fav;
-    filled (`Icons.favorite`, `AppColors.primary`) when fav.
-  * Subscribes to `FavoritesStore.idsForLang(appLang.value)`.
-  * `onTap`: toggle via store; `HapticFeedback.lightImpact()`.
-* If both YouTube and Favorite badges exist on the same card, stack
-  them vertically with `AppSpacing.xs` gap. Favorite goes ABOVE
-  YouTube (top-right outermost).
+  * Добавить `_FavoriteBadge` — зеркало `_YoutubeBadge`: тот же
+    размер и позиция (правый верх изображения), полупрозрачный
+    чёрный фон.
+  * Контурное сердце (`Icons.favorite_border`, белое), пока не в
+    избранном; заполненное (`Icons.favorite`, `AppColors.primary`)
+    в избранном.
+  * Подписан на `FavoritesStore.idsForLang(appLang.value)`.
+  * `onTap`: переключить через стор; `HapticFeedback.lightImpact()`.
+* Если на одной карточке оба бейджа — YouTube и Favorite —
+  складываем их вертикально через `AppSpacing.xs`. Сердце
+  ВЫШЕ YouTube (то есть самое верхнее в правом верхнем углу).
 
-### Tests
+### Тесты
 * `recipe_list/test/ui/recipe_card_favorite_test.dart`:
-  * Pump card with no favorite → outlined heart visible.
-  * Tap → store contains id; widget rebuilds with filled heart.
-  * Tap again → store empty; widget back to outlined.
+  * Pump карточки без избранного → видно контурное сердце.
+  * Тап → в сторе появился id; виджет перерисован с заполненным
+    сердцем.
+  * Тап ещё раз → стор пуст; виджет вернулся к контурному.
 
-### Acceptance
-* `flutter analyze` clean. Widget test green.
+### Приёмка
+* `flutter analyze` чистый. Widget-тест зелёный.
 
 ---
 
-## Chunk C — Heart badge on details page
+## Чанк C — Бейдж сердца на странице деталей
 
-### Changes
+### Изменения
 * `recipe_list/lib/ui/recipe_details_page.dart`:
-  * Same `_FavoriteBadge` overlaid top-right of the hero image.
-  * Toggling on details reflects on the underlying card when the
-    user pops back.
+  * Тот же `_FavoriteBadge` поверх hero-изображения, в правом
+    верхнем углу.
+  * Переключение в деталях отражается на исходной карточке после
+    возврата.
 
-### Tests
+### Тесты
 * `recipe_list/test/ui/recipe_details_favorite_test.dart`:
-  * Mark on details → pop → card shows filled heart.
+  * Отметить в деталях → pop → карточка показывает заполненное
+    сердце.
 
-### Acceptance
-* Manual: mark/unmark on details, hot-restart, state preserved.
+### Приёмка
+* Ручная проверка: отметить/снять в деталях, hot-restart,
+  состояние сохранено.
 
 ---
 
-## Chunk D — Favorites tab + screen
+## Чанк D — Вкладка и экран «Избранное»
 
-### Changes
-* `recipe_list/lib/ui/favorites_page.dart` (new):
-  * `RecipeListPage`-shaped grid backed by
+### Изменения
+* `recipe_list/lib/ui/favorites_page.dart` (новый):
+  * Сетка в стиле `RecipeListPage`, источник —
     `FavoritesStore.list(appLang.value)`.
-  * Empty state: localised hint via `s.favoritesEmpty`.
-  * Reuses `RecipeCard`.
-  * AppBar: reuse `SearchAppBar` shell. Add a flag (e.g.
-    `disableLangAndReload: true`) or render the favorites variant
-    that wraps the lang + reload icons in `Opacity(0.38) +
-    IgnorePointer` — they stay visible for layout parity but are
-    inert.
-  * Search field is local-only: filter the in-memory list by
-    case-folded substring match on `recipe.name`. No network call,
-    no `searchByName` invocation.
-* `recipe_list/lib/main.dart` (or wherever the bottom-nav router
-  lives): wire `AppNavTab.favorites` → `FavoritesPage`.
-* `recipe_list/lib/i18n/strings_*.g.dart`: add `favoritesEmpty`
-  string in 10 locales (run `slang build` after editing the
-  source `strings.i18n.yaml`).
+  * Пустое состояние: локализованная подсказка через
+    `s.favoritesEmpty`.
+  * Переиспользует `RecipeCard`.
+  * AppBar: переиспользовать оболочку `SearchAppBar`. Добавить
+    флаг (например, `disableLangAndReload: true`) или отрисовать
+    favorites-вариант, в котором иконки language + reload
+    обёрнуты в `Opacity(0.38) + IgnorePointer` — остаются
+    видимыми для согласованности лэйаута, но инертны.
+  * Поле поиска работает только локально: фильтр по in-memory
+    списку через case-fold подстрочное совпадение по
+    `recipe.name`. Без сетевых вызовов, без `searchByName`.
+* `recipe_list/lib/main.dart` (или там, где живёт роутер нижней
+  навигации): провязать `AppNavTab.favorites` на `FavoritesPage`.
+* `recipe_list/lib/i18n/strings_*.g.dart`: добавить ключ
+  `favoritesEmpty` для всех 10 локалей (после правки исходного
+  `strings.i18n.yaml` запустить `slang build`).
 
-### Tests
+### Тесты
 * `recipe_list/test/ui/favorites_page_test.dart`:
-  * Empty store → empty-state hint visible.
-  * Two saved → grid renders 2 cards in `saved_at DESC` order.
-  * Switching `appLang` mid-test refreshes content.
-  * Lang + reload icons present but tap is a no-op (verify via
-    `IgnorePointer` ancestor or null `onPressed`).
-  * Type a substring in the search field → only matching favorites
-    remain; no network call (mock API expects zero hits).
+  * Стор пуст → видна подсказка пустого состояния.
+  * Два сохранённых → сетка рендерит 2 карточки в порядке
+    `saved_at DESC`.
+  * Смена `appLang` посреди теста перерисовывает контент.
+  * Иконки language + reload присутствуют, но тап — no-op
+    (проверяется через предка `IgnorePointer` или `onPressed: null`).
+  * Ввод подстроки в поле поиска → остаются только подходящие
+    избранные; сетевой вызов не происходит (mock API ожидает
+    ноль обращений).
 
-### Acceptance
-* Tapping nav heart navigates to the screen; lang + reload icons
-  faded and inert; search filters favorites locally only.
+### Приёмка
+* Тап по сердцу в нижней навигации ведёт на экран; иконки
+  language + reload приглушены и инертны; поиск фильтрует
+  избранное локально.
 
 ---
 
-## Chunk E — Polish + project_log
+## Чанк E — Полировка и project_log
 
-### Changes
-* `docs/project_log.md`: 2026-04-30+ entry summarising chunks A-D.
-* Verify reload button on Recipes tab does NOT touch `favorites`
-  table — add a regression test that reload-flow preserves a
-  favorite record.
-* Hot-restart manual sweep across iOS / Android / web.
+### Изменения
+* `docs/project_log.md`: запись от 2026-04-30+ с резюме чанков
+  A–D.
+* Проверить, что кнопка reload на вкладке «Рецепты» НЕ трогает
+  таблицу `favorites` — добавить регрессионный тест на то, что
+  reload-flow сохраняет запись избранного.
+* Ручной hot-restart прогон на iOS / Android / web.
 
-### Tests
+### Тесты
 * `recipe_list/test/data/favorites_survives_reload_test.dart`:
-  * Add favorite → trigger feed reload (`requestFeedReload`) →
-    favorite still present.
+  * Добавить избранное → дёрнуть reload ленты
+    (`requestFeedReload`) → избранное на месте.
 
-### Acceptance
-* `flutter analyze` clean. All new test files green.
-* `flutter test` baseline preserved (existing tests untouched).
+### Приёмка
+* `flutter analyze` чистый. Все новые тестовые файлы зелёные.
+* `flutter test` baseline сохранён (существующие тесты не
+  тронуты).
 
 ---
 
-## Out of scope (do NOT do here)
+## Что НЕ делаем здесь
 
-* Server-side favorite endpoint or sync.
-* Cross-language favorite migration UI.
-* Sharing / exporting favorites.
-* Folders / collections.
+* Серверный endpoint избранного и синхронизация.
+* UI миграции избранного между языками.
+* Шаринг / экспорт избранного.
+* Папки / коллекции.
