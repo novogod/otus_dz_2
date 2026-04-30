@@ -92,7 +92,10 @@ class _SourcePageState extends State<SourcePage> {
             elevation: 0,
             leading: IconButton(
               tooltip: s.back,
-              icon: const Icon(Icons.chevron_left, color: AppColors.primaryDark),
+              icon: const Icon(
+                Icons.chevron_left,
+                color: AppColors.primaryDark,
+              ),
               onPressed: () => Navigator.of(context).maybePop(),
             ),
             title: Column(
