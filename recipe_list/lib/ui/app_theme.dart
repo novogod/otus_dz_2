@@ -40,11 +40,16 @@ class AppColors {
   /// Неактивный текст / плейсхолдеры / неактивный таб навбара.
   static const Color textInactive = Color(0xFFC2C2C2);
 
-  /// Тень карточки рецепта: rgba(149,146,146,0.10).
-  static const Color cardShadow = Color(0x1A959292);
+  /// Тень карточки рецепта. Базовый Figma-токен —
+  /// `rgba(149,146,146,0.10)` (alpha 0x1A); для лучшей
+  /// читаемости на сером scaffold-фоне затемняем в 1.4×
+  /// → alpha 0x24 (≈ 0.14).
+  static const Color cardShadow = Color(0x24959292);
 
-  /// Тень нижнего навбара: rgba(0,0,0,0.25).
-  static const Color navBarShadow = Color(0x40000000);
+  /// Тень нижнего навбара / FAB. Базовый Figma-токен —
+  /// `rgba(0,0,0,0.25)` (alpha 0x40); затемнён в 1.4×
+  /// → alpha 0x5A (≈ 0.35) для большей выраженности тени.
+  static const Color navBarShadow = Color(0x5A000000);
 }
 
 /// Радиусы скруглений.
@@ -323,7 +328,15 @@ class AppTheme {
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.surface,
       foregroundColor: AppColors.textPrimary,
-      elevation: 0,
+      // Material-elevation вместо ручного boxShadow на каждом
+      // экране: scrolledUnderElevation срабатывает, когда под
+      // AppBar-ом есть прокручиваемый контент, иначе — статичный
+      // elevation. shadowColor берём из дизайн-системы
+      // (`navBarShadow` × 1.4).
+      elevation: 4,
+      scrolledUnderElevation: 4,
+      shadowColor: AppColors.navBarShadow,
+      surfaceTintColor: AppColors.surface,
       centerTitle: true,
       // Заголовок страницы — docs/design_system.md §типографика
       // «Page title» (Roboto 500/24/22 `#000000`). Регистрируем
@@ -331,6 +344,42 @@ class AppTheme {
       // `style:` вручную и брали токен через Theme-канал.
       titleTextStyle: AppTextStyles.pageTitle,
       toolbarTextStyle: AppTextStyles.pageTitle,
+    ),
+    // Карточки рецептов и любые `Card`-обёртки на форме —
+    // получают тень дизайн-системы через Material-elevation.
+    cardTheme: const CardThemeData(
+      color: AppColors.surface,
+      surfaceTintColor: AppColors.surface,
+      elevation: 4,
+      shadowColor: AppColors.cardShadow,
+      shape: RoundedRectangleBorder(borderRadius: AppRadii.cardAll),
+      margin: EdgeInsets.zero,
+    ),
+    // FAB (плюс на списке рецептов) — выраженная тень,
+    // соответствует ручному `AppShadows.navBar` ранее.
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: AppColors.primary,
+      foregroundColor: AppColors.surface,
+      elevation: 6,
+      focusElevation: 6,
+      hoverElevation: 8,
+      highlightElevation: 12,
+      shape: CircleBorder(),
+    ),
+    // BottomNavigationBar (Material 2 API) — тень тёмная,
+    // тот же токен `navBarShadow`. Цветовые токены оставляем
+    // на уровне виджета (см. `AppBottomNavBar`).
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: AppColors.surface,
+      elevation: 8,
+      type: BottomNavigationBarType.fixed,
+    ),
+    // NavigationBar (Material 3) — на случай миграции.
+    navigationBarTheme: const NavigationBarThemeData(
+      backgroundColor: AppColors.surface,
+      surfaceTintColor: AppColors.surface,
+      shadowColor: AppColors.navBarShadow,
+      elevation: 8,
     ),
     textTheme: const TextTheme(
       titleLarge: AppTextStyles.brandTitle,

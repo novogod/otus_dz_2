@@ -89,7 +89,6 @@ class _SourcePageState extends State<SourcePage> {
           child: AppBar(
             backgroundColor: AppColors.surface,
             foregroundColor: AppColors.primaryDark,
-            elevation: 0,
             leading: IconButton(
               tooltip: s.back,
               icon: const Icon(
