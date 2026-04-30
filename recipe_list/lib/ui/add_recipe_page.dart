@@ -436,21 +436,38 @@ class _AddRecipePageState extends State<AddRecipePage> {
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: Directionality(
           textDirection: TextDirection.ltr,
+          // AppBar по-умолчанию центрирует title в *оставшемся*
+          // после leading/actions слоте, поэтому на узких
+          // экранах с back-кнопкой заголовок визуально съезжает
+          // вправо от центра экрана. Кладём текст в
+          // `flexibleSpace` поверх toolbar-а: он растягивается
+          // на всю ширину AppBar-а и центруется относительно
+          // оси экрана независимо от длины перевода. FittedBox
+          // с `scaleDown` оставляет typography-токен из темы и
+          // только уменьшает шрифт ровно настолько, чтобы
+          // строка влезла между leading-кнопкой и правым краем
+          // (резерв `kToolbarHeight` с обеих сторон, чтобы
+          // back-кнопка не накрывала текст).
           child: AppBar(
-            // `Редактировать рецепт` (ru), `Resipê biguherîne` (ku)
-            // и пр. перевешивают доступную ширину title-слота на
-            // узких экранах и обрезаются троеточием. FittedBox с
-            // `scaleDown` сохраняет typography-токен из темы и
-            // только уменьшает шрифт ровно настолько, чтобы
-            // строка влезла целиком — соответствует подходу
-            // адаптивных метрик из `AppMetrics` в app_theme.dart.
-            title: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.center,
-              child: Text(
-                _isEdit ? s.editRecipeTitle : s.addRecipeTitle,
-                maxLines: 1,
-                softWrap: false,
+            title: null,
+            flexibleSpace: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: kToolbarHeight,
+                ),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Text(
+                      _isEdit ? s.editRecipeTitle : s.addRecipeTitle,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: Theme.of(context).appBarTheme.titleTextStyle ??
+                          Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
