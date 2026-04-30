@@ -461,7 +461,11 @@ class _AddRecipePageState extends State<AddRecipePage> {
                       _isEdit ? s.editRecipeTitle : s.addRecipeTitle,
                       maxLines: 1,
                       softWrap: false,
-                      // `flexibleSpace` \u043d\u0435 \u043f\u043e\u0434\u0445\u0432\u0430\u0442\u044b\u0432\u0430\u0435\u0442 toolbar-\u044b\u0439\n                      // DefaultTextStyle, \u043f\u043e\u044d\u0442\u043e\u043c\u0443 \u0432\u044b\u043d\u0438\u043c\u0430\u0435\u043c\n                      // page-title-\u0442\u043e\u043a\u0435\u043d \u0438\u0437 \u0442\u0435\u043c\u044b \u0432\u0440\u0443\u0447\u043d\u0443\u044e\n                      // (docs/design_system.md \u00abPage title\u00bb \u2014\n                      // Roboto 500/24/22 `#000000`).\n                      style: Theme.of(context).appBarTheme.titleTextStyle,
+                      // `flexibleSpace` не подхватывает toolbar-овый
+                      // DefaultTextStyle, поэтому достаём page-title
+                      // токен из темы вручную (docs/design_system.md
+                      // «Page title» — Roboto 500/24/22 `#000000`).
+                      style: Theme.of(context).appBarTheme.titleTextStyle,
                     ),
                   ),
                 ),
@@ -478,113 +482,140 @@ class _AddRecipePageState extends State<AddRecipePage> {
         top: false,
         child: AbsorbPointer(
           absorbing: _saving,
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              controller: _scrollController,
-              // Нижний padding учитывает клавиатуру (`viewInsets.bottom`)
-              // — без этого новая строка ингредиента, добавленная
-              // из-под открытой клавы, ложится под неё и пользователь
-              // воспринимает это как «form провалилась за safe-area».
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
-              ),
-              children: [
-                TextFormField(
-                  controller: _name,
-                  decoration: InputDecoration(labelText: s.addRecipeName),
-                  validator: _required,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                // Photo picker (camera / gallery). На web — URL-fallback ниже.
-                Semantics(
-                  button: true,
-                  label: s.addRecipePhotoPicker,
-                  child: _PhotoPicker(
-                    picked: _pickedPhoto,
-                    existingUrl: widget.existing?.photo,
-                    loading: _compressing,
-                    errorText:
-                        (_photoTouched &&
-                            _pickedPhoto == null &&
-                            (widget.existing?.photo.isEmpty ?? true) &&
-                            !_allowUrlFallback)
-                        ? s.addRecipePhotoRequired
-                        : null,
-                    onTap: _compressing ? null : _showPhotoSourceSheet,
-                    onClear: _pickedPhoto == null ? null : _clearPickedPhoto,
-                  ),
-                ),
-                if (_allowUrlFallback) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _photo,
-                    decoration: InputDecoration(labelText: s.addRecipePhoto),
-                    keyboardType: TextInputType.url,
-                    textInputAction: TextInputAction.next,
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _category,
-                  decoration: InputDecoration(labelText: s.addRecipeCategory),
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _area,
-                  decoration: InputDecoration(labelText: s.addRecipeArea),
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _instructions,
-                  decoration: InputDecoration(
-                    labelText: s.addRecipeInstructions,
-                    alignLabelWithHint: true,
-                  ),
-                  maxLines: 6,
-                  minLines: 3,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                // Ингредиенты: динамический список строк [name|qty|unit].
-                // Справа от каждой строки — номер (1…20) и кнопка «+»,
-                // вставляющая новую строку ниже текущей. Сервер
-                // ожидает `strMeasureN` одной строкой, поэтому
-                // qty + unit склеиваются в [_collectIngredients].
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: AppSpacing.xs,
-                    bottom: AppSpacing.sm,
-                  ),
-                  child: Text(
-                    s.addRecipeIngredientsLabel,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppColors.primaryDark,
+          // На сером scaffold-фоне глобальные `textSecondary` (#797676)
+          // лейблы и `primaryDark` (#165932) floating-label плохо
+          // читаются на белом fill-е поля. На форме add/edit
+          // переопределяем токены `inputDecorationTheme` на чёрный
+          // (`textPrimary`), сохраняя остальной theme.
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              inputDecorationTheme: Theme.of(context).inputDecorationTheme
+                  .copyWith(
+                    labelStyle: const TextStyle(color: AppColors.textPrimary),
+                    floatingLabelStyle: const TextStyle(
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w500,
                     ),
-                  ),
-                ),
-                for (var i = 0; i < _ingredientRows.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _IngredientRowField(
-                      row: _ingredientRows[i],
-                      showRemove: _ingredientRows.length > 1,
-                      onAdd: () => _addIngredientRow(i),
-                      onRemove: () => _removeIngredientRow(i),
+                    helperStyle: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                    hintStyle: AppTextStyles.inputHint.copyWith(
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                const SizedBox(height: AppSpacing.lg),
-                FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: Text(_saving ? s.addRecipeSaving : s.addRecipeSubmit),
+            ),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                controller: _scrollController,
+                // Нижний padding учитывает клавиатуру (`viewInsets.bottom`)
+                // — без этого новая строка ингредиента, добавленная
+                // из-под открытой клавы, ложится под неё и пользователь
+                // воспринимает это как «form провалилась за safe-area».
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
                 ),
-              ],
+                children: [
+                  TextFormField(
+                    controller: _name,
+                    decoration: InputDecoration(labelText: s.addRecipeName),
+                    validator: _required,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  // Photo picker (camera / gallery). На web — URL-fallback ниже.
+                  Semantics(
+                    button: true,
+                    label: s.addRecipePhotoPicker,
+                    child: _PhotoPicker(
+                      picked: _pickedPhoto,
+                      existingUrl: widget.existing?.photo,
+                      loading: _compressing,
+                      errorText:
+                          (_photoTouched &&
+                              _pickedPhoto == null &&
+                              (widget.existing?.photo.isEmpty ?? true) &&
+                              !_allowUrlFallback)
+                          ? s.addRecipePhotoRequired
+                          : null,
+                      onTap: _compressing ? null : _showPhotoSourceSheet,
+                      onClear: _pickedPhoto == null ? null : _clearPickedPhoto,
+                    ),
+                  ),
+                  if (_allowUrlFallback) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: _photo,
+                      decoration: InputDecoration(labelText: s.addRecipePhoto),
+                      keyboardType: TextInputType.url,
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _category,
+                    decoration: InputDecoration(labelText: s.addRecipeCategory),
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _area,
+                    decoration: InputDecoration(labelText: s.addRecipeArea),
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _instructions,
+                    decoration: InputDecoration(
+                      labelText: s.addRecipeInstructions,
+                      alignLabelWithHint: true,
+                    ),
+                    maxLines: 6,
+                    minLines: 3,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  // Ингредиенты: динамический список строк [name|qty|unit].
+                  // Справа от каждой строки — номер (1…20) и кнопка «+»,
+                  // вставляющая новую строку ниже текущей. Сервер
+                  // ожидает `strMeasureN` одной строкой, поэтому
+                  // qty + unit склеиваются в [_collectIngredients].
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: AppSpacing.xs,
+                      bottom: AppSpacing.sm,
+                    ),
+                    child: Text(
+                      s.addRecipeIngredientsLabel,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  for (var i = 0; i < _ingredientRows.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: _IngredientRowField(
+                        row: _ingredientRows[i],
+                        showRemove: _ingredientRows.length > 1,
+                        onAdd: () => _addIngredientRow(i),
+                        onRemove: () => _removeIngredientRow(i),
+                      ),
+                    ),
+                  const SizedBox(height: AppSpacing.lg),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: Text(
+                      _saving ? s.addRecipeSaving : s.addRecipeSubmit,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -640,7 +671,7 @@ class _IngredientRowField extends StatelessWidget {
     const helperStyle = TextStyle(
       fontSize: 10,
       height: 1.2,
-      color: AppColors.textSecondary,
+      color: AppColors.textPrimary,
     );
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
