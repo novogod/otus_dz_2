@@ -1,5 +1,51 @@
 # Project Log
 
+## Избранное: бейдж сердца, страница favorites, локальный поиск
+
+**Date:** 2026-05-02
+
+Реализована фича «избранное» из `docs/spec/favorites.md` /
+`todo/15-favorites.md`. Избранное хранится по языку — рецепт,
+добавленный в RU, не показывается на EN, и наоборот.
+
+* **Chunk A — БД и стор.** `recipe_list/lib/data/local/recipe_db.dart`:
+  `kRecipeDbSchemaVersion` поднята до 6, добавлена таблица
+  `favorites(recipe_id, lang, saved_at)` c составным PK + индексом
+  `idx_favorites_lang_saved_at`. Миграция v5→v6 — additive
+  (`applyFavoritesSchema`), кэш рецептов сохраняется.
+  `recipe_list/lib/data/repository/favorites_store.dart` — обёртка:
+  кэш id-шников по языкам в памяти + ValueListenable, INNER JOIN
+  с `recipes` для `list()`, `orphanIds()` для тел, удалённых
+  LRU-eviction. Глобальный `favoritesStoreNotifier` пробрасывается
+  в UI через `RecipeListLoader._defaultRepoBuilder`.
+* **Chunk B — бейдж на карточке.** В `recipe_card.dart` добавлен
+  `FavoriteBadge` (top-right, симметрично YouTube-бейджу): тап
+  переключает `Icons.favorite_border` ↔ `Icons.favorite` (зелёный
+  `AppColors.primary`), пишет в `FavoritesStore` на текущем
+  `appLang`. Без стора рендерится outlined и `onTap == null`.
+* **Chunk C — бейдж на странице деталей.** Hero-image обёрнут
+  в `Stack`; тот же `FavoriteBadge` повешен top-right. Реюз
+  виджета из `recipe_card.dart`.
+* **Chunk D — таб «Избранное».** Новый `lib/ui/favorites_page.dart`:
+  `SearchAppBar` c флагом `disableLangAndReload` (через расширенный
+  `AppPageBar`) — кнопки переключения языка и reload показываются
+  faded (`Opacity 0.38`) и не реагируют на тап (`IgnorePointer`).
+  Поиск работает только локально по `recipe.name` (case-fold
+  substring), без обращения к API. Empty / no-matches placeholder
+  через slang `s.favoritesEmpty` (10 локалей) и `s.searchNoMatches`.
+  Bottom-nav таб favorites пушит страницу из `RecipeListPage`.
+* **Chunk E — гарантии и логи.** Регрессия
+  `test/favorites_survives_reload_test.dart`: favorite живёт при
+  переоткрытии БД; полное удаление `recipes` (имитация LRU-evict
+  при reload) не трогает `favorites`, id остаётся в `orphanIds`.
+
+`flutter test` зелёный по новым тестам (favorites_store, миграция
+v5→v6, recipe_card_favorite, recipe_details_favorite, favorites_page,
+favorites_survives_reload). Два пред-существующих фейла в
+`recipe_repository_test.dart` не связаны с изменениями.
+
+---
+
 ## Шапка экрана: единый стиль 40×40 для back / reload / flag / lang
 
 **Date:** 2026-04-30
