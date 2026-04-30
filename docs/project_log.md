@@ -1,5 +1,49 @@
 # Project Log
 
+## Автоопределение языка нового рецепта + i18n заголовка «Edit recipe»
+
+**Date:** 2026-04-30
+
+Полный разбор — [docs/recipe-source-language.md](recipe-source-language.md).
+
+Два мелких фидбэка по фиче владельца:
+
+1. Заголовок `AppBar` на `AddRecipePage` в режиме редактирования
+   был хардкодом «Edit Recipe» — не переводился. Под полем
+   имени висела подсказка «please enter in English», навязывающая
+   пользователю чужой язык.
+2. Сервер ожидал английский payload и складывал его как
+   `i18n.en`, поэтому рецепт, созданный условным русскоязычным
+   пользователем, не находился в автокомплите при `lang=ru`.
+
+* **Flutter** (`otus_dz_2`, commit `9a128d9`): новый ключ
+  `editRecipeTitle` во всех 10 локалях; геттер в фасаде `S`
+  поверх slang; `AppBar.title` — тернарник
+  `_isEdit ? s.editRecipeTitle : s.addRecipeTitle`. Подсказка
+  `addRecipeEnglishHint` удалена из JSON и из UI.
+* **Backend** (`mahallem_ist`, commit `a3d32083`):
+  * `local_user_portal/utils/detect-language.js` — синхронная
+    Unicode-эвристика (Cyrillic→ru, арабская графика с
+    курдскими/персидскими дискриминирующими буквами→ku/fa,
+    иначе ar; Latin→en).
+  * POST `/recipes` и PUT `/recipes/:id` детектируют язык на
+    `strMeal + strInstructions`, гонят draft через
+    `translateRecipe(meal, sourceLang, 'en')` и пишут английскую
+    версию как канон `i18n.en`. Оригинал кладётся в
+    `i18n[sourceLang]`, чтобы `searchByName` находил рецепт и в
+    родном скрипте — `searchByName` уже перебирает все ключи
+    `jsonb_object_keys(i18n)`, отдельная индексация не нужна.
+  * `createUserMeal` / `updateUserMeal` получили опциональный
+    `{ extraI18n }`: мерджит дополнительные локали в общий jsonb
+    `i18n`, форсит `strMealThumb` из английского draft.
+  * Падение перевода не валит запрос — draft уходит в БД как
+    есть, перевод выполняется лениво при первом чтении.
+
+**Smoke-тест:** POST `Плов` → запись `1000005` с
+`i18n.en="PILAF"` и `i18n.ru="Плов"`; `/recipes/search?q=плов&lang=ru`
+возвращает `1000005` в выдаче рядом с TheMealDB-овскими
+`53083/53263`.
+
 ## Owner edit/delete + бэкап рецептов на mahallem
 
 **Date:** 2026-04-30
