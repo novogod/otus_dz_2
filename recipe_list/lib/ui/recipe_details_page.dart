@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/api/recipe_api.dart';
@@ -223,7 +224,9 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                           Positioned(
                             top: AppSpacing.sm,
                             right: AppSpacing.sm,
-                            child: FavoriteBadge(recipeId: recipe.id),
+                            child: PointerInterceptor(
+                              child: FavoriteBadge(recipeId: recipe.id),
+                            ),
                           ),
                           // Owner-actions (delete + edit) — top-left.
                           // Видны только если рецепт помечен как
@@ -232,10 +235,12 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                           Positioned(
                             top: AppSpacing.sm,
                             left: AppSpacing.sm,
-                            child: _OwnerActions(
-                              recipe: recipe,
-                              api: widget.api,
-                              repository: widget.repository,
+                            child: PointerInterceptor(
+                              child: _OwnerActions(
+                                recipe: recipe,
+                                api: widget.api,
+                                repository: widget.repository,
+                              ),
                             ),
                           ),
                         ],

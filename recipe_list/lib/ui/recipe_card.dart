@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/repository/favorites_store.dart';
@@ -135,12 +136,16 @@ class _Photo extends StatelessWidget {
               Positioned(
                 right: AppSpacing.sm,
                 bottom: AppSpacing.sm,
-                child: _YoutubeBadge(url: recipe.youtubeUrl!),
+                child: PointerInterceptor(
+                  child: _YoutubeBadge(url: recipe.youtubeUrl!),
+                ),
               ),
             Positioned(
               right: AppSpacing.sm,
               top: AppSpacing.sm,
-              child: FavoriteBadge(recipeId: recipe.id),
+              child: PointerInterceptor(
+                child: FavoriteBadge(recipeId: recipe.id),
+              ),
             ),
           ],
         ),
