@@ -258,10 +258,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         ? S.of(context).offlineReloadUnavailable
         : S.of(context).reloadServerBusy;
     messenger.showSnackBar(
-      SnackBar(
-        content: Text(text),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
     );
   }
 

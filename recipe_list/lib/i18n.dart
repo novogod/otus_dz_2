@@ -38,7 +38,7 @@ enum AppLang {
 }
 
 /// Глобальное хранилище текущего языка.
-final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.ru);
+final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.en);
 
 /// Глобальный «тикер» принудительной перезагрузки ленты. Кнопка
 /// «обновить» в [AppPageBar] инкрементирует значение; слушатель в
