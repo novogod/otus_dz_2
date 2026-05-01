@@ -1,7 +1,7 @@
 # CORS for `/recipes/*` (Pattern A: public reads, no cookies)
 
 **Date:** 2026-05-01
-**Status:** Documented; implementation pending in this commit batch.
+**Status:** Implemented in `routes/recipes.js` (mahallem-user-portal). Verified on prod: `Access-Control-Allow-Origin: *` on both OPTIONS preflight and GET responses for `/recipes/*`.
 
 ## Зачем
 

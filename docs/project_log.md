@@ -1,5 +1,23 @@
 # Project Log
 
+## CORS для `/recipes/*` (паттерн A)
+
+**Date:** 2026-05-01
+
+В `routes/recipes.js` добавлен `cors({origin:'*',
+credentials:false, methods:['GET','POST','PUT','DELETE'],
+allowedHeaders:['Content-Type','Authorization'], maxAge:86400})`,
+применён только к `/recipes` плюс явный `app.options('/recipes/*')`,
+чтобы preflight не уходил в `authMiddleware`. Native-клиенты не
+затронуты, Flutter web (`flutter run -d chrome`) теперь читает
+ленту без CORS-блока. Cookies сессии mahallem.ist в cross-origin
+не утекают (`credentials:false`), пишущие ручки по-прежнему
+требуют `Authorization: Bearer`.
+
+Проверено на проде: OPTIONS и GET на `/recipes/page` возвращают
+`Access-Control-Allow-Origin: *`. См.
+[`docs/cors-recipes.md`](cors-recipes.md).
+
 ## RU-приоритет в каскаде перевода + цикл EN→RU→…
 
 **Date:** 2026-05-01
