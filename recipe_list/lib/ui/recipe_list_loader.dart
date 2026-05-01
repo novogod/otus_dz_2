@@ -775,7 +775,9 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         ownedRecipesStoreNotifier.value = store;
       }
       return RecipeRepository(db: db, api: api);
-    } on Object {
+    } on Object catch (e) {
+      // ignore: avoid_print
+      print('[repo] local db bootstrap failed: $e');
       return null;
     }
   }

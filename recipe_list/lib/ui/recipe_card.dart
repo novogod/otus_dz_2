@@ -31,70 +31,74 @@ class RecipeCard extends StatelessWidget {
     return Stack(
       children: [
         Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.pagePadding,
-        vertical: AppSpacing.sm,
-      ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadii.cardAll,
-          boxShadow: AppShadows.card,
-        ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: AppRadii.cardAll,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _Photo(recipe: recipe),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        recipe.name,
-                        style: AppTextStyles.recipeTitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.pagePadding,
+            vertical: AppSpacing.sm,
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: AppRadii.cardAll,
+              boxShadow: AppShadows.card,
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: AppRadii.cardAll,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _Photo(recipe: recipe),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.md,
+                        AppSpacing.lg,
+                        AppSpacing.md,
                       ),
-                      if (!lite) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        _Badges(recipe: recipe),
-                        if (recipe.tags.isNotEmpty) ...[
-                          const SizedBox(height: AppSpacing.sm),
-                          _Tags(tags: recipe.tags),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            recipe.name,
+                            style: AppTextStyles.recipeTitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (!lite) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            _Badges(recipe: recipe),
+                            if (recipe.tags.isNotEmpty) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              _Tags(tags: recipe.tags),
+                            ],
+                            if (recipe.ingredients.isNotEmpty) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              _IngredientCount(
+                                count: recipe.ingredients.length,
+                              ),
+                            ],
+                          ],
                         ],
-                        if (recipe.ingredients.isNotEmpty) ...[
-                          const SizedBox(height: AppSpacing.sm),
-                          _IngredientCount(count: recipe.ingredients.length),
-                        ],
-                      ],
-                    ],
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
-    ),
         // Badge is last (= topmost) so hit-test finds it first and the card is
         // never hit-tested for taps in this area.
         Positioned(
-          top: AppSpacing.sm + AppSpacing.sm,   // card vertical padding + badge inset
-          right: AppSpacing.pagePadding + AppSpacing.sm, // card horizontal padding + badge inset
-          child: PointerInterceptor(
-            child: FavoriteBadge(recipeId: recipe.id),
-          ),
+          top:
+              AppSpacing.sm +
+              AppSpacing.sm, // card vertical padding + badge inset
+          right:
+              AppSpacing.pagePadding +
+              AppSpacing.sm, // card horizontal padding + badge inset
+          child: PointerInterceptor(child: FavoriteBadge(recipeId: recipe.id)),
         ),
       ],
     );
@@ -230,7 +234,16 @@ class FavoriteBadge extends StatelessWidget {
           valueListenable: appLang,
           builder: (context, lang, _) {
             if (store == null) {
-              return _FavoriteBadgeView(isFavorite: false, onTap: null);
+              return _FavoriteBadgeView(
+                isFavorite: false,
+                onTap: () async {
+                  HapticFeedback.lightImpact();
+                  final bootstrapped =
+                      await ensureFavoritesStoreInitialized();
+                  if (bootstrapped == null) return;
+                  await bootstrapped.toggle(recipeId, lang);
+                },
+              );
             }
             return ValueListenableBuilder<Set<int>>(
               valueListenable: store.idsForLang(lang),

@@ -17,6 +17,40 @@ import '../local/recipe_db.dart';
 final ValueNotifier<FavoritesStore?> favoritesStoreNotifier =
     ValueNotifier<FavoritesStore?>(null);
 
+/// Гарантирует, что глобальный [FavoritesStore] инициализирован.
+///
+/// Нужен как fail-safe для web: если репозиторий не поднялся в
+/// `RecipeListLoader` (например, при временной ошибке открытия БД),
+/// сердце не должно оставаться «мертвым» с `onTap: null`.
+///
+/// Возвращает готовый стор либо `null`, если инициализация не удалась.
+Future<FavoritesStore?> ensureFavoritesStoreInitialized() async {
+  final existing = favoritesStoreNotifier.value;
+  if (existing != null) {
+    try {
+      await existing.ensureLoaded(appLang.value);
+    } on Object {
+      // Прогрев не критичен: стор уже есть, UI может работать.
+    }
+    return existing;
+  }
+
+  try {
+    final db = await openRecipeDatabase();
+    final store = FavoritesStore(db: db);
+    favoritesStoreNotifier.value = store;
+    try {
+      await store.ensureLoaded(appLang.value);
+    } on Object {
+      // Не блокируем работу бейджа из-за ошибки прогрева.
+    }
+    return store;
+  } on Object catch (e) {
+    debugPrint('[favorites] store init failed: $e');
+    return null;
+  }
+}
+
 /// Стор избранного: тонкая обёртка вокруг таблицы `favorites` плюс
 /// кэш id-шников по языкам в памяти, чтобы UI (бейдж сердца на
 /// карточке) перерисовывался без лишних обращений к БД.

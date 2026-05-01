@@ -53,6 +53,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
     _scrollController.addListener(_onScroll);
     recipeDeletedNotifier.addListener(_onRecipeChanged);
     recipeUpdatedNotifier.addListener(_onRecipeChanged);
+    // Fail-safe bootstrap: если loader не успел/не смог поднять
+    // sqflite-стор, пробуем инициализировать избранное при первом
+    // заходе на экран.
+    ensureFavoritesStoreInitialized();
   }
 
   /// Owner-flow: перерисовываем избранное при удалении
