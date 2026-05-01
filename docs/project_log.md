@@ -1,5 +1,24 @@
 # Project Log
 
+## RU-приоритет в каскаде перевода + цикл EN→RU→…
+
+**Date:** 2026-05-01
+
+* **Frontend** ([recipe_list/lib/i18n.dart](../recipe_list/lib/i18n.dart)):
+  enum `AppLang` переупорядочен в `en, ru, es, fr, de, it, tr, ar,
+  fa, ku`. Цикл по тапу `LangIconButton` теперь EN → RU → … →
+  EN. Самый частый ручной свитч (EN ↔ RU) — один тап.
+* **Backend** (`local_user_portal/routes/recipes.js`):
+  `_ensureLang` теперь даёт RU полный
+  `RECIPES_TRANSLATE_BUDGET_MS` (8 c), остальным неприоритетным
+  языкам — `RECIPES_TRANSLATE_BUDGET_LOW_MS` (3 c). При
+  деградации Gemini/LT экзотические локали быстро откатываются на
+  английский fallback и не сжигают квоту, оставляя её для RU.
+  Список приоритетов настраивается env-переменной
+  `RECIPES_PRIORITY_LANGS` (по умолчанию `"ru"`).
+
+См. [`docs/translation-priority.md`](translation-priority.md).
+
 ## English по умолчанию при холодном старте
 
 **Date:** 2026-05-01

@@ -8,8 +8,8 @@ import 'i18n/strings.g.dart';
 /// SVG-флаг в `assets/flags/<flag>.svg` (10 файлов, скопированных
 /// из `mahallem_flutter/assets/pictures/flags`).
 enum AppLang {
-  ru('RU', 'ru', AppLocale.ru),
   en('EN', 'us', AppLocale.en),
+  ru('RU', 'ru', AppLocale.ru),
   es('ES', 'es', AppLocale.es),
   fr('FR', 'fr', AppLocale.fr),
   de('DE', 'de', AppLocale.de),
