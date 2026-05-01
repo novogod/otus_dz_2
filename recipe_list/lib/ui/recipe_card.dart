@@ -24,7 +24,13 @@ class RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lite = recipe.isLite;
-    return Padding(
+    // FavoriteBadge is placed OUTSIDE the card's InkWell (as a Stack sibling).
+    // This prevents the card tap from winning the gesture arena over the badge.
+    // Flutter's defaultHitTestChildren stops at the first (topmost) hit, so when
+    // the badge is tested first it is the only widget in the arena — card never fires.
+    return Stack(
+      children: [
+        Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.pagePadding,
         vertical: AppSpacing.sm,
@@ -80,6 +86,17 @@ class RecipeCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
+        // Badge is last (= topmost) so hit-test finds it first and the card is
+        // never hit-tested for taps in this area.
+        Positioned(
+          top: AppSpacing.sm + AppSpacing.sm,   // card vertical padding + badge inset
+          right: AppSpacing.pagePadding + AppSpacing.sm, // card horizontal padding + badge inset
+          child: PointerInterceptor(
+            child: FavoriteBadge(recipeId: recipe.id),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -140,13 +157,6 @@ class _Photo extends StatelessWidget {
                   child: _YoutubeBadge(url: recipe.youtubeUrl!),
                 ),
               ),
-            Positioned(
-              right: AppSpacing.sm,
-              top: AppSpacing.sm,
-              child: PointerInterceptor(
-                child: FavoriteBadge(recipeId: recipe.id),
-              ),
-            ),
           ],
         ),
       ),
