@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
 import '../data/recipe_events.dart';
@@ -212,13 +212,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
         const spacing = AppSpacing.md;
         const minCardWidth = 300.0;
         const maxCardWidth = 420.0;
-        final available =
-            (constraints.maxWidth - AppSpacing.pagePadding * 2).clamp(0.0, double.infinity);
+        final available = (constraints.maxWidth - AppSpacing.pagePadding * 2)
+            .clamp(0.0, double.infinity);
 
-        int columns =
-            ((available + spacing) / (maxCardWidth + spacing)).ceil().clamp(1, 8);
-        double itemWidth =
-            (available - spacing * (columns - 1)) / columns;
+        int columns = ((available + spacing) / (maxCardWidth + spacing))
+            .ceil()
+            .clamp(1, 8);
+        double itemWidth = (available - spacing * (columns - 1)) / columns;
         while (columns > 1 && itemWidth < minCardWidth) {
           columns -= 1;
           itemWidth = (available - spacing * (columns - 1)) / columns;

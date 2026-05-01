@@ -866,6 +866,7 @@ class _PhotoPicker extends StatelessWidget {
   });
 
   final File? picked;
+
   /// Web-only: raw image bytes from XFile.readAsBytes(). When non-null,
   /// Image.memory is used for preview instead of Image.file.
   final Uint8List? webPickedBytes;

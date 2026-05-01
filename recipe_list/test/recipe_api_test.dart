@@ -177,7 +177,14 @@ void main() {
           capture: adapter,
         );
 
-        final photoBytes = Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10]);
+        final photoBytes = Uint8List.fromList([
+          0xFF,
+          0xD8,
+          0xFF,
+          0xE0,
+          0x00,
+          0x10,
+        ]);
         try {
           final out = await api.createRecipeWithPhoto(
             const Recipe(
