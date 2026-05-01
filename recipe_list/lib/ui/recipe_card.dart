@@ -238,8 +238,7 @@ class FavoriteBadge extends StatelessWidget {
                 isFavorite: false,
                 onTap: () async {
                   HapticFeedback.lightImpact();
-                  final bootstrapped =
-                      await ensureFavoritesStoreInitialized();
+                  final bootstrapped = await ensureFavoritesStoreInitialized();
                   if (bootstrapped == null) return;
                   await bootstrapped.toggle(recipeId, lang);
                 },

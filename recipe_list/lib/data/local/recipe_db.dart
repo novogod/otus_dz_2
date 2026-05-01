@@ -8,6 +8,19 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import '../../models/recipe.dart';
 
+/// Dedicated web sqflite factory for this app only.
+///
+/// Important: do NOT assign to global `databaseFactory` on web.
+/// Changing the global default causes side effects for any other
+/// sqflite consumer and emits runtime warnings. We keep a private
+/// factory and call it explicitly.
+///
+/// We intentionally use `databaseFactoryFfiWebNoWebWorker` here.
+/// In our Chrome runtime the worker message pipeline intermittently
+/// returned `unsupported result null (null)`; no-web-worker mode
+/// avoids that path and keeps IndexedDB-backed persistence.
+final DatabaseFactory _webDbFactory = databaseFactoryFfiWebNoWebWorker;
+
 /// Имя файла локальной БД.
 const String kRecipeDbFileName = 'recipes.db';
 
@@ -161,8 +174,10 @@ Future<Database> openRecipeDatabase() async {
   if (kIsWeb) {
     // На web нет файловой системы — sqflite_common_ffi_web хранит
     // БД в IndexedDB. Имя играет роль ключа в indexedDB-сторадже.
-    databaseFactory = databaseFactoryFfiWeb;
-    return databaseFactory.openDatabase(
+    // Используем локальный factory (без изменения глобального
+    // `databaseFactory`) и без web-worker пути, который на текущем
+    // Chrome окружении даёт `unsupported result null (null)`.
+    return _webDbFactory.openDatabase(
       kRecipeDbFileName,
       options: OpenDatabaseOptions(
         version: kRecipeDbSchemaVersion,
