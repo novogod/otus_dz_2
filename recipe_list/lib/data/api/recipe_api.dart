@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:path/path.dart' as p;
 
 import '../../i18n.dart';
 import '../../models/recipe.dart';
@@ -140,16 +139,17 @@ class RecipeApi {
   /// рецепт с публичным URL картинки.
   ///
   /// Бросает [StateError] если backend != mahallem.
-  Future<Recipe> createRecipeWithPhoto(Recipe draft, File photo) async {
+  Future<Recipe> createRecipeWithPhoto(
+    Recipe draft,
+    Uint8List photoBytes,
+    String photoFilename,
+  ) async {
     if (_client.backend != RecipeBackend.mahallem) {
       throw StateError('createRecipeWithPhoto requires the mahallem backend');
     }
     final form = FormData.fromMap({
       'meal': jsonEncode(_mealToJson(draft)),
-      'photo': await MultipartFile.fromFile(
-        photo.path,
-        filename: p.basename(photo.path),
-      ),
+      'photo': MultipartFile.fromBytes(photoBytes, filename: photoFilename),
     });
     final res = await _client.dio.post<Map<String, dynamic>>(
       '',
@@ -202,16 +202,20 @@ class RecipeApi {
   /// mahallem-only: PUT /recipes/:id с новой фотографией.
   /// Если `photo == null` — серверная картинка остаётся прежней
   /// (отправляется обычный JSON-PUT).
-  Future<Recipe> updateRecipeWithPhoto(Recipe draft, File? photo) async {
+  Future<Recipe> updateRecipeWithPhoto(
+    Recipe draft,
+    Uint8List? photoBytes,
+    String? photoFilename,
+  ) async {
     if (_client.backend != RecipeBackend.mahallem) {
       throw StateError('updateRecipeWithPhoto requires the mahallem backend');
     }
-    if (photo == null) return updateRecipe(draft);
+    if (photoBytes == null) return updateRecipe(draft);
     final form = FormData.fromMap({
       'meal': jsonEncode(_mealToJson(draft)),
-      'photo': await MultipartFile.fromFile(
-        photo.path,
-        filename: p.basename(photo.path),
+      'photo': MultipartFile.fromBytes(
+        photoBytes,
+        filename: photoFilename ?? 'photo.jpg',
       ),
     });
     final res = await _client.dio.put<Map<String, dynamic>>(

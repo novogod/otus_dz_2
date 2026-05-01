@@ -1,9 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:path/path.dart' as p;
 import 'package:recipe_list/data/api/meal_db_client.dart';
 import 'package:recipe_list/data/api/recipe_api.dart';
 import 'package:recipe_list/data/api/recipe_api_config.dart';
@@ -178,9 +177,7 @@ void main() {
           capture: adapter,
         );
 
-        final tmp = await Directory.systemTemp.createTemp('recipe_api_test_');
-        final photo = File(p.join(tmp.path, 'pic.jpg'))
-          ..writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10]);
+        final photoBytes = Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10]);
         try {
           final out = await api.createRecipeWithPhoto(
             const Recipe(
@@ -193,7 +190,8 @@ void main() {
               tags: [],
               ingredients: [],
             ),
-            photo,
+            photoBytes,
+            'pic.jpg',
           );
           expect(out.id, 1000123);
           expect(
@@ -223,7 +221,7 @@ void main() {
           final photoNames = form.files.map((e) => e.key).toSet();
           expect(photoNames, contains('photo'));
         } finally {
-          await tmp.delete(recursive: true);
+          // no temp files to clean up (bytes-based upload)
         }
       },
     );

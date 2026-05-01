@@ -72,7 +72,11 @@ class _AddRecipePageState extends State<AddRecipePage> {
   bool _saving = false;
   bool _compressing = false;
   bool _photoTouched = false; // user pressed Save → show "required" error
-  File? _pickedPhoto;
+  File? _pickedPhoto; // native only — compressed dart:io.File
+  Uint8List? _webPickedBytes; // web only — raw bytes for preview + upload
+  String _webPickedFilename = 'photo.jpg'; // web only — original filename
+
+  bool get _hasPickedPhoto => _pickedPhoto != null || _webPickedBytes != null;
 
   bool get _isEdit => widget.existing != null;
 
@@ -232,34 +236,48 @@ class _AddRecipePageState extends State<AddRecipePage> {
   }
 
   /// Выбор фото с указанного источника (камера / галерея).
-  /// На входе — `XFile` от `image_picker`, на выходе — сжатый
-  /// JPEG ≤ 5 МБ (см. [downscaleForUpload]).
+  /// На входе — `XFile` от `image_picker`, на выходе:
+  ///   * native: сжатый JPEG ≤ 5 МБ через [downscaleForUpload].
+  ///   * web: сырые байты через `XFile.readAsBytes()` (flutter_image_compress
+  ///     не поддерживает dart:io-пути на web).
   Future<void> _pickPhoto(ImageSource source) async {
     final s = S.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
       final picker = ImagePicker();
-      // Не задаём maxWidth/maxHeight/imageQuality — сжатие делает
-      // [downscaleForUpload] для предсказуемого результата (см. чанк 11.5).
       final raw = await picker.pickImage(source: source);
       if (raw == null) return; // user cancelled
 
       if (!mounted) return;
       setState(() => _compressing = true);
-      final compressed = await downscaleForUpload(raw);
-      if (!mounted) {
-        try {
-          if (await compressed.exists()) await compressed.delete();
-        } catch (_) {}
-        return;
+
+      if (kIsWeb) {
+        // On web dart:io.File doesn't exist — read bytes directly.
+        final bytes = await raw.readAsBytes();
+        if (!mounted) return;
+        _disposePickedPhoto();
+        setState(() {
+          _webPickedBytes = bytes;
+          _webPickedFilename = raw.name.isNotEmpty ? raw.name : 'photo.jpg';
+          _compressing = false;
+          _photoTouched = true;
+        });
+      } else {
+        // Native: compress via flutter_image_compress.
+        final compressed = await downscaleForUpload(raw);
+        if (!mounted) {
+          try {
+            if (await compressed.exists()) await compressed.delete();
+          } catch (_) {}
+          return;
+        }
+        _disposePickedPhoto();
+        setState(() {
+          _pickedPhoto = compressed;
+          _compressing = false;
+          _photoTouched = true;
+        });
       }
-      // Удаляем предыдущий tmp до подмены ссылки.
-      _disposePickedPhoto();
-      setState(() {
-        _pickedPhoto = compressed;
-        _compressing = false;
-        _photoTouched = true;
-      });
     } on PlatformException catch (e) {
       if (!mounted) return;
       setState(() => _compressing = false);
@@ -328,7 +346,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
                   _pickPhoto(ImageSource.gallery);
                 },
               ),
-              if (_pickedPhoto != null)
+              if (_hasPickedPhoto)
                 ListTile(
                   leading: const Icon(
                     Icons.delete_outline,
@@ -352,6 +370,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
     _disposePickedPhoto();
     setState(() {
       _pickedPhoto = null;
+      _webPickedBytes = null;
       _photoTouched = true;
     });
   }
@@ -370,7 +389,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
     // URL-fallback (см. [_allowUrlFallback]). В edit-режиме фото
     // переиспользуется из существующего рецепта, если новое не
     // выбрано.
-    final hasPicked = _pickedPhoto != null;
+    final hasPicked = _hasPickedPhoto;
     final hasUrl = _photo.text.trim().isNotEmpty;
     final existing = widget.existing;
     if (!hasPicked && !(_allowUrlFallback && hasUrl) && existing == null) {
@@ -402,14 +421,32 @@ class _AddRecipePageState extends State<AddRecipePage> {
     );
 
     try {
+      // Resolve photo bytes once (web: from _webPickedBytes; native: read from File).
+      final Uint8List? uploadBytes = hasPicked
+          ? (_webPickedBytes ?? await _pickedPhoto!.readAsBytes())
+          : null;
+      final String uploadFilename = hasPicked
+          ? (_webPickedBytes != null
+                ? _webPickedFilename
+                : _pickedPhoto!.path.split('/').last)
+          : 'photo.jpg';
+
       final Recipe saved;
       if (existing != null) {
         saved = hasPicked
-            ? await api.updateRecipeWithPhoto(draft, _pickedPhoto)
+            ? await api.updateRecipeWithPhoto(
+                draft,
+                uploadBytes,
+                uploadFilename,
+              )
             : await api.updateRecipe(draft);
       } else {
         saved = hasPicked
-            ? await api.createRecipeWithPhoto(draft, _pickedPhoto!)
+            ? await api.createRecipeWithPhoto(
+                draft,
+                uploadBytes!,
+                uploadFilename,
+              )
             : await api.createRecipe(draft);
       }
       // POST/PUT возвращают рецепт после трансляции в `i18n.en`
@@ -589,17 +626,18 @@ class _AddRecipePageState extends State<AddRecipePage> {
                     label: s.addRecipePhotoPicker,
                     child: _PhotoPicker(
                       picked: _pickedPhoto,
+                      webPickedBytes: _webPickedBytes,
                       existingUrl: widget.existing?.photo,
                       loading: _compressing,
                       errorText:
                           (_photoTouched &&
-                              _pickedPhoto == null &&
+                              !_hasPickedPhoto &&
                               (widget.existing?.photo.isEmpty ?? true) &&
                               !_allowUrlFallback)
                           ? s.addRecipePhotoRequired
                           : null,
                       onTap: _compressing ? null : _showPhotoSourceSheet,
-                      onClear: _pickedPhoto == null ? null : _clearPickedPhoto,
+                      onClear: !_hasPickedPhoto ? null : _clearPickedPhoto,
                     ),
                   ),
                   if (_allowUrlFallback) ...[
@@ -813,8 +851,9 @@ class _IngredientRowField extends StatelessWidget {
 ///   * empty: dashed-border placeholder с иконкой `add_a_photo`.
 ///     Тап → `onTap` (показывает bottom-sheet с camera/gallery).
 ///   * loading: тот же фрейм, по центру `CircularProgressIndicator`.
-///   * filled: `Image.file` cover, в правом верхнем углу — `×`,
-///     закрывающий выбор. Тап по картинке → `onTap` (replace).
+///   * filled: `Image.file` (native) / `Image.memory` (web) cover,
+///     в правом верхнем углу — `×`, закрывающий выбор.
+///     Тап по картинке → `onTap` (replace).
 class _PhotoPicker extends StatelessWidget {
   const _PhotoPicker({
     required this.picked,
@@ -823,9 +862,13 @@ class _PhotoPicker extends StatelessWidget {
     required this.onTap,
     required this.onClear,
     this.existingUrl,
+    this.webPickedBytes,
   });
 
   final File? picked;
+  /// Web-only: raw image bytes from XFile.readAsBytes(). When non-null,
+  /// Image.memory is used for preview instead of Image.file.
+  final Uint8List? webPickedBytes;
   final bool loading;
   final String? errorText;
   final VoidCallback? onTap;
@@ -845,6 +888,7 @@ class _PhotoPicker extends StatelessWidget {
         : AppColors.primaryDark.withValues(alpha: 0.6);
     final radius = BorderRadius.circular(AppSpacing.md);
 
+    final bool hasPicked = picked != null || webPickedBytes != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -862,16 +906,18 @@ class _PhotoPicker extends StatelessWidget {
                       borderRadius: radius,
                       border: Border.all(
                         color: borderColor,
-                        width: picked == null ? 1.5 : 1,
+                        width: hasPicked ? 1 : 1.5,
                       ),
-                      color: picked == null
-                          ? theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.5)
-                          : Colors.black,
+                      color: hasPicked
+                          ? Colors.black
+                          : theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.5),
                     ),
                     child: ClipRRect(
                       borderRadius: radius,
-                      child: picked != null
+                      child: webPickedBytes != null
+                          ? Image.memory(webPickedBytes!, fit: BoxFit.cover)
+                          : picked != null
                           ? Image.file(picked!, fit: BoxFit.cover)
                           : (existingUrl != null && existingUrl!.isNotEmpty)
                           ? Image.network(
@@ -920,7 +966,7 @@ class _PhotoPicker extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (picked != null && onClear != null && !loading)
+                if (hasPicked && onClear != null && !loading)
                   Positioned(
                     top: 4,
                     right: 4,
