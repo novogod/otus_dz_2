@@ -110,6 +110,7 @@ class _TranslationsA11yKu implements TranslationsA11yEn {
 	@override String get reloadFeed => 'نوێکردنەوەی لیست';
 	@override String flagOf({required Object label}) => 'ئاڵای ${label}';
 	@override String get offlineReloadUnavailable => 'دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.';
+	@override String get reloadServerBusy => 'سێرڤێر سەرقاڵە. رێسێپاکانی پێشوو پیشاندەدرێن.';
 	@override String get scrollToTop => 'گەڕانەوە بۆ سەرەوە';
 	@override String get addRecipe => 'Resipe zêde bike';
 	@override String get addRecipePhotoPicker => 'Hilbijêrê wêneyê reçeteyê';
@@ -154,6 +155,7 @@ extension on TranslationsKu {
 			'a11y.reloadFeed' => 'نوێکردنەوەی لیست',
 			'a11y.flagOf' => ({required Object label}) => 'ئاڵای ${label}',
 			'a11y.offlineReloadUnavailable' => 'دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.',
+			'a11y.reloadServerBusy' => 'سێرڤێر سەرقاڵە. رێسێپاکانی پێشوو پیشاندەدرێن.',
 			'a11y.scrollToTop' => 'گەڕانەوە بۆ سەرەوە',
 			'a11y.addRecipe' => 'Resipe zêde bike',
 			'a11y.addRecipePhotoPicker' => 'Hilbijêrê wêneyê reçeteyê',

@@ -112,6 +112,7 @@ class _TranslationsA11yRu implements TranslationsA11yEn {
 	@override String flagOf({required Object label}) => 'Флаг ${label}';
 	@override String get reloadFeed => 'Обновить ленту';
 	@override String get offlineReloadUnavailable => 'Нет сети. Показываем прежние рецепты.';
+	@override String get reloadServerBusy => 'Сервер занят. Показываем прежние рецепты.';
 	@override String get scrollToTop => 'Наверх';
 	@override String get addRecipe => 'Добавить рецепт';
 	@override String get addRecipePhotoPicker => 'Выбор фото рецепта';
@@ -156,6 +157,7 @@ extension on TranslationsRu {
 			'a11y.flagOf' => ({required Object label}) => 'Флаг ${label}',
 			'a11y.reloadFeed' => 'Обновить ленту',
 			'a11y.offlineReloadUnavailable' => 'Нет сети. Показываем прежние рецепты.',
+			'a11y.reloadServerBusy' => 'Сервер занят. Показываем прежние рецепты.',
 			'a11y.scrollToTop' => 'Наверх',
 			'a11y.addRecipe' => 'Добавить рецепт',
 			'a11y.addRecipePhotoPicker' => 'Выбор фото рецепта',

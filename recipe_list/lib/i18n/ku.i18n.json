@@ -34,6 +34,7 @@
     "reloadFeed": "نوێکردنەوەی لیست",
     "flagOf": "ئاڵای ${label}",
     "offlineReloadUnavailable": "دڵبوونی ئینتەرنێت نییە. رێسێپاکانی پێشوو پیشاندەدرێن.",
+    "reloadServerBusy": "سێرڤێر سەرقاڵە. رێسێپاکانی پێشوو پیشاندەدرێن.",
     "scrollToTop": "گەڕانەوە بۆ سەرەوە",
     "addRecipe": "Resipe zêde bike",
     "addRecipePhotoPicker": "Hilbijêrê wêneyê reçeteyê"

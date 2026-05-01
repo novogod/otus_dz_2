@@ -235,6 +235,9 @@ class TranslationsA11yEn {
 	/// en: 'You're offline. Showing previous recipes.'
 	String get offlineReloadUnavailable => 'You\'re offline. Showing previous recipes.';
 
+	/// en: 'Server is busy. Showing previous recipes.'
+	String get reloadServerBusy => 'Server is busy. Showing previous recipes.';
+
 	/// en: 'Scroll to top'
 	String get scrollToTop => 'Scroll to top';
 
@@ -284,6 +287,7 @@ extension on Translations {
 			'a11y.flagOf' => ({required Object label}) => '${label} flag',
 			'a11y.reloadFeed' => 'Reload feed',
 			'a11y.offlineReloadUnavailable' => 'You\'re offline. Showing previous recipes.',
+			'a11y.reloadServerBusy' => 'Server is busy. Showing previous recipes.',
 			'a11y.scrollToTop' => 'Scroll to top',
 			'a11y.addRecipe' => 'Add recipe',
 			'a11y.addRecipePhotoPicker' => 'Recipe photo picker',

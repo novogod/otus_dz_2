@@ -38,6 +38,7 @@
     "reloadFeed": "إعادة تحميل القائمة",
     "flagOf": "علم ${label}",
     "offlineReloadUnavailable": "أنت غير متصل بالإنترنت. عرض الوصفات السابقة.",
+    "reloadServerBusy": "الخادم مشغول. عرض الوصفات السابقة.",
     "scrollToTop": "التمرير إلى الأعلى",
     "addRecipe": "إضافة وصفة",
     "addRecipePhotoPicker": "اختيار صورة الوصفة"

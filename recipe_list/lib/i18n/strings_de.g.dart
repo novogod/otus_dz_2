@@ -110,6 +110,7 @@ class _TranslationsA11yDe implements TranslationsA11yEn {
 	@override String get reloadFeed => 'Liste aktualisieren';
 	@override String flagOf({required Object label}) => 'Flagge von ${label}';
 	@override String get offlineReloadUnavailable => 'Offline. Vorherige Rezepte werden angezeigt.';
+	@override String get reloadServerBusy => 'Server ist ausgelastet. Vorherige Rezepte werden angezeigt.';
 	@override String get scrollToTop => 'Nach oben scrollen';
 	@override String get addRecipe => 'Rezept hinzufügen';
 	@override String get addRecipePhotoPicker => 'Rezept-Fotoauswahl';
@@ -154,6 +155,7 @@ extension on TranslationsDe {
 			'a11y.reloadFeed' => 'Liste aktualisieren',
 			'a11y.flagOf' => ({required Object label}) => 'Flagge von ${label}',
 			'a11y.offlineReloadUnavailable' => 'Offline. Vorherige Rezepte werden angezeigt.',
+			'a11y.reloadServerBusy' => 'Server ist ausgelastet. Vorherige Rezepte werden angezeigt.',
 			'a11y.scrollToTop' => 'Nach oben scrollen',
 			'a11y.addRecipe' => 'Rezept hinzufügen',
 			'a11y.addRecipePhotoPicker' => 'Rezept-Fotoauswahl',

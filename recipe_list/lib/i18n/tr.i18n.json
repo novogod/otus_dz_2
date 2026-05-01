@@ -34,6 +34,7 @@
     "reloadFeed": "Listeyi yenile",
     "flagOf": "${label} bayrağı",
     "offlineReloadUnavailable": "Çevrimdışısınız. Önceki tarifler gösteriliyor.",
+    "reloadServerBusy": "Sunucu meşgul. Önceki tarifler gösteriliyor.",
     "scrollToTop": "Yukarı kaydır",
     "addRecipe": "Tarif ekle",
     "addRecipePhotoPicker": "Tarif fotoğraf seçici"

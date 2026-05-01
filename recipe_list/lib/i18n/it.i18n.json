@@ -34,6 +34,7 @@
     "reloadFeed": "Aggiorna lista",
     "flagOf": "Bandiera di ${label}",
     "offlineReloadUnavailable": "Sei offline. Vengono mostrate le ricette precedenti.",
+    "reloadServerBusy": "Server occupato. Vengono mostrate le ricette precedenti.",
     "scrollToTop": "Torna su",
     "addRecipe": "Aggiungi ricetta",
     "addRecipePhotoPicker": "Selezione foto ricetta"

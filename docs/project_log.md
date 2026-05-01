@@ -1,5 +1,43 @@
 # Project Log
 
+## Reload «Нет сети» на не-английских локалях
+
+**Date:** 2026-05-01
+
+Симптом: на RU/AR/FA UI кнопка reload в шапке ленты крутилась
+~60 c, после чего поверх старой ленты всплывал snackbar
+«Нет сети. Показываем прежние рецепты.» — независимо от того,
+есть ли реальная сеть. На EN reload работал мгновенно.
+
+Диагностика и фикс: см.
+[`docs/reload-no-network.md`](reload-no-network.md). Кратко:
+
+* **Backend** (`routes/recipes.js`):
+  * `_ensureLang` теперь оборачивает `this.translate(...)` в
+    `Promise.race` с бюджетом
+    `RECIPES_TRANSLATE_BUDGET_MS` (по умолчанию 8 c). По таймауту
+    отдаём английский payload как fallback **без записи** в БД —
+    кэш не отравляется, повторный запрос снова попробует Gemini.
+  * `RecipeRepository.page(lang)` параллелит per-row `_ensureLang`
+    через `Promise.all` — суммарное время = max(per-row), а не sum.
+    На прод-проверке `/recipes/page?lang=ru&limit=50` ушёл с
+    HTTP 504 30 s на HTTP 200 8 s.
+* **Client** (`recipe_list/lib/ui/recipe_list_loader.dart`):
+  * Reload теперь сначала пробует `RecipeApi.fetchPage(...)` (тот же
+    путь, что cold-start через `useBulkPage`); локально шафлит и
+    персистит. `_seedFromCategories` остаётся как fallback на случай
+    полного отказа bulk-эндпойнта.
+  * Snackbar реагирует на тип ошибки. Добавлен ключ
+    `a11y.reloadServerBusy` («Сервер занят. Показываем прежние
+    рецепты.») во всех 10 локалях. `DioException`
+    `connectionError/connectionTimeout/sendTimeout` → старый
+    `offlineReloadUnavailable` («Нет сети.»). Прочее (5xx,
+    `receiveTimeout`, общий 60 s budget `TimeoutException`,
+    «server busy» и проч.) → новый `reloadServerBusy`.
+
+Деплой: `docker compose build user-portal && docker compose up -d
+user-portal` на `72.61.181.62`. `flutter analyze` чистый.
+
 ## RTL-порядок вкладок + усиленные тени/elevation
 
 **Date:** 2026-04-30

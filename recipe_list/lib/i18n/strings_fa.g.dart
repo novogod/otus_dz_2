@@ -110,6 +110,7 @@ class _TranslationsA11yFa implements TranslationsA11yEn {
 	@override String get reloadFeed => 'بارگذاری مجدد فهرست';
 	@override String flagOf({required Object label}) => 'پرچم ${label}';
 	@override String get offlineReloadUnavailable => 'آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.';
+	@override String get reloadServerBusy => 'سرور شلوغ است. دستور های قبلی نمایش داده می‌شوند.';
 	@override String get scrollToTop => 'حرکت به بالا';
 	@override String get addRecipe => 'افزودن دستور';
 	@override String get addRecipePhotoPicker => 'انتخاب عکس دستور';
@@ -154,6 +155,7 @@ extension on TranslationsFa {
 			'a11y.reloadFeed' => 'بارگذاری مجدد فهرست',
 			'a11y.flagOf' => ({required Object label}) => 'پرچم ${label}',
 			'a11y.offlineReloadUnavailable' => 'آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.',
+			'a11y.reloadServerBusy' => 'سرور شلوغ است. دستور های قبلی نمایش داده می‌شوند.',
 			'a11y.scrollToTop' => 'حرکت به بالا',
 			'a11y.addRecipe' => 'افزودن دستور',
 			'a11y.addRecipePhotoPicker' => 'انتخاب عکس دستور',

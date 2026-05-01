@@ -34,6 +34,7 @@
     "reloadFeed": "بارگذاری مجدد فهرست",
     "flagOf": "پرچم ${label}",
     "offlineReloadUnavailable": "آفلاین هستید. دستور های قبلی نمایش داده می‌شوند.",
+    "reloadServerBusy": "سرور شلوغ است. دستور های قبلی نمایش داده می‌شوند.",
     "scrollToTop": "حرکت به بالا",
     "addRecipe": "افزودن دستور",
     "addRecipePhotoPicker": "انتخاب عکس دستور"

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -172,7 +173,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     reloadingFeed.value = true;
     setState(() {
       _stage.value = const _LoadStage.initial();
-      _future = _runLoad(forceReseed: true)
+      _future = _runReload()
           .timeout(const Duration(seconds: 60))
           .then((r) {
             if (seq != _translateSeq || !mounted) return r;
@@ -187,12 +188,12 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             // ignore: avoid_print
             print('[reload] _runLoad failed: $e');
             // Keep previous feed on screen instead of crashing the page.
-            // Surface the offline state via a SnackBar.
+            // Surface the offline / busy state via a SnackBar.
             if (previous != null) {
               setState(() {
                 _future = Future<_LoadResult>.value(previous);
               });
-              _showOfflineReloadSnack();
+              _showReloadFailureSnack(e);
               return previous;
             }
             // No previous feed — let the FutureBuilder render its error
@@ -213,16 +214,76 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     });
   }
 
-  void _showOfflineReloadSnack() {
+  /// Reload-specific load path. Reload должен дать пользователю
+  /// «свежий» вид без 14-fan-out на `/recipes/filter` (после
+  /// деградации Gemini это была гарантированная 60 c-таймаут-ловушка
+  /// → snackbar «Нет сети.»). Стратегия:
+  ///   1) пробуем `/recipes/page` (тот же путь, что cold-start);
+  ///      успех — локально перетасовываем для свежего вида и
+  ///      персистим в SQLite;
+  ///   2) если page недоступен — падаем в `_runLoad(forceReseed:
+  ///      true)`, который заведёт ленту через `_seedFromCategories`.
+  /// См. docs/reload-no-network.md.
+  Future<_LoadResult> _runReload() async {
+    final repo = await (widget.repositoryBuilder ?? _defaultRepoBuilder)(
+      widget.api,
+    );
+    final lang = appLang.value;
+    if (widget.api.backend == RecipeBackend.mahallem &&
+        widget.config.useBulkPage) {
+      try {
+        final page = await widget.api.fetchPage(
+          lang: lang,
+          limit: widget.config.seedTarget,
+        );
+        if (page.recipes.isNotEmpty) {
+          final shuffled = List<Recipe>.from(page.recipes)..shuffle();
+          await _persist(repo, shuffled, lang);
+          return _LoadResult(recipes: shuffled, repository: repo);
+        }
+      } on Object catch (e) {
+        // ignore: avoid_print
+        print('[reload] /recipes/page failed, falling back: $e');
+      }
+    }
+    return _runLoad(forceReseed: true);
+  }
+
+  void _showReloadFailureSnack(Object error) {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
+    final isOffline = _isOfflineError(error);
+    final text = isOffline
+        ? S.of(context).offlineReloadUnavailable
+        : S.of(context).reloadServerBusy;
     messenger.showSnackBar(
       SnackBar(
-        content: Text(S.of(context).offlineReloadUnavailable),
+        content: Text(text),
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  /// Истинно «нет сети» только для DNS/connect/send-таймаута и
+  /// `connectionError`. Receive-timeout, 5xx, общий 60s-budget
+  /// `TimeoutException` — это «сервер занят», а не offline.
+  bool _isOfflineError(Object error) {
+    if (error is DioException) {
+      switch (error.type) {
+        case DioExceptionType.connectionError:
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+          return true;
+        case DioExceptionType.receiveTimeout:
+        case DioExceptionType.badResponse:
+        case DioExceptionType.badCertificate:
+        case DioExceptionType.cancel:
+        case DioExceptionType.unknown:
+          return false;
+      }
+    }
+    return false;
   }
 
   /// Публикует частичный результат прямо в `_lastResult`, чтобы

@@ -110,6 +110,7 @@ class _TranslationsA11yTr implements TranslationsA11yEn {
 	@override String get reloadFeed => 'Listeyi yenile';
 	@override String flagOf({required Object label}) => '${label} bayrağı';
 	@override String get offlineReloadUnavailable => 'Çevrimdışısınız. Önceki tarifler gösteriliyor.';
+	@override String get reloadServerBusy => 'Sunucu meşgul. Önceki tarifler gösteriliyor.';
 	@override String get scrollToTop => 'Yukarı kaydır';
 	@override String get addRecipe => 'Tarif ekle';
 	@override String get addRecipePhotoPicker => 'Tarif fotoğraf seçici';
@@ -154,6 +155,7 @@ extension on TranslationsTr {
 			'a11y.reloadFeed' => 'Listeyi yenile',
 			'a11y.flagOf' => ({required Object label}) => '${label} bayrağı',
 			'a11y.offlineReloadUnavailable' => 'Çevrimdışısınız. Önceki tarifler gösteriliyor.',
+			'a11y.reloadServerBusy' => 'Sunucu meşgul. Önceki tarifler gösteriliyor.',
 			'a11y.scrollToTop' => 'Yukarı kaydır',
 			'a11y.addRecipe' => 'Tarif ekle',
 			'a11y.addRecipePhotoPicker' => 'Tarif fotoğraf seçici',

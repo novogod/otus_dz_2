@@ -36,6 +36,7 @@
     "flagOf": "Флаг ${label}",
     "reloadFeed": "Обновить ленту",
     "offlineReloadUnavailable": "Нет сети. Показываем прежние рецепты.",
+    "reloadServerBusy": "Сервер занят. Показываем прежние рецепты.",
     "scrollToTop": "Наверх",
     "addRecipe": "Добавить рецепт",
     "addRecipePhotoPicker": "Выбор фото рецепта"

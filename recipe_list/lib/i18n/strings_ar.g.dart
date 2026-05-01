@@ -114,6 +114,7 @@ class _TranslationsA11yAr implements TranslationsA11yEn {
 	@override String get reloadFeed => 'إعادة تحميل القائمة';
 	@override String flagOf({required Object label}) => 'علم ${label}';
 	@override String get offlineReloadUnavailable => 'أنت غير متصل بالإنترنت. عرض الوصفات السابقة.';
+	@override String get reloadServerBusy => 'الخادم مشغول. عرض الوصفات السابقة.';
 	@override String get scrollToTop => 'التمرير إلى الأعلى';
 	@override String get addRecipe => 'إضافة وصفة';
 	@override String get addRecipePhotoPicker => 'اختيار صورة الوصفة';
@@ -158,6 +159,7 @@ extension on TranslationsAr {
 			'a11y.reloadFeed' => 'إعادة تحميل القائمة',
 			'a11y.flagOf' => ({required Object label}) => 'علم ${label}',
 			'a11y.offlineReloadUnavailable' => 'أنت غير متصل بالإنترنت. عرض الوصفات السابقة.',
+			'a11y.reloadServerBusy' => 'الخادم مشغول. عرض الوصفات السابقة.',
 			'a11y.scrollToTop' => 'التمرير إلى الأعلى',
 			'a11y.addRecipe' => 'إضافة وصفة',
 			'a11y.addRecipePhotoPicker' => 'اختيار صورة الوصفة',

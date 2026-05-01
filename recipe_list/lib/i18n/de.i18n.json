@@ -34,6 +34,7 @@
     "reloadFeed": "Liste aktualisieren",
     "flagOf": "Flagge von ${label}",
     "offlineReloadUnavailable": "Offline. Vorherige Rezepte werden angezeigt.",
+    "reloadServerBusy": "Server ist ausgelastet. Vorherige Rezepte werden angezeigt.",
     "scrollToTop": "Nach oben scrollen",
     "addRecipe": "Rezept hinzufügen",
     "addRecipePhotoPicker": "Rezept-Fotoauswahl"

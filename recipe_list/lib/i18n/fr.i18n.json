@@ -34,6 +34,7 @@
     "reloadFeed": "Actualiser la liste",
     "flagOf": "Drapeau de ${label}",
     "offlineReloadUnavailable": "Hors ligne. Les recettes précédentes sont affichées.",
+    "reloadServerBusy": "Serveur occupé. Les recettes précédentes sont affichées.",
     "scrollToTop": "Revenir en haut",
     "addRecipe": "Ajouter une recette",
     "addRecipePhotoPicker": "Sélecteur de photo de recette"

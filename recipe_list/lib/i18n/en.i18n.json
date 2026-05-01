@@ -34,6 +34,7 @@
     "flagOf": "${label} flag",
     "reloadFeed": "Reload feed",
     "offlineReloadUnavailable": "You're offline. Showing previous recipes.",
+    "reloadServerBusy": "Server is busy. Showing previous recipes.",
     "scrollToTop": "Scroll to top",
     "addRecipe": "Add recipe",
     "addRecipePhotoPicker": "Recipe photo picker"
