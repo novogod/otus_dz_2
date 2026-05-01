@@ -14,8 +14,9 @@ photo upload), и набор пакетов.
 | Проблема | Слой | Решение |
 |---|---|---|
 | `Access-Control-Allow-Origin` отсутствует у `/recipes/*` → fetch fails | backend | `cors({origin:'*', credentials:false})` на `/recipes` |
-| `openDatabase()` падает на web (нет sqflite-канала) → favorites/owned пустые | client | `sqflite_common_ffi_web` (sqlite3.wasm в IndexedDB) |
+| `openDatabase()` падает/шумит на web (`unsupported result null`, global-factory warning) → favorites/owned пустые | client | `sqflite_common_ffi_web` + локальный factory `databaseFactoryFfiWebNoWebWorker` |
 | `Image.network` рисует пусто на CanvasKit (CORS на decode) | client | `WebHtmlElementStrategy.fallback` |
+| Сердце поверх фото не кликается на web | client | `PointerInterceptor` + вынос `FavoriteBadge` из subtree карточки `InkWell` |
 
 ## 1. Backend: CORS на `/recipes/*`
 
@@ -55,10 +56,11 @@ dependencies:
 
 ```dart
 // recipe_list/lib/data/local/recipe_db.dart
+final DatabaseFactory _webDbFactory = databaseFactoryFfiWebNoWebWorker;
+
 Future<Database> openRecipeDatabase() async {
   if (kIsWeb) {
-    databaseFactory = databaseFactoryFfiWeb;
-    return databaseFactory.openDatabase(
+    return _webDbFactory.openDatabase(
       kRecipeDbFileName,
       options: OpenDatabaseOptions(
         version: kRecipeDbSchemaVersion,
@@ -70,6 +72,54 @@ Future<Database> openRecipeDatabase() async {
   // ... native: getApplicationSupportDirectory() + openDatabase
 }
 ```
+
+### Почему именно так (Chrome)
+
+На ранней версии web-фикса использовался глобальный свитч
+`databaseFactory = databaseFactoryFfiWeb`. Это давало два побочных
+эффекта:
+
+1. Повторяющееся предупреждение sqflite: «You are changing sqflite default factory…».
+2. Нестабильная инициализация worker-пути в Chrome с ошибкой
+   `unsupported result null (null)`.
+
+Финальная версия держит **приватный** factory только внутри
+`openRecipeDatabase()` и не трогает глобальный `databaseFactory`.
+Дополнительно выбран режим `databaseFactoryFfiWebNoWebWorker`, который
+обходит flaky worker-message path и сохраняет persistency в IndexedDB.
+
+### Fail-safe для избранного
+
+Даже если bootstrap репозитория на старте не успел/упал, сердце больше
+не остаётся «мёртвым». Добавлен lazy-bootstrap:
+
+* `ensureFavoritesStoreInitialized()` в
+  `recipe_list/lib/data/repository/favorites_store.dart`;
+* первый тап по `FavoriteBadge` при `store == null` инициализирует БД
+  и сразу делает `toggle`;
+* `FavoritesPage.initState()` тоже триггерит bootstrap.
+
+Это убирает сценарий «сердце контурное, тап открывает details, но не
+добавляет в избранное».
+
+## 2.1. Heart badge over HTML image: pointer-interception fix
+
+После включения `WebHtmlElementStrategy.fallback` фото рендерится как
+DOM `<img>` (platform view). На web такой элемент перехватывает pointer
+events на уровне браузера. В результате Flutter-оверлеи сверху (heart,
+owner-actions) могут не получать tap.
+
+Финальный рабочий паттерн:
+
+1. Обернуть интерактивные оверлеи в `PointerInterceptor`.
+2. Для карточки списка вынести `FavoriteBadge` в **внешний `Stack`** как
+   sibling поверх карточки (а не оставлять внутри subtree карточного
+   `InkWell`), чтобы tap на сердце не конкурировал в gesture-arena с
+   tap карточки.
+
+YouTube-кнопка остаётся кликабельной внутри фото-стека с
+`PointerInterceptor`, потому что у неё нет конфликта со state-toggle UI
+и нет зависимости от `favoritesStoreNotifier`.
 
 ### Setup ассетов
 
@@ -208,3 +258,7 @@ Web-build кладётся в `recipe_list/build/web/` после
 | `578ecb4` | docs: CORS implemented |
 | `d1c30e7` | sqflite_common_ffi_web on web |
 | `2c735bf` | Image.network web fallback |
+| `fd175fc` | PointerInterceptor for overlays above fallback `<img>` |
+| `bf83a0c` | Move `FavoriteBadge` outside card InkWell subtree |
+| `68f738f` | Lazy bootstrap favorites store on first heart tap |
+| `1677e84` | Use private web db factory (`NoWebWorker`), no global sqflite switch |

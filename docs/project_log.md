@@ -1,5 +1,36 @@
 # Project Log
 
+## Chrome web: сердце не кликалось + sqflite `unsupported result null`
+
+**Date:** 2026-05-01
+
+Симптомы в `flutter run -d chrome`:
+
+* ❤️ на карточке не меняет цвет и не добавляет рецепт в избранное;
+* тап по зоне сердца иногда открывает details карточки;
+* в логах sqflite: предупреждение про смену default factory и
+  `[favorites] store init failed: unsupported result null (null)`.
+
+Итоговый набор фиксов:
+
+* `recipe_list/lib/ui/recipe_card.dart` / `recipe_details_page.dart`:
+  `PointerInterceptor` для overlay-виджетов поверх
+  `WebHtmlElementStrategy.fallback` (`<img>` platform view на web).
+* `recipe_list/lib/ui/recipe_card.dart`:
+  `FavoriteBadge` вынесен в внешний `Stack` (sibling поверх карточки),
+  чтобы tap сердца не конкурировал с `InkWell` карточки в gesture arena.
+* `recipe_list/lib/data/repository/favorites_store.dart`:
+  добавлен fail-safe `ensureFavoritesStoreInitialized()`; первый тап
+  по сердцу при `store == null` bootstrap-ит БД и делает `toggle`.
+* `recipe_list/lib/data/local/recipe_db.dart`:
+  убран глобальный `databaseFactory = ...`; вместо этого приватный
+  `_webDbFactory = databaseFactoryFfiWebNoWebWorker`.
+  Это убрало warning про global factory side effects и обходило
+  flaky worker-path, который давал `unsupported result null (null)`.
+
+Коммиты: `fd175fc`, `bf83a0c`, `68f738f`, `1677e84`.
+Подробности: [`docs/chrome-web-support.md`](chrome-web-support.md).
+
 ## Web: добавление в избранное в Chrome
 
 **Date:** 2026-05-01
