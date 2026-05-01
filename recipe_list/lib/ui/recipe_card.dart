@@ -245,12 +245,19 @@ class _FavoriteBadgeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.65),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
+    // GestureDetector + HitTestBehavior.opaque вместо Material/InkWell:
+    // на Flutter web (CanvasKit) вложенный InkWell внутри Stack поверх
+    // другого InkWell не всегда получает тап — событие уходит в
+    // родительский Material карточки. GestureDetector с opaque всегда
+    // поглощает тап независимо от платформы.
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: Color(0xA6000000), // Colors.black.withValues(alpha:0.65)
+          shape: BoxShape.circle,
+        ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.sm),
           child: Icon(
