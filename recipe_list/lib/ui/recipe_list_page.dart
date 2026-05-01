@@ -198,8 +198,18 @@ class _RecipeListPageState extends State<RecipeListPage> {
   }
 
   void _onFocusChange() {
-    // Перерисовка для скрытия dropdown при потере фокуса.
-    setState(() {});
+    if (_focusNode.hasFocus || !kIsWeb) {
+      // Focus gained, or native platform: rebuild immediately.
+      setState(() {});
+    } else {
+      // On web the browser fires blur synchronously on pointerdown,
+      // before the ListTile tap gesture completes. Delay the rebuild
+      // so _onPredictionTap can fire first; otherwise the predictions
+      // panel is removed from the tree mid-gesture and the tap is lost.
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) setState(() {});
+      });
+    }
   }
 
   /// Следит за controller-ом, чтобы реагировать на `controller.clear()`
@@ -442,13 +452,13 @@ class _RecipeListPageState extends State<RecipeListPage> {
         const spacing = AppSpacing.md;
         const minCardWidth = 300.0;
         const maxCardWidth = 420.0;
-        final available =
-            (constraints.maxWidth - AppSpacing.pagePadding * 2).clamp(0.0, double.infinity);
+        final available = (constraints.maxWidth - AppSpacing.pagePadding * 2)
+            .clamp(0.0, double.infinity);
 
-        int columns =
-            ((available + spacing) / (maxCardWidth + spacing)).ceil().clamp(1, 8);
-        double itemWidth =
-            (available - spacing * (columns - 1)) / columns;
+        int columns = ((available + spacing) / (maxCardWidth + spacing))
+            .ceil()
+            .clamp(1, 8);
+        double itemWidth = (available - spacing * (columns - 1)) / columns;
         while (columns > 1 && itemWidth < minCardWidth) {
           columns -= 1;
           itemWidth = (available - spacing * (columns - 1)) / columns;
