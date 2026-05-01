@@ -1,5 +1,60 @@
 # Project Log
 
+## Chrome web: фильтр поиска — выбор из автокомплита не применялся
+
+**Date:** 2026-05-01
+
+**Симптом.** В Chrome после нажатия на подсказку в выпадающем списке
+поиска список рецептов не менялся — оставался нефильтрованным.
+
+**Причина.** Браузер генерирует событие `blur` **синхронно на
+`pointerdown`**, до того как завершится `pointerup`/tap на элементе
+списка. `_onFocusChange` вызывал `setState` немедленно, `_showPredictions`
+становился `false`, виджет `SearchPredictions` убирался из дерева прямо
+во время жеста — `onTap` у `ListTile` отменялся, и `_onPredictionTap`
+никогда не вызывался.
+
+**Исправление** (`recipe_list/lib/ui/recipe_list_page.dart`):
+при потере фокуса **на web** `setState` в `_onFocusChange` откладывается
+на 200 мс через `Future.delayed`, что даёт текущему жесту завершиться.
+На native и при получении фокуса поведение не изменилось.
+
+Коммит: `c444484`.
+
+---
+
+## Chrome web: фото не загружалось на странице «Добавить рецепт»
+
+**Date:** 2026-05-01
+
+**Симптом.** На Chrome после выбора фото с компьютера превью не
+появлялось; при сохранении рецепта фотография также не загружалась.
+
+**Причина.** Весь pipeline работы с фото строился на `dart:io.File`,
+которого в web-сборке Flutter не существует:
+* `downscaleForUpload` использует `flutter_image_compress` с нативными
+  путями файловой системы;
+* `Image.file()` не работает на web;
+* `MultipartFile.fromFile(path)` — тоже только нативный вызов.
+
+**Исправление:**
+
+* `add_recipe_page.dart` — `_pickPhoto` теперь ветвится по `kIsWeb`:
+  на web пропускает сжатие и читает байты через `XFile.readAsBytes()`
+  в новое поле `_webPickedBytes`/`_webPickedFilename`.
+* `_PhotoPicker` — добавлен параметр `webPickedBytes`; превью на web
+  строится через `Image.memory(bytes)` вместо `Image.file()`.
+* `_save` — байты для загрузки определяются один раз: `_webPickedBytes`
+  на web или `File.readAsBytes()` на native.
+* `recipe_api.dart` — `createRecipeWithPhoto` / `updateRecipeWithPhoto`
+  переведены с `File` на `Uint8List bytes + String filename`; используют
+  `MultipartFile.fromBytes()`, который работает и на web, и на native.
+* `recipe_api_test.dart` — тест обновлён под новую сигнатуру.
+
+Коммит: `ec58ce3`.
+
+---
+
 ## Chrome web: responsive grid for recipes and favorites cards
 
 **Date:** 2026-05-01
