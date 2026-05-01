@@ -1,5 +1,30 @@
 # Project Log
 
+## Web: добавление в избранное в Chrome
+
+**Date:** 2026-05-01
+
+В Chrome (`flutter run -d chrome`) тап «в избранное» падал, потому
+что `recipe_list/lib/data/local/recipe_db.dart` открывал sqflite
+через `path_provider` + дефолтный фабричный канал, которых на
+web нет. Решение:
+
+* Добавлена зависимость `sqflite_common_ffi_web: ^0.4.5`
+  (sqlite3.wasm в IndexedDB) в
+  [`recipe_list/pubspec.yaml`](../recipe_list/pubspec.yaml).
+* `openRecipeDatabase` теперь определяет `kIsWeb` и переключает
+  `databaseFactory = databaseFactoryFfiWeb`, открывая БД по
+  имени `recipes.db` (без файловой системы). Логика миграций
+  (`_onRecipeDbUpgrade`) общая для нативки и web.
+* В каталог `recipe_list/web/` положены ассеты
+  `sqflite_sw.js` (~250KB) + `sqlite3.wasm` (~706KB) через
+  `dart run sqflite_common_ffi_web:setup`. Это требование
+  пакета: воркер и wasm загружаются браузером во время первого
+  open.
+
+Native-сборки (iOS/Android/desktop) не затронуты — на них
+работает прежний `getApplicationSupportDirectory()` + `openDatabase`.
+
 ## CORS для `/recipes/*` (паттерн A)
 
 **Date:** 2026-05-01

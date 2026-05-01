@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import '../../models/recipe.dart';
 
@@ -151,38 +153,59 @@ Future<void> applyFavoritesSchema(Database db) async {
 }
 
 /// Открывает persistent БД в `getApplicationSupportDirectory()`.
-/// Тесты вместо этого передают `Database` напрямую через
-/// `RecipeRepository(db: ...)`.
+/// На web вместо файловой системы используется
+/// `sqflite_common_ffi_web` (IndexedDB-backed sqlite3.wasm) — см.
+/// docs/web-favorites.md. Тесты вместо этого передают `Database`
+/// напрямую через `RecipeRepository(db: ...)`.
 Future<Database> openRecipeDatabase() async {
+  if (kIsWeb) {
+    // На web нет файловой системы — sqflite_common_ffi_web хранит
+    // БД в IndexedDB. Имя играет роль ключа в indexedDB-сторадже.
+    databaseFactory = databaseFactoryFfiWeb;
+    return databaseFactory.openDatabase(
+      kRecipeDbFileName,
+      options: OpenDatabaseOptions(
+        version: kRecipeDbSchemaVersion,
+        onCreate: (db, _) => applyRecipeSchema(db),
+        onUpgrade: _onRecipeDbUpgrade,
+      ),
+    );
+  }
   final dir = await getApplicationSupportDirectory();
   final path = p.join(dir.path, kRecipeDbFileName);
   return openDatabase(
     path,
     version: kRecipeDbSchemaVersion,
     onCreate: (db, _) => applyRecipeSchema(db),
-    onUpgrade: (db, oldVersion, newVersion) async {
-      // v<5 апгрейды по-прежнему destructive: новый перевод-пайплайн
-      // делает старые кэшированные строки невалидными. Избранного
-      // там ещё не существовало, терять нечего.
-      if (oldVersion < 5) {
-        await db.execute('DROP TABLE IF EXISTS recipes');
-        await db.execute('DROP TABLE IF EXISTS recipe_bodies');
-        await db.execute('DROP TABLE IF EXISTS favorites');
-        await applyRecipeSchema(db);
-        return;
-      }
-      // v5 → v6: только дополняем схему таблицей favorites,
-      // существующие кэши не трогаем.
-      if (oldVersion < 6) {
-        await applyFavoritesSchema(db);
-      }
-      // v6 → v7: добавляем owned_recipes — избранное и кэш
-      // сохраняются.
-      if (oldVersion < 7) {
-        await applyOwnedRecipesSchema(db);
-      }
-    },
+    onUpgrade: _onRecipeDbUpgrade,
   );
+}
+
+Future<void> _onRecipeDbUpgrade(
+  Database db,
+  int oldVersion,
+  int newVersion,
+) async {
+  // v<5 апгрейды по-прежнему destructive: новый перевод-пайплайн
+  // делает старые кэшированные строки невалидными. Избранного
+  // там ещё не существовало, терять нечего.
+  if (oldVersion < 5) {
+    await db.execute('DROP TABLE IF EXISTS recipes');
+    await db.execute('DROP TABLE IF EXISTS recipe_bodies');
+    await db.execute('DROP TABLE IF EXISTS favorites');
+    await applyRecipeSchema(db);
+    return;
+  }
+  // v5 → v6: только дополняем схему таблицей favorites,
+  // существующие кэши не трогаем.
+  if (oldVersion < 6) {
+    await applyFavoritesSchema(db);
+  }
+  // v6 → v7: добавляем owned_recipes — избранное и кэш
+  // сохраняются.
+  if (oldVersion < 7) {
+    await applyOwnedRecipesSchema(db);
+  }
 }
 
 /// Сериализация ингредиентов в JSON-строку — sqflite не умеет
