@@ -1,5 +1,33 @@
 # Project Log
 
+## Chrome web: responsive grid for recipes and favorites cards
+
+**Date:** 2026-05-01
+
+Реализован адаптивный грид карточек для web (Chrome) на экранах
+списка рецептов и избранного:
+
+* `recipe_list/lib/ui/recipe_list_page.dart`:
+  на web вместо `ListView` используется `GridView` с динамическим
+  `crossAxisCount` по ширине viewport.
+* `recipe_list/lib/ui/favorites_page.dart`:
+  применена та же схема адаптивного грида, чтобы поведение и
+  плотность карточек совпадали с основным списком.
+* `recipe_list/lib/ui/recipe_card.dart`:
+  добавлен параметр `outerPadding`, чтобы карточка одинаково
+  корректно работала в list-режиме (старые отступы) и в grid-ячейке
+  (`EdgeInsets.zero`), без дублирования компонента.
+
+Поведение:
+
+* размер карточки сохраняется близким к «мобильному» (фиксированный
+  диапазон ширин, без растягивания на весь desktop);
+* при значимом изменении ширины браузера меняется число карточек
+  в строке (responsive break by viewport);
+* на native-таргетах (iOS/Android) сохранён прежний `ListView`.
+
+Коммит: `74d8dc3`.
+
 ## Chrome web: сердце не кликалось + sqflite `unsupported result null`
 
 **Date:** 2026-05-01
