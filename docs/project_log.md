@@ -1,5 +1,17 @@
 # Project Log
 
+## English по умолчанию при холодном старте
+
+**Date:** 2026-05-01
+
+`764d373` — `appLang` инициализируется `AppLang.en` вместо
+`AppLang.ru` ([recipe_list/lib/i18n.dart](../recipe_list/lib/i18n.dart#L41)).
+Порядок цикла не менялся (`next = (index+1) % length`): тап по
+`LangIconButton` ведёт EN → ES → FR → DE → IT → TR → AR → FA → KU
+→ RU → EN. Полезно, потому что на холодном языке `/recipes/page`
+и `/lookup/:id` тратят translate-budget, а EN отдаётся из БД
+мгновенно.
+
 ## Reload «Нет сети» на не-английских локалях
 
 **Date:** 2026-05-01
