@@ -18,8 +18,17 @@ import 'app_theme.dart';
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
   final VoidCallback? onTap;
+  final EdgeInsets outerPadding;
 
-  const RecipeCard({super.key, required this.recipe, this.onTap});
+  const RecipeCard({
+    super.key,
+    required this.recipe,
+    this.onTap,
+    this.outerPadding = const EdgeInsets.symmetric(
+      horizontal: AppSpacing.pagePadding,
+      vertical: AppSpacing.sm,
+    ),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +40,7 @@ class RecipeCard extends StatelessWidget {
     return Stack(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.pagePadding,
-            vertical: AppSpacing.sm,
-          ),
+          padding: outerPadding,
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -92,12 +98,8 @@ class RecipeCard extends StatelessWidget {
         // Badge is last (= topmost) so hit-test finds it first and the card is
         // never hit-tested for taps in this area.
         Positioned(
-          top:
-              AppSpacing.sm +
-              AppSpacing.sm, // card vertical padding + badge inset
-          right:
-              AppSpacing.pagePadding +
-              AppSpacing.sm, // card horizontal padding + badge inset
+          top: outerPadding.top + AppSpacing.sm,
+          right: outerPadding.right + AppSpacing.sm,
           child: PointerInterceptor(child: FavoriteBadge(recipeId: recipe.id)),
         ),
       ],

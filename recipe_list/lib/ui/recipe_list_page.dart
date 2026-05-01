@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
@@ -342,20 +343,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                   Positioned.fill(
                     child: list.isEmpty
                         ? const _EmptyState()
-                        : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: AppSpacing.sm,
-                            ),
-                            itemCount: list.length,
-                            itemBuilder: (context, index) {
-                              final recipe = list[index];
-                              return RecipeCard(
-                                recipe: recipe,
-                                onTap: () => _openDetails(context, recipe),
-                              );
-                            },
-                          ),
+                        : _buildRecipesCollection(list),
                   ),
                   // FAB «к началу списка». Появляется, когда первая
                   // карточка ушла за верхнюю границу экрана. Стек
@@ -431,6 +419,69 @@ class _RecipeListPageState extends State<RecipeListPage> {
           duration: const Duration(seconds: 2),
         ),
       );
+  }
+
+  Widget _buildRecipesCollection(List<Recipe> list) {
+    if (!kIsWeb) {
+      return ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          final recipe = list[index];
+          return RecipeCard(
+            recipe: recipe,
+            onTap: () => _openDetails(context, recipe),
+          );
+        },
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = AppSpacing.md;
+        const minCardWidth = 300.0;
+        const maxCardWidth = 420.0;
+        final available =
+            (constraints.maxWidth - AppSpacing.pagePadding * 2).clamp(0.0, double.infinity);
+
+        int columns =
+            ((available + spacing) / (maxCardWidth + spacing)).ceil().clamp(1, 8);
+        double itemWidth =
+            (available - spacing * (columns - 1)) / columns;
+        while (columns > 1 && itemWidth < minCardWidth) {
+          columns -= 1;
+          itemWidth = (available - spacing * (columns - 1)) / columns;
+        }
+
+        final childAspectRatio = itemWidth / (itemWidth * 0.5625 + 176);
+
+        return GridView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pagePadding,
+            AppSpacing.sm,
+            AppSpacing.pagePadding,
+            AppSpacing.sm,
+          ),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: AppSpacing.sm,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemCount: list.length,
+          itemBuilder: (context, index) {
+            final recipe = list[index];
+            return RecipeCard(
+              recipe: recipe,
+              outerPadding: EdgeInsets.zero,
+              onTap: () => _openDetails(context, recipe),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _openDetails(BuildContext context, Recipe recipe) async {

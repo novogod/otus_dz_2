@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../data/api/recipe_api.dart';
 import '../data/recipe_events.dart';
@@ -138,20 +139,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                               if (filtered.isEmpty) {
                                 return const _NoMatches();
                               }
-                              return ListView.builder(
-                                controller: _scrollController,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.sm,
-                                ),
-                                itemCount: filtered.length,
-                                itemBuilder: (context, i) {
-                                  final recipe = filtered[i];
-                                  return RecipeCard(
-                                    recipe: recipe,
-                                    onTap: () => _openDetails(context, recipe),
-                                  );
-                                },
-                              );
+                              return _buildFavoritesCollection(filtered);
                             },
                           );
                         },
@@ -201,6 +189,69 @@ class _FavoritesPageState extends State<FavoritesPage> {
     return source
         .where((r) => r.name.toLowerCase().contains(query))
         .toList(growable: false);
+  }
+
+  Widget _buildFavoritesCollection(List<Recipe> list) {
+    if (!kIsWeb) {
+      return ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        itemCount: list.length,
+        itemBuilder: (context, i) {
+          final recipe = list[i];
+          return RecipeCard(
+            recipe: recipe,
+            onTap: () => _openDetails(context, recipe),
+          );
+        },
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = AppSpacing.md;
+        const minCardWidth = 300.0;
+        const maxCardWidth = 420.0;
+        final available =
+            (constraints.maxWidth - AppSpacing.pagePadding * 2).clamp(0.0, double.infinity);
+
+        int columns =
+            ((available + spacing) / (maxCardWidth + spacing)).ceil().clamp(1, 8);
+        double itemWidth =
+            (available - spacing * (columns - 1)) / columns;
+        while (columns > 1 && itemWidth < minCardWidth) {
+          columns -= 1;
+          itemWidth = (available - spacing * (columns - 1)) / columns;
+        }
+
+        final childAspectRatio = itemWidth / (itemWidth * 0.5625 + 176);
+
+        return GridView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pagePadding,
+            AppSpacing.sm,
+            AppSpacing.pagePadding,
+            AppSpacing.sm,
+          ),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: AppSpacing.sm,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemCount: list.length,
+          itemBuilder: (context, i) {
+            final recipe = list[i];
+            return RecipeCard(
+              recipe: recipe,
+              outerPadding: EdgeInsets.zero,
+              onTap: () => _openDetails(context, recipe),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _openDetails(BuildContext context, Recipe recipe) {
