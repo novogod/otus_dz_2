@@ -882,6 +882,8 @@ class _PhotoPicker extends StatelessWidget {
                               // и заодно отдаёт уменьшенную версию.
                               imgproxyUrl(existingUrl!, 320, 320),
                               fit: BoxFit.cover,
+                              webHtmlElementStrategy:
+                                  WebHtmlElementStrategy.fallback,
                               errorBuilder: (_, _, _) => Center(
                                 child: Icon(
                                   Icons.broken_image_outlined,

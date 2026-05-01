@@ -103,9 +103,15 @@ class _Photo extends StatelessWidget {
             Image.network(
               _thumbUrl(recipe.photo),
               fit: BoxFit.cover,
+              // На web-CanvasKit Image.network декодирует через
+              // canvas → требует CORS, который не отдаёт ни imgproxy,
+              // ни внешние CDN. fallback-стратегия рендерит
+              // картинку как <img>-элемент, как на native.
+              webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
               errorBuilder: (_, _, _) => Image.network(
                 recipe.photo,
                 fit: BoxFit.cover,
+                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
                 errorBuilder: (_, _, _) => Container(
                   color: AppColors.surfaceMuted,
                   child: const Icon(

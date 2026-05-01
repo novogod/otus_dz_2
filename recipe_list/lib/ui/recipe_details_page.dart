@@ -203,6 +203,10 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                               // Hero отдаём больше пикселей чем в карточке (1200x675).
                               _detailsThumb(recipe.photo),
                               fit: BoxFit.cover,
+                              // См. recipe_card.dart — на web без
+                              // этого CanvasKit падает на CORS.
+                              webHtmlElementStrategy:
+                                  WebHtmlElementStrategy.fallback,
                               errorBuilder: (_, _, _) => Container(
                                 color: AppColors.surfaceMuted,
                                 alignment: Alignment.center,
