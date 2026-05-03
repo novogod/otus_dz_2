@@ -60,6 +60,7 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSenderError => 'Аккаунт создан, но письмо не отправлено';
 	@override String get signUpError => 'Не удалось создать аккаунт. Попробуйте ещё раз.';
 	@override String get signUpSuccess => 'Аккаунт создан. Данные отправлены на ваш email.';
+	@override String get signUpChooseLanguage => 'Выберите язык';
 	@override String get loginInvalidCredentials => 'Неверный логин или пароль';
 	@override String get loginSuccessAdmin => 'Режим администратора включён';
 	@override String get loginSuccessUser => 'Вход выполнен';
@@ -187,6 +188,7 @@ extension on TranslationsRu {
 			'signUpSenderError' => 'Аккаунт создан, но письмо не отправлено',
 			'signUpError' => 'Не удалось создать аккаунт. Попробуйте ещё раз.',
 			'signUpSuccess' => 'Аккаунт создан. Данные отправлены на ваш email.',
+			'signUpChooseLanguage' => 'Выберите язык',
 			'loginInvalidCredentials' => 'Неверный логин или пароль',
 			'loginSuccessAdmin' => 'Режим администратора включён',
 			'loginSuccessUser' => 'Вход выполнен',

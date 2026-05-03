@@ -22,6 +22,7 @@
   "signUpSenderError": "هەژمار دروست بوو بەڵام ئیمەیڵ نەهات",
   "signUpError": "دروستکردنی هەژمار سەرکەوتوو نەبوو. دووبارە هەوڵبدەوە.",
   "signUpSuccess": "هەژمار دروست بوو. زانیاری چوونەژوورەوە نێردرا بۆ ئیمەیڵەکەت.",
+  "signUpChooseLanguage": "Zimanê xwe hilbijêre",
   "loginInvalidCredentials": "ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە",
   "loginSuccessAdmin": "دۆخی ئەدمین چالاک کرا",
   "loginSuccessUser": "چوونەژوورەوە سەرکەوتوو بوو",

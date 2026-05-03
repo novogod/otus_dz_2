@@ -60,6 +60,7 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSenderError => 'Konto erstellt, aber E-Mail konnte nicht gesendet werden';
 	@override String get signUpError => 'Konto konnte nicht erstellt werden. Bitte erneut versuchen.';
 	@override String get signUpSuccess => 'Konto erstellt. Zugangsdaten wurden per E-Mail gesendet.';
+	@override String get signUpChooseLanguage => 'Wählen Sie Ihre Sprache';
 	@override String get loginInvalidCredentials => 'Login oder Passwort ungültig';
 	@override String get loginSuccessAdmin => 'Admin-Modus aktiviert';
 	@override String get loginSuccessUser => 'Erfolgreich angemeldet';
@@ -185,6 +186,7 @@ extension on TranslationsDe {
 			'signUpSenderError' => 'Konto erstellt, aber E-Mail konnte nicht gesendet werden',
 			'signUpError' => 'Konto konnte nicht erstellt werden. Bitte erneut versuchen.',
 			'signUpSuccess' => 'Konto erstellt. Zugangsdaten wurden per E-Mail gesendet.',
+			'signUpChooseLanguage' => 'Wählen Sie Ihre Sprache',
 			'loginInvalidCredentials' => 'Login oder Passwort ungültig',
 			'loginSuccessAdmin' => 'Admin-Modus aktiviert',
 			'loginSuccessUser' => 'Erfolgreich angemeldet',

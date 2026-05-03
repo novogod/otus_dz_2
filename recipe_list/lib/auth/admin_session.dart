@@ -87,7 +87,7 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   _db = db;
   final rows = await db.query(
     'auth_credentials',
-    columns: ['login', 'token'],
+    columns: ['login', 'token', 'preferred_language'],
     where: 'active = 1',
     limit: 1,
   );
@@ -97,6 +97,11 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   }
   final login = rows.first['login'] as String?;
   final token = rows.first['token'] as String?;
+  final storedLang = rows.first['preferred_language'] as String?;
+  if (storedLang != null) {
+    final lang = AppLang.values.where((l) => l.name == storedLang).firstOrNull;
+    if (lang != null) cycleAppLangTo(lang);
+  }
   _setSessionState(
     login: login,
     token: token,
@@ -117,11 +122,18 @@ Future<bool> loginAsAdmin({
 
   final online = await _loginOnline(normalizedLogin, password);
   if (online != null) {
+    if (online.preferredLang != null) {
+      final lang = AppLang.values
+          .where((l) => l.name == online.preferredLang)
+          .firstOrNull;
+      if (lang != null) cycleAppLangTo(lang);
+    }
     await _saveMirroredCredentials(
       db: db,
       login: normalizedLogin,
       passwordHash: _passwordHash(password),
       token: online.token,
+      preferredLang: online.preferredLang,
     );
     _setSessionState(
       login: normalizedLogin,
@@ -218,10 +230,15 @@ Future<void> setRemoteFavorite({
 }
 
 class _OnlineLoginResult {
-  const _OnlineLoginResult({required this.token, required this.isAdmin});
+  const _OnlineLoginResult({
+    required this.token,
+    required this.isAdmin,
+    this.preferredLang,
+  });
 
   final String? token;
   final bool isAdmin;
+  final String? preferredLang;
 }
 
 class _OfflineLoginResult {
@@ -245,6 +262,7 @@ Future<SignUpResult> signUpUser({
   required String name,
   required String email,
   required String password,
+  AppLang? preferredLang,
 }) async {
   final normalizedName = name.trim();
   final normalizedEmail = email.trim().toLowerCase();
@@ -272,6 +290,7 @@ Future<SignUpResult> signUpUser({
     name: normalizedName,
     email: normalizedEmail,
     password: password,
+    language: (preferredLang ?? appLang.value).name,
   );
   if (signUpOk == SignUpResult.success) {
     final senderOk = await _sendCredentialsEmail(
@@ -422,6 +441,7 @@ Future<SignUpResult> _createUser({
   required String name,
   required String email,
   required String password,
+  String language = 'en',
 }) async {
   final paths = <String>{
     _normalizePath(_kAuthSignUpPath),
@@ -434,12 +454,12 @@ Future<SignUpResult> _createUser({
   };
 
   final payloads = <Map<String, String>>[
-    {'name': name, 'email': email, 'password': password},
+    {'name': name, 'email': email, 'password': password, 'language': language},
     {'login': email, 'password': password, 'avatar': ''},
     {'login': email, 'password': password, 'name': name, 'avatar': ''},
-    {'login': email, 'password': password, 'name': name},
-    {'username': email, 'password': password, 'name': name},
-    {'user': email, 'password': password, 'name': name},
+    {'login': email, 'password': password, 'name': name, 'language': language},
+    {'username': email, 'password': password, 'name': name, 'language': language},
+    {'user': email, 'password': password, 'name': name, 'language': language},
   ];
 
   final methods = <String>{'POST', 'PUT'};
@@ -569,7 +589,14 @@ Future<_OnlineLoginResult?> _loginOnline(String login, String password) async {
                       body['is_admin'] == true ||
                       body['role'] == 'admin')
                 : false;
-            return _OnlineLoginResult(token: token, isAdmin: isAdmin);
+            final preferredLang = body is Map<String, dynamic>
+                ? body['preferredLanguage'] as String?
+                : null;
+            return _OnlineLoginResult(
+              token: token,
+              isAdmin: isAdmin,
+              preferredLang: preferredLang,
+            );
           }
         } on DioException catch (e) {
           final code = e.response?.statusCode;
@@ -618,6 +645,7 @@ Future<void> _saveMirroredCredentials({
   required String login,
   required String passwordHash,
   required String? token,
+  String? preferredLang,
 }) async {
   final ts = DateTime.now().millisecondsSinceEpoch;
   await db.insert('auth_credentials', {
@@ -626,6 +654,7 @@ Future<void> _saveMirroredCredentials({
     'token': token,
     'active': 1,
     'updated_at': ts,
+    if (preferredLang != null) 'preferred_language': preferredLang,
   }, conflictAlgorithm: ConflictAlgorithm.replace);
   await db.update(
     'auth_credentials',

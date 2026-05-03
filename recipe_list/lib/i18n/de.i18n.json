@@ -22,6 +22,7 @@
   "signUpSenderError": "Konto erstellt, aber E-Mail konnte nicht gesendet werden",
   "signUpError": "Konto konnte nicht erstellt werden. Bitte erneut versuchen.",
   "signUpSuccess": "Konto erstellt. Zugangsdaten wurden per E-Mail gesendet.",
+  "signUpChooseLanguage": "Wählen Sie Ihre Sprache",
   "loginInvalidCredentials": "Login oder Passwort ungültig",
   "loginSuccessAdmin": "Admin-Modus aktiviert",
   "loginSuccessUser": "Erfolgreich angemeldet",

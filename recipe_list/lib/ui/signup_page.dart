@@ -7,6 +7,7 @@ import '../auth/admin_session.dart';
 import '../i18n.dart';
 import 'app_theme.dart';
 import 'splash_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 Future<bool> openSignUpPage(BuildContext context) async {
   final created = await Navigator.of(context).push<bool>(_signUpRoute());
@@ -90,6 +91,7 @@ class _SignUpPageState extends State<SignUpPage> {
       name: _nameController.text,
       email: _emailController.text,
       password: _passwordController.text,
+        preferredLang: appLang.value,
     );
     if (!mounted) return;
     setState(() => _busy = false);
@@ -224,6 +226,8 @@ class _SignUpPageState extends State<SignUpPage> {
                               child: Text(s.signUpButton),
                             ),
                           ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _LanguagePicker(),
                         ],
                       ),
                     ),
@@ -237,3 +241,78 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
+
+  /// Language picker row: flag circle (current lang) + cycle button (next lang).
+  /// Same visual style as [LangIconButton] in the app bar.
+  class _LanguagePicker extends StatelessWidget {
+    @override
+    Widget build(BuildContext context) {
+      final s = S.of(context);
+      return ValueListenableBuilder<AppLang>(
+        valueListenable: appLang,
+        builder: (context, current, _) {
+          final next =
+              AppLang.values[(current.index + 1) % AppLang.values.length];
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                s.signUpChooseLanguage,
+                style: const TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  color: AppColors.surface,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Semantics(
+                button: true,
+                label: s.switchLanguageTo(next.label),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipOval(
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: SvgPicture.asset(
+                          current.flagAsset,
+                          fit: BoxFit.cover,
+                          semanticsLabel: s.flagOf(current.label),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Material(
+                      color: AppColors.primary,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: cycleAppLang,
+                        child: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Center(
+                            child: Text(
+                              next.label,
+                              style: const TextStyle(
+                                fontFamily: AppTextStyles.fontFamily,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                color: AppColors.surface,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }

@@ -60,6 +60,7 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSenderError => 'هەژمار دروست بوو بەڵام ئیمەیڵ نەهات';
 	@override String get signUpError => 'دروستکردنی هەژمار سەرکەوتوو نەبوو. دووبارە هەوڵبدەوە.';
 	@override String get signUpSuccess => 'هەژمار دروست بوو. زانیاری چوونەژوورەوە نێردرا بۆ ئیمەیڵەکەت.';
+	@override String get signUpChooseLanguage => 'Zimanê xwe hilbijêre';
 	@override String get loginInvalidCredentials => 'ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە';
 	@override String get loginSuccessAdmin => 'دۆخی ئەدمین چالاک کرا';
 	@override String get loginSuccessUser => 'چوونەژوورەوە سەرکەوتوو بوو';
@@ -185,6 +186,7 @@ extension on TranslationsKu {
 			'signUpSenderError' => 'هەژمار دروست بوو بەڵام ئیمەیڵ نەهات',
 			'signUpError' => 'دروستکردنی هەژمار سەرکەوتوو نەبوو. دووبارە هەوڵبدەوە.',
 			'signUpSuccess' => 'هەژمار دروست بوو. زانیاری چوونەژوورەوە نێردرا بۆ ئیمەیڵەکەت.',
+			'signUpChooseLanguage' => 'Zimanê xwe hilbijêre',
 			'loginInvalidCredentials' => 'ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە',
 			'loginSuccessAdmin' => 'دۆخی ئەدمین چالاک کرا',
 			'loginSuccessUser' => 'چوونەژوورەوە سەرکەوتوو بوو',

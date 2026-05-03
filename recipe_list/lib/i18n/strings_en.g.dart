@@ -110,6 +110,9 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Account created. Credentials were sent to your email.'
 	String get signUpSuccess => 'Account created. Credentials were sent to your email.';
 
+	/// en: 'Choose your language'
+	String get signUpChooseLanguage => 'Choose your language';
+
 	/// en: 'Invalid login or password'
 	String get loginInvalidCredentials => 'Invalid login or password';
 
@@ -393,6 +396,7 @@ extension on Translations {
 			'signUpSenderError' => 'Account created, but email delivery failed',
 			'signUpError' => 'Couldn\'t create account. Try again.',
 			'signUpSuccess' => 'Account created. Credentials were sent to your email.',
+			'signUpChooseLanguage' => 'Choose your language',
 			'loginInvalidCredentials' => 'Invalid login or password',
 			'loginSuccessAdmin' => 'Admin mode enabled',
 			'loginSuccessUser' => 'Logged in successfully',

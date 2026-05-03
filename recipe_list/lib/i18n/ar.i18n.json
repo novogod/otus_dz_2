@@ -22,6 +22,7 @@
   "signUpSenderError": "تم إنشاء الحساب لكن تعذر إرسال البريد",
   "signUpError": "تعذر إنشاء الحساب. حاول مرة أخرى.",
   "signUpSuccess": "تم إنشاء الحساب. تم إرسال بيانات الدخول إلى بريدك.",
+  "signUpChooseLanguage": "اختر لغتك",
   "loginInvalidCredentials": "اسم المستخدم أو كلمة المرور غير صحيحة",
   "loginSuccessAdmin": "تم تفعيل وضع المسؤول",
   "loginSuccessUser": "تم تسجيل الدخول بنجاح",

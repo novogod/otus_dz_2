@@ -22,6 +22,7 @@
   "signUpSenderError": "Account creato, ma invio email non riuscito",
   "signUpError": "Impossibile creare l'account. Riprova.",
   "signUpSuccess": "Account creato. Credenziali inviate via email.",
+  "signUpChooseLanguage": "Scegli la tua lingua",
   "loginInvalidCredentials": "Login o password non validi",
   "loginSuccessAdmin": "Modalità amministratore attivata",
   "loginSuccessUser": "Accesso effettuato con successo",

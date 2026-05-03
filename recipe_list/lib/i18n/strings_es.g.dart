@@ -60,6 +60,7 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSenderError => 'Cuenta creada, pero no se pudo enviar el correo';
 	@override String get signUpError => 'No se pudo crear la cuenta. Inténtalo de nuevo.';
 	@override String get signUpSuccess => 'Cuenta creada. Las credenciales se enviaron a tu correo.';
+	@override String get signUpChooseLanguage => 'Elige tu idioma';
 	@override String get loginInvalidCredentials => 'Usuario o contraseña incorrectos';
 	@override String get loginSuccessAdmin => 'Modo administrador activado';
 	@override String get loginSuccessUser => 'Sesión iniciada correctamente';
@@ -185,6 +186,7 @@ extension on TranslationsEs {
 			'signUpSenderError' => 'Cuenta creada, pero no se pudo enviar el correo',
 			'signUpError' => 'No se pudo crear la cuenta. Inténtalo de nuevo.',
 			'signUpSuccess' => 'Cuenta creada. Las credenciales se enviaron a tu correo.',
+			'signUpChooseLanguage' => 'Elige tu idioma',
 			'loginInvalidCredentials' => 'Usuario o contraseña incorrectos',
 			'loginSuccessAdmin' => 'Modo administrador activado',
 			'loginSuccessUser' => 'Sesión iniciada correctamente',

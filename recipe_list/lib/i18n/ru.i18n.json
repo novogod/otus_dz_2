@@ -22,6 +22,7 @@
   "signUpSenderError": "Аккаунт создан, но письмо не отправлено",
   "signUpError": "Не удалось создать аккаунт. Попробуйте ещё раз.",
   "signUpSuccess": "Аккаунт создан. Данные отправлены на ваш email.",
+  "signUpChooseLanguage": "Выберите язык",
   "loginInvalidCredentials": "Неверный логин или пароль",
   "loginSuccessAdmin": "Режим администратора включён",
   "loginSuccessUser": "Вход выполнен",

@@ -60,6 +60,7 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSenderError => 'Hesap oluşturuldu fakat e-posta gönderilemedi';
 	@override String get signUpError => 'Hesap oluşturulamadı. Tekrar deneyin.';
 	@override String get signUpSuccess => 'Hesap oluşturuldu. Bilgiler e-postanıza gönderildi.';
+	@override String get signUpChooseLanguage => 'Dilinizi seçin';
 	@override String get loginInvalidCredentials => 'Kullanıcı adı veya şifre hatalı';
 	@override String get loginSuccessAdmin => 'Yönetici modu etkin';
 	@override String get loginSuccessUser => 'Başarıyla giriş yapıldı';
@@ -185,6 +186,7 @@ extension on TranslationsTr {
 			'signUpSenderError' => 'Hesap oluşturuldu fakat e-posta gönderilemedi',
 			'signUpError' => 'Hesap oluşturulamadı. Tekrar deneyin.',
 			'signUpSuccess' => 'Hesap oluşturuldu. Bilgiler e-postanıza gönderildi.',
+			'signUpChooseLanguage' => 'Dilinizi seçin',
 			'loginInvalidCredentials' => 'Kullanıcı adı veya şifre hatalı',
 			'loginSuccessAdmin' => 'Yönetici modu etkin',
 			'loginSuccessUser' => 'Başarıyla giriş yapıldı',

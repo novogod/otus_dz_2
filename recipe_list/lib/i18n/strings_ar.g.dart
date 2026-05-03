@@ -60,6 +60,7 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSenderError => 'تم إنشاء الحساب لكن تعذر إرسال البريد';
 	@override String get signUpError => 'تعذر إنشاء الحساب. حاول مرة أخرى.';
 	@override String get signUpSuccess => 'تم إنشاء الحساب. تم إرسال بيانات الدخول إلى بريدك.';
+	@override String get signUpChooseLanguage => 'اختر لغتك';
 	@override String get loginInvalidCredentials => 'اسم المستخدم أو كلمة المرور غير صحيحة';
 	@override String get loginSuccessAdmin => 'تم تفعيل وضع المسؤول';
 	@override String get loginSuccessUser => 'تم تسجيل الدخول بنجاح';
@@ -189,6 +190,7 @@ extension on TranslationsAr {
 			'signUpSenderError' => 'تم إنشاء الحساب لكن تعذر إرسال البريد',
 			'signUpError' => 'تعذر إنشاء الحساب. حاول مرة أخرى.',
 			'signUpSuccess' => 'تم إنشاء الحساب. تم إرسال بيانات الدخول إلى بريدك.',
+			'signUpChooseLanguage' => 'اختر لغتك',
 			'loginInvalidCredentials' => 'اسم المستخدم أو كلمة المرور غير صحيحة',
 			'loginSuccessAdmin' => 'تم تفعيل وضع المسؤول',
 			'loginSuccessUser' => 'تم تسجيل الدخول بنجاح',

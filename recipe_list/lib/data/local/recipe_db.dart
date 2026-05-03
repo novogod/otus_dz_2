@@ -51,7 +51,9 @@ const String kRecipeDbFileName = 'recipes.db';
 /// docs/owner-edit-delete.md).
 /// v8: add `auth_credentials` table — stores mirrored login
 /// credentials and active session flag for offline login.
-const int kRecipeDbSchemaVersion = 8;
+/// v9: add `preferred_language` column to `auth_credentials` so the
+/// app can restore the user's chosen language on next launch.
+const int kRecipeDbSchemaVersion = 9;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -131,7 +133,8 @@ CREATE TABLE auth_credentials (
   password_hash TEXT NOT NULL,
   token TEXT,
   active INTEGER NOT NULL DEFAULT 0,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  preferred_language TEXT
 );
 ''';
 
@@ -172,7 +175,8 @@ Future<void> applyAuthCredentialsSchema(Database db) async {
     'password_hash TEXT NOT NULL, '
     'token TEXT, '
     'active INTEGER NOT NULL DEFAULT 0, '
-    'updated_at INTEGER NOT NULL)',
+    'updated_at INTEGER NOT NULL, '
+    'preferred_language TEXT)',
   );
   await db.execute(
     'CREATE INDEX IF NOT EXISTS idx_auth_credentials_active '
@@ -257,6 +261,16 @@ Future<void> _onRecipeDbUpgrade(
   if (oldVersion < 8) {
     await applyAuthCredentialsSchema(db);
   }
+    // v8 → v9: добавляем preferred_language в auth_credentials.
+    if (oldVersion < 9) {
+      try {
+        await db.execute(
+          'ALTER TABLE auth_credentials ADD COLUMN preferred_language TEXT',
+        );
+      } catch (_) {
+        // Column may already exist (idempotent).
+      }
+    }
 }
 
 /// Сериализация ингредиентов в JSON-строку — sqflite не умеет

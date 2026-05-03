@@ -22,6 +22,7 @@
   "signUpSenderError": "Account created, but email delivery failed",
   "signUpError": "Couldn't create account. Try again.",
   "signUpSuccess": "Account created. Credentials were sent to your email.",
+  "signUpChooseLanguage": "Choose your language",
   "loginInvalidCredentials": "Invalid login or password",
   "loginSuccessAdmin": "Admin mode enabled",
   "loginSuccessUser": "Logged in successfully",

@@ -60,6 +60,7 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSenderError => 'Compte créé, mais l\'e-mail n\'a pas été envoyé';
 	@override String get signUpError => 'Impossible de créer le compte. Réessayez.';
 	@override String get signUpSuccess => 'Compte créé. Les identifiants ont été envoyés par e-mail.';
+	@override String get signUpChooseLanguage => 'Choisissez votre langue';
 	@override String get loginInvalidCredentials => 'Identifiant ou mot de passe incorrect';
 	@override String get loginSuccessAdmin => 'Mode administrateur activé';
 	@override String get loginSuccessUser => 'Connexion réussie';
@@ -185,6 +186,7 @@ extension on TranslationsFr {
 			'signUpSenderError' => 'Compte créé, mais l\'e-mail n\'a pas été envoyé',
 			'signUpError' => 'Impossible de créer le compte. Réessayez.',
 			'signUpSuccess' => 'Compte créé. Les identifiants ont été envoyés par e-mail.',
+			'signUpChooseLanguage' => 'Choisissez votre langue',
 			'loginInvalidCredentials' => 'Identifiant ou mot de passe incorrect',
 			'loginSuccessAdmin' => 'Mode administrateur activé',
 			'loginSuccessUser' => 'Connexion réussie',

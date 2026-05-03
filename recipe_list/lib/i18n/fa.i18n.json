@@ -22,6 +22,7 @@
   "signUpSenderError": "حساب ساخته شد اما ارسال ایمیل ناموفق بود",
   "signUpError": "ایجاد حساب ممکن نشد. دوباره تلاش کنید.",
   "signUpSuccess": "حساب ایجاد شد. اطلاعات ورود به ایمیل شما ارسال شد.",
+  "signUpChooseLanguage": "زبان خود را انتخاب کنید",
   "loginInvalidCredentials": "نام کاربری یا رمز عبور نادرست است",
   "loginSuccessAdmin": "حالت مدیر فعال شد",
   "loginSuccessUser": "ورود با موفقیت انجام شد",

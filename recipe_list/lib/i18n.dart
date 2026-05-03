@@ -85,6 +85,14 @@ void cycleAppLang() {
   appLang.value = next;
 }
 
+/// Устанавливает язык приложения в конкретное значение [lang].
+void cycleAppLangTo(AppLang lang) {
+  if (appLang.value == lang) return;
+  // ignore: avoid_print
+  print('[lang] cycleAppLangTo ${appLang.value.name} -> ${lang.name}');
+  appLang.value = lang;
+}
+
 /// Связывает [appLang] с slang's [LocaleSettings]. Вызывать один раз
 /// в `main()` — после этого каждое изменение `appLang.value`
 /// автоматически перенастраивает текущий локаль slang, и все
@@ -299,6 +307,7 @@ class S {
   String get signUpSenderError => _t.signUpSenderError;
   String get signUpError => _t.signUpError;
   String get signUpSuccess => _t.signUpSuccess;
+    String get signUpChooseLanguage => _t.signUpChooseLanguage;
   String get loginInvalidCredentials => _t.loginInvalidCredentials;
   String get loginSuccessAdmin => _t.loginSuccessAdmin;
   String get loginSuccessUser => _t.loginSuccessUser;

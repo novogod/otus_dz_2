@@ -22,6 +22,7 @@
   "signUpSenderError": "Hesap oluşturuldu fakat e-posta gönderilemedi",
   "signUpError": "Hesap oluşturulamadı. Tekrar deneyin.",
   "signUpSuccess": "Hesap oluşturuldu. Bilgiler e-postanıza gönderildi.",
+  "signUpChooseLanguage": "Dilinizi seçin",
   "loginInvalidCredentials": "Kullanıcı adı veya şifre hatalı",
   "loginSuccessAdmin": "Yönetici modu etkin",
   "loginSuccessUser": "Başarıyla giriş yapıldı",

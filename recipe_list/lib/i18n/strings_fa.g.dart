@@ -60,6 +60,7 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSenderError => 'حساب ساخته شد اما ارسال ایمیل ناموفق بود';
 	@override String get signUpError => 'ایجاد حساب ممکن نشد. دوباره تلاش کنید.';
 	@override String get signUpSuccess => 'حساب ایجاد شد. اطلاعات ورود به ایمیل شما ارسال شد.';
+	@override String get signUpChooseLanguage => 'زبان خود را انتخاب کنید';
 	@override String get loginInvalidCredentials => 'نام کاربری یا رمز عبور نادرست است';
 	@override String get loginSuccessAdmin => 'حالت مدیر فعال شد';
 	@override String get loginSuccessUser => 'ورود با موفقیت انجام شد';
@@ -185,6 +186,7 @@ extension on TranslationsFa {
 			'signUpSenderError' => 'حساب ساخته شد اما ارسال ایمیل ناموفق بود',
 			'signUpError' => 'ایجاد حساب ممکن نشد. دوباره تلاش کنید.',
 			'signUpSuccess' => 'حساب ایجاد شد. اطلاعات ورود به ایمیل شما ارسال شد.',
+			'signUpChooseLanguage' => 'زبان خود را انتخاب کنید',
 			'loginInvalidCredentials' => 'نام کاربری یا رمز عبور نادرست است',
 			'loginSuccessAdmin' => 'حالت مدیر فعال شد',
 			'loginSuccessUser' => 'ورود با موفقیت انجام شد',

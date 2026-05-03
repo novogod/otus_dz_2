@@ -61,7 +61,7 @@ class LangIconButton extends StatelessWidget {
                       height: 40,
                       child: Center(
                         child: Text(
-                          s.langLabel,
+                          next.label,
                           style: const TextStyle(
                             fontFamily: AppTextStyles.fontFamily,
                             fontWeight: FontWeight.w800,

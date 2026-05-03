@@ -22,6 +22,7 @@
   "signUpSenderError": "Compte créé, mais l'e-mail n'a pas été envoyé",
   "signUpError": "Impossible de créer le compte. Réessayez.",
   "signUpSuccess": "Compte créé. Les identifiants ont été envoyés par e-mail.",
+  "signUpChooseLanguage": "Choisissez votre langue",
   "loginInvalidCredentials": "Identifiant ou mot de passe incorrect",
   "loginSuccessAdmin": "Mode administrateur activé",
   "loginSuccessUser": "Connexion réussie",
