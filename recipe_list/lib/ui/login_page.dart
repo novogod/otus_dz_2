@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../auth/admin_session.dart';
 import '../i18n.dart';
+import 'admin_after_login_page.dart';
 import 'app_theme.dart';
 import 'password_recovery_page.dart';
 import 'signup_page.dart';
@@ -116,6 +117,14 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       );
+    if (adminLoggedInNotifier.value) {
+      await openAdminAfterLoginPage(
+        context,
+        adminLogin: _loginController.text.trim(),
+        adminPassword: _passwordController.text,
+      );
+      return;
+    }
     Navigator.of(context).pop(true);
   }
 

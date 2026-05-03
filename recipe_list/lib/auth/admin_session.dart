@@ -83,6 +83,48 @@ enum PasswordResetResult {
   serverError,
 }
 
+class AdminRecipeUser {
+  const AdminRecipeUser({
+    required this.id,
+    required this.email,
+    required this.fullName,
+    required this.status,
+    required this.preferredLanguage,
+    this.createdAt,
+    this.updatedAt,
+    this.lastLoginAt,
+  });
+
+  final String id;
+  final String email;
+  final String fullName;
+  final String status;
+  final String preferredLanguage;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? lastLoginAt;
+
+  bool get isActive => status == 'active';
+
+  static AdminRecipeUser fromJson(Map<String, dynamic> json) {
+    DateTime? parseDate(dynamic v) {
+      if (v is! String || v.isEmpty) return null;
+      return DateTime.tryParse(v);
+    }
+
+    return AdminRecipeUser(
+      id: (json['id'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+      fullName: (json['fullName'] ?? '').toString(),
+      status: (json['status'] ?? 'active').toString(),
+      preferredLanguage: (json['preferredLanguage'] ?? 'en').toString(),
+      createdAt: parseDate(json['createdAt']),
+      updatedAt: parseDate(json['updatedAt']),
+      lastLoginAt: parseDate(json['lastLoginAt']),
+    );
+  }
+}
+
 Future<void> bootstrapAdminSession({required Database db}) async {
   _db = db;
   final rows = await db.query(
@@ -434,6 +476,117 @@ Future<PasswordResetResult> resetPasswordWithCode({
     }
     return PasswordResetResult.serverError;
   }
+}
+
+Future<List<AdminRecipeUser>> fetchRecipeAdminUsers({
+  required String adminLogin,
+  required String adminPassword,
+}) async {
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) return const [];
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: _kAuthBase,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      headers: {
+        'x-recipe-admin-login': adminLogin,
+        'x-recipe-admin-password': adminPassword,
+      },
+    ),
+  );
+  final res = await dio.get<Map<String, dynamic>>('/users/admin/list');
+  final usersRaw = res.data?['users'];
+  if (usersRaw is! List) return const [];
+  return usersRaw
+      .whereType<Map<String, dynamic>>()
+      .map(AdminRecipeUser.fromJson)
+      .toList(growable: false);
+}
+
+Future<AdminRecipeUser?> updateRecipeAdminUser({
+  required String adminLogin,
+  required String adminPassword,
+  required String id,
+  required String fullName,
+  required String preferredLanguage,
+  required String status,
+}) async {
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) return null;
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: _kAuthBase,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      headers: {
+        'x-recipe-admin-login': adminLogin,
+        'x-recipe-admin-password': adminPassword,
+      },
+    ),
+  );
+  final res = await dio.patch<Map<String, dynamic>>(
+    '/users/admin/$id',
+    data: {
+      'fullName': fullName,
+      'preferredLanguage': preferredLanguage,
+      'status': status,
+    },
+  );
+  final userRaw = res.data?['user'];
+  if (userRaw is! Map<String, dynamic>) return null;
+  return AdminRecipeUser.fromJson(userRaw);
+}
+
+Future<bool> deleteRecipeAdminUser({
+  required String adminLogin,
+  required String adminPassword,
+  required String id,
+}) async {
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) return false;
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: _kAuthBase,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      headers: {
+        'x-recipe-admin-login': adminLogin,
+        'x-recipe-admin-password': adminPassword,
+      },
+    ),
+  );
+  final res = await dio.delete<Map<String, dynamic>>('/users/admin/$id');
+  return res.data?['success'] == true;
+}
+
+Future<int> bulkDeleteRecipeAdminUsers({
+  required String adminLogin,
+  required String adminPassword,
+  required List<String> ids,
+}) async {
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) return 0;
+  if (ids.isEmpty) return 0;
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: _kAuthBase,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      headers: {
+        'x-recipe-admin-login': adminLogin,
+        'x-recipe-admin-password': adminPassword,
+      },
+    ),
+  );
+  final res = await dio.post<Map<String, dynamic>>(
+    '/users/admin/bulk-delete',
+    data: {'ids': ids},
+  );
+  final deletedCount = res.data?['deletedCount'];
+  if (deletedCount is int) return deletedCount;
+  if (deletedCount is num) return deletedCount.toInt();
+  return 0;
 }
 
 Future<SignUpResult> _createUser({

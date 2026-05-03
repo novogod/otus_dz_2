@@ -334,6 +334,94 @@ class S {
   String get adminDeleteAction => _t.adminDeleteAction;
   String get adminEditAction => _t.adminEditAction;
 
+  // Admin users management (manual mapping to avoid regenerating slang files).
+  String get adminPanelTitle => _byLang({
+    AppLang.en: 'Admin panel',
+    AppLang.ru: 'Панель администратора',
+    AppLang.tr: 'Yönetici paneli',
+  });
+  String get adminEditUsersList => _byLang({
+    AppLang.en: 'Edit users list',
+    AppLang.ru: 'Редактировать список пользователей',
+    AppLang.tr: 'Kullanıcı listesini düzenle',
+  });
+  String get adminEditCards => _byLang({
+    AppLang.en: 'Edit cards',
+    AppLang.ru: 'Редактировать карточки',
+    AppLang.tr: 'Kartları düzenle',
+  });
+  String get adminUsersTitle => _byLang({
+    AppLang.en: 'Users list',
+    AppLang.ru: 'Список пользователей',
+    AppLang.tr: 'Kullanıcı listesi',
+  });
+  String get adminSelectAll => _byLang({
+    AppLang.en: 'Select all',
+    AppLang.ru: 'Выбрать все',
+    AppLang.tr: 'Tümünü seç',
+  });
+  String get adminNoUsersFound => _byLang({
+    AppLang.en: 'No users found',
+    AppLang.ru: 'Пользователи не найдены',
+    AppLang.tr: 'Kullanıcı bulunamadı',
+  });
+  String get adminDeleteUserTitle => _byLang({
+    AppLang.en: 'Delete user',
+    AppLang.ru: 'Удалить пользователя',
+    AppLang.tr: 'Kullanıcıyı sil',
+  });
+  String get adminDeleteSelectedUsersTitle => _byLang({
+    AppLang.en: 'Delete selected users',
+    AppLang.ru: 'Удалить выбранных пользователей',
+    AppLang.tr: 'Seçili kullanıcıları sil',
+  });
+  String adminDeleteUserPrompt(String email) => _byLang({
+    AppLang.en: 'Delete $email?',
+    AppLang.ru: 'Удалить $email?',
+    AppLang.tr: '$email silinsin mi?',
+  });
+  String adminDeleteSelectedUsersPrompt(int count) => _byLang({
+    AppLang.en: 'Delete $count selected users?',
+    AppLang.ru: 'Удалить $count выбранных пользователей?',
+    AppLang.tr: '$count seçili kullanıcı silinsin mi?',
+  });
+  String get adminEditUserTitle => _byLang({
+    AppLang.en: 'Edit user',
+    AppLang.ru: 'Редактировать пользователя',
+    AppLang.tr: 'Kullanıcıyı düzenle',
+  });
+  String get adminEditAccountFields => _byLang({
+    AppLang.en: 'Edit account fields',
+    AppLang.ru: 'Редактируйте поля аккаунта',
+    AppLang.tr: 'Hesap alanlarını düzenle',
+  });
+  String get adminFullName => _byLang({
+    AppLang.en: 'Full name',
+    AppLang.ru: 'Полное имя',
+    AppLang.tr: 'Ad Soyad',
+  });
+  String get adminPreferredLanguage => _byLang({
+    AppLang.en: 'Preferred language',
+    AppLang.ru: 'Предпочитаемый язык',
+    AppLang.tr: 'Tercih edilen dil',
+  });
+  String get adminActive => _byLang({
+    AppLang.en: 'Active',
+    AppLang.ru: 'Активен',
+    AppLang.tr: 'Aktif',
+  });
+  String adminDeleteSelectedButton(int count) => '${adminDeleteAction} ($count)';
+  String adminLangAndStatus(String preferredLanguage, String status) =>
+      _byLang({
+        AppLang.en: 'Lang: ${preferredLanguage.toUpperCase()} • $status',
+        AppLang.ru: 'Язык: ${preferredLanguage.toUpperCase()} • $status',
+        AppLang.tr: 'Dil: ${preferredLanguage.toUpperCase()} • $status',
+      });
+
+  String _byLang(Map<AppLang, String> values) {
+    return values[appLang.value] ?? values[AppLang.en] ?? values.values.first;
+  }
+
   // FAB label — derives from current AppLang, not from translations.
   String get langLabel => appLang.value.label;
 
