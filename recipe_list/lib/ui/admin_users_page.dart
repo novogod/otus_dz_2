@@ -22,6 +22,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   List<AdminRecipeUser> _users = const [];
   final Set<String> _selectedIds = <String>{};
   bool _busy = false;
+  String? _loadError;
 
   @override
   void initState() {
@@ -39,7 +40,15 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
       if (!mounted) return;
       setState(() {
         _users = users;
+        _loadError = null;
         _selectedIds.removeWhere((id) => !_users.any((u) => u.id == id));
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _users = const [];
+        _selectedIds.clear();
+        _loadError = 'Failed to load users list';
       });
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -281,6 +290,25 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             Expanded(
               child: _busy && _users.isEmpty
                   ? const Center(child: CircularProgressIndicator())
+                  : _loadError != null
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.error_outline),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(_loadError!, textAlign: TextAlign.center),
+                            const SizedBox(height: AppSpacing.md),
+                            FilledButton(
+                              onPressed: _busy ? null : _reload,
+                              child: Text(s.retry),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
                   : _users.isEmpty
                   ? Center(child: Text(s.adminNoUsersFound))
                   : ListView.separated(

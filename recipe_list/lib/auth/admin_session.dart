@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -489,19 +491,50 @@ Future<List<AdminRecipeUser>> fetchRecipeAdminUsers({
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 20),
       responseType: ResponseType.json,
+      validateStatus: (_) => true,
       headers: {
         'x-recipe-admin-login': adminLogin,
         'x-recipe-admin-password': adminPassword,
       },
     ),
   );
-  final res = await dio.get<Map<String, dynamic>>('/users/admin/list');
-  final usersRaw = res.data?['users'];
-  if (usersRaw is! List) return const [];
-  return usersRaw
-      .whereType<Map<String, dynamic>>()
-      .map(AdminRecipeUser.fromJson)
-      .toList(growable: false);
+  DioException? lastError;
+  for (final path in const ['/api/users/admin/list', '/users/admin/list']) {
+    final res = await dio.get<Object>(
+      path,
+      options: Options(responseType: ResponseType.plain),
+    );
+    final status = res.statusCode ?? 0;
+    final location = res.headers.value('location') ?? '';
+    final bodyText = res.data?.toString() ?? '';
+    if (status >= 300 && status < 400 && location.contains('/login')) {
+      throw StateError('admin_list_redirected_to_login');
+    }
+    if (status == 401 || status == 403) {
+      throw StateError('admin_list_unauthorized');
+    }
+    if (status == 404) continue;
+    if (status < 200 || status >= 300) {
+      lastError = DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        type: DioExceptionType.badResponse,
+      );
+      continue;
+    }
+    final decoded = jsonDecode(bodyText);
+    if (decoded is! Map<String, dynamic>) {
+      throw StateError('admin_list_invalid_response');
+    }
+    final usersRaw = decoded['users'];
+    if (usersRaw is! List) return const [];
+    return usersRaw
+        .whereType<Map<String, dynamic>>()
+        .map(AdminRecipeUser.fromJson)
+        .toList(growable: false);
+  }
+  if (lastError != null) throw lastError;
+  throw StateError('admin_list_route_not_found');
 }
 
 Future<AdminRecipeUser?> updateRecipeAdminUser({
@@ -519,23 +552,35 @@ Future<AdminRecipeUser?> updateRecipeAdminUser({
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 20),
       responseType: ResponseType.json,
+      validateStatus: (_) => true,
       headers: {
         'x-recipe-admin-login': adminLogin,
         'x-recipe-admin-password': adminPassword,
       },
     ),
   );
-  final res = await dio.patch<Map<String, dynamic>>(
-    '/users/admin/$id',
-    data: {
-      'fullName': fullName,
-      'preferredLanguage': preferredLanguage,
-      'status': status,
-    },
-  );
-  final userRaw = res.data?['user'];
-  if (userRaw is! Map<String, dynamic>) return null;
-  return AdminRecipeUser.fromJson(userRaw);
+  for (final path in ['/api/users/admin/$id', '/users/admin/$id']) {
+    final res = await dio.patch<Map<String, dynamic>>(
+      path,
+      data: {
+        'fullName': fullName,
+        'preferredLanguage': preferredLanguage,
+        'status': status,
+      },
+    );
+    final statusCode = res.statusCode ?? 0;
+    if (statusCode == 404) continue;
+    if (statusCode == 401 || statusCode == 403) {
+      throw StateError('admin_update_unauthorized');
+    }
+    if (statusCode < 200 || statusCode >= 300) {
+      throw StateError('admin_update_failed');
+    }
+    final userRaw = res.data?['user'];
+    if (userRaw is! Map<String, dynamic>) return null;
+    return AdminRecipeUser.fromJson(userRaw);
+  }
+  throw StateError('admin_update_route_not_found');
 }
 
 Future<bool> deleteRecipeAdminUser({
@@ -550,14 +595,26 @@ Future<bool> deleteRecipeAdminUser({
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 20),
       responseType: ResponseType.json,
+      validateStatus: (_) => true,
       headers: {
         'x-recipe-admin-login': adminLogin,
         'x-recipe-admin-password': adminPassword,
       },
     ),
   );
-  final res = await dio.delete<Map<String, dynamic>>('/users/admin/$id');
-  return res.data?['success'] == true;
+  for (final path in ['/api/users/admin/$id', '/users/admin/$id']) {
+    final res = await dio.delete<Map<String, dynamic>>(path);
+    final statusCode = res.statusCode ?? 0;
+    if (statusCode == 404) continue;
+    if (statusCode == 401 || statusCode == 403) {
+      throw StateError('admin_delete_unauthorized');
+    }
+    if (statusCode < 200 || statusCode >= 300) {
+      throw StateError('admin_delete_failed');
+    }
+    return res.data?['success'] == true;
+  }
+  throw StateError('admin_delete_route_not_found');
 }
 
 Future<int> bulkDeleteRecipeAdminUsers({
@@ -573,20 +630,32 @@ Future<int> bulkDeleteRecipeAdminUsers({
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 20),
       responseType: ResponseType.json,
+      validateStatus: (_) => true,
       headers: {
         'x-recipe-admin-login': adminLogin,
         'x-recipe-admin-password': adminPassword,
       },
     ),
   );
-  final res = await dio.post<Map<String, dynamic>>(
-    '/users/admin/bulk-delete',
-    data: {'ids': ids},
-  );
-  final deletedCount = res.data?['deletedCount'];
-  if (deletedCount is int) return deletedCount;
-  if (deletedCount is num) return deletedCount.toInt();
-  return 0;
+  for (final path in const ['/api/users/admin/bulk-delete', '/users/admin/bulk-delete']) {
+    final res = await dio.post<Map<String, dynamic>>(
+      path,
+      data: {'ids': ids},
+    );
+    final statusCode = res.statusCode ?? 0;
+    if (statusCode == 404) continue;
+    if (statusCode == 401 || statusCode == 403) {
+      throw StateError('admin_bulk_delete_unauthorized');
+    }
+    if (statusCode < 200 || statusCode >= 300) {
+      throw StateError('admin_bulk_delete_failed');
+    }
+    final deletedCount = res.data?['deletedCount'];
+    if (deletedCount is int) return deletedCount;
+    if (deletedCount is num) return deletedCount.toInt();
+    return 0;
+  }
+  throw StateError('admin_bulk_delete_route_not_found');
 }
 
 Future<SignUpResult> _createUser({
