@@ -59,7 +59,7 @@ class _SplashPageState extends State<SplashPage> {
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: _MaskedLogo(image: _foodImage),
+            child: SplashMaskedLogo(image: _foodImage),
           ),
         ),
       ),
@@ -72,8 +72,8 @@ class _SplashPageState extends State<SplashPage> {
 /// Пока картинка ещё грузится, лого на короткое время рисуется
 /// сплошным `textPrimary` — это занимает первый кадр и не успевает
 /// заметно мелькнуть (image precache завершается до показа splash).
-class _MaskedLogo extends StatelessWidget {
-  const _MaskedLogo({required this.image});
+class SplashMaskedLogo extends StatelessWidget {
+  const SplashMaskedLogo({super.key, required this.image});
 
   final ui.Image? image;
 

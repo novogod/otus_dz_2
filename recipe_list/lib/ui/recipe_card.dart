@@ -3,11 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../auth/admin_session.dart';
 import '../data/repository/favorites_store.dart';
+import '../data/repository/owned_recipes_store.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import '../utils/imgproxy.dart';
 import 'app_theme.dart';
+import 'login_page.dart';
+import 'signup_page.dart';
 
 /// Карточка рецепта TheMealDB.
 ///
@@ -18,12 +22,16 @@ import 'app_theme.dart';
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   final EdgeInsets outerPadding;
 
   const RecipeCard({
     super.key,
     required this.recipe,
     this.onTap,
+    this.onEdit,
+    this.onDelete,
     this.outerPadding = const EdgeInsets.symmetric(
       horizontal: AppSpacing.pagePadding,
       vertical: AppSpacing.sm,
@@ -102,7 +110,89 @@ class RecipeCard extends StatelessWidget {
           right: outerPadding.right + AppSpacing.sm,
           child: PointerInterceptor(child: FavoriteBadge(recipeId: recipe.id)),
         ),
+        Positioned(
+          top: outerPadding.top + AppSpacing.sm,
+          left: outerPadding.left + AppSpacing.sm,
+          child: ValueListenableBuilder<OwnedRecipesStore?>(
+            valueListenable: ownedRecipesStoreNotifier,
+            builder: (context, ownedStore, _) {
+              if (onEdit == null && onDelete == null) {
+                return const SizedBox.shrink();
+              }
+              if (ownedStore == null) {
+                return ValueListenableBuilder<bool>(
+                  valueListenable: adminLoggedInNotifier,
+                  builder: (context, isAdmin, _) {
+                    if (!isAdmin) return const SizedBox.shrink();
+                    return _CardActions(onEdit: onEdit, onDelete: onDelete);
+                  },
+                );
+              }
+              return ValueListenableBuilder<Set<int>>(
+                valueListenable: ownedStore.ids,
+                builder: (context, ownedIds, _) {
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: adminLoggedInNotifier,
+                    builder: (context, isAdmin, _) {
+                      final canManage = isAdmin || ownedIds.contains(recipe.id);
+                      if (!canManage) return const SizedBox.shrink();
+                      return _CardActions(onEdit: onEdit, onDelete: onDelete);
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _CardActions extends StatelessWidget {
+  const _CardActions({required this.onEdit, required this.onDelete});
+
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return PointerInterceptor(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (onDelete != null)
+            _AdminActionBadge(icon: Icons.delete_outline, onTap: onDelete!),
+          if (onDelete != null && onEdit != null)
+            const SizedBox(width: AppSpacing.xs),
+          if (onEdit != null)
+            _AdminActionBadge(icon: Icons.edit, onTap: onEdit!),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminActionBadge extends StatelessWidget {
+  const _AdminActionBadge({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black54,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(icon, size: 20, color: Colors.white),
+        ),
+      ),
     );
   }
 }
@@ -239,6 +329,10 @@ class FavoriteBadge extends StatelessWidget {
               return _FavoriteBadgeView(
                 isFavorite: false,
                 onTap: () async {
+                  if (!userLoggedInNotifier.value) {
+                    await _showRegistrationRequired(context);
+                    return;
+                  }
                   HapticFeedback.lightImpact();
                   final bootstrapped = await ensureFavoritesStoreInitialized();
                   if (bootstrapped == null) return;
@@ -253,6 +347,10 @@ class FavoriteBadge extends StatelessWidget {
                 return _FavoriteBadgeView(
                   isFavorite: isFav,
                   onTap: () async {
+                    if (!userLoggedInNotifier.value) {
+                      await _showRegistrationRequired(context);
+                      return;
+                    }
                     HapticFeedback.lightImpact();
                     await store.toggle(recipeId, lang);
                   },
@@ -263,6 +361,26 @@ class FavoriteBadge extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _showRegistrationRequired(BuildContext context) async {
+    if (!context.mounted) return;
+    final s = S.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(s.favoritesRegistrationRequired),
+          action: SnackBarAction(
+            label: s.signUp,
+            onPressed: () async {
+              final created = await openSignUpPage(context);
+              if (!context.mounted || !created) return;
+              await openLoginPage(context);
+            },
+          ),
+        ),
+      );
   }
 }
 

@@ -49,7 +49,9 @@ const String kRecipeDbFileName = 'recipes.db';
 /// created on this device, so the details page can show
 /// edit/delete buttons only to the creator (see
 /// docs/owner-edit-delete.md).
-const int kRecipeDbSchemaVersion = 7;
+/// v8: add `auth_credentials` table — stores mirrored login
+/// credentials and active session flag for offline login.
+const int kRecipeDbSchemaVersion = 8;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -121,10 +123,23 @@ CREATE TABLE owned_recipes (
 );
 ''';
 
+/// v8: offline mirror of successful online auth.
+/// One row per login; `active=1` marks current in-app session.
+const String _kAuthCredentialsSchema = '''
+CREATE TABLE auth_credentials (
+  login TEXT PRIMARY KEY,
+  password_hash TEXT NOT NULL,
+  token TEXT,
+  active INTEGER NOT NULL DEFAULT 0,
+  updated_at INTEGER NOT NULL
+);
+''';
+
 const List<String> _kIndexes = [
   'CREATE INDEX idx_recipes_lang_name_lower ON recipes(lang, name_lower);',
   'CREATE INDEX idx_recipes_last_used_at ON recipes(last_used_at);',
   'CREATE INDEX idx_favorites_lang_saved_at ON favorites(lang, saved_at DESC);',
+  'CREATE INDEX idx_auth_credentials_active ON auth_credentials(active, updated_at DESC);',
 ];
 
 Future<void> applyRecipeSchema(Database db) async {
@@ -133,6 +148,7 @@ Future<void> applyRecipeSchema(Database db) async {
   await db.execute(_kBodyCascadeTrigger);
   await db.execute(_kFavoritesSchema);
   await db.execute(_kOwnedRecipesSchema);
+  await db.execute(_kAuthCredentialsSchema);
   for (final stmt in _kIndexes) {
     await db.execute(stmt);
   }
@@ -145,6 +161,22 @@ Future<void> applyOwnedRecipesSchema(Database db) async {
     'CREATE TABLE IF NOT EXISTS owned_recipes ('
     'id INTEGER PRIMARY KEY, '
     'created_at INTEGER NOT NULL)',
+  );
+}
+
+/// Idempotent v7 → v8 migration: adds mirrored auth table.
+Future<void> applyAuthCredentialsSchema(Database db) async {
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS auth_credentials ('
+    'login TEXT PRIMARY KEY, '
+    'password_hash TEXT NOT NULL, '
+    'token TEXT, '
+    'active INTEGER NOT NULL DEFAULT 0, '
+    'updated_at INTEGER NOT NULL)',
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_auth_credentials_active '
+    'ON auth_credentials(active, updated_at DESC)',
   );
 }
 
@@ -220,6 +252,10 @@ Future<void> _onRecipeDbUpgrade(
   // сохраняются.
   if (oldVersion < 7) {
     await applyOwnedRecipesSchema(db);
+  }
+  // v7 → v8: добавляем auth_credentials для офлайн-логина.
+  if (oldVersion < 8) {
+    await applyAuthCredentialsSchema(db);
   }
 }
 

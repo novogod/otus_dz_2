@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:recipe_list/auth/admin_session.dart';
 import 'package:recipe_list/data/local/recipe_db.dart';
 import 'package:recipe_list/data/repository/favorites_store.dart';
 import 'package:recipe_list/i18n.dart';
@@ -29,8 +30,22 @@ void main() {
 
   group('FavoritesStore', () {
     late Database db;
-    setUp(() async => db = await _openInMemoryDb());
-    tearDown(() async => db.close());
+    setUp(() async {
+      db = await _openInMemoryDb();
+      userLoggedInNotifier.value = false;
+      adminLoggedInNotifier.value = false;
+      currentUserLoginNotifier.value = null;
+      currentUserTokenNotifier.value = null;
+      appLang.value = AppLang.en;
+    });
+    tearDown(() async {
+      userLoggedInNotifier.value = false;
+      adminLoggedInNotifier.value = false;
+      currentUserLoginNotifier.value = null;
+      currentUserTokenNotifier.value = null;
+      appLang.value = AppLang.en;
+      await db.close();
+    });
 
     test('add → isFavorite → remove round-trip', () async {
       final store = FavoritesStore(db: db);
@@ -131,6 +146,18 @@ void main() {
       await store.add(2, AppLang.en);
 
       expect(await store.orphanIds(AppLang.en), [2]);
+    });
+
+    test('session change clears in-memory ids immediately', () async {
+      final store = FavoritesStore(db: db);
+      await store.add(42, AppLang.en);
+      expect(store.snapshotForLang(AppLang.en), {42});
+
+      userLoggedInNotifier.value = true;
+      currentUserLoginNotifier.value = 'user2@example.com';
+      currentUserTokenNotifier.value = 'token-user-2';
+
+      expect(store.snapshotForLang(AppLang.en), isEmpty);
     });
   });
 }

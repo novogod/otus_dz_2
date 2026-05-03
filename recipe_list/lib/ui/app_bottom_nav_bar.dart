@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../auth/admin_session.dart';
 import '../i18n.dart';
 import 'app_theme.dart';
 
@@ -55,21 +56,30 @@ class AppBottomNavBar extends StatelessWidget {
             // зеркалить её под направление текста было бы дезориентирующе
             // (иконки не несут текстовой семантики). Локальная
             // Directionality.ltr не влияет на остальной интерфейс.
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Row(
-                children: [
-                  for (final item in _items)
-                    Expanded(
-                      child: _Tab(
-                        icon: item.icon,
-                        label: _label(item.tab, s),
-                        active: item.tab == current,
-                        onTap: onTap == null ? null : () => onTap!(item.tab),
-                      ),
-                    ),
-                ],
-              ),
+            child: ValueListenableBuilder<bool>(
+              valueListenable: userLoggedInNotifier,
+              builder: (context, userLoggedIn, _) {
+                return Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(
+                    children: [
+                      for (final item in _items)
+                        Expanded(
+                          child: _Tab(
+                            icon: item.icon,
+                            label: _label(item.tab, s),
+                            active:
+                                item.tab == current ||
+                                (item.tab == AppNavTab.profile && userLoggedIn),
+                            onTap: onTap == null
+                                ? null
+                                : () => onTap!(item.tab),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ),

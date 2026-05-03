@@ -1,5 +1,145 @@
 # Project Log
 
+## Forgot password flow + signup→login chaining + session-aware favorites
+
+**Date:** 2026-05-03
+
+### Signup → login chaining
+
+- `openSignUpPage(context)` теперь возвращает `bool` (true = аккаунт создан).
+- После успешного signup автоматически открывается `LoginPage` (email не pre-fill на этом шаге).
+
+### Session-aware favorites (cross-user protection)
+
+- `FavoritesStore` сбрасывает in-memory ids и инвалидирует sync-кэш при смене auth-identity.
+- `list(lang)` вызывает `ensureLoaded(lang)` перед возвратом результата.
+
+### "Forgot password" flow
+
+Полный контур сброса пароля в клиенте. Бэкенд уже был в production — новые деплои не нужны.
+
+#### Клиент (`otus_dz/recipe_list`)
+
+- `lib/auth/admin_session.dart`
+  - `enum PasswordRecoveryStartResult` / `PasswordRecoveryStartResponse`
+  - `requestPasswordRecovery({required String email})` → POST /forgot-password, захватывает `set-cookie` как `sessionCookie`
+  - `enum PasswordResetResult`
+  - `resetPasswordWithCode({email, code, newPassword, sessionCookie})` → POST /reset-password с Cookie-заголовком
+
+- `lib/ui/login_page.dart`
+  - "Forgot password?" TextButton под кнопкой Login/Logout
+  - `openLoginPage(context, {String? prefillLogin})` — опциональный prefill email
+  - `_forgotPassword()`: валидирует email-поле, вызывает `requestPasswordRecovery`, роутит по результату
+
+- `lib/ui/password_recovery_page.dart` (новый файл)
+  - Тот же визуал: gradient, SplashMaskedLogo, form-style
+  - Поле кода (4 цифры) + поле нового пароля с visibility toggle
+  - Submit → `resetPasswordWithCode` → snackbar "Your new password is saved" → `openLoginPage(prefillLogin: email)`
+  - Snackbar для каждого error-кейса: `invalidCode`, `passwordTooShort`, `sessionExpired`, `serverError`
+
+- i18n
+  - 15 новых ключей во всех 10 локалях (en, ru, de, es, fr, it, tr, ar, fa, ku):
+    `forgotPassword`, `passwordRecoveryTitle`, `passwordRecoveryInstruction`,
+    `passwordRecoveryCodeLabel`, `passwordRecoveryCodeHint`, `passwordRecoveryNewPassword`,
+    `passwordRecoverySubmit`, `passwordRecoveryEnterEmail`, `passwordRecoveryInvalidEmail`,
+    `passwordRecoveryRequestFailed`, `passwordRecoveryInvalidCode`,
+    `passwordRecoveryPasswordTooShort`, `passwordRecoverySessionExpired`,
+    `passwordRecoverySaveFailed`, `passwordRecoverySaved`
+  - `dart run slang` → "Translations generated successfully."
+
+#### Бэкенд
+
+Без изменений — `/forgot-password` и `/reset-password` уже были живы на production.
+Деплой бэкенда не производился.
+
+---
+
+## Role-aware login, favorites auth gate, backend user-token favorites sync + production rollout
+
+**Date:** 2026-05-03
+
+Реализован и задеплоен полный контур для запроса:
+
+- «Admin mode enabled» только для admin, не для обычного пользователя;
+- edit/delete только owner или admin;
+- favorites доступны только зарегистрированным;
+- favorites сохраняются на production backend под user credentials;
+- у гостя при тапе в favorites — snackbar с требованием регистрации + переход на Sign Up.
+
+### Клиент (`otus_dz/recipe_list`)
+
+- `lib/auth/admin_session.dart`
+  - добавлены state-notifier'ы:
+    `userLoggedInNotifier`, `adminLoggedInNotifier`,
+    `currentUserLoginNotifier`, `currentUserTokenNotifier`;
+  - онлайн-логин теперь читает `token` и role flags (`isAdmin` / `role`),
+    а не сводится к одному bool «admin logged in»;
+  - добавлены методы remote favorites API:
+    `fetchRemoteFavorites(lang)` / `setRemoteFavorite(...)`
+    с заголовком `x-recipes-user-token`.
+
+- `lib/ui/login_page.dart`
+  - success snackbar разделён:
+    `loginSuccessAdmin` для admin и `loginSuccessUser` для regular user;
+  - UI login/logout привязан к `userLoggedInNotifier`.
+
+- `lib/ui/app_bottom_nav_bar.dart`
+  - подсветка profile-tab переведена на `userLoggedInNotifier`
+    (а не admin-only).
+
+- `lib/ui/recipe_card.dart` / `lib/ui/recipe_list_page.dart`
+  - owner/admin guard для edit/delete;
+  - guest guard для favorite heart и favorites-tab;
+  - snackbar `favoritesRegistrationRequired` + action `Sign Up`.
+
+- `lib/ui/add_recipe_page.dart`
+  - photo field обязателен в create-flow;
+  - на web URL fallback явно валидируется как required, если нет picked photo;
+  - автодобавление нового рецепта в favorites убрано.
+
+- `lib/data/repository/favorites_store.dart`
+  - remote sync в `ensureLoaded`: подтягивание ids с backend по токену;
+  - `add/remove` делают best-effort POST sync на backend;
+  - local cache остаётся fallback при сетевых ошибках.
+
+- i18n
+  - добавлены ключи `loginSuccessUser` и `favoritesRegistrationRequired`
+    во все локали + regen `strings_*.g.dart`.
+
+### Бэкенд (`mahallem_ist/local_user_portal`)
+
+- `routes/auth.js`
+  - login compatibility (`/users/login` aliases) теперь выдаёт
+    signed recipes-user token + `isAdmin`.
+
+- `routes/recipes.js`
+  - добавлена token verification middleware (`x-recipes-user-token`);
+  - реализованы endpoints:
+    - `GET /recipes/favorites?lang=...`
+    - `POST /recipes/favorites` (`{recipeId, lang, favorite}`);
+  - lazy schema ensure:
+    `recipe_user_favorites(user_id, recipe_id, lang, saved_at)` + индекс.
+
+### Деплой (строго по `hostinger-deployment/DEPLOYMENT_WORKFLOW.md`)
+
+1. Step 0 sync-check на EU production (`72.61.181.62`) — clean `main`.
+2. Commit + push backend изменений в `mahallem_ist`:
+   `192df999`.
+3. Pull на production + rebuild `user-portal` из
+   `/root/mahallem/mahallem_ist/local_docker_admin_backend`:
+   `docker compose up -d --build user-portal`.
+
+### Production smoke (`https://mahallem.ist`)
+
+- `POST /users` → `201` ✅
+- `POST /users/login` → `200` и возвращает `token` + `isAdmin` ✅
+- `GET /recipes/favorites?lang=en` без токена → `401` ✅
+- `POST /recipes/favorites` с токеном (`favorite:true`) → `200` ✅
+- `GET /recipes/favorites` с токеном содержит id → `200` ✅
+- `POST /recipes/favorites` (`favorite:false`) → `200` ✅
+
+---
+
 ## Chrome web: фильтр поиска — выбор из автокомплита не применялся
 
 **Date:** 2026-05-01

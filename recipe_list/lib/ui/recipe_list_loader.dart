@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../auth/admin_session.dart';
 import '../config/feed_config.dart';
 import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
@@ -755,6 +756,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       // todo/15). Карточка/страница деталей слушают
       // [favoritesStoreNotifier] и перерисовываются при toggle.
       favoritesStoreNotifier.value ??= FavoritesStore(db: db);
+      await bootstrapAdminSession(db: db);
       // Прогреваем избранное для текущего языка, иначе сразу после
       // старта `FavoriteBadge` слушает пустой нотифаер и рисует
       // контурное сердце для уже сохранённых рецептов до тех пор,

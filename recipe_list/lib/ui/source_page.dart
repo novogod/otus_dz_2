@@ -5,6 +5,7 @@ import '../i18n.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
 import 'lang_icon_button.dart';
+import 'login_page.dart';
 
 /// Внутристраничный читатель внешнего источника рецепта.
 ///
@@ -141,7 +142,16 @@ class _SourcePageState extends State<SourcePage> {
         ),
       ),
       body: WebViewWidget(controller: _controller),
-      bottomNavigationBar: const AppBottomNavBar(current: AppNavTab.recipes),
+      bottomNavigationBar: AppBottomNavBar(
+        current: AppNavTab.recipes,
+        onTap: (tab) {
+          if (tab == AppNavTab.profile) {
+            openLoginPage(context);
+            return;
+          }
+          Navigator.of(context).maybePop();
+        },
+      ),
     );
   }
 }

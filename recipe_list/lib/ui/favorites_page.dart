@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import '../data/api/recipe_api.dart';
 import '../data/recipe_events.dart';
 import '../data/repository/favorites_store.dart';
+import '../data/repository/owned_recipes_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import 'add_recipe_page.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
+import 'login_page.dart';
 import 'recipe_card.dart';
 import 'recipe_details_page.dart';
 import 'recipe_list_page.dart';
@@ -54,10 +56,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
     _scrollController.addListener(_onScroll);
     recipeDeletedNotifier.addListener(_onRecipeChanged);
     recipeUpdatedNotifier.addListener(_onRecipeChanged);
-    // Fail-safe bootstrap: если loader не успел/не смог поднять
-    // sqflite-стор, пробуем инициализировать избранное при первом
-    // заходе на экран.
-    ensureFavoritesStoreInitialized();
   }
 
   /// Owner-flow: перерисовываем избранное при удалении
@@ -202,6 +200,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
           return RecipeCard(
             recipe: recipe,
             onTap: () => _openDetails(context, recipe),
+            onEdit: () => _openEditRecipe(context, recipe),
+            onDelete: () => _confirmAndDeleteFromCard(context, recipe),
           );
         },
       );
@@ -247,6 +247,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
               recipe: recipe,
               outerPadding: EdgeInsets.zero,
               onTap: () => _openDetails(context, recipe),
+              onEdit: () => _openEditRecipe(context, recipe),
+              onDelete: () => _confirmAndDeleteFromCard(context, recipe),
             );
           },
         );
@@ -286,10 +288,71 @@ class _FavoritesPageState extends State<FavoritesPage> {
     // пользователь нажмёт сердце на странице деталей.
   }
 
+  Future<void> _openEditRecipe(BuildContext context, Recipe recipe) async {
+    await Navigator.of(context).push<Recipe>(
+      MaterialPageRoute<Recipe>(
+        builder: (_) => AddRecipePage(
+          api: widget.api,
+          repository: widget.repository,
+          existing: recipe,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmAndDeleteFromCard(
+    BuildContext context,
+    Recipe recipe,
+  ) async {
+    final s = S.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(s.adminDeleteTitle),
+        content: Text(s.adminDeleteMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(s.dismiss),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(s.adminDeleteAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+    final api = widget.api;
+    if (api == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(s.addRecipeError)));
+      return;
+    }
+    try {
+      await api.deleteRecipe(recipe.id);
+      await widget.repository?.deleteById(recipe.id);
+      await favoritesStoreNotifier.value?.removeAcrossLangs(recipe.id);
+      await ownedRecipesStoreNotifier.value?.remove(recipe.id);
+      recipeDeletedNotifier.value = recipe.id;
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(s.addRecipeError)));
+    }
+  }
+
   void _onNavTap(BuildContext context, AppNavTab tab) {
     if (tab == AppNavTab.favorites) return;
     if (tab == AppNavTab.recipes) {
       Navigator.of(context).maybePop();
+      return;
+    }
+    if (tab == AppNavTab.profile) {
+      openLoginPage(context);
       return;
     }
     final s = S.of(context);

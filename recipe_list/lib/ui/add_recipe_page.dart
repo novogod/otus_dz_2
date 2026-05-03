@@ -479,7 +479,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
         // Авто-добавление в избранное только при создании.
         // При edit пользователь сам решает, оставлять ли сердце.
         try {
-          await favoritesStoreNotifier.value?.add(localized.id, appLang.value);
+          await favoritesStoreNotifier.value?.ensureLoaded(appLang.value);
         } catch (_) {}
         try {
           await ownedRecipesStoreNotifier.value?.add(localized.id);
@@ -644,9 +644,23 @@ class _AddRecipePageState extends State<AddRecipePage> {
                     const SizedBox(height: AppSpacing.md),
                     TextFormField(
                       controller: _photo,
-                      decoration: InputDecoration(labelText: s.addRecipePhoto),
+                      decoration: InputDecoration(
+                        labelText: '${s.addRecipePhoto} *',
+                      ),
                       keyboardType: TextInputType.url,
                       textInputAction: TextInputAction.next,
+                      validator: (v) {
+                        if (!_allowUrlFallback) return null;
+                        if (_hasPickedPhoto) return null;
+                        final existingPhoto = widget.existing?.photo ?? '';
+                        if (_isEdit && existingPhoto.trim().isNotEmpty) {
+                          return null;
+                        }
+                        if ((v ?? '').trim().isEmpty) {
+                          return s.addRecipePhotoRequired;
+                        }
+                        return null;
+                      },
                     ),
                   ],
                   const SizedBox(height: AppSpacing.md),

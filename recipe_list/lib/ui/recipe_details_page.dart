@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
 import '../data/recipe_events.dart';
 import '../data/repository/favorites_store.dart';
@@ -14,6 +15,7 @@ import 'add_recipe_page.dart';
 import 'app_bottom_nav_bar.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
+import 'login_page.dart';
 import 'recipe_card.dart' show FavoriteBadge;
 import 'source_page.dart';
 
@@ -180,7 +182,13 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
       ),
       bottomNavigationBar: AppBottomNavBar(
         current: widget.originTab,
-        onTap: (_) => Navigator.of(context).maybePop(),
+        onTap: (tab) {
+          if (tab == AppNavTab.profile) {
+            openLoginPage(context);
+            return;
+          }
+          Navigator.of(context).maybePop();
+        },
       ),
       body: SafeArea(
         top: false,
@@ -544,29 +552,59 @@ class _OwnerActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return ValueListenableBuilder<OwnedRecipesStore?>(
       valueListenable: ownedRecipesStoreNotifier,
       builder: (context, store, _) {
-        if (store == null) return const SizedBox.shrink();
+        if (store == null) {
+          return ValueListenableBuilder<bool>(
+            valueListenable: adminLoggedInNotifier,
+            builder: (context, isAdmin, __) {
+              if (!isAdmin) return const SizedBox.shrink();
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _CircleIconButton(
+                    icon: Icons.delete_outline,
+                    tooltip: s.adminDeleteAction,
+                    onPressed: () => _confirmAndDelete(context),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  _CircleIconButton(
+                    icon: Icons.edit,
+                    tooltip: s.adminEditAction,
+                    onPressed: () => _openEdit(context),
+                  ),
+                ],
+              );
+            },
+          );
+        }
         return ValueListenableBuilder<Set<int>>(
           valueListenable: store.ids,
-          builder: (context, ids, _) {
-            if (!ids.contains(recipe.id)) return const SizedBox.shrink();
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _CircleIconButton(
-                  icon: Icons.delete_outline,
-                  tooltip: 'Delete',
-                  onPressed: () => _confirmAndDelete(context),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                _CircleIconButton(
-                  icon: Icons.edit,
-                  tooltip: 'Edit',
-                  onPressed: () => _openEdit(context),
-                ),
-              ],
+          builder: (context, ids, __) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: adminLoggedInNotifier,
+              builder: (context, isAdmin, ___) {
+                final isOwner = ids.contains(recipe.id);
+                if (!isOwner && !isAdmin) return const SizedBox.shrink();
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _CircleIconButton(
+                      icon: Icons.delete_outline,
+                      tooltip: s.adminDeleteAction,
+                      onPressed: () => _confirmAndDelete(context),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    _CircleIconButton(
+                      icon: Icons.edit,
+                      tooltip: s.adminEditAction,
+                      onPressed: () => _openEdit(context),
+                    ),
+                  ],
+                );
+              },
             );
           },
         );
@@ -575,21 +613,22 @@ class _OwnerActions extends StatelessWidget {
   }
 
   Future<void> _confirmAndDelete(BuildContext context) async {
+    final s = S.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete recipe?'),
-        content: const Text('This will remove the recipe for everyone.'),
+        title: Text(s.adminDeleteTitle),
+        content: Text(s.adminDeleteMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(s.dismiss),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text(s.adminDeleteAction),
           ),
         ],
       ),
@@ -597,17 +636,13 @@ class _OwnerActions extends StatelessWidget {
     if (confirmed != true) return;
     final apiRef = api;
     if (apiRef == null) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Cannot delete: offline')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(s.addRecipeError)));
       return;
     }
     try {
       await apiRef.deleteRecipe(recipe.id);
     } catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Failed to delete recipe')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(s.addRecipeError)));
       return;
     }
     // Best-effort локальные cleanup-ы. Падение любого из них не

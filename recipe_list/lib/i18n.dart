@@ -283,6 +283,48 @@ class S {
   String get addRecipePhotoErrorTooLarge => _t.addRecipePhotoErrorTooLarge;
   String get addRecipePhotoPicker => _t.a11y.addRecipePhotoPicker;
 
+  // Login / admin mode.
+  String get loginUsername => _t.loginUsername;
+  String get loginPassword => _t.loginPassword;
+  String get loginButton => _t.loginButton;
+  String get logoutButton => _t.logoutButton;
+  String get signUp => _t.signUp;
+  String get signUpName => _t.signUpName;
+  String get signUpEmail => _t.signUpEmail;
+  String get signUpPassword => _t.signUpPassword;
+  String get signUpButton => _t.signUpButton;
+  String get signUpInvalidEmail => _t.signUpInvalidEmail;
+  String get signUpPasswordTooShort => _t.signUpPasswordTooShort;
+  String get signUpDuplicateUser => _t.signUpDuplicateUser;
+  String get signUpSenderError => _t.signUpSenderError;
+  String get signUpError => _t.signUpError;
+  String get signUpSuccess => _t.signUpSuccess;
+  String get loginInvalidCredentials => _t.loginInvalidCredentials;
+  String get loginSuccessAdmin => _t.loginSuccessAdmin;
+  String get loginSuccessUser => _t.loginSuccessUser;
+  String get favoritesRegistrationRequired => _t.favoritesRegistrationRequired;
+  String get forgotPassword => _t.forgotPassword;
+  String get passwordRecoveryTitle => _t.passwordRecoveryTitle;
+  String get passwordRecoveryInstruction => _t.passwordRecoveryInstruction;
+  String get passwordRecoveryCodeLabel => _t.passwordRecoveryCodeLabel;
+  String get passwordRecoveryCodeHint => _t.passwordRecoveryCodeHint;
+  String get passwordRecoveryNewPassword => _t.passwordRecoveryNewPassword;
+  String get passwordRecoverySubmit => _t.passwordRecoverySubmit;
+  String get passwordRecoveryEnterEmail => _t.passwordRecoveryEnterEmail;
+  String get passwordRecoveryInvalidEmail => _t.passwordRecoveryInvalidEmail;
+  String get passwordRecoveryRequestFailed => _t.passwordRecoveryRequestFailed;
+  String get passwordRecoveryInvalidCode => _t.passwordRecoveryInvalidCode;
+  String get passwordRecoveryPasswordTooShort =>
+      _t.passwordRecoveryPasswordTooShort;
+  String get passwordRecoverySessionExpired =>
+      _t.passwordRecoverySessionExpired;
+  String get passwordRecoverySaveFailed => _t.passwordRecoverySaveFailed;
+  String get passwordRecoverySaved => _t.passwordRecoverySaved;
+  String get adminDeleteTitle => _t.adminDeleteTitle;
+  String get adminDeleteMessage => _t.adminDeleteMessage;
+  String get adminDeleteAction => _t.adminDeleteAction;
+  String get adminEditAction => _t.adminEditAction;
+
   // FAB label — derives from current AppLang, not from translations.
   String get langLabel => appLang.value.label;
 

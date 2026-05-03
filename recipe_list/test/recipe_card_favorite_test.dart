@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:recipe_list/auth/admin_session.dart';
 import 'package:recipe_list/data/local/recipe_db.dart';
 import 'package:recipe_list/data/repository/favorites_store.dart';
 import 'package:recipe_list/i18n.dart';
@@ -41,6 +42,7 @@ void main() {
       db = await _openInMemoryDb();
       store = FavoritesStore(db: db);
       favoritesStoreNotifier.value = store;
+      userLoggedInNotifier.value = true;
       appLang.value = AppLang.ru;
       // HapticFeedback.lightImpact() в карточке ходит в method
       // channel; в headless-тестах он висит без ответа платформы.
@@ -53,6 +55,7 @@ void main() {
 
     tearDown(() async {
       favoritesStoreNotifier.value = null;
+      userLoggedInNotifier.value = false;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, null);
       await db.close();
@@ -144,27 +147,32 @@ void main() {
       expect(icon.icon, Icons.favorite_border);
     });
 
-    testWidgets('without store: outlined heart, tap is no-op', (tester) async {
-      favoritesStoreNotifier.value = null;
-      await tester.pumpWidget(_wrap(const RecipeCard(recipe: _recipe)));
-      await tester.pump();
+    testWidgets(
+      'without store + guest: outlined heart and registration snackbar',
+      (tester) async {
+        favoritesStoreNotifier.value = null;
+        userLoggedInNotifier.value = false;
+        await tester.pumpWidget(_wrap(const RecipeCard(recipe: _recipe)));
+        await tester.pump();
 
-      final icon = tester.widget<Icon>(
-        find.descendant(
-          of: find.byType(FavoriteBadge),
-          matching: find.byType(Icon),
-        ),
-      );
-      expect(icon.icon, Icons.favorite_border);
-      // Без стора бейдж рендерится, но onTap == null —
-      // InkWell не среагирует на тап, проверяем виджет напрямую.
-      final inkWell = tester.widget<InkWell>(
-        find.descendant(
-          of: find.byType(FavoriteBadge),
-          matching: find.byType(InkWell),
-        ),
-      );
-      expect(inkWell.onTap, isNull);
-    });
+        final icon = tester.widget<Icon>(
+          find.descendant(
+            of: find.byType(FavoriteBadge),
+            matching: find.byType(Icon),
+          ),
+        );
+        expect(icon.icon, Icons.favorite_border);
+
+        await tester.tap(find.byType(FavoriteBadge));
+        await tester.pump();
+
+        expect(
+          find.text(
+            'Для этой функции нужна регистрация, пожалуйста нажмите кнопку Sign Up',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

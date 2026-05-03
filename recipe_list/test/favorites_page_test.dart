@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:recipe_list/auth/admin_session.dart';
 import 'package:recipe_list/data/local/recipe_db.dart';
 import 'package:recipe_list/data/repository/favorites_store.dart';
 import 'package:recipe_list/data/repository/recipe_repository.dart';
@@ -47,6 +48,7 @@ void main() {
       await _seed(db, _en1, AppLang.en);
       store = FavoritesStore(db: db);
       favoritesStoreNotifier.value = store;
+      userLoggedInNotifier.value = true;
       appLang.value = AppLang.ru;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
@@ -54,6 +56,7 @@ void main() {
 
     tearDown(() async {
       favoritesStoreNotifier.value = null;
+      userLoggedInNotifier.value = false;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, null);
       await db.close();

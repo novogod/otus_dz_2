@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../auth/admin_session.dart';
 import '../../i18n.dart';
 import '../../models/recipe.dart';
 import '../api/recipe_api.dart';
@@ -73,6 +76,8 @@ class FavoritesStore {
   /// инвалидируется только через [add] / [remove], которые
   /// поддерживают его в актуальном состоянии.
   final Map<AppLang, ValueNotifier<Set<int>>> _idsByLang = {};
+  final Map<AppLang, String?> _remoteSyncKeyByLang = {};
+  String? _sessionCacheKey;
 
   FavoritesStore({required Database db, DateTime Function()? now})
     : _db = db,
@@ -85,26 +90,58 @@ class FavoritesStore {
   /// при смене языка бейджи на список секунду рисовали бы
   /// контурные сердца до первого захода в /favorites.
   ValueListenable<Set<int>> idsForLang(AppLang lang) {
-    final notifier = _ensureNotifier(lang);
-    if (!_loadedLangs.contains(lang)) {
-      // Не блокируем UI: подгрузим и обновим notifier, когда БД ответит.
-      ensureLoaded(lang);
-    }
-    return notifier;
+    _syncSessionContext();
+    return _ensureNotifier(lang);
   }
 
   /// Текущий снимок множества (без подписки).
-  Set<int> snapshotForLang(AppLang lang) =>
-      Set<int>.unmodifiable(_ensureNotifier(lang).value);
+  Set<int> snapshotForLang(AppLang lang) {
+    _syncSessionContext();
+    return Set<int>.unmodifiable(_ensureNotifier(lang).value);
+  }
 
   /// Подгружает множество id для языка из БД, если ещё не подгружено.
   /// Полезно вызвать при старте приложения для текущего языка
   /// (UI получит готовое значение без мерцания).
   Future<Set<int>> ensureLoaded(AppLang lang) async {
+    _syncSessionContext();
     final notifier = _ensureNotifier(lang);
-    if (notifier.value.isNotEmpty || _loadedLangs.contains(lang)) {
+    final currentSyncKey = _currentRemoteSyncKey();
+    final needsRemoteSync =
+        canSyncFavoritesRemotely &&
+        _remoteSyncKeyByLang[lang] != currentSyncKey;
+    if (!needsRemoteSync &&
+        (notifier.value.isNotEmpty || _loadedLangs.contains(lang))) {
       return notifier.value;
     }
+
+    if (needsRemoteSync) {
+      try {
+        final remoteIds = await fetchRemoteFavorites(lang);
+        await _db.transaction((txn) async {
+          await txn.delete(
+            'favorites',
+            where: 'lang = ?',
+            whereArgs: [lang.name],
+          );
+          final savedAt = _now().millisecondsSinceEpoch;
+          for (final recipeId in remoteIds) {
+            await txn.insert('favorites', {
+              'recipe_id': recipeId,
+              'lang': lang.name,
+              'saved_at': savedAt,
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+        });
+        notifier.value = remoteIds;
+        _loadedLangs.add(lang);
+        _remoteSyncKeyByLang[lang] = currentSyncKey;
+        return remoteIds;
+      } on Object catch (e) {
+        debugPrint('[favorites] remote sync failed, using local cache: $e');
+      }
+    }
+
     final rows = await _db.query(
       'favorites',
       columns: const ['recipe_id'],
@@ -114,6 +151,7 @@ class FavoritesStore {
     final ids = {for (final r in rows) r['recipe_id']! as int};
     notifier.value = ids;
     _loadedLangs.add(lang);
+    _remoteSyncKeyByLang[lang] = currentSyncKey;
     return ids;
   }
 
@@ -129,6 +167,7 @@ class FavoritesStore {
   /// повторный вызов обновляет `saved_at`, но не плодит строки
   /// (PK = `(recipe_id, lang)`).
   Future<void> add(int recipeId, AppLang lang) async {
+    _syncSessionContext();
     await _db.insert('favorites', {
       'recipe_id': recipeId,
       'lang': lang.name,
@@ -139,10 +178,16 @@ class FavoritesStore {
     if (!notifier.value.contains(recipeId)) {
       notifier.value = {...notifier.value, recipeId};
     }
+    try {
+      await setRemoteFavorite(recipeId: recipeId, lang: lang, favorite: true);
+    } on Object catch (e) {
+      debugPrint('[favorites] remote add failed: $e');
+    }
   }
 
   /// Удаляет рецепт из избранного в данном языке.
   Future<void> remove(int recipeId, AppLang lang) async {
+    _syncSessionContext();
     await _db.delete(
       'favorites',
       where: 'recipe_id = ? AND lang = ?',
@@ -153,6 +198,11 @@ class FavoritesStore {
     if (notifier.value.contains(recipeId)) {
       final next = {...notifier.value}..remove(recipeId);
       notifier.value = next;
+    }
+    try {
+      await setRemoteFavorite(recipeId: recipeId, lang: lang, favorite: false);
+    } on Object catch (e) {
+      debugPrint('[favorites] remote remove failed: $e');
     }
   }
 
@@ -177,6 +227,7 @@ class FavoritesStore {
   /// иначе добавляет. Возвращает новое состояние (`true` = в
   /// избранном).
   Future<bool> toggle(int recipeId, AppLang lang) async {
+    _syncSessionContext();
     final isFav = await isFavorite(recipeId, lang);
     if (isFav) {
       await remove(recipeId, lang);
@@ -192,6 +243,7 @@ class FavoritesStore {
   /// равно вернётся, но без `instructions`. Чанк D достаёт тело
   /// уже на странице деталей через `RecipeRepository.getInstructions`.
   Future<List<Recipe>> list(AppLang lang) async {
+    await ensureLoaded(lang);
     final rows = await _db.rawQuery(
       'SELECT r.* '
       'FROM favorites f '
@@ -222,4 +274,40 @@ class FavoritesStore {
 
   ValueNotifier<Set<int>> _ensureNotifier(AppLang lang) =>
       _idsByLang.putIfAbsent(lang, () => ValueNotifier<Set<int>>(<int>{}));
+
+  String? _currentRemoteSyncKey() {
+    if (!canSyncFavoritesRemotely) return null;
+    final login = currentUserLoginNotifier.value;
+    final token = currentUserTokenNotifier.value;
+    if (login == null || login.isEmpty || token == null || token.isEmpty) {
+      return null;
+    }
+    return '$login::$token';
+  }
+
+  void _syncSessionContext() {
+    final nextSessionKey = _currentSessionCacheKey();
+    if (_sessionCacheKey == nextSessionKey) return;
+    _sessionCacheKey = nextSessionKey;
+    _loadedLangs.clear();
+    _remoteSyncKeyByLang.clear();
+    for (final notifier in _idsByLang.values) {
+      if (notifier.value.isNotEmpty) {
+        notifier.value = <int>{};
+      }
+    }
+    if (canSyncFavoritesRemotely) {
+      final lang = appLang.value;
+      unawaited(ensureLoaded(lang));
+    }
+  }
+
+  String _currentSessionCacheKey() {
+    final login = currentUserLoginNotifier.value;
+    final token = currentUserTokenNotifier.value ?? '';
+    if (!userLoggedInNotifier.value || login == null || login.isEmpty) {
+      return 'guest';
+    }
+    return '$login::$token';
+  }
 }

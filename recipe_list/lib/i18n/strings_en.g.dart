@@ -65,6 +65,120 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'This section is coming soon'
 	String get tabComingSoon => 'This section is coming soon';
 
+	/// en: 'Login'
+	String get loginUsername => 'Login';
+
+	/// en: 'Password'
+	String get loginPassword => 'Password';
+
+	/// en: 'Log in'
+	String get loginButton => 'Log in';
+
+	/// en: 'Log out'
+	String get logoutButton => 'Log out';
+
+	/// en: 'Sign up'
+	String get signUp => 'Sign up';
+
+	/// en: 'Name'
+	String get signUpName => 'Name';
+
+	/// en: 'Email'
+	String get signUpEmail => 'Email';
+
+	/// en: 'Password'
+	String get signUpPassword => 'Password';
+
+	/// en: 'Create account'
+	String get signUpButton => 'Create account';
+
+	/// en: 'Enter a valid email address'
+	String get signUpInvalidEmail => 'Enter a valid email address';
+
+	/// en: 'Password must be at least 4 characters'
+	String get signUpPasswordTooShort => 'Password must be at least 4 characters';
+
+	/// en: 'User already exists'
+	String get signUpDuplicateUser => 'User already exists';
+
+	/// en: 'Account created, but email delivery failed'
+	String get signUpSenderError => 'Account created, but email delivery failed';
+
+	/// en: 'Couldn't create account. Try again.'
+	String get signUpError => 'Couldn\'t create account. Try again.';
+
+	/// en: 'Account created. Credentials were sent to your email.'
+	String get signUpSuccess => 'Account created. Credentials were sent to your email.';
+
+	/// en: 'Invalid login or password'
+	String get loginInvalidCredentials => 'Invalid login or password';
+
+	/// en: 'Admin mode enabled'
+	String get loginSuccessAdmin => 'Admin mode enabled';
+
+	/// en: 'Logged in successfully'
+	String get loginSuccessUser => 'Logged in successfully';
+
+	/// en: 'Registration required for this feature, please tap Sign Up button'
+	String get favoritesRegistrationRequired => 'Registration required for this feature, please tap Sign Up button';
+
+	/// en: 'I forgot password'
+	String get forgotPassword => 'I forgot password';
+
+	/// en: 'Password recovery'
+	String get passwordRecoveryTitle => 'Password recovery';
+
+	/// en: 'Enter 4 digits recovery code from your email'
+	String get passwordRecoveryInstruction => 'Enter 4 digits recovery code from your email';
+
+	/// en: 'Recovery code'
+	String get passwordRecoveryCodeLabel => 'Recovery code';
+
+	/// en: '1234'
+	String get passwordRecoveryCodeHint => '1234';
+
+	/// en: 'New password'
+	String get passwordRecoveryNewPassword => 'New password';
+
+	/// en: 'Submit'
+	String get passwordRecoverySubmit => 'Submit';
+
+	/// en: 'Enter your email first'
+	String get passwordRecoveryEnterEmail => 'Enter your email first';
+
+	/// en: 'Enter a valid email address'
+	String get passwordRecoveryInvalidEmail => 'Enter a valid email address';
+
+	/// en: 'Couldn't start password recovery. Try again.'
+	String get passwordRecoveryRequestFailed => 'Couldn\'t start password recovery. Try again.';
+
+	/// en: 'Enter a valid 4-digit code'
+	String get passwordRecoveryInvalidCode => 'Enter a valid 4-digit code';
+
+	/// en: 'Password must be at least 6 characters'
+	String get passwordRecoveryPasswordTooShort => 'Password must be at least 6 characters';
+
+	/// en: 'Recovery session expired. Start again.'
+	String get passwordRecoverySessionExpired => 'Recovery session expired. Start again.';
+
+	/// en: 'Couldn't save new password. Try again.'
+	String get passwordRecoverySaveFailed => 'Couldn\'t save new password. Try again.';
+
+	/// en: 'Your new password is saved'
+	String get passwordRecoverySaved => 'Your new password is saved';
+
+	/// en: 'Delete recipe?'
+	String get adminDeleteTitle => 'Delete recipe?';
+
+	/// en: 'This will remove the recipe for everyone.'
+	String get adminDeleteMessage => 'This will remove the recipe for everyone.';
+
+	/// en: 'Delete'
+	String get adminDeleteAction => 'Delete';
+
+	/// en: 'Edit'
+	String get adminEditAction => 'Edit';
+
 	/// en: 'No recipes'
 	String get emptyList => 'No recipes';
 
@@ -264,6 +378,44 @@ extension on Translations {
 			'tabFavorites' => 'Favorites',
 			'tabProfile' => 'Profile',
 			'tabComingSoon' => 'This section is coming soon',
+			'loginUsername' => 'Login',
+			'loginPassword' => 'Password',
+			'loginButton' => 'Log in',
+			'logoutButton' => 'Log out',
+			'signUp' => 'Sign up',
+			'signUpName' => 'Name',
+			'signUpEmail' => 'Email',
+			'signUpPassword' => 'Password',
+			'signUpButton' => 'Create account',
+			'signUpInvalidEmail' => 'Enter a valid email address',
+			'signUpPasswordTooShort' => 'Password must be at least 4 characters',
+			'signUpDuplicateUser' => 'User already exists',
+			'signUpSenderError' => 'Account created, but email delivery failed',
+			'signUpError' => 'Couldn\'t create account. Try again.',
+			'signUpSuccess' => 'Account created. Credentials were sent to your email.',
+			'loginInvalidCredentials' => 'Invalid login or password',
+			'loginSuccessAdmin' => 'Admin mode enabled',
+			'loginSuccessUser' => 'Logged in successfully',
+			'favoritesRegistrationRequired' => 'Registration required for this feature, please tap Sign Up button',
+			'forgotPassword' => 'I forgot password',
+			'passwordRecoveryTitle' => 'Password recovery',
+			'passwordRecoveryInstruction' => 'Enter 4 digits recovery code from your email',
+			'passwordRecoveryCodeLabel' => 'Recovery code',
+			'passwordRecoveryCodeHint' => '1234',
+			'passwordRecoveryNewPassword' => 'New password',
+			'passwordRecoverySubmit' => 'Submit',
+			'passwordRecoveryEnterEmail' => 'Enter your email first',
+			'passwordRecoveryInvalidEmail' => 'Enter a valid email address',
+			'passwordRecoveryRequestFailed' => 'Couldn\'t start password recovery. Try again.',
+			'passwordRecoveryInvalidCode' => 'Enter a valid 4-digit code',
+			'passwordRecoveryPasswordTooShort' => 'Password must be at least 6 characters',
+			'passwordRecoverySessionExpired' => 'Recovery session expired. Start again.',
+			'passwordRecoverySaveFailed' => 'Couldn\'t save new password. Try again.',
+			'passwordRecoverySaved' => 'Your new password is saved',
+			'adminDeleteTitle' => 'Delete recipe?',
+			'adminDeleteMessage' => 'This will remove the recipe for everyone.',
+			'adminDeleteAction' => 'Delete',
+			'adminEditAction' => 'Edit',
 			'emptyList' => 'No recipes',
 			'loadError' => ({required Object error}) => 'Failed to load: ${error}',
 			'retry' => 'Retry',
