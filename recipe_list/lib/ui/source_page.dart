@@ -146,7 +146,7 @@ class _SourcePageState extends State<SourcePage> {
         current: AppNavTab.recipes,
         onTap: (tab) {
           if (tab == AppNavTab.profile) {
-            openLoginPage(context);
+            openProfilePage(context);
             return;
           }
           Navigator.of(context).maybePop();

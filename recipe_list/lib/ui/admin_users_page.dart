@@ -83,6 +83,10 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             child: Text(s.dismiss),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFF54848),
+              foregroundColor: AppColors.surface,
+            ),
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(s.adminDeleteAction),
           ),
@@ -122,6 +126,10 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             child: Text(s.dismiss),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFF54848),
+              foregroundColor: AppColors.surface,
+            ),
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(s.adminDeleteAction),
           ),
@@ -213,6 +221,10 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                 child: Text(s.dismiss),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primaryDark,
+                  foregroundColor: AppColors.surface,
+                ),
                 onPressed: () => Navigator.of(context).pop(true),
                 child: Text(s.addRecipeSubmit),
               ),
@@ -250,7 +262,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
     final s = S.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.adminUsersTitle),
+        title: Text(
+          s.adminUsersTitle,
+          style: const TextStyle(
+            fontFamily: AppTextStyles.fontFamily,
+            fontWeight: FontWeight.w400,
+            fontSize: 20,
+            height: 23 / 20,
+            color: AppColors.primaryDark,
+          ),
+        ),
         actions: [
           IconButton(
             tooltip: s.retry,
@@ -262,28 +283,49 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: _allSelected,
-                    onChanged: _busy
-                        ? null
-                        : (v) => _toggleSelectAll(v ?? false),
-                  ),
-                  Text(s.adminSelectAll),
-                  const Spacer(),
-                  FilledButton.icon(
-                    onPressed: _busy || _selectedIds.isEmpty
-                        ? null
-                        : _bulkDeleteSelected,
-                    icon: const Icon(Icons.delete_outline),
-                    label: Text(
-                      s.adminDeleteSelectedButton(_selectedIds.length),
+            ColoredBox(
+              color: AppColors.surface,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pagePadding,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: _allSelected,
+                      activeColor: AppColors.primaryDark,
+                      onChanged: _busy
+                          ? null
+                          : (v) => _toggleSelectAll(v ?? false),
                     ),
-                  ),
-                ],
+                    Text(
+                      s.adminSelectAll,
+                      style: const TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16,
+                        height: 23 / 16,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                    const Spacer(),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primaryDark,
+                        foregroundColor: AppColors.surface,
+                        textStyle: AppTextStyles.buttonLabel,
+                      ),
+                      onPressed: _busy || _selectedIds.isEmpty
+                          ? null
+                          : _bulkDeleteSelected,
+                      icon: const Icon(Icons.delete_outline),
+                      label: Text(
+                        s.adminDeleteSelectedButton(_selectedIds.length),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const Divider(height: 1),
@@ -312,11 +354,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                   : _users.isEmpty
                   ? Center(child: Text(s.adminNoUsersFound))
                   : ListView.separated(
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      padding: const EdgeInsets.all(AppSpacing.pagePadding),
                       itemBuilder: (context, index) {
                         final user = _users[index];
                         final selected = _selectedIds.contains(user.id);
-                        return Card(
+                        return DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: AppRadii.cardAll,
+                            boxShadow: AppShadows.card,
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.all(AppSpacing.md),
                             child: Row(
@@ -324,6 +371,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                               children: [
                                 Checkbox(
                                   value: selected,
+                                  activeColor: AppColors.primaryDark,
                                   onChanged: _busy
                                       ? null
                                       : (v) {
@@ -344,7 +392,11 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                                       Text(
                                         user.email,
                                         style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
+                                          fontFamily: AppTextStyles.fontFamily,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 16,
+                                          height: 23 / 16,
+                                          color: AppColors.primaryDark,
                                         ),
                                       ),
                                       const SizedBox(height: AppSpacing.xs),

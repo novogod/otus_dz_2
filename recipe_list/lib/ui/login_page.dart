@@ -11,6 +11,29 @@ import 'password_recovery_page.dart';
 import 'signup_page.dart';
 import 'splash_page.dart';
 
+Future<void> openProfilePage(
+  BuildContext context, {
+  String? prefillLogin,
+}) async {
+  if (adminLoggedInNotifier.value) {
+    final login = currentUserLoginNotifier.value?.trim();
+    final password = currentSessionAdminPassword;
+    if (login != null &&
+        login.isNotEmpty &&
+        password != null &&
+        password.isNotEmpty) {
+      await openAdminAfterLoginPage(
+        context,
+        adminLogin: login,
+        adminPassword: password,
+        replaceCurrent: false,
+      );
+      return;
+    }
+  }
+  await openLoginPage(context, prefillLogin: prefillLogin);
+}
+
 Future<void> openLoginPage(BuildContext context, {String? prefillLogin}) async {
   await Navigator.of(
     context,

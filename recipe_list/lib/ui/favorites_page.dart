@@ -352,7 +352,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
       return;
     }
     if (tab == AppNavTab.profile) {
-      openLoginPage(context);
+      openProfilePage(context);
       return;
     }
     final s = S.of(context);

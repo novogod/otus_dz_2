@@ -430,7 +430,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
       return;
     }
     if (tab == AppNavTab.profile) {
-      openLoginPage(context);
+      openProfilePage(context);
       return;
     }
     final s = S.of(context);

@@ -184,7 +184,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
         current: widget.originTab,
         onTap: (tab) {
           if (tab == AppNavTab.profile) {
-            openLoginPage(context);
+            openProfilePage(context);
             return;
           }
           Navigator.of(context).maybePop();

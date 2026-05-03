@@ -21,6 +21,10 @@ final ValueNotifier<String?> currentUserTokenNotifier = ValueNotifier<String?>(
   null,
 );
 
+String? _sessionAdminPassword;
+
+String? get currentSessionAdminPassword => _sessionAdminPassword;
+
 Database? _db;
 
 const String _kAuthBase = String.fromEnvironment(
@@ -129,6 +133,7 @@ class AdminRecipeUser {
 
 Future<void> bootstrapAdminSession({required Database db}) async {
   _db = db;
+  _sessionAdminPassword = null;
   final rows = await db.query(
     'auth_credentials',
     columns: ['login', 'token', 'preferred_language'],
@@ -184,6 +189,7 @@ Future<bool> loginAsAdmin({
       token: online.token,
       isAdmin: online.isAdmin,
     );
+    _sessionAdminPassword = online.isAdmin ? password : null;
     return true;
   }
 
@@ -212,6 +218,9 @@ Future<bool> loginAsAdmin({
     token: offline?.token,
     isAdmin: legacyOk || normalizedLogin == _legacyAdminLogin,
   );
+  _sessionAdminPassword = (legacyOk || normalizedLogin == _legacyAdminLogin)
+      ? password
+      : null;
   return ok;
 }
 
@@ -221,6 +230,7 @@ Future<void> logoutAdmin() async {
     await db.update('auth_credentials', {'active': 0});
   }
   _setSessionState(login: null, token: null, isAdmin: false);
+  _sessionAdminPassword = null;
 }
 
 bool get canSyncFavoritesRemotely =>
@@ -300,6 +310,9 @@ void _setSessionState({
   currentUserTokenNotifier.value = token;
   userLoggedInNotifier.value = login != null && login.isNotEmpty;
   adminLoggedInNotifier.value = userLoggedInNotifier.value && isAdmin;
+  if (!adminLoggedInNotifier.value) {
+    _sessionAdminPassword = null;
+  }
 }
 
 Future<SignUpResult> signUpUser({
@@ -637,11 +650,11 @@ Future<int> bulkDeleteRecipeAdminUsers({
       },
     ),
   );
-  for (final path in const ['/api/users/admin/bulk-delete', '/users/admin/bulk-delete']) {
-    final res = await dio.post<Map<String, dynamic>>(
-      path,
-      data: {'ids': ids},
-    );
+  for (final path in const [
+    '/api/users/admin/bulk-delete',
+    '/users/admin/bulk-delete',
+  ]) {
+    final res = await dio.post<Map<String, dynamic>>(path, data: {'ids': ids});
     final statusCode = res.statusCode ?? 0;
     if (statusCode == 404) continue;
     if (statusCode == 401 || statusCode == 403) {
