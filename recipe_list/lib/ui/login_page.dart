@@ -147,11 +147,17 @@ class _LoginPageState extends State<LoginPage> {
 
     switch (result.result) {
       case PasswordRecoveryStartResult.success:
-        await openPasswordRecoveryPage(
+        final recoveredEmail = await openPasswordRecoveryPage(
           context,
           email: email,
           recoverySessionCookie: result.sessionCookie ?? '',
         );
+        if (!mounted) return;
+        if (recoveredEmail != null) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(s.passwordRecoverySaved)));
+        }
       case PasswordRecoveryStartResult.invalidEmail:
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -178,6 +184,16 @@ class _LoginPageState extends State<LoginPage> {
       builder: (context, loggedIn, _) {
         return Scaffold(
           resizeToAvoidBottomInset: true,
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: AppColors.primaryDark,
+            elevation: 12,
+            focusElevation: 12,
+            hoverElevation: 14,
+            highlightElevation: 18,
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Icon(Icons.chevron_left, size: 28),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
           body: DecoratedBox(
             decoration: const BoxDecoration(gradient: kSplashGradient),
             child: SafeArea(
@@ -188,16 +204,6 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                            ),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ),
                         SizedBox(
                           width: 260,
                           child: SplashMaskedLogo(image: _logoImage),

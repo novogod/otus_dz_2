@@ -6,16 +6,15 @@ import 'package:flutter/material.dart';
 import '../auth/admin_session.dart';
 import '../i18n.dart';
 import 'app_theme.dart';
-import 'login_page.dart';
 import 'splash_page.dart';
 
-Future<void> openPasswordRecoveryPage(
+Future<String?> openPasswordRecoveryPage(
   BuildContext context, {
   required String email,
   required String recoverySessionCookie,
-}) async {
-  await Navigator.of(context).push<void>(
-    PageRouteBuilder<void>(
+}) {
+  return Navigator.of(context).push<String>(
+    PageRouteBuilder<String>(
       transitionDuration: AppDurations.splashTransition,
       reverseTransitionDuration: AppDurations.splashTransition,
       pageBuilder: (context, animation, secondaryAnimation) =>
@@ -108,12 +107,11 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
 
     switch (result) {
       case PasswordResetResult.success:
+        if (!mounted) return;
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(SnackBar(content: Text(s.passwordRecoverySaved)));
-        await Navigator.of(context).pushReplacement<bool, bool>(
-          buildLoginRoute(prefillLogin: widget.email),
-        );
+        Navigator.of(context).pop<String>(widget.email);
       case PasswordResetResult.invalidCode:
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -145,6 +143,16 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
     final s = S.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.primaryDark,
+        elevation: 12,
+        focusElevation: 12,
+        hoverElevation: 14,
+        highlightElevation: 18,
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Icon(Icons.chevron_left, size: 28),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: kSplashGradient),
         child: SafeArea(
@@ -155,13 +163,6 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ),
                     SizedBox(
                       width: 260,
                       child: SplashMaskedLogo(image: _logoImage),

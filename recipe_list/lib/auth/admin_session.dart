@@ -311,10 +311,13 @@ Future<PasswordRecoveryStartResponse> requestPasswordRecovery({
     ),
   );
 
+  final langCode = appLang.value.name; // 'en', 'ru', 'tr', etc.
+
   try {
     final res = await dio.post<Map<String, dynamic>>(
       _normalizePath(_kAuthForgotPasswordPath),
-      data: {'email': normalizedEmail},
+      data: {'email': normalizedEmail, 'app_name': 'Otus Food'},
+      options: Options(headers: {'Accept-Language': langCode}),
     );
 
     final status = res.statusCode ?? 0;
