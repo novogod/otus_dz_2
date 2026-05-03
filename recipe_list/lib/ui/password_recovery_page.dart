@@ -155,6 +155,13 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
                     SizedBox(
                       width: 260,
                       child: SplashMaskedLogo(image: _logoImage),
