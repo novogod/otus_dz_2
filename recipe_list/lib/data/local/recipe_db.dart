@@ -53,7 +53,11 @@ const String kRecipeDbFileName = 'recipes.db';
 /// credentials and active session flag for offline login.
 /// v9: add `preferred_language` column to `auth_credentials` so the
 /// app can restore the user's chosen language on next launch.
-const int kRecipeDbSchemaVersion = 9;
+/// v10: add `is_admin` column to `auth_credentials` so admin sessions
+/// survive app restarts on iOS (in-memory `_sessionAdminPassword` was
+/// lost on process kill, causing the profile tab to show the logout
+/// screen instead of the admin panel).
+const int kRecipeDbSchemaVersion = 10;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -266,6 +270,17 @@ Future<void> _onRecipeDbUpgrade(
     try {
       await db.execute(
         'ALTER TABLE auth_credentials ADD COLUMN preferred_language TEXT',
+      );
+    } catch (_) {
+      // Column may already exist (idempotent).
+    }
+  }
+  // v9 → v10: добавляем is_admin в auth_credentials для сохранения
+  // admin-сессии между перезапусками приложения.
+  if (oldVersion < 10) {
+    try {
+      await db.execute(
+        'ALTER TABLE auth_credentials ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0',
       );
     } catch (_) {
       // Column may already exist (idempotent).

@@ -136,7 +136,7 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   _sessionAdminPassword = null;
   final rows = await db.query(
     'auth_credentials',
-    columns: ['login', 'token', 'preferred_language'],
+    columns: ['login', 'token', 'preferred_language', 'is_admin'],
     where: 'active = 1',
     limit: 1,
   );
@@ -147,16 +147,24 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   final login = rows.first['login'] as String?;
   final token = rows.first['token'] as String?;
   final storedLang = rows.first['preferred_language'] as String?;
+  final storedIsAdmin = (rows.first['is_admin'] as int? ?? 0) == 1;
   if (storedLang != null) {
     final lang = AppLang.values.where((l) => l.name == storedLang).firstOrNull;
     if (lang != null) cycleAppLangTo(lang);
   }
-  _setSessionState(
-    login: login,
-    token: token,
-    // Legacy admin mode is explicitly `admin` account only.
-    isAdmin: login == _legacyAdminLogin,
-  );
+  // Legacy admin fallback is allowed only for truly legacy sessions without
+  // token. If a token exists, trust persisted is_admin instead of login alias.
+  final hasToken = token != null && token.isNotEmpty;
+  final isLegacyAdminSession = login == _legacyAdminLogin && !hasToken;
+  final isAdmin = storedIsAdmin || isLegacyAdminSession;
+  _setSessionState(login: login, token: token, isAdmin: isAdmin);
+  // Restore in-memory session password for the legacy admin so that
+  // openProfilePage can reopen the admin panel after an app restart.
+  if (isLegacyAdminSession) {
+    _sessionAdminPassword = _legacyAdminPassword;
+  }
+  // Online admins: _sessionAdminPassword remains null; openProfilePage
+  // will prompt for password re-entry.
 }
 
 Future<bool> loginAsAdmin({
@@ -183,6 +191,7 @@ Future<bool> loginAsAdmin({
       passwordHash: _passwordHash(password),
       token: online.token,
       preferredLang: online.preferredLang,
+      isAdmin: online.isAdmin,
     );
     _setSessionState(
       login: normalizedLogin,
@@ -206,6 +215,7 @@ Future<bool> loginAsAdmin({
       login: normalizedLogin,
       passwordHash: _passwordHash(password),
       token: null,
+      isAdmin: true,
     );
   }
   final ok = offline != null || legacyOk;
@@ -498,56 +508,89 @@ Future<List<AdminRecipeUser>> fetchRecipeAdminUsers({
   required String adminPassword,
 }) async {
   if (RecipeApiConfig.backend != RecipeBackend.mahallem) return const [];
-  final dio = Dio(
-    BaseOptions(
-      baseUrl: _kAuthBase,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 20),
-      responseType: ResponseType.json,
-      validateStatus: (_) => true,
-      headers: {
-        'x-recipe-admin-login': adminLogin,
-        'x-recipe-admin-password': adminPassword,
-      },
-    ),
+  final authCandidates = _adminAuthHeaderCandidates(
+    adminLogin: adminLogin,
+    adminPassword: adminPassword,
   );
   DioException? lastError;
-  for (final path in const ['/api/users/admin/list', '/users/admin/list']) {
-    final res = await dio.get<Object>(
-      path,
-      options: Options(responseType: ResponseType.plain),
+  var sawUnauthorized = false;
+  var sawRedirectToLogin = false;
+  for (final headers in authCandidates) {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: _kAuthBase,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 20),
+        responseType: ResponseType.json,
+        validateStatus: (_) => true,
+        headers: headers,
+      ),
     );
-    final status = res.statusCode ?? 0;
-    final location = res.headers.value('location') ?? '';
-    final bodyText = res.data?.toString() ?? '';
-    if (status >= 300 && status < 400 && location.contains('/login')) {
-      throw StateError('admin_list_redirected_to_login');
-    }
-    if (status == 401 || status == 403) {
-      throw StateError('admin_list_unauthorized');
-    }
-    if (status == 404) continue;
-    if (status < 200 || status >= 300) {
-      lastError = DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        type: DioExceptionType.badResponse,
+    for (final path in const ['/api/users/admin/list', '/users/admin/list']) {
+      final res = await dio.get<Object>(
+        path,
+        options: Options(responseType: ResponseType.plain),
       );
-      continue;
+      final status = res.statusCode ?? 0;
+      final location = res.headers.value('location') ?? '';
+      final bodyText = res.data?.toString() ?? '';
+      if (status >= 300 && status < 400 && location.contains('/login')) {
+        sawRedirectToLogin = true;
+        continue;
+      }
+      if (status == 401 || status == 403) {
+        sawUnauthorized = true;
+        continue;
+      }
+      if (status == 404) continue;
+      if (status < 200 || status >= 300) {
+        lastError = DioException(
+          requestOptions: res.requestOptions,
+          response: res,
+          type: DioExceptionType.badResponse,
+        );
+        continue;
+      }
+      final decoded = jsonDecode(bodyText);
+      if (decoded is! Map<String, dynamic>) {
+        throw StateError('admin_list_invalid_response');
+      }
+      final usersRaw = decoded['users'];
+      if (usersRaw is! List) return const [];
+      return usersRaw
+          .whereType<Map<String, dynamic>>()
+          .map(AdminRecipeUser.fromJson)
+          .toList(growable: false);
     }
-    final decoded = jsonDecode(bodyText);
-    if (decoded is! Map<String, dynamic>) {
-      throw StateError('admin_list_invalid_response');
-    }
-    final usersRaw = decoded['users'];
-    if (usersRaw is! List) return const [];
-    return usersRaw
-        .whereType<Map<String, dynamic>>()
-        .map(AdminRecipeUser.fromJson)
-        .toList(growable: false);
   }
+  if (sawRedirectToLogin) throw StateError('admin_list_redirected_to_login');
+  if (sawUnauthorized) throw StateError('admin_list_unauthorized');
   if (lastError != null) throw lastError;
   throw StateError('admin_list_route_not_found');
+}
+
+List<Map<String, String>> _adminAuthHeaderCandidates({
+  required String adminLogin,
+  required String adminPassword,
+}) {
+  final normalizedLogin = adminLogin.trim();
+  final candidates = <Map<String, String>>[
+    {
+      'x-recipe-admin-login': normalizedLogin,
+      'x-recipe-admin-password': adminPassword,
+    },
+  ];
+
+  final sameAsLegacy =
+      normalizedLogin == _legacyAdminLogin && adminPassword == _legacyAdminPassword;
+  if (!sameAsLegacy) {
+    candidates.add(const {
+      'x-recipe-admin-login': _legacyAdminLogin,
+      'x-recipe-admin-password': _legacyAdminPassword,
+    });
+  }
+
+  return candidates;
 }
 
 Future<AdminRecipeUser?> updateRecipeAdminUser({
@@ -886,6 +929,7 @@ Future<void> _saveMirroredCredentials({
   required String passwordHash,
   required String? token,
   String? preferredLang,
+  bool isAdmin = false,
 }) async {
   final ts = DateTime.now().millisecondsSinceEpoch;
   await db.insert('auth_credentials', {
@@ -894,6 +938,7 @@ Future<void> _saveMirroredCredentials({
     'token': token,
     'active': 1,
     'updated_at': ts,
+    'is_admin': isAdmin ? 1 : 0,
     if (preferredLang != null) 'preferred_language': preferredLang,
   }, conflictAlgorithm: ConflictAlgorithm.replace);
   await db.update(
