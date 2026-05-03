@@ -40,7 +40,9 @@ Sources:
     - `openLoginPage` accepts optional `prefillLogin` to pre-fill email (used after signup and after password reset).
 
 2. **Logged in (regular user)**
-    - Inputs disabled.
+   - Inputs disabled.
+   - Disabled login field is pre-filled with current account email.
+   - Disabled password field shows masked dots (`••••••••`).
     - Primary button: **Log out**.
     - Success snackbar: `loginSuccessUser`.
 
@@ -112,6 +114,15 @@ Payload variants tried for compatibility:
 - `{user,password}`
 
 Signup and sender use similar path/payload compatibility probing.
+
+Important (current production behavior): recipe-app compatibility auth is now
+isolated from Mahallem web auth domain.
+
+- Recipe app compatibility login/signup routes (`/users/login`, `/users`, aliases)
+   use table `recipe_app_users`.
+- Mahallem web/PWA auth continues to use table `users`.
+- Same email may exist in both domains with independent
+   `preferred_language` and password-reset scope.
 
 Expected successful login body now includes user token/role hints:
 
@@ -228,7 +239,7 @@ Implemented in `local_user_portal/routes/auth.js` and `routes/recipes.js`:
 
 - login compatibility endpoint issues signed recipes-user token;
 - favorites endpoints verify token and persist per-user rows in
-   `recipe_user_favorites(user_id, recipe_id, lang, saved_at)`.
+   `recipe_app_user_favorites(user_id, recipe_id, lang, saved_at)`.
 
 ---
 
@@ -264,7 +275,10 @@ Result enums:
 Source: `mahallem_ist/local_user_portal/routes/auth.js`
 
 1. `POST /forgot-password` `{ email }` → sets Express session (`resetPasswordEmail`), dispatches 4-digit code via internal email-verification service (`email-verification-api:3333/send-code`).
-2. `POST /reset-password` `{ code, newPassword }` → verifies code via `email-verification-api:3333/verify-code`, updates bcrypt hash in `users` table. Session cookie ties the two requests.
+2. `POST /reset-password` `{ code, newPassword }` → verifies code via `email-verification-api:3333/verify-code`, updates bcrypt hash in the auth domain captured at recovery start:
+   - `users` for Mahallem app,
+   - `recipe_app_users` for Otus Food requests (`app_name = "Otus Food"`).
+   Session cookie ties the two requests.
 
 ---
 
@@ -277,6 +291,8 @@ Source: `mahallem_ist/local_user_portal/routes/auth.js`
 4. Remote favorites sync is best-effort with local fallback if network fails.
 5. Language preference restore depends on `preferredLanguage` in online login response;
    if absent, app keeps current language.
+6. Password recovery domain separation depends on `app_name` in forgot-password request;
+   recipe app sends `app_name = "Otus Food"`.
 
 ---
 

@@ -1,5 +1,62 @@
 # Project Log
 
+## Recipe auth domain isolation from Mahallem users + login logout-field UX
+
+**Date:** 2026-05-03
+
+После жалобы на конфликт signup (`"user already exists"` для email,
+который есть в mahallem, но не регистрировался в recipe app) изолировали
+auth-домен Otus Food от общего Mahallem `users`.
+
+### Backend (`mahallem_ist/local_user_portal`)
+
+- `routes/auth.js`
+  - Recipe compatibility auth (`/users/login`, `/users`, aliases)
+    переведён с `users` на отдельную таблицу `recipe_app_users`.
+  - Lazy schema ensure для `recipe_app_users` (auto-create при первом вызове).
+  - Логин recipe app теперь выдаёт token для recipe-domain пользователя;
+    `isAdmin=false` для этого контура.
+  - Password recovery изолирован по домену:
+    - если `app_name = "Otus Food"` → `forgot/reset` работают с
+      `recipe_app_users`;
+    - иначе поведение прежнее (`users`).
+
+- `routes/recipes.js`
+  - Favorites persistence для recipe-domain переведён на
+    `recipe_app_user_favorites` (user_id text, PK `(user_id, recipe_id, lang)`).
+  - Добавлен one-time backfill из legacy `recipe_user_favorites` (если таблица есть).
+
+### Deploy
+
+- Backend commit: `90d26bc4`
+  (`feat: isolate recipe app auth from mahallem users`).
+- Push в `main` + production deploy:
+  `docker compose up -d --build user-portal` на `72.61.181.62`.
+- Smoke: `GET https://mahallem.ist/recipes/health` → `status: ok`.
+
+### Data checks / hotfixes
+
+- Проверка `alarmdcs@gmail.com`:
+  - `users.preferred_language = ru`
+  - `recipe_app_users.preferred_language = en`
+- Проверка `info@lagente.do`:
+  - был только в `users` (`tr`),
+  - добавлен в `recipe_app_users`, выставлен `preferred_language = ru`.
+
+### Client UX (`otus_dz/recipe_list`)
+
+- `lib/ui/login_page.dart`
+  - В состоянии logged-in (кнопка `Log out`):
+    - email field disabled, prefilled текущим login;
+    - password field disabled, prefilled `••••••••`.
+
+### Result
+
+- Signup/login recipe app больше не конфликтует с Mahallem users-domain.
+- Предпочтительный язык и recovery flow теперь доменно-разделены.
+- Logout state в login UI визуально подтверждает, под каким аккаунтом
+  пользователь сейчас авторизован.
+
 ## Preferred language on signup/login/bootstrap + language carousel semantics
 
 **Date:** 2026-05-03
