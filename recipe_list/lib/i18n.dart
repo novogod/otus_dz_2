@@ -410,7 +410,8 @@ class S {
     AppLang.ru: 'Активен',
     AppLang.tr: 'Aktif',
   });
-  String adminDeleteSelectedButton(int count) => '${adminDeleteAction} ($count)';
+  String adminDeleteSelectedButton(int count) =>
+      '${adminDeleteAction} ($count)';
   String adminLangAndStatus(String preferredLanguage, String status) =>
       _byLang({
         AppLang.en: 'Lang: ${preferredLanguage.toUpperCase()} • $status',

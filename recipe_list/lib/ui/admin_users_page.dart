@@ -270,7 +270,9 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                         ? null
                         : _bulkDeleteSelected,
                     icon: const Icon(Icons.delete_outline),
-                    label: Text(s.adminDeleteSelectedButton(_selectedIds.length)),
+                    label: Text(
+                      s.adminDeleteSelectedButton(_selectedIds.length),
+                    ),
                   ),
                 ],
               ),

@@ -1,5 +1,71 @@
 # Project Log
 
+## Admin after-login panel + users management + backend admin endpoints
+
+**Date:** 2026-05-03
+
+Реализован отдельный post-login поток для admin-пользователя в recipe app,
+с user-management UI и backend API для управления пользователями
+`recipe_app_users`.
+
+### Flutter (`otus_dz/recipe_list`)
+
+- `lib/ui/login_page.dart`
+  - после успешного admin-login теперь открывается новый admin экран,
+    вместо обычного `Navigator.pop(true)`.
+
+- `lib/ui/admin_after_login_page.dart` (новый)
+  - экран «после логина» с 3 кнопками:
+    1) Edit users list,
+    2) Edit cards,
+    3) Logout.
+  - `Edit cards` возвращает на корневой feed (`popUntil(isFirst)`), где
+    уже действуют admin edit/delete affordances.
+
+- `lib/ui/admin_users_page.dart` (новый)
+  - карточки пользователей с действиями edit/delete;
+  - checkbox per-card + select-all;
+  - bulk delete выбранных пользователей;
+  - refresh action и диалоги подтверждения.
+
+- `lib/auth/admin_session.dart`
+  - добавлены admin API-методы для recipe-domain пользователей:
+    - `fetchRecipeAdminUsers(...)`
+    - `updateRecipeAdminUser(...)`
+    - `deleteRecipeAdminUser(...)`
+    - `bulkDeleteRecipeAdminUsers(...)`
+  - добавлен DTO `AdminRecipeUser`.
+
+- i18n/polish
+  - в `lib/i18n.dart` добавлены admin-строки через фасад `S` (manual mapping
+    c EN fallback; RU/TR покрыты), чтобы не трогать generated slang-файлы;
+  - `admin_after_login_page.dart` и `admin_users_page.dart` переведены на
+    эти ключи;
+  - дополнительная правка форматирования (line-wrap) в i18n/admin_users.
+
+### Backend (`mahallem_ist/local_user_portal`)
+
+- `routes/auth.js`
+  - добавлен `requireRecipeCompatAdmin` по заголовкам:
+    - `x-recipe-admin-login`
+    - `x-recipe-admin-password`
+  - добавлены admin endpoints для `recipe_app_users`:
+    - `GET /users/admin/list`
+    - `PATCH /users/admin/:id`
+    - `DELETE /users/admin/:id`
+    - `POST /users/admin/bulk-delete`
+
+### Commits / push
+
+- `otus_dz`: `3b48976` — `feat(admin): add post-login panel and users management UI`
+- `mahallem_ist`: `17cafc5f` — `feat(auth): add recipe-app admin user management endpoints`
+
+### Validation
+
+- Diagnostics checked on touched files (Flutter + backend `auth.js`) — no errors.
+- `recipes.js` в `mahallem_ist` имел отдельный локальный style-only diff
+  (reindent import block), логически не связанный с admin фичей.
+
 ## Recipe auth domain isolation from Mahallem users + login logout-field UX
 
 **Date:** 2026-05-03
