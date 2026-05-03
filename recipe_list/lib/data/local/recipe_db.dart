@@ -261,16 +261,16 @@ Future<void> _onRecipeDbUpgrade(
   if (oldVersion < 8) {
     await applyAuthCredentialsSchema(db);
   }
-    // v8 → v9: добавляем preferred_language в auth_credentials.
-    if (oldVersion < 9) {
-      try {
-        await db.execute(
-          'ALTER TABLE auth_credentials ADD COLUMN preferred_language TEXT',
-        );
-      } catch (_) {
-        // Column may already exist (idempotent).
-      }
+  // v8 → v9: добавляем preferred_language в auth_credentials.
+  if (oldVersion < 9) {
+    try {
+      await db.execute(
+        'ALTER TABLE auth_credentials ADD COLUMN preferred_language TEXT',
+      );
+    } catch (_) {
+      // Column may already exist (idempotent).
     }
+  }
 }
 
 /// Сериализация ингредиентов в JSON-строку — sqflite не умеет

@@ -214,7 +214,10 @@ class _LoginPageState extends State<LoginPage> {
                           child: Column(
                             children: [
                               TextFormField(
-                                controller: _loginController,
+                                controller: loggedIn ? null : _loginController,
+                                initialValue: loggedIn
+                                    ? (currentUserLoginNotifier.value ?? '')
+                                    : null,
                                 enabled: !loggedIn,
                                 style: TextStyle(
                                   color: loggedIn
@@ -243,14 +246,19 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               const SizedBox(height: AppSpacing.md),
                               TextFormField(
-                                controller: _passwordController,
+                                controller: loggedIn
+                                    ? null
+                                    : _passwordController,
+                                initialValue: loggedIn ? '••••••••' : null,
                                 enabled: !loggedIn,
                                 style: TextStyle(
                                   color: loggedIn
                                       ? AppColors.textSecondary
                                       : AppColors.textPrimary,
                                 ),
-                                obscureText: _obscurePassword,
+                                obscureText: loggedIn
+                                    ? false
+                                    : _obscurePassword,
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => _submit(),
                                 decoration: InputDecoration(

@@ -458,7 +458,12 @@ Future<SignUpResult> _createUser({
     {'login': email, 'password': password, 'avatar': ''},
     {'login': email, 'password': password, 'name': name, 'avatar': ''},
     {'login': email, 'password': password, 'name': name, 'language': language},
-    {'username': email, 'password': password, 'name': name, 'language': language},
+    {
+      'username': email,
+      'password': password,
+      'name': name,
+      'language': language,
+    },
     {'user': email, 'password': password, 'name': name, 'language': language},
   ];
 

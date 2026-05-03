@@ -307,7 +307,7 @@ class S {
   String get signUpSenderError => _t.signUpSenderError;
   String get signUpError => _t.signUpError;
   String get signUpSuccess => _t.signUpSuccess;
-    String get signUpChooseLanguage => _t.signUpChooseLanguage;
+  String get signUpChooseLanguage => _t.signUpChooseLanguage;
   String get loginInvalidCredentials => _t.loginInvalidCredentials;
   String get loginSuccessAdmin => _t.loginSuccessAdmin;
   String get loginSuccessUser => _t.loginSuccessUser;
