@@ -1,5 +1,64 @@
 # Project Log
 
+## Preferred language on signup/login/bootstrap + language carousel semantics
+
+**Date:** 2026-05-03
+
+Реализован полный контур «пользователь выбирает язык при signup → язык
+сохраняется на backend/local mirror → восстанавливается при следующем входе
+и при открытии приложения».
+
+### Клиент (`otus_dz/recipe_list`)
+
+- `lib/ui/lang_icon_button.dart`
+  - зафиксирована семантика карусели языка:
+    - круглый флаг = **текущий** язык,
+    - круглая кнопка = **следующий** язык (`next.label`), в который
+      переключится приложение по тапу.
+
+- `lib/ui/signup_page.dart`
+  - добавлен блок выбора языка перед submit:
+    - текст `s.signUpChooseLanguage`,
+    - круглый флаг текущего языка,
+    - круглая кнопка-cycle (как в app bar);
+  - в `signUpUser(...)` передаётся `preferredLang: appLang.value`.
+
+- `lib/auth/admin_session.dart`
+  - `signUpUser` принимает `AppLang? preferredLang` и отправляет `language` в signup payload;
+  - онлайн-логин парсит `preferredLanguage` из ответа;
+  - при наличии `preferredLanguage` сразу переключает `appLang` (`cycleAppLangTo`);
+  - локальный mirror `auth_credentials` сохраняет `preferred_language`;
+  - `bootstrapAdminSession` читает `preferred_language` и восстанавливает язык до
+    финальной инициализации UI-сессии.
+
+- `lib/data/local/recipe_db.dart`
+  - schema version: `8 → 9`;
+  - `auth_credentials` получил `preferred_language TEXT` + миграция `ALTER TABLE`.
+
+- i18n
+  - добавлен ключ `signUpChooseLanguage` во все 10 локалей;
+  - slang regenerated (`strings.g.dart`, `strings_*.g.dart`);
+  - фасад `S` получил геттер `signUpChooseLanguage`.
+
+### Бэкенд (`mahallem_ist/local_user_portal`)
+
+- `routes/auth.js`
+  - login compatibility handler теперь возвращает
+    `preferredLanguage: user.preferred_language || null`.
+
+### Deploy / commits
+
+- Backend commit: `d2532ec9` (push + production deploy `user-portal`).
+- Flutter commit: `f514691` (push `main`).
+
+### Результат
+
+- Пользователь может явно выбрать язык на signup.
+- Следующий логин и следующий cold start приложения используют
+  сохранённый пользовательский язык.
+- Карусель языка в app bar теперь отображает «куда переключимся»,
+  а флаг — «где сейчас находимся».
+
 ## Forgot password flow + signup→login chaining + session-aware favorites
 
 **Date:** 2026-05-03

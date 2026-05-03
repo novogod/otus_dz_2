@@ -7,6 +7,7 @@ It covers:
 
 - role-aware login UX (user vs admin)
 - client session/auth state and offline mirror
+- preferred language selection/persistence across signup/login/app boot
 - favorites access policy (registered users only)
 - favorites persistence on backend under user credentials
 
@@ -18,11 +19,16 @@ It covers:
 
 - Profile tab opens `LoginPage` via `openLoginPage(...)`.
 - Login and signup screens use the same splash-style slide transition.
+- Signup screen now includes a dedicated language chooser:
+   - text: `signUpChooseLanguage` ("Choose your language"),
+   - round current-language flag,
+   - round cycle button showing the **next** language label (`next.label`).
 
 Sources:
 - `recipe_list/lib/ui/login_page.dart`
 - `recipe_list/lib/ui/signup_page.dart`
 - `recipe_list/lib/ui/password_recovery_page.dart`
+- `recipe_list/lib/ui/lang_icon_button.dart`
 
 ### Login states
 
@@ -64,6 +70,8 @@ Source: `recipe_list/lib/auth/admin_session.dart`
 
 - On startup, `bootstrapAdminSession(...)` restores active row from
    `auth_credentials` (`active = 1`) and initializes both user/admin flags.
+- During bootstrap, client also reads `preferred_language` and restores app language
+  via `cycleAppLangTo(...)` before session UI becomes active.
 - Admin mode is explicit: currently based on login metadata (`admin` legacy path
    and/or backend-provided admin role in online response).
 
@@ -76,6 +84,9 @@ Source: `recipe_list/lib/auth/admin_session.dart`
 3. legacy fallback `admin/admin`.
 
 On success, client updates full session state and mirrors credentials locally.
+
+If online login response includes `preferredLanguage`, client applies it immediately
+(`cycleAppLangTo`) and persists it in local mirror (`auth_credentials.preferred_language`).
 
 ### Logout
 
@@ -110,7 +121,8 @@ Expected successful login body now includes user token/role hints:
    "userId": "...",
    "email": "...",
    "token": "<signed-recipes-user-token>",
-   "isAdmin": false
+   "isAdmin": false,
+   "preferredLanguage": "en"
 }
 ```
 
@@ -118,12 +130,15 @@ Client extracts:
 
 - `token` → `currentUserTokenNotifier`
 - `isAdmin` / `is_admin` / `role == 'admin'` → `adminLoggedInNotifier`
+- `preferredLanguage` → app locale restore (`appLang`)
+
+Signup now sends selected language in compatibility payloads as `language`.
 
 ---
 
 ## 4) Offline credential mirror schema
 
-Source: `recipe_list/lib/data/local/recipe_db.dart` (schema v8)
+Source: `recipe_list/lib/data/local/recipe_db.dart` (schema v9)
 
 ```sql
 CREATE TABLE auth_credentials (
@@ -131,7 +146,8 @@ CREATE TABLE auth_credentials (
    password_hash TEXT NOT NULL,
    token TEXT,
    active INTEGER NOT NULL DEFAULT 0,
-   updated_at INTEGER NOT NULL
+   updated_at INTEGER NOT NULL,
+   preferred_language TEXT
 );
 ```
 
@@ -142,6 +158,7 @@ Mirror stores:
 - last known token (nullable)
 - active flag
 - updated timestamp
+- preferred language (`AppLang.name`, nullable)
 
 Offline login succeeds only on exact `(login, password_hash)` match.
 
@@ -258,6 +275,8 @@ Source: `mahallem_ist/local_user_portal/routes/auth.js`
 2. Legacy `admin/admin` fallback is still present for continuity.
 3. Offline hash is continuity-oriented, not a strong KDF.
 4. Remote favorites sync is best-effort with local fallback if network fails.
+5. Language preference restore depends on `preferredLanguage` in online login response;
+   if absent, app keeps current language.
 
 ---
 
