@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:recipe_list/auth/admin_session.dart' show userLoggedInNotifier;
 import 'package:recipe_list/data/local/recipe_db.dart';
 import 'package:recipe_list/data/repository/favorites_store.dart';
 import 'package:recipe_list/i18n.dart';
@@ -40,12 +41,20 @@ void main() {
       store = FavoritesStore(db: db);
       favoritesStoreNotifier.value = store;
       appLang.value = AppLang.ru;
+      // Тап по сердцу с тех пор, как `recipe_card.dart` стал
+      // session-aware (commit 3d981d7), требует залогиненного
+      // пользователя — иначе показывается «нужна регистрация»
+      // SnackBar и `store.toggle` не вызывается. Тест проверяет
+      // именно happy-path toggle, поэтому имитируем
+      // авторизованного юзера.
+      userLoggedInNotifier.value = true;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
     });
 
     tearDown(() async {
       favoritesStoreNotifier.value = null;
+      userLoggedInNotifier.value = false;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, null);
       await db.close();
