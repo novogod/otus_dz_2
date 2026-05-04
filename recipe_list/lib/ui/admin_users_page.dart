@@ -43,12 +43,13 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
         _loadError = null;
         _selectedIds.removeWhere((id) => !_users.any((u) => u.id == id));
       });
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[AdminUsersPage] _reload error: $e\n$st');
       if (!mounted) return;
       setState(() {
         _users = const [];
         _selectedIds.clear();
-        _loadError = 'Failed to load users list';
+        _loadError = 'Failed to load users list: $e';
       });
     } finally {
       if (mounted) setState(() => _busy = false);

@@ -36,7 +36,7 @@ class FeedConfig {
     this.categoryCacheThreshold = 10,
     this.translateConcurrency = 8,
     this.translateConcurrencyBackground = 2,
-    this.useBulkPage = false,
+    this.useBulkPage = true,
   });
 
   /// Reads overrides from `--dart-define` flags. Names are stable
@@ -59,6 +59,6 @@ class FeedConfig {
       'FEED_TRANSLATE_CONCURRENCY_BG',
       defaultValue: 2,
     ),
-    useBulkPage: bool.fromEnvironment('USE_BULK_PAGE', defaultValue: false),
+    useBulkPage: bool.fromEnvironment('USE_BULK_PAGE', defaultValue: true),
   );
 }

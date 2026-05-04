@@ -57,7 +57,9 @@ const String kRecipeDbFileName = 'recipes.db';
 /// survive app restarts on iOS (in-memory `_sessionAdminPassword` was
 /// lost on process kill, causing the profile tab to show the logout
 /// screen instead of the admin panel).
-const int kRecipeDbSchemaVersion = 10;
+/// v11: idempotent re-apply of `is_admin` — v10 fresh-install schema was
+/// missing the column; this migration ensures any v10 DB gets it.
+const int kRecipeDbSchemaVersion = 11;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -131,6 +133,8 @@ CREATE TABLE owned_recipes (
 
 /// v8: offline mirror of successful online auth.
 /// One row per login; `active=1` marks current in-app session.
+/// v9: preferred_language added.
+/// v10: is_admin added.
 const String _kAuthCredentialsSchema = '''
 CREATE TABLE auth_credentials (
   login TEXT PRIMARY KEY,
@@ -138,7 +142,8 @@ CREATE TABLE auth_credentials (
   token TEXT,
   active INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL,
-  preferred_language TEXT
+  preferred_language TEXT,
+  is_admin INTEGER NOT NULL DEFAULT 0
 );
 ''';
 
@@ -284,6 +289,17 @@ Future<void> _onRecipeDbUpgrade(
       );
     } catch (_) {
       // Column may already exist (idempotent).
+    }
+  }
+  // v10 → v11: idempotent re-apply — v10 fresh-install schema was created
+  // without is_admin; ensure it exists in any surviving v10 DB.
+  if (oldVersion < 11) {
+    try {
+      await db.execute(
+        'ALTER TABLE auth_credentials ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0',
+      );
+    } catch (_) {
+      // Column already exists — nothing to do.
     }
   }
 }

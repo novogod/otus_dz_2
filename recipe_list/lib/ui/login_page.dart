@@ -15,113 +15,39 @@ Future<void> openProfilePage(
   BuildContext context, {
   String? prefillLogin,
 }) async {
-  if (adminLoggedInNotifier.value) {
-    final login = currentUserLoginNotifier.value?.trim();
-    var password = currentSessionAdminPassword;
+  final login = currentUserLoginNotifier.value?.trim();
+  final password = currentSessionAdminPassword;
+  final recipeAdminToken = currentRecipeAdminTokenNotifier.value;
+  final hasRecipeAdminToken =
+      recipeAdminToken != null && recipeAdminToken.isNotEmpty;
 
-    // After an app restart the in-memory password is gone for online admins.
-    // Prompt for it rather than falling through to the logout-only login page.
-    if ((password == null || password.isEmpty) &&
-        login != null &&
-        login.isNotEmpty) {
-      password = await _promptAdminPassword(context, login: login);
-      if (!context.mounted) return;
-      if (password == null) return; // user cancelled
-    }
+  final hasLogin = login != null && login.isNotEmpty;
+  final canOpenWithPassword =
+      password != null && password.isNotEmpty && hasLogin;
+  final canOpenWithToken = hasRecipeAdminToken && hasLogin;
+  final canOpenWithAdminFlag = adminLoggedInNotifier.value && hasLogin;
+  final shouldOpenAdmin =
+      adminLoggedInNotifier.value || canOpenWithToken || canOpenWithPassword;
 
-    if (login != null &&
-        login.isNotEmpty &&
-        password != null &&
-        password.isNotEmpty) {
-      await openAdminAfterLoginPage(
-        context,
-        adminLogin: login,
-        adminPassword: password,
-        replaceCurrent: false,
-      );
-      return;
-    }
+  if (shouldOpenAdmin &&
+      (canOpenWithToken || canOpenWithPassword || canOpenWithAdminFlag)) {
+    await openAdminAfterLoginPage(
+      context,
+      adminLogin: login,
+      // If token is already present, password can be empty. Network calls in
+      // admin_session.dart reuse currentRecipeAdminTokenNotifier first.
+      adminPassword: password ?? '',
+      replaceCurrent: false,
+    );
+    return;
   }
   if (!context.mounted) return;
-  await openLoginPage(context, prefillLogin: prefillLogin);
-}
-
-/// Shows a password-only dialog for admins who need to re-authenticate
-/// after the app was killed and relaunched (in-memory password was lost).
-/// Calls [loginAsAdmin] so the session password is also restored in memory.
-Future<String?> _promptAdminPassword(
-  BuildContext context, {
-  required String login,
-}) async {
-  final s = S.of(context);
-  final controller = TextEditingController();
-  bool obscure = true;
-
-  final password = await showDialog<String>(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setState) => AlertDialog(
-        title: Text(
-          login,
-          style: const TextStyle(
-            fontFamily: AppTextStyles.fontFamily,
-            fontWeight: FontWeight.w500,
-            fontSize: 20,
-            color: AppColors.primaryDark,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          obscureText: obscure,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: s.loginPassword,
-            suffixIcon: IconButton(
-              icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
-              onPressed: () => setState(() => obscure = !obscure),
-            ),
-          ),
-          onSubmitted: (_) {
-            final pw = controller.text;
-            if (pw.isNotEmpty) Navigator.of(ctx).pop(pw);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(null),
-            child: Text(s.dismiss),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primaryDark,
-            ),
-            onPressed: () {
-              final pw = controller.text;
-              if (pw.isNotEmpty) Navigator.of(ctx).pop(pw);
-            },
-            child: Text(s.loginButton),
-          ),
-        ],
-      ),
-    ),
+  await openLoginPage(
+    context,
+    prefillLogin: (prefillLogin != null && prefillLogin.trim().isNotEmpty)
+        ? prefillLogin
+        : login,
   );
-  controller.dispose();
-
-  if (password == null || password.isEmpty) return null;
-
-  // Re-authenticate to restore the in-memory session password.
-  if (!context.mounted) return null;
-  final ok = await loginAsAdmin(login: login, password: password);
-  if (!ok || !adminLoggedInNotifier.value) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(s.loginInvalidCredentials)));
-    }
-    return null;
-  }
-  return password;
 }
 
 Future<void> openLoginPage(BuildContext context, {String? prefillLogin}) async {
@@ -163,6 +89,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
+  final bool _inlineLogoutEnabled = false;
   bool _obscurePassword = true;
   bool _authBusy = false;
   ui.Image? _logoImage;
@@ -303,7 +230,8 @@ class _LoginPageState extends State<LoginPage> {
     final disabledBorder = AppColors.textSecondary.withValues(alpha: 0.45);
     return ValueListenableBuilder<bool>(
       valueListenable: userLoggedInNotifier,
-      builder: (context, loggedIn, _) {
+      builder: (context, userLoggedIn, _) {
+        final loggedIn = userLoggedIn && _inlineLogoutEnabled;
         return Scaffold(
           resizeToAvoidBottomInset: true,
           floatingActionButton: FloatingActionButton(

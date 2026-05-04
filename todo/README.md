@@ -34,4 +34,5 @@ Files in this folder:
 * `11-client-lru-per-language.md` — P2, partition cache per lang.
 * `12-blob-instructions-table.md` — P2, lazy-load HTML body.
 * `13-app-reload-ticker.md` — P3, optional global refresh.
+* `16-food-admin-secure-users-list.md` — P0, secure production admin domain + DB isolation.
 * `99-rollout-checklist.md` — final canary + rollback plan.

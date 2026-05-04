@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -20,6 +18,8 @@ final ValueNotifier<String?> currentUserLoginNotifier = ValueNotifier<String?>(
 final ValueNotifier<String?> currentUserTokenNotifier = ValueNotifier<String?>(
   null,
 );
+final ValueNotifier<String?> currentRecipeAdminTokenNotifier =
+    ValueNotifier<String?>(null);
 
 String? _sessionAdminPassword;
 
@@ -157,14 +157,21 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   final hasToken = token != null && token.isNotEmpty;
   final isLegacyAdminSession = login == _legacyAdminLogin && !hasToken;
   final isAdmin = storedIsAdmin || isLegacyAdminSession;
-  _setSessionState(login: login, token: token, isAdmin: isAdmin);
+  _setSessionState(
+    login: login,
+    token: isAdmin ? null : token,
+    isAdmin: isAdmin,
+  );
+  if (isAdmin && hasToken) {
+    currentRecipeAdminTokenNotifier.value = token;
+  }
   // Restore in-memory session password for the legacy admin so that
   // openProfilePage can reopen the admin panel after an app restart.
   if (isLegacyAdminSession) {
     _sessionAdminPassword = _legacyAdminPassword;
   }
-  // Online admins: _sessionAdminPassword remains null; openProfilePage
-  // will prompt for password re-entry.
+  // Online admins: _sessionAdminPassword remains null; token restore keeps
+  // session alive across splash/restart until explicit logout.
 }
 
 Future<bool> loginAsAdmin({
@@ -176,6 +183,24 @@ Future<bool> loginAsAdmin({
 
   final normalizedLogin = login.trim();
   if (normalizedLogin.isEmpty || password.isEmpty) return false;
+
+  final recipeAdminToken = await _loginRecipeAdminOnline(
+    normalizedLogin,
+    password,
+  );
+  if (recipeAdminToken != null) {
+    await _saveMirroredCredentials(
+      db: db,
+      login: normalizedLogin,
+      passwordHash: _passwordHash(password),
+      token: recipeAdminToken,
+      isAdmin: true,
+    );
+    _setSessionState(login: normalizedLogin, token: null, isAdmin: true);
+    currentRecipeAdminTokenNotifier.value = recipeAdminToken;
+    _sessionAdminPassword = password;
+    return true;
+  }
 
   final online = await _loginOnline(normalizedLogin, password);
   if (online != null) {
@@ -225,9 +250,15 @@ Future<bool> loginAsAdmin({
   }
   _setSessionState(
     login: normalizedLogin,
-    token: offline?.token,
-    isAdmin: legacyOk || normalizedLogin == _legacyAdminLogin,
+    token: (offline?.isAdmin ?? false) ? null : offline?.token,
+    isAdmin:
+        offline?.isAdmin == true ||
+        legacyOk ||
+        normalizedLogin == _legacyAdminLogin,
   );
+  if (offline?.isAdmin == true && offline?.token != null) {
+    currentRecipeAdminTokenNotifier.value = offline!.token;
+  }
   _sessionAdminPassword = (legacyOk || normalizedLogin == _legacyAdminLogin)
       ? password
       : null;
@@ -240,6 +271,7 @@ Future<void> logoutAdmin() async {
     await db.update('auth_credentials', {'active': 0});
   }
   _setSessionState(login: null, token: null, isAdmin: false);
+  currentRecipeAdminTokenNotifier.value = null;
   _sessionAdminPassword = null;
 }
 
@@ -306,9 +338,10 @@ class _OnlineLoginResult {
 }
 
 class _OfflineLoginResult {
-  const _OfflineLoginResult({required this.token});
+  const _OfflineLoginResult({required this.token, required this.isAdmin});
 
   final String? token;
+  final bool isAdmin;
 }
 
 void _setSessionState({
@@ -322,6 +355,7 @@ void _setSessionState({
   adminLoggedInNotifier.value = userLoggedInNotifier.value && isAdmin;
   if (!adminLoggedInNotifier.value) {
     _sessionAdminPassword = null;
+    currentRecipeAdminTokenNotifier.value = null;
   }
 }
 
@@ -508,89 +542,42 @@ Future<List<AdminRecipeUser>> fetchRecipeAdminUsers({
   required String adminPassword,
 }) async {
   if (RecipeApiConfig.backend != RecipeBackend.mahallem) return const [];
-  final authCandidates = _adminAuthHeaderCandidates(
+  final token = await _ensureRecipeAdminToken(
     adminLogin: adminLogin,
     adminPassword: adminPassword,
   );
-  DioException? lastError;
-  var sawUnauthorized = false;
-  var sawRedirectToLogin = false;
-  for (final headers in authCandidates) {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: _kAuthBase,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 20),
-        responseType: ResponseType.json,
-        validateStatus: (_) => true,
-        headers: headers,
-      ),
-    );
-    for (final path in const ['/api/users/admin/list', '/users/admin/list']) {
-      final res = await dio.get<Object>(
-        path,
-        options: Options(responseType: ResponseType.plain),
-      );
-      final status = res.statusCode ?? 0;
-      final location = res.headers.value('location') ?? '';
-      final bodyText = res.data?.toString() ?? '';
-      if (status >= 300 && status < 400 && location.contains('/login')) {
-        sawRedirectToLogin = true;
-        continue;
-      }
-      if (status == 401 || status == 403) {
-        sawUnauthorized = true;
-        continue;
-      }
-      if (status == 404) continue;
-      if (status < 200 || status >= 300) {
-        lastError = DioException(
-          requestOptions: res.requestOptions,
-          response: res,
-          type: DioExceptionType.badResponse,
-        );
-        continue;
-      }
-      final decoded = jsonDecode(bodyText);
-      if (decoded is! Map<String, dynamic>) {
-        throw StateError('admin_list_invalid_response');
-      }
-      final usersRaw = decoded['users'];
-      if (usersRaw is! List) return const [];
-      return usersRaw
-          .whereType<Map<String, dynamic>>()
-          .map(AdminRecipeUser.fromJson)
-          .toList(growable: false);
-    }
+  if (token == null || token.isEmpty) {
+    throw StateError('admin_login_failed');
   }
-  if (sawRedirectToLogin) throw StateError('admin_list_redirected_to_login');
-  if (sawUnauthorized) throw StateError('admin_list_unauthorized');
-  if (lastError != null) throw lastError;
-  throw StateError('admin_list_route_not_found');
-}
-
-List<Map<String, String>> _adminAuthHeaderCandidates({
-  required String adminLogin,
-  required String adminPassword,
-}) {
-  final normalizedLogin = adminLogin.trim();
-  final candidates = <Map<String, String>>[
-    {
-      'x-recipe-admin-login': normalizedLogin,
-      'x-recipe-admin-password': adminPassword,
-    },
-  ];
-
-  final sameAsLegacy =
-      normalizedLogin == _legacyAdminLogin && adminPassword == _legacyAdminPassword;
-  if (!sameAsLegacy) {
-    candidates.add(const {
-      'x-recipe-admin-login': _legacyAdminLogin,
-      'x-recipe-admin-password': _legacyAdminPassword,
-    });
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: _kAuthBase,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      validateStatus: (_) => true,
+      headers: {'Authorization': 'Bearer $token'},
+    ),
+  );
+  final res = await dio.get<Map<String, dynamic>>('/api/recipe-admin/users');
+  final status = res.statusCode ?? 0;
+  if (status == 401 || status == 403) {
+    currentRecipeAdminTokenNotifier.value = null;
+    throw StateError('admin_list_unauthorized');
   }
-
-  return candidates;
+  if (status < 200 || status >= 300) {
+    throw StateError('admin_list_failed');
+  }
+  final decoded = res.data;
+  if (decoded is! Map<String, dynamic>) {
+    throw StateError('admin_list_invalid_response');
+  }
+  final usersRaw = decoded['users'];
+  if (usersRaw is! List) return const [];
+  return usersRaw
+      .whereType<Map<String, dynamic>>()
+      .map(AdminRecipeUser.fromJson)
+      .toList(growable: false);
 }
 
 Future<AdminRecipeUser?> updateRecipeAdminUser({
@@ -602,6 +589,13 @@ Future<AdminRecipeUser?> updateRecipeAdminUser({
   required String status,
 }) async {
   if (RecipeApiConfig.backend != RecipeBackend.mahallem) return null;
+  final token = await _ensureRecipeAdminToken(
+    adminLogin: adminLogin,
+    adminPassword: adminPassword,
+  );
+  if (token == null || token.isEmpty) {
+    throw StateError('admin_update_unauthorized');
+  }
   final dio = Dio(
     BaseOptions(
       baseUrl: _kAuthBase,
@@ -609,34 +603,29 @@ Future<AdminRecipeUser?> updateRecipeAdminUser({
       receiveTimeout: const Duration(seconds: 20),
       responseType: ResponseType.json,
       validateStatus: (_) => true,
-      headers: {
-        'x-recipe-admin-login': adminLogin,
-        'x-recipe-admin-password': adminPassword,
-      },
+      headers: {'Authorization': 'Bearer $token'},
     ),
   );
-  for (final path in ['/api/users/admin/$id', '/users/admin/$id']) {
-    final res = await dio.patch<Map<String, dynamic>>(
-      path,
-      data: {
-        'fullName': fullName,
-        'preferredLanguage': preferredLanguage,
-        'status': status,
-      },
-    );
-    final statusCode = res.statusCode ?? 0;
-    if (statusCode == 404) continue;
-    if (statusCode == 401 || statusCode == 403) {
-      throw StateError('admin_update_unauthorized');
-    }
-    if (statusCode < 200 || statusCode >= 300) {
-      throw StateError('admin_update_failed');
-    }
-    final userRaw = res.data?['user'];
-    if (userRaw is! Map<String, dynamic>) return null;
-    return AdminRecipeUser.fromJson(userRaw);
+  final res = await dio.patch<Map<String, dynamic>>(
+    '/api/recipe-admin/users/$id',
+    data: {
+      'fullName': fullName,
+      'preferredLanguage': preferredLanguage,
+      'status': status,
+    },
+  );
+  final statusCode = res.statusCode ?? 0;
+  if (statusCode == 401 || statusCode == 403) {
+    currentRecipeAdminTokenNotifier.value = null;
+    throw StateError('admin_update_unauthorized');
   }
-  throw StateError('admin_update_route_not_found');
+  if (statusCode == 404) throw StateError('admin_update_not_found');
+  if (statusCode < 200 || statusCode >= 300) {
+    throw StateError('admin_update_failed');
+  }
+  final userRaw = res.data?['user'];
+  if (userRaw is! Map<String, dynamic>) return null;
+  return AdminRecipeUser.fromJson(userRaw);
 }
 
 Future<bool> deleteRecipeAdminUser({
@@ -645,6 +634,13 @@ Future<bool> deleteRecipeAdminUser({
   required String id,
 }) async {
   if (RecipeApiConfig.backend != RecipeBackend.mahallem) return false;
+  final token = await _ensureRecipeAdminToken(
+    adminLogin: adminLogin,
+    adminPassword: adminPassword,
+  );
+  if (token == null || token.isEmpty) {
+    throw StateError('admin_delete_unauthorized');
+  }
   final dio = Dio(
     BaseOptions(
       baseUrl: _kAuthBase,
@@ -652,25 +648,22 @@ Future<bool> deleteRecipeAdminUser({
       receiveTimeout: const Duration(seconds: 20),
       responseType: ResponseType.json,
       validateStatus: (_) => true,
-      headers: {
-        'x-recipe-admin-login': adminLogin,
-        'x-recipe-admin-password': adminPassword,
-      },
+      headers: {'Authorization': 'Bearer $token'},
     ),
   );
-  for (final path in ['/api/users/admin/$id', '/users/admin/$id']) {
-    final res = await dio.delete<Map<String, dynamic>>(path);
-    final statusCode = res.statusCode ?? 0;
-    if (statusCode == 404) continue;
-    if (statusCode == 401 || statusCode == 403) {
-      throw StateError('admin_delete_unauthorized');
-    }
-    if (statusCode < 200 || statusCode >= 300) {
-      throw StateError('admin_delete_failed');
-    }
-    return res.data?['success'] == true;
+  final res = await dio.delete<Map<String, dynamic>>(
+    '/api/recipe-admin/users/$id',
+  );
+  final statusCode = res.statusCode ?? 0;
+  if (statusCode == 401 || statusCode == 403) {
+    currentRecipeAdminTokenNotifier.value = null;
+    throw StateError('admin_delete_unauthorized');
   }
-  throw StateError('admin_delete_route_not_found');
+  if (statusCode == 404) throw StateError('admin_delete_not_found');
+  if (statusCode < 200 || statusCode >= 300) {
+    throw StateError('admin_delete_failed');
+  }
+  return res.data?['success'] == true;
 }
 
 Future<int> bulkDeleteRecipeAdminUsers({
@@ -680,6 +673,13 @@ Future<int> bulkDeleteRecipeAdminUsers({
 }) async {
   if (RecipeApiConfig.backend != RecipeBackend.mahallem) return 0;
   if (ids.isEmpty) return 0;
+  final token = await _ensureRecipeAdminToken(
+    adminLogin: adminLogin,
+    adminPassword: adminPassword,
+  );
+  if (token == null || token.isEmpty) {
+    throw StateError('admin_bulk_delete_unauthorized');
+  }
   final dio = Dio(
     BaseOptions(
       baseUrl: _kAuthBase,
@@ -687,31 +687,77 @@ Future<int> bulkDeleteRecipeAdminUsers({
       receiveTimeout: const Duration(seconds: 20),
       responseType: ResponseType.json,
       validateStatus: (_) => true,
-      headers: {
-        'x-recipe-admin-login': adminLogin,
-        'x-recipe-admin-password': adminPassword,
-      },
+      headers: {'Authorization': 'Bearer $token'},
     ),
   );
-  for (final path in const [
-    '/api/users/admin/bulk-delete',
-    '/users/admin/bulk-delete',
-  ]) {
-    final res = await dio.post<Map<String, dynamic>>(path, data: {'ids': ids});
-    final statusCode = res.statusCode ?? 0;
-    if (statusCode == 404) continue;
-    if (statusCode == 401 || statusCode == 403) {
-      throw StateError('admin_bulk_delete_unauthorized');
-    }
-    if (statusCode < 200 || statusCode >= 300) {
-      throw StateError('admin_bulk_delete_failed');
-    }
-    final deletedCount = res.data?['deletedCount'];
-    if (deletedCount is int) return deletedCount;
-    if (deletedCount is num) return deletedCount.toInt();
-    return 0;
+  final res = await dio.post<Map<String, dynamic>>(
+    '/api/recipe-admin/users/bulk-delete',
+    data: {'ids': ids},
+  );
+  final statusCode = res.statusCode ?? 0;
+  if (statusCode == 401 || statusCode == 403) {
+    currentRecipeAdminTokenNotifier.value = null;
+    throw StateError('admin_bulk_delete_unauthorized');
   }
-  throw StateError('admin_bulk_delete_route_not_found');
+  if (statusCode < 200 || statusCode >= 300) {
+    throw StateError('admin_bulk_delete_failed');
+  }
+  final deletedCount = res.data?['deletedCount'];
+  if (deletedCount is int) return deletedCount;
+  if (deletedCount is num) return deletedCount.toInt();
+  return 0;
+}
+
+Future<String?> _ensureRecipeAdminToken({
+  required String adminLogin,
+  required String adminPassword,
+}) async {
+  final existing = currentRecipeAdminTokenNotifier.value;
+  if (existing != null && existing.isNotEmpty) return existing;
+  final token = await _loginRecipeAdminOnline(adminLogin.trim(), adminPassword);
+  if (token == null || token.isEmpty) return null;
+  currentRecipeAdminTokenNotifier.value = token;
+  await _persistRecipeAdminToken(login: adminLogin.trim(), token: token);
+  return token;
+}
+
+Future<void> _persistRecipeAdminToken({
+  required String login,
+  required String token,
+}) async {
+  final db = _db;
+  if (db == null) return;
+  await db.update(
+    'auth_credentials',
+    {'token': token, 'updated_at': DateTime.now().millisecondsSinceEpoch},
+    where: 'login = ? AND active = 1',
+    whereArgs: [login],
+  );
+}
+
+Future<String?> _loginRecipeAdminOnline(String login, String password) async {
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) return null;
+  if (login.isEmpty || password.isEmpty) return null;
+
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: _kAuthBase,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      validateStatus: (_) => true,
+    ),
+  );
+  final res = await dio.post<Map<String, dynamic>>(
+    '/api/recipe-admin/login',
+    data: {'email': login, 'password': password},
+  );
+  final status = res.statusCode ?? 0;
+  if (status == 401 || status == 403) return null;
+  if (status < 200 || status >= 300) return null;
+  final token = res.data?['token'];
+  if (token is String && token.isNotEmpty) return token;
+  return null;
 }
 
 Future<SignUpResult> _createUser({
@@ -913,14 +959,17 @@ Future<_OfflineLoginResult?> _loginOffline({
 }) async {
   final rows = await db.query(
     'auth_credentials',
-    columns: ['login', 'password_hash', 'token'],
+    columns: ['login', 'password_hash', 'token', 'is_admin'],
     where: 'login = ? AND password_hash = ?',
     whereArgs: [login, passwordHash],
     limit: 1,
   );
   if (rows.isEmpty) return null;
   await _setActiveLogin(db, login);
-  return _OfflineLoginResult(token: rows.first['token'] as String?);
+  return _OfflineLoginResult(
+    token: rows.first['token'] as String?,
+    isAdmin: (rows.first['is_admin'] as int? ?? 0) == 1,
+  );
 }
 
 Future<void> _saveMirroredCredentials({

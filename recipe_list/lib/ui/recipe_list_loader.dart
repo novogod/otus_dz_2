@@ -627,7 +627,9 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       return _LoadResult(recipes: recipes, repository: repo);
     }
 
-    // TheMealDB: одно слово возвращает полные карточки.
+    // TheMealDB fallback: use a multi-letter seed query. Some
+    // proxies/backends reject one-letter prefixes (e.g. `q=c`
+    // -> `prefix_too_short`), which would produce an empty feed.
     _stage.value = _LoadStage.fetching(
       category: 'recipes',
       done: 0,
@@ -635,7 +637,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       loaded: 0,
       target: 0,
     );
-    final recipes = await widget.api.searchByName(query: 'c', lang: lang);
+    final recipes = await widget.api.searchByName(query: 'chicken', lang: lang);
     await _persist(repo, recipes, lang);
     return _LoadResult(recipes: recipes, repository: repo);
   }
