@@ -147,88 +147,96 @@ class _SignUpPageState extends State<SignUpPage> {
                     const SizedBox(height: AppSpacing.xl),
                     Form(
                       key: _formKey,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _nameController,
-                            textInputAction: TextInputAction.next,
-                            decoration: InputDecoration(
-                              labelText: s.signUpName,
-                              fillColor: AppColors.surface,
+                      child: SizedBox(
+                        width: 320,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _nameController,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: s.signUpName,
+                                fillColor: AppColors.surface,
+                              ),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? s.addRecipeRequired
+                                  : null,
                             ),
-                            validator: (v) => (v == null || v.trim().isEmpty)
-                                ? s.addRecipeRequired
-                                : null,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _emailController,
-                            textInputAction: TextInputAction.next,
-                            keyboardType: TextInputType.emailAddress,
-                            autocorrect: false,
-                            decoration: InputDecoration(
-                              labelText: s.signUpEmail,
-                              fillColor: AppColors.surface,
+                            const SizedBox(height: AppSpacing.md),
+                            TextFormField(
+                              controller: _emailController,
+                              textInputAction: TextInputAction.next,
+                              keyboardType: TextInputType.emailAddress,
+                              autocorrect: false,
+                              decoration: InputDecoration(
+                                labelText: s.signUpEmail,
+                                fillColor: AppColors.surface,
+                              ),
+                              validator: (v) {
+                                final email = (v ?? '').trim();
+                                if (email.isEmpty) {
+                                  return s.addRecipeRequired;
+                                }
+                                if (!email.contains('@')) {
+                                  return s.signUpInvalidEmail;
+                                }
+                                final re = RegExp(
+                                  r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                                );
+                                if (!re.hasMatch(email)) {
+                                  return s.signUpInvalidEmail;
+                                }
+                                return null;
+                              },
                             ),
-                            validator: (v) {
-                              final email = (v ?? '').trim();
-                              if (email.isEmpty) {
-                                return s.addRecipeRequired;
-                              }
-                              if (!email.contains('@')) {
-                                return s.signUpInvalidEmail;
-                              }
-                              final re = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                              if (!re.hasMatch(email)) {
-                                return s.signUpInvalidEmail;
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _submit(),
-                            decoration: InputDecoration(
-                              labelText: s.signUpPassword,
-                              fillColor: AppColors.surface,
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(
-                                    () => _obscurePassword = !_obscurePassword,
-                                  );
-                                },
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
+                            const SizedBox(height: AppSpacing.md),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _submit(),
+                              decoration: InputDecoration(
+                                labelText: s.signUpPassword,
+                                fillColor: AppColors.surface,
+                                suffixIcon: IconButton(
+                                  onPressed: () {
+                                    setState(
+                                      () =>
+                                          _obscurePassword = !_obscurePassword,
+                                    );
+                                  },
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
                                 ),
                               ),
+                              validator: (v) {
+                                if (v == null || v.isEmpty) {
+                                  return s.addRecipeRequired;
+                                }
+                                if (v.length < 4)
+                                  return s.signUpPasswordTooShort;
+                                return null;
+                              },
                             ),
-                            validator: (v) {
-                              if (v == null || v.isEmpty) {
-                                return s.addRecipeRequired;
-                              }
-                              if (v.length < 4) return s.signUpPasswordTooShort;
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.primaryDark,
+                            const SizedBox(height: AppSpacing.lg),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primaryDark,
+                                  minimumSize: const Size(double.infinity, 67),
+                                ),
+                                onPressed: _busy ? null : _submit,
+                                child: Text(s.signUpButton),
                               ),
-                              onPressed: _busy ? null : _submit,
-                              child: Text(s.signUpButton),
                             ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _LanguagePicker(),
-                        ],
+                            const SizedBox(height: AppSpacing.lg),
+                            _LanguagePicker(),
+                          ],
+                        ),
                       ),
                     ),
                   ],

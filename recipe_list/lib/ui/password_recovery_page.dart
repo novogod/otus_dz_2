@@ -11,7 +11,6 @@ import 'splash_page.dart';
 Future<String?> openPasswordRecoveryPage(
   BuildContext context, {
   required String email,
-  required String recoverySessionCookie,
 }) {
   return Navigator.of(context).push<String>(
     PageRouteBuilder<String>(
@@ -20,7 +19,6 @@ Future<String?> openPasswordRecoveryPage(
       pageBuilder: (context, animation, secondaryAnimation) =>
           PasswordRecoveryPage(
             email: email,
-            recoverySessionCookie: recoverySessionCookie,
           ),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final curved = CurvedAnimation(
@@ -39,12 +37,10 @@ Future<String?> openPasswordRecoveryPage(
 
 class PasswordRecoveryPage extends StatefulWidget {
   final String email;
-  final String recoverySessionCookie;
 
   const PasswordRecoveryPage({
     super.key,
     required this.email,
-    required this.recoverySessionCookie,
   });
 
   @override
@@ -100,7 +96,7 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
     final result = await resetPasswordWithCode(
       code: _codeController.text,
       newPassword: _newPasswordController.text,
-      recoverySessionCookie: widget.recoverySessionCookie,
+      recoveryEmail: widget.email,
     );
     if (!mounted) return;
     setState(() => _busy = false);
@@ -188,68 +184,73 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
                     const SizedBox(height: AppSpacing.lg),
                     Form(
                       key: _formKey,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _codeController,
-                            keyboardType: TextInputType.number,
-                            maxLength: 4,
-                            textInputAction: TextInputAction.next,
-                            decoration: InputDecoration(
-                              labelText: s.passwordRecoveryCodeLabel,
-                              hintText: s.passwordRecoveryCodeHint,
-                              fillColor: AppColors.surface,
-                              counterText: '',
+                      child: SizedBox(
+                        width: 320,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _codeController,
+                              keyboardType: TextInputType.number,
+                              maxLength: 4,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: s.passwordRecoveryCodeLabel,
+                                hintText: s.passwordRecoveryCodeHint,
+                                fillColor: AppColors.surface,
+                                counterText: '',
+                              ),
+                              validator: (v) {
+                                final value = (v ?? '').trim();
+                                if (!RegExp(r'^\d{4}$').hasMatch(value)) {
+                                  return s.passwordRecoveryInvalidCode;
+                                }
+                                return null;
+                              },
                             ),
-                            validator: (v) {
-                              final value = (v ?? '').trim();
-                              if (!RegExp(r'^\d{4}$').hasMatch(value)) {
-                                return s.passwordRecoveryInvalidCode;
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _newPasswordController,
-                            obscureText: _obscurePassword,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _submit(),
-                            decoration: InputDecoration(
-                              labelText: s.passwordRecoveryNewPassword,
-                              fillColor: AppColors.surface,
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(
-                                    () => _obscurePassword = !_obscurePassword,
-                                  );
-                                },
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
+                            const SizedBox(height: AppSpacing.md),
+                            TextFormField(
+                              controller: _newPasswordController,
+                              obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _submit(),
+                              decoration: InputDecoration(
+                                labelText: s.passwordRecoveryNewPassword,
+                                fillColor: AppColors.surface,
+                                suffixIcon: IconButton(
+                                  onPressed: () {
+                                    setState(
+                                      () =>
+                                          _obscurePassword = !_obscurePassword,
+                                    );
+                                  },
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
                                 ),
                               ),
+                              validator: (v) {
+                                if ((v ?? '').length < 6) {
+                                  return s.passwordRecoveryPasswordTooShort;
+                                }
+                                return null;
+                              },
                             ),
-                            validator: (v) {
-                              if ((v ?? '').length < 6) {
-                                return s.passwordRecoveryPasswordTooShort;
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.primaryDark,
+                            const SizedBox(height: AppSpacing.lg),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primaryDark,
+                                  minimumSize: const Size(double.infinity, 67),
+                                ),
+                                onPressed: _busy ? null : _submit,
+                                child: Text(s.passwordRecoverySubmit),
                               ),
-                              onPressed: _busy ? null : _submit,
-                              child: Text(s.passwordRecoverySubmit),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],

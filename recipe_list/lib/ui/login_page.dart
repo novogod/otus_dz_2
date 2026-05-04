@@ -50,6 +50,25 @@ Future<void> openProfilePage(
         ? prefillLogin
         : login,
   );
+  if (!context.mounted) return;
+
+  // After LoginPage closes, check if user is now authenticated as admin.
+  // If so, open the admin panel. This handles the post-login flow.
+  final loginAfter = currentUserLoginNotifier.value?.trim();
+  final passwordAfter = currentSessionAdminPassword;
+  final tokenAfter = currentRecipeAdminTokenNotifier.value;
+  final hasTokenAfter = tokenAfter != null && tokenAfter.isNotEmpty;
+  final hasLoginAfter = loginAfter != null && loginAfter.isNotEmpty;
+  final isAdminAfter = adminLoggedInNotifier.value && hasLoginAfter;
+
+  if ((isAdminAfter || (hasTokenAfter && hasLoginAfter)) && context.mounted) {
+    await openAdminAfterLoginPage(
+      context,
+      adminLogin: loginAfter,
+      adminPassword: passwordAfter ?? '',
+      replaceCurrent: false,
+    );
+  }
 }
 
 Future<void> openLoginPage(BuildContext context, {String? prefillLogin}) async {
@@ -91,6 +110,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
+  late FocusNode _passwordFocusNode;
   bool _obscurePassword = true;
   bool _authBusy = false;
   bool _biometricSaved = false;
@@ -99,6 +119,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    _passwordFocusNode = FocusNode();
     final initialLogin = widget.initialLogin;
     if (initialLogin != null && initialLogin.trim().isNotEmpty) {
       _loginController.text = initialLogin.trim();
@@ -137,6 +158,7 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _loginController.dispose();
     _passwordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -171,14 +193,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       );
-    if (adminLoggedInNotifier.value) {
-      await openAdminAfterLoginPage(
-        context,
-        adminLogin: _loginController.text.trim(),
-        adminPassword: _passwordController.text,
-      );
-      return;
-    }
+    if (!context.mounted) return;
     Navigator.of(context).pop(true);
   }
 
@@ -342,7 +357,6 @@ class _LoginPageState extends State<LoginPage> {
         final recoveredEmail = await openPasswordRecoveryPage(
           context,
           email: email,
-          recoverySessionCookie: result.sessionCookie ?? '',
         );
         if (!mounted) return;
         if (recoveredEmail != null) {
@@ -410,160 +424,183 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: AppSpacing.xl),
                             Form(
                               key: _formKey,
-                              child: Column(
-                                children: [
-                                  TextFormField(
-                                    controller: loggedIn
-                                        ? null
-                                        : _loginController,
-                                    initialValue: loggedIn
-                                        ? (currentUserLoginNotifier.value ?? '')
-                                        : null,
-                                    enabled: !loggedIn,
-                                    style: TextStyle(
-                                      color: loggedIn
-                                          ? AppColors.textSecondary
-                                          : AppColors.textPrimary,
-                                    ),
-                                    textInputAction: TextInputAction.next,
-                                    decoration: InputDecoration(
-                                      labelText: s.loginUsername,
-                                      fillColor: loggedIn
-                                          ? disabledFill
-                                          : AppColors.surface,
-                                      disabledBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(
-                                          Radius.circular(AppRadii.input),
-                                        ),
-                                        borderSide: BorderSide(
-                                          color: disabledBorder,
-                                        ),
-                                      ),
-                                    ),
-                                    validator: (v) =>
-                                        (v == null || v.trim().isEmpty)
-                                        ? s.addRecipeRequired
-                                        : null,
-                                  ),
-                                  const SizedBox(height: AppSpacing.md),
-                                  TextFormField(
-                                    controller: loggedIn
-                                        ? null
-                                        : _passwordController,
-                                    initialValue: loggedIn ? '••••••••' : null,
-                                    enabled: !loggedIn,
-                                    style: TextStyle(
-                                      color: loggedIn
-                                          ? AppColors.textSecondary
-                                          : AppColors.textPrimary,
-                                    ),
-                                    obscureText: loggedIn
-                                        ? false
-                                        : _obscurePassword,
-                                    textInputAction: TextInputAction.done,
-                                    onFieldSubmitted: (_) => _submit(),
-                                    decoration: InputDecoration(
-                                      labelText: s.loginPassword,
-                                      fillColor: loggedIn
-                                          ? disabledFill
-                                          : AppColors.surface,
-                                      disabledBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(
-                                          Radius.circular(AppRadii.input),
-                                        ),
-                                        borderSide: BorderSide(
-                                          color: disabledBorder,
-                                        ),
-                                      ),
-                                      suffixIcon: loggedIn
+                              child: SizedBox(
+                                width: 320,
+                                child: Column(
+                                  children: [
+                                    TextFormField(
+                                      controller: loggedIn
                                           ? null
-                                          : IconButton(
-                                              onPressed: () {
-                                                setState(
-                                                  () => _obscurePassword =
-                                                      !_obscurePassword,
-                                                );
-                                              },
-                                              icon: Icon(
-                                                _obscurePassword
-                                                    ? Icons.visibility_off
-                                                    : Icons.visibility,
+                                          : _loginController,
+                                      initialValue: loggedIn
+                                          ? (currentUserLoginNotifier.value ??
+                                                '')
+                                          : null,
+                                      enabled: !loggedIn,
+                                      style: TextStyle(
+                                        color: loggedIn
+                                            ? AppColors.textSecondary
+                                            : AppColors.textPrimary,
+                                      ),
+                                      textInputAction: TextInputAction.next,
+                                      onFieldSubmitted: loggedIn
+                                          ? null
+                                          : (_) {
+                                              _passwordFocusNode.requestFocus();
+                                            },
+                                      decoration: InputDecoration(
+                                        labelText: s.loginUsername,
+                                        fillColor: loggedIn
+                                            ? disabledFill
+                                            : AppColors.surface,
+                                        disabledBorder: OutlineInputBorder(
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(AppRadii.input),
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: disabledBorder,
+                                          ),
+                                        ),
+                                      ),
+                                      validator: (v) =>
+                                          (v == null || v.trim().isEmpty)
+                                          ? s.addRecipeRequired
+                                          : null,
+                                    ),
+                                    const SizedBox(height: AppSpacing.md),
+                                    TextFormField(
+                                      focusNode: loggedIn
+                                          ? null
+                                          : _passwordFocusNode,
+                                      controller: loggedIn
+                                          ? null
+                                          : _passwordController,
+                                      initialValue: loggedIn
+                                          ? '••••••••'
+                                          : null,
+                                      enabled: !loggedIn,
+                                      style: TextStyle(
+                                        color: loggedIn
+                                            ? AppColors.textSecondary
+                                            : AppColors.textPrimary,
+                                      ),
+                                      obscureText: loggedIn
+                                          ? false
+                                          : _obscurePassword,
+                                      textInputAction: TextInputAction.done,
+                                      onFieldSubmitted: (_) => _submit(),
+                                      decoration: InputDecoration(
+                                        labelText: s.loginPassword,
+                                        fillColor: loggedIn
+                                            ? disabledFill
+                                            : AppColors.surface,
+                                        disabledBorder: OutlineInputBorder(
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(AppRadii.input),
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: disabledBorder,
+                                          ),
+                                        ),
+                                        suffixIcon: loggedIn
+                                            ? null
+                                            : IconButton(
+                                                onPressed: () {
+                                                  setState(
+                                                    () => _obscurePassword =
+                                                        !_obscurePassword,
+                                                  );
+                                                },
+                                                icon: Icon(
+                                                  _obscurePassword
+                                                      ? Icons.visibility_off
+                                                      : Icons.visibility,
+                                                ),
                                               ),
-                                            ),
-                                    ),
-                                    validator: (v) => (v == null || v.isEmpty)
-                                        ? s.addRecipeRequired
-                                        : null,
-                                  ),
-                                  const SizedBox(height: AppSpacing.lg),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: FilledButton(
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: AppColors.primaryDark,
                                       ),
-                                      onPressed: _authBusy
-                                          ? null
-                                          : (loggedIn ? _logout : _submit),
-                                      child: Text(
-                                        loggedIn
-                                            ? s.logoutButton
-                                            : s.loginButton,
+                                      validator: (v) => (v == null || v.isEmpty)
+                                          ? s.addRecipeRequired
+                                          : null,
+                                    ),
+                                    const SizedBox(height: AppSpacing.lg),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: FilledButton(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor:
+                                              AppColors.primaryDark,
+                                          minimumSize: const Size(
+                                            double.infinity,
+                                            67,
+                                          ),
+                                        ),
+                                        onPressed: _authBusy
+                                            ? null
+                                            : (loggedIn ? _logout : _submit),
+                                        child: Text(
+                                          loggedIn
+                                              ? s.logoutButton
+                                              : s.loginButton,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  if (loggedIn) ...[
+                                    if (loggedIn) ...[
+                                      const SizedBox(height: AppSpacing.sm),
+                                      OutlinedButton.icon(
+                                        onPressed: _authBusy
+                                            ? null
+                                            : _saveCurrentSessionForBiometric,
+                                        icon: Icon(
+                                          _biometricSaved
+                                              ? Icons.verified_user
+                                              : Icons.fingerprint,
+                                          size: 72,
+                                        ),
+                                        label: Text(
+                                          _biometricSaved
+                                              ? 'Face ID / Fingerprint is saved for login'
+                                              : 'Save this login for Face ID / Fingerprint',
+                                        ),
+                                      ),
+                                    ],
+                                    if (!loggedIn) ...[
+                                      const SizedBox(height: AppSpacing.sm),
+                                      OutlinedButton.icon(
+                                        onPressed: _authBusy
+                                            ? null
+                                            : _loginWithBiometrics,
+                                        icon: const Icon(
+                                          Icons.fingerprint,
+                                          size: 72,
+                                        ),
+                                        label: const Text(
+                                          'Sign in with Face ID / Fingerprint',
+                                        ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.sm),
+                                      TextButton(
+                                        onPressed: _authBusy
+                                            ? null
+                                            : _forgotPassword,
+                                        child: Text(
+                                          s.forgotPassword,
+                                          style: AppTextStyles.secondaryLink,
+                                        ),
+                                      ),
+                                    ],
                                     const SizedBox(height: AppSpacing.sm),
-                                    OutlinedButton.icon(
-                                      onPressed: _authBusy
-                                          ? null
-                                          : _saveCurrentSessionForBiometric,
-                                      icon: Icon(
-                                        _biometricSaved
-                                            ? Icons.verified_user
-                                            : Icons.fingerprint,
+                                    if (!loggedIn)
+                                      TextButton(
+                                        onPressed: () async {
+                                          await openSignUpPage(context);
+                                        },
+                                        child: Text(
+                                          s.signUp,
+                                          style: AppTextStyles.secondaryLink,
+                                        ),
                                       ),
-                                      label: Text(
-                                        _biometricSaved
-                                            ? 'Face ID / Fingerprint is saved for login'
-                                            : 'Save this login for Face ID / Fingerprint',
-                                      ),
-                                    ),
                                   ],
-                                  if (!loggedIn) ...[
-                                    const SizedBox(height: AppSpacing.sm),
-                                    OutlinedButton.icon(
-                                      onPressed: _authBusy
-                                          ? null
-                                          : _loginWithBiometrics,
-                                      icon: const Icon(Icons.fingerprint),
-                                      label: const Text(
-                                        'Sign in with Face ID / Fingerprint',
-                                      ),
-                                    ),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    TextButton(
-                                      onPressed: _authBusy
-                                          ? null
-                                          : _forgotPassword,
-                                      child: Text(
-                                        s.forgotPassword,
-                                        style: AppTextStyles.secondaryLink,
-                                      ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: AppSpacing.sm),
-                                  if (!loggedIn)
-                                    TextButton(
-                                      onPressed: () async {
-                                        await openSignUpPage(context);
-                                      },
-                                      child: Text(
-                                        s.signUp,
-                                        style: AppTextStyles.secondaryLink,
-                                      ),
-                                    ),
-                                ],
+                                ),
                               ),
                             ),
                           ],

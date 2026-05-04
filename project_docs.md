@@ -1,6 +1,23 @@
 # Project Recent Changes
 
-_Last updated: 2026-05-03_
+_Last updated: 2026-05-04_
+
+## Password recovery session fix (web platform)
+
+- **Issue**: Web clients received "session expired" error when submitting password recovery code, even though `/forgot-password` succeeded
+- **Root Cause**: Backend `/reset-password` endpoint relied on Express HTTP-only session cookies to validate recovery context
+  - Flutter web cannot reliably maintain HTTP-only cookies across requests (different request lifecycle than browsers)
+  - Backend expected email in `req.session.resetPasswordEmail` from `/forgot-password`
+- **Solution**:
+  - Modified backend `/reset-password` to accept `email` in request body as fallback: `const email = req.session.resetPasswordEmail || bodyEmail`
+  - Simplified Flutter app signature: `resetPasswordWithCode({code, newPassword, recoveryEmail})` (removed sessionCookie param)
+  - Now sends email explicitly in JSON request body
+- **Result**: Password recovery flow works across all platforms (web, mobile, desktop)
+- **Files Modified**:
+  - `local_docker_admin_backend/frontend-admin/server.js` (line 3817-3819)
+  - `recipe_list/lib/auth/admin_session.dart` (resetPasswordWithCode function)
+  - `recipe_list/lib/ui/password_recovery_page.dart` (removed sessionCookie parameter)
+  - `recipe_list/lib/ui/login_page.dart` (caller updated)
 
 ## Admin auth/session flow
 

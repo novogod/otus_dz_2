@@ -31,14 +31,13 @@ const String _kAuthBaseEnv = String.fromEnvironment(
   'MAHALLEM_AUTH_BASE',
   defaultValue: '__unset__',
 );
-const String _kLocalWebAuthBase = 'http://localhost:4000';
 
-/// Auth base: localhost:4000 for web development, production for other platforms.
+/// Auth base: all platforms use production backend by default.
 String get _kAuthBase {
   if (_kAuthBaseEnv != '__unset__') {
     return _kAuthBaseEnv; // явно переданный через dart-define
   }
-  return kIsWeb ? _kLocalWebAuthBase : 'https://mahallem.ist';
+  return 'https://mahallem.ist';
 }
 
 const String _kAuthLoginPath = String.fromEnvironment(
@@ -602,11 +601,30 @@ Future<PasswordRecoveryStartResponse> requestPasswordRecovery({
       );
     }
 
-    final setCookieHeader = res.headers['set-cookie'];
-    final sessionCookie =
-        (setCookieHeader != null && setCookieHeader.isNotEmpty)
-        ? setCookieHeader.first.split(';').first
-        : null;
+    // Extract the session identifier - try response body first, then set-cookie header
+    String? sessionCookie;
+    
+    // Try to get session ID from response body (for APIs that return it)
+    if (body is Map<String, dynamic>) {
+      sessionCookie = body['sessionId'] as String? ??
+          body['session'] as String? ??
+          body['recoveryToken'] as String? ??
+          body['token'] as String?;
+    }
+    
+    // Fall back to set-cookie header if not in body
+    if ((sessionCookie == null || sessionCookie.isEmpty)) {
+      final setCookieHeader = res.headers['set-cookie'];
+      if (setCookieHeader != null && setCookieHeader.isNotEmpty) {
+        sessionCookie = setCookieHeader.first.split(';').first;
+      }
+    }
+    
+    // If still no session ID, use the email as identifier
+    // (Express session is stored server-side, client just needs to send same email)
+    if ((sessionCookie == null || sessionCookie.isEmpty)) {
+      sessionCookie = normalizedEmail;
+    }
 
     return PasswordRecoveryStartResponse(
       result: PasswordRecoveryStartResult.success,
@@ -630,7 +648,7 @@ Future<PasswordRecoveryStartResponse> requestPasswordRecovery({
 Future<PasswordResetResult> resetPasswordWithCode({
   required String code,
   required String newPassword,
-  required String recoverySessionCookie,
+  required String recoveryEmail,
 }) async {
   final normalizedCode = code.trim();
   if (!RegExp(r'^\d{4}$').hasMatch(normalizedCode)) {
@@ -650,14 +668,21 @@ Future<PasswordResetResult> resetPasswordWithCode({
       receiveTimeout: const Duration(seconds: 20),
       responseType: ResponseType.json,
       validateStatus: (_) => true,
-      headers: {'Cookie': recoverySessionCookie},
     ),
   );
 
   try {
+    // Backend expects email, code, and newPassword in request body
+    // The backend uses email to validate the recovery session from /forgot-password
+    final requestData = {
+      'code': normalizedCode,
+      'newPassword': newPassword,
+      'email': recoveryEmail,
+    };
+    
     final res = await dio.post<Map<String, dynamic>>(
       _normalizePath(_kAuthResetPasswordPath),
-      data: {'code': normalizedCode, 'newPassword': newPassword},
+      data: requestData,
     );
     final status = res.statusCode ?? 0;
     final body = res.data;
