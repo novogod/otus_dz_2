@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -10,12 +11,11 @@ import '../data/repository/owned_recipes_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
+import '../router/routes.dart';
 import '../utils/imgproxy.dart';
-import 'add_recipe_page.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
 import 'recipe_card.dart' show FavoriteBadge;
-import 'source_page.dart';
 
 /// Глобальный счётчик активных страниц деталей рецепта.
 ///
@@ -424,9 +424,8 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
   }
 
   static void _openSource(BuildContext context, String url) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => SourcePage(url: url)));
+    final base = Routes.currentBranchBase(GoRouterState.of(context).uri.path);
+    context.push(Routes.sourceUnder(base, url));
   }
 }
 
@@ -678,11 +677,10 @@ class _OwnerActions extends StatelessWidget {
   }
 
   Future<void> _openEdit(BuildContext context) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            AddRecipePage(api: api, repository: repository, existing: recipe),
-      ),
+    final base = Routes.currentBranchBase(GoRouterState.of(context).uri.path);
+    await context.push<Recipe>(
+      Routes.editUnder(base, recipe.id),
+      extra: recipe,
     );
   }
 }

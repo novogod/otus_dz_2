@@ -282,11 +282,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
     }
     final api = widget.api;
     if (api == null) return;
-    await Navigator.of(context).push<Recipe>(
-      MaterialPageRoute<Recipe>(
-        builder: (_) => AddRecipePage(api: api, repository: widget.repository),
-      ),
-    );
+    final base = Routes.currentBranchBase(GoRouterState.of(context).uri.path);
+    await context.push<Recipe>(Routes.addUnder(base));
     // Новый рецепт не попадает автоматически в избранное — список
     // обновится сам через `favoritesStoreNotifier`, когда
     // пользователь нажмёт сердце на странице деталей.
@@ -312,14 +309,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   Future<void> _openEditRecipe(BuildContext context, Recipe recipe) async {
-    await Navigator.of(context).push<Recipe>(
-      MaterialPageRoute<Recipe>(
-        builder: (_) => AddRecipePage(
-          api: widget.api,
-          repository: widget.repository,
-          existing: recipe,
-        ),
-      ),
+    final base = Routes.currentBranchBase(GoRouterState.of(context).uri.path);
+    await context.push<Recipe>(
+      Routes.editUnder(base, recipe.id),
+      extra: recipe,
     );
   }
 

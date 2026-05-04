@@ -545,12 +545,8 @@ class _RecipeListPageState extends State<RecipeListPage> {
       _showFavoritesRegistrationRequired(context);
       return;
     }
-    await Navigator.of(context).push<Recipe>(
-      MaterialPageRoute<Recipe>(
-        builder: (_) =>
-            AddRecipePage(api: widget.api, repository: widget.repository),
-      ),
-    );
+    final base = Routes.currentBranchBase(GoRouterState.of(context).uri.path);
+    await context.push<Recipe>(Routes.addUnder(base));
   }
 
   Future<void> _openEditRecipe(BuildContext context, Recipe recipe) async {
@@ -558,14 +554,10 @@ class _RecipeListPageState extends State<RecipeListPage> {
         adminLoggedInNotifier.value ||
         (ownedRecipesStoreNotifier.value?.isOwned(recipe.id) ?? false);
     if (!canManage) return;
-    await Navigator.of(context).push<Recipe>(
-      MaterialPageRoute<Recipe>(
-        builder: (_) => AddRecipePage(
-          api: widget.api,
-          repository: widget.repository,
-          existing: recipe,
-        ),
-      ),
+    final base = Routes.currentBranchBase(GoRouterState.of(context).uri.path);
+    await context.push<Recipe>(
+      Routes.editUnder(base, recipe.id),
+      extra: recipe,
     );
   }
 

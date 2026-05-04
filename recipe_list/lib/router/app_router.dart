@@ -7,11 +7,13 @@ import '../i18n.dart';
 import '../main.dart' show splashAndRecipesKey;
 import '../models/recipe.dart';
 import '../ui/admin_after_login_page.dart';
+import '../ui/add_recipe_page.dart';
 import '../ui/app_shell.dart';
 import '../ui/app_theme.dart' show AppDurations;
 import '../ui/favorites_page.dart';
 import '../ui/login_page.dart';
 import '../ui/recipe_details_page.dart';
+import '../ui/source_page.dart';
 import '../ui/splash_and_recipes.dart';
 import 'routes.dart';
 
@@ -62,6 +64,18 @@ final GoRouter appRouter = GoRouter(
                   builder: (context, state) =>
                       _buildDetailsPage(context, state),
                 ),
+                GoRoute(
+                  path: Routes.addSubpath,
+                  builder: (context, state) => _buildAddRecipePage(state),
+                ),
+                GoRoute(
+                  path: Routes.editSubpath,
+                  builder: (context, state) => _buildAddRecipePage(state),
+                ),
+                GoRoute(
+                  path: Routes.sourceSubpath,
+                  builder: (context, state) => _buildSourcePage(state),
+                ),
               ],
             ),
           ],
@@ -94,6 +108,18 @@ final GoRouter appRouter = GoRouter(
                   path: Routes.detailsSubpath,
                   builder: (context, state) =>
                       _buildDetailsPage(context, state),
+                ),
+                GoRoute(
+                  path: Routes.addSubpath,
+                  builder: (context, state) => _buildAddRecipePage(state),
+                ),
+                GoRoute(
+                  path: Routes.editSubpath,
+                  builder: (context, state) => _buildAddRecipePage(state),
+                ),
+                GoRoute(
+                  path: Routes.sourceSubpath,
+                  builder: (context, state) => _buildSourcePage(state),
                 ),
               ],
             ),
@@ -213,6 +239,40 @@ Widget _buildDetailsPage(BuildContext context, GoRouterState state) {
     if (context.mounted && context.canPop()) context.pop();
   });
   return const Scaffold(body: Center(child: CircularProgressIndicator()));
+}
+
+/// Сборка экрана `AddRecipePage` для add- и edit-роутов.
+///
+/// Подхватывает api/repository из [appServicesNotifier] (так же,
+/// как [_FavoritesBranchRoot]), чтобы строки на push не нужно
+/// было таскать сервисы вручную через `extra`. В edit-режиме
+/// полный [Recipe] прилетает через `state.extra` (callsite
+/// уже знает рецепт). Если extra пустое (например, прямой
+/// deep-link на `/recipes/edit/123` без preload) — выходим
+/// обратно: full edit без подкачки рецепта в чанке D не
+/// реализуем.
+Widget _buildAddRecipePage(GoRouterState state) {
+  final services = appServicesNotifier.value;
+  final extra = state.extra;
+  Recipe? existing;
+  if (extra is Recipe) existing = extra;
+  return AddRecipePage(
+    api: services?.api,
+    repository: services?.repository,
+    existing: existing,
+  );
+}
+
+/// Сборка [SourcePage] из query-параметра `url`. Если url не
+/// задан — `SourcePage` всё равно отрендерится, но загрузить
+/// ничего не сможет (пустая строка), поэтому в этом редком
+/// случае показываем заглушку и возвращаемся.
+Widget _buildSourcePage(GoRouterState state) {
+  final url = state.uri.queryParameters['url'] ?? '';
+  if (url.isEmpty) {
+    return const Scaffold(body: Center(child: Text('source url missing')));
+  }
+  return SourcePage(url: url);
 }
 
 /// Auth-aware redirect для профильной ветки. Запускается

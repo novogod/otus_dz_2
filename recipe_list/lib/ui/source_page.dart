@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../i18n.dart';
-import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
 import 'lang_icon_button.dart';
-import 'login_page.dart';
 
 /// Внутристраничный читатель внешнего источника рецепта.
 ///
 /// Открывается по кнопке `Source` на экране деталей. Сам контент
 /// (страница `recipe.sourceUrl`) рендерится через [WebViewWidget]
-/// в полосе между [AppBar] и [AppBottomNavBar]. AppBar имеет
-/// заголовок `Source` (см. [S.source]) и chevron-кнопку назад.
+/// в полосе под [AppBar]. С переходом на go_router (чанк D)
+/// экран живёт внутри своей ветки [StatefulShellRoute] и берёт
+/// нижний навбар из [AppShell] — своего `bottomNavigationBar`
+/// больше не рисует (выход — через chevron в AppBar).
 class SourcePage extends StatefulWidget {
   final String url;
 
@@ -142,16 +142,6 @@ class _SourcePageState extends State<SourcePage> {
         ),
       ),
       body: WebViewWidget(controller: _controller),
-      bottomNavigationBar: AppBottomNavBar(
-        current: AppNavTab.recipes,
-        onTap: (tab) {
-          if (tab == AppNavTab.profile) {
-            openProfilePage(context);
-            return;
-          }
-          Navigator.of(context).maybePop();
-        },
-      ),
     );
   }
 }
