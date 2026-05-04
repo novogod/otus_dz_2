@@ -101,10 +101,7 @@ void main() {
     await tester.pumpWidget(_wrap(router));
     await tester.pump();
 
-    expect(
-      router.routerDelegate.currentConfiguration.uri.path,
-      Routes.recipes,
-    );
+    expect(router.routerDelegate.currentConfiguration.uri.path, Routes.recipes);
     expect(find.text('recipes-stub'), findsOneWidget);
   });
 

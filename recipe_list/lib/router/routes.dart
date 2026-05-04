@@ -28,4 +28,13 @@ abstract final class Routes {
 
   /// Вкладка «Профиль» (чанк C).
   static const String profile = '/profile';
+
+  /// Экран входа в профильной ветке. Открывается с slide-up
+  /// анимацией через `CustomTransitionPage`.
+  static const String profileLogin = '/profile/login';
+
+  /// Экран админки/«моего профиля» после успешного логина.
+  /// Тоже slide-up — переход login → admin воспринимается как
+  /// продолжение того же модального флоу.
+  static const String profileAdmin = '/profile/admin';
 }

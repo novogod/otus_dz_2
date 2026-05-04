@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../auth/admin_session.dart';
 import '../data/app_services.dart';
 import '../i18n.dart';
 import '../main.dart' show splashAndRecipesKey;
 import '../models/recipe.dart';
+import '../ui/admin_after_login_page.dart';
 import '../ui/app_shell.dart';
+import '../ui/app_theme.dart' show AppDurations;
 import '../ui/favorites_page.dart';
-import '../ui/login_page.dart' show openProfilePage;
+import '../ui/login_page.dart';
 import '../ui/recipe_details_page.dart';
 import '../ui/splash_and_recipes.dart';
 import 'routes.dart';
@@ -27,6 +30,18 @@ import 'routes.dart';
 ///   `IndexedStack`-ом shell-а.
 final GoRouter appRouter = GoRouter(
   initialLocation: Routes.recipes,
+  // Перерисовываем редиректы при смене auth-состояния: после
+  // успешного логина `/profile/login` должен автоматически
+  // переехать на `/profile/admin`, а после `logout` — обратно
+  // (см. `_profileRedirect` ниже). Без `refreshListenable`
+  // редиректы запускались бы только на явных навигациях.
+  refreshListenable: Listenable.merge(<Listenable>[
+    adminLoggedInNotifier,
+    userLoggedInNotifier,
+    currentRecipeAdminTokenNotifier,
+    currentUserLoginNotifier,
+  ]),
+  redirect: _profileRedirect,
   routes: <RouteBase>[
     StatefulShellRoute.indexedStack(
       builder: (context, state, navShell) {
@@ -72,9 +87,8 @@ final GoRouter appRouter = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: Routes.favorites,
-              pageBuilder: (context, state) => const NoTransitionPage<void>(
-                child: _FavoritesBranchRoot(),
-              ),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage<void>(child: _FavoritesBranchRoot()),
               routes: <RouteBase>[
                 GoRoute(
                   path: Routes.detailsSubpath,
@@ -85,15 +99,50 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // [3] Profile — placeholder, заменяется в чанке C.
-        //     На чанке A открывает legacy-флоу логина через push,
-        //     чтобы UX не ломался.
+        // [3] Profile — auth-aware ветка с двумя sub-роутами:
+        //     `/profile/login` (форма входа) и `/profile/admin`
+        //     (после-логин экран). Корневой `/profile` сам
+        //     ничего не рендерит — `_profileRedirect` уводит
+        //     либо на login, либо на admin в зависимости от
+        //     состояния notifier-ов из `admin_session.dart`.
+        //     Slide-up анимация sub-роутов сохранена через
+        //     `CustomTransitionPage` (см. `_slideUpPage`).
         StatefulShellBranch(
           routes: <RouteBase>[
             GoRoute(
               path: Routes.profile,
-              pageBuilder: (context, state) =>
-                  const NoTransitionPage<void>(child: _ProfileStubPage()),
+              // Никогда не рендерится — redirect всегда уводит
+              // на login или admin. Builder нужен формально.
+              builder: (context, state) =>
+                  const Scaffold(body: SizedBox.shrink()),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: 'login',
+                  pageBuilder: (context, state) => _slideUpPage<void>(
+                    key: const ValueKey('profile-login'),
+                    child: LoginPage(
+                      initialLogin:
+                          currentUserLoginNotifier.value?.trim().isNotEmpty ==
+                              true
+                          ? currentUserLoginNotifier.value!.trim()
+                          : null,
+                    ),
+                  ),
+                ),
+                GoRoute(
+                  path: 'admin',
+                  pageBuilder: (context, state) {
+                    final login = currentUserLoginNotifier.value?.trim() ?? '';
+                    return _slideUpPage<void>(
+                      key: const ValueKey('profile-admin'),
+                      child: AdminAfterLoginPage(
+                        adminLogin: login,
+                        adminPassword: currentSessionAdminPassword ?? '',
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -166,36 +215,64 @@ Widget _buildDetailsPage(BuildContext context, GoRouterState state) {
   return const Scaffold(body: Center(child: CircularProgressIndicator()));
 }
 
-/// Заглушка для вкладки «Профиль» на чанке A. При маунтинге
-/// сразу открывает legacy-флоу логина через [openProfilePage]
-/// (использует Navigator.push под капотом). Это сохраняет
-/// привычное поведение «тап на Profile → форма логина», пока
-/// чанк C не переедет на честные роуты.
-class _ProfileStubPage extends StatefulWidget {
-  const _ProfileStubPage();
-
-  @override
-  State<_ProfileStubPage> createState() => _ProfileStubPageState();
+/// Auth-aware redirect для профильной ветки. Запускается
+/// `GoRouter` на каждой навигации и при срабатывании
+/// `refreshListenable` (см. конфигурацию выше). Логика:
+///
+/// * Корень `/profile` сам по себе не имеет UI — он всегда
+///   уводит на `/profile/login` или `/profile/admin`.
+/// * Если пользователь оказался на `/profile/login`, но
+///   admin-токен/пароль появились (= успешный логин), уводим
+///   на `/profile/admin`.
+/// * Если на `/profile/admin`, но admin-доступ пропал (logout
+///   очистил `currentRecipeAdminTokenNotifier` и
+///   `adminLoggedInNotifier`), уводим обратно на login.
+/// * Прочие пути (вне `/profile`) пропускаем как есть.
+String? _profileRedirect(BuildContext context, GoRouterState state) {
+  final path = state.uri.path;
+  if (!path.startsWith(Routes.profile)) return null;
+  final hasAdmin = adminLoggedInNotifier.value;
+  final token = currentRecipeAdminTokenNotifier.value;
+  final hasToken = token != null && token.isNotEmpty;
+  final login = currentUserLoginNotifier.value?.trim() ?? '';
+  final canShowAdmin = (hasAdmin || hasToken) && login.isNotEmpty;
+  if (path == Routes.profile) {
+    return canShowAdmin ? Routes.profileAdmin : Routes.profileLogin;
+  }
+  if (path == Routes.profileLogin && canShowAdmin) {
+    return Routes.profileAdmin;
+  }
+  if (path == Routes.profileAdmin && !canShowAdmin) {
+    return Routes.profileLogin;
+  }
+  return null;
 }
 
-class _ProfileStubPageState extends State<_ProfileStubPage> {
-  bool _opened = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_opened) return;
-    _opened = true;
-    // Откладываем до конца кадра: openProfilePage пушит роут
-    // на текущий Navigator, а тот ещё не доехал до build-а.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      openProfilePage(context);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: SizedBox.shrink());
-  }
+/// Slide-up `CustomTransitionPage` — общий конструктор для
+/// `/profile/login` и `/profile/admin`. Параметры тayouта
+/// (длительность, кривая, направление) совпадают с тем, что
+/// раньше задавалось в `buildLoginRoute`/`_signUpRoute`/
+/// `openPasswordRecoveryPage`, чтобы UX слайд-апа не дрейфовал
+/// между «модальным» и «вкладочным» открытием.
+CustomTransitionPage<T> _slideUpPage<T>({
+  required Widget child,
+  LocalKey? key,
+}) {
+  return CustomTransitionPage<T>(
+    key: key,
+    transitionDuration: AppDurations.splashTransition,
+    reverseTransitionDuration: AppDurations.splashTransition,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeInOut,
+      );
+      final slide = Tween<Offset>(
+        begin: const Offset(0, 1),
+        end: Offset.zero,
+      ).animate(curved);
+      return SlideTransition(position: slide, child: child);
+    },
+  );
 }

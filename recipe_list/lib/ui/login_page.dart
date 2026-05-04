@@ -3,72 +3,36 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../auth/admin_session.dart';
 import '../i18n.dart';
+import '../router/routes.dart';
 import 'admin_after_login_page.dart';
 import 'app_theme.dart';
 import 'password_recovery_page.dart';
 import 'signup_page.dart';
 import 'splash_page.dart';
 
-Future<void> openProfilePage(
-  BuildContext context, {
-  String? prefillLogin,
-}) async {
-  final login = currentUserLoginNotifier.value?.trim();
-  final password = currentSessionAdminPassword;
-  final recipeAdminToken = currentRecipeAdminTokenNotifier.value;
-  final hasRecipeAdminToken =
-      recipeAdminToken != null && recipeAdminToken.isNotEmpty;
-
-  final hasLogin = login != null && login.isNotEmpty;
-  final canOpenWithPassword =
-      password != null && password.isNotEmpty && hasLogin;
-  final canOpenWithToken = hasRecipeAdminToken && hasLogin;
-  final canOpenWithAdminFlag = adminLoggedInNotifier.value && hasLogin;
-  final shouldOpenAdmin =
-      adminLoggedInNotifier.value || canOpenWithToken || canOpenWithPassword;
-
-  if (shouldOpenAdmin &&
-      (canOpenWithToken || canOpenWithPassword || canOpenWithAdminFlag)) {
-    await openAdminAfterLoginPage(
-      context,
-      adminLogin: login,
-      // If token is already present, password can be empty. Network calls in
-      // admin_session.dart reuse currentRecipeAdminTokenNotifier first.
-      adminPassword: password ?? '',
-      replaceCurrent: false,
-    );
-    return;
-  }
-  if (!context.mounted) return;
-  await openLoginPage(
-    context,
-    prefillLogin: (prefillLogin != null && prefillLogin.trim().isNotEmpty)
-        ? prefillLogin
-        : login,
-  );
-  if (!context.mounted) return;
-
-  // After LoginPage closes, check if user is now authenticated as admin.
-  // If so, open the admin panel. This handles the post-login flow.
-  final loginAfter = currentUserLoginNotifier.value?.trim();
-  final passwordAfter = currentSessionAdminPassword;
-  final tokenAfter = currentRecipeAdminTokenNotifier.value;
-  final hasTokenAfter = tokenAfter != null && tokenAfter.isNotEmpty;
-  final hasLoginAfter = loginAfter != null && loginAfter.isNotEmpty;
-  final isAdminAfter = adminLoggedInNotifier.value && hasLoginAfter;
-
-  if ((isAdminAfter || (hasTokenAfter && hasLoginAfter)) && context.mounted) {
-    await openAdminAfterLoginPage(
-      context,
-      adminLogin: loginAfter,
-      adminPassword: passwordAfter ?? '',
-      replaceCurrent: false,
-    );
-  }
+/// Открывает вкладку «Профиль» (login или admin в зависимости
+/// от auth-состояния — решает `_profileRedirect` в роутере,
+/// см. `lib/router/app_router.dart`).
+///
+/// До чанка C это была императивная функция с собственным
+/// Navigator.push, тщательно разруливавшая «есть токен →
+/// показать admin, нет → показать login». Теперь её роль —
+/// тонкая обёртка над `context.go(Routes.profile)`: вся та же
+/// логика теперь живёт в `_profileRedirect`, а
+/// `refreshListenable` на роутере перерисовывает sub-роуты при
+/// смене auth-нотифаеров (login → admin при успешном входе,
+/// admin → login после logout).
+///
+/// Сохраняем функцию ради совместимости с существующими
+/// callsite-ами (`SourcePage` и др.), чтобы их не пришлось
+/// массово переписывать.
+void openProfilePage(BuildContext context) {
+  context.go(Routes.profile);
 }
 
 Future<void> openLoginPage(BuildContext context, {String? prefillLogin}) async {
