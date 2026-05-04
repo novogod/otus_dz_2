@@ -45,9 +45,28 @@ final GoRouter appRouter = GoRouter(
   ]),
   redirect: _profileRedirect,
   routes: <RouteBase>[
-    StatefulShellRoute.indexedStack(
+    StatefulShellRoute(
       builder: (context, state, navShell) {
         return AppShell(navShell: navShell);
+      },
+      // Каждой ветке — свой `ScaffoldMessenger`. Иначе все
+      // Scaffold-ы вкладок (recipes/fridge/favorites/profile),
+      // которые `IndexedStack` держит смонтированными
+      // одновременно, регистрируются в едином корневом
+      // ScaffoldMessenger; SnackBar может «сесть» на скрытый
+      // Scaffold вне активной ветки, не получить
+      // `AnimationStatus.completed` и зависнуть навсегда (его
+      // dismiss-Timer стартует только на completed). Per-branch
+      // messenger гарантирует, что snackbar всегда отрисуется
+      // на видимом Scaffold-е активной ветки и сам исчезнет
+      // по таймауту.
+      navigatorContainerBuilder: (context, navShell, children) {
+        return IndexedStack(
+          index: navShell.currentIndex,
+          children: <Widget>[
+            for (final child in children) ScaffoldMessenger(child: child),
+          ],
+        );
       },
       branches: <StatefulShellBranch>[
         // [0] Recipes — реальный экран ленты + splash.

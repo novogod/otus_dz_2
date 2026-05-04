@@ -1,5 +1,56 @@
 # Project Log
 
+## SnackBar hangs forever inside `StatefulShellRoute.indexedStack`
+
+**Date:** 2026-05-04
+
+**Status:** ✅ Fixed
+
+**Symptom.** После перехода на `go_router` (todo/19) любой `SnackBar`
+(сохранение настроек, ошибка добавления, registration-required и
+т.п.) появлялся, но никогда не скрывался — висел поверх UI до
+явного нажатия на `SnackBarAction` или ручного dismiss. Логи
+чистые, таймер dismiss-а просто не запускался.
+
+**Root cause.** `StatefulShellRoute.indexedStack` держит **все**
+ветки одновременно смонтированными внутри `IndexedStack`. Каждый
+вкладочный `Scaffold` (recipes/fridge/favorites/profile) при
+`didChangeDependencies` регистрируется в **общем** корневом
+`ScaffoldMessenger`, который автоматически создаёт `MaterialApp`.
+Messenger выбирает «host scaffold» для snackbar-а из своего
+`LinkedHashSet` зарегистрированных Scaffold-ов — нередко им
+оказывается Scaffold *внеактивной* ветки. Snackbar монтируется в
+его `OverlayEntry`, но `RenderIndexedStack` не красит off-branch
+поддерево, его `AnimatedBuilder` не получает кадров → статус
+анимации никогда не становится `AnimationStatus.completed` →
+`Scaffold._handleStatusChanged` не успевает запустить
+`_snackBarTimer`, который и должен был вызвать
+`hideCurrentSnackBar(reason: timeout)` через 4 секунды. Snackbar
+остаётся видимым «навсегда».
+
+**Fix.** Перешли с `StatefulShellRoute.indexedStack` на полный
+`StatefulShellRoute(navigatorContainerBuilder: …)` и обернули
+**каждую** ветку в собственный `ScaffoldMessenger`. Теперь
+Scaffold-ы регистрируются только в messenger-е своей ветки;
+у активной ветки messenger содержит только видимый Scaffold,
+анимация snackbar-а нормально доходит до `completed`, dismiss-Timer
+запускается и snackbar исчезает по таймауту. Поведение
+[AppShell.Scaffold](recipe_list/lib/ui/app_shell.dart) и
+`navShell.goBranch` не изменилось.
+
+**Файлы:**
+* [recipe_list/lib/router/app_router.dart](recipe_list/lib/router/app_router.dart)
+  — `StatefulShellRoute.indexedStack` → `StatefulShellRoute` с
+  кастомным `navigatorContainerBuilder` (IndexedStack из
+  обёрнутых в `ScaffoldMessenger` детей). Комментарий с
+  объяснением рядом.
+
+**Тесты.** Существующая суита 95 pass / 6 несвязанных fail —
+без изменений. Поведение IndexedStack (state-saving между
+переключениями вкладок) сохранено.
+
+---
+
 ## Navigation refactor — `go_router` + `StatefulShellRoute`
 
 **Date:** 2026-05-04
