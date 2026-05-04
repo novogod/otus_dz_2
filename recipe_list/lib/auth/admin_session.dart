@@ -603,15 +603,16 @@ Future<PasswordRecoveryStartResponse> requestPasswordRecovery({
 
     // Extract the session identifier - try response body first, then set-cookie header
     String? sessionCookie;
-    
+
     // Try to get session ID from response body (for APIs that return it)
     if (body is Map<String, dynamic>) {
-      sessionCookie = body['sessionId'] as String? ??
+      sessionCookie =
+          body['sessionId'] as String? ??
           body['session'] as String? ??
           body['recoveryToken'] as String? ??
           body['token'] as String?;
     }
-    
+
     // Fall back to set-cookie header if not in body
     if ((sessionCookie == null || sessionCookie.isEmpty)) {
       final setCookieHeader = res.headers['set-cookie'];
@@ -619,7 +620,7 @@ Future<PasswordRecoveryStartResponse> requestPasswordRecovery({
         sessionCookie = setCookieHeader.first.split(';').first;
       }
     }
-    
+
     // If still no session ID, use the email as identifier
     // (Express session is stored server-side, client just needs to send same email)
     if ((sessionCookie == null || sessionCookie.isEmpty)) {
@@ -679,7 +680,7 @@ Future<PasswordResetResult> resetPasswordWithCode({
       'newPassword': newPassword,
       'email': recoveryEmail,
     };
-    
+
     final res = await dio.post<Map<String, dynamic>>(
       _normalizePath(_kAuthResetPasswordPath),
       data: requestData,

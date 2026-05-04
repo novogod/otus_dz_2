@@ -216,8 +216,9 @@ class _SignUpPageState extends State<SignUpPage> {
                                 if (v == null || v.isEmpty) {
                                   return s.addRecipeRequired;
                                 }
-                                if (v.length < 4)
+                                if (v.length < 4) {
                                   return s.signUpPasswordTooShort;
+                                }
                                 return null;
                               },
                             ),

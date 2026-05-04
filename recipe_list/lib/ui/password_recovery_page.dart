@@ -17,9 +17,7 @@ Future<String?> openPasswordRecoveryPage(
       transitionDuration: AppDurations.splashTransition,
       reverseTransitionDuration: AppDurations.splashTransition,
       pageBuilder: (context, animation, secondaryAnimation) =>
-          PasswordRecoveryPage(
-            email: email,
-          ),
+          PasswordRecoveryPage(email: email),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final curved = CurvedAnimation(
           parent: animation,
@@ -38,10 +36,7 @@ Future<String?> openPasswordRecoveryPage(
 class PasswordRecoveryPage extends StatefulWidget {
   final String email;
 
-  const PasswordRecoveryPage({
-    super.key,
-    required this.email,
-  });
+  const PasswordRecoveryPage({super.key, required this.email});
 
   @override
   State<PasswordRecoveryPage> createState() => _PasswordRecoveryPageState();
