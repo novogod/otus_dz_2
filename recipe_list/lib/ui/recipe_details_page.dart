@@ -12,10 +12,8 @@ import '../i18n.dart';
 import '../models/recipe.dart';
 import '../utils/imgproxy.dart';
 import 'add_recipe_page.dart';
-import 'app_bottom_nav_bar.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
-import 'login_page.dart';
 import 'recipe_card.dart' show FavoriteBadge;
 import 'source_page.dart';
 
@@ -43,20 +41,16 @@ class RecipeDetailsPage extends StatefulWidget {
   final RecipeApi? api;
   final RecipeRepository? repository;
 
-  /// Вкладка нижней навигации, которая должна подсвечиваться,
-  /// пока открыт этот экран деталей. По умолчанию — `recipes`
-  /// (главная лента), но при открытии из «Избранного» сюда
-  /// прокидывается `favorites`, чтобы пользователь не видел
-  /// «перепрыгивания» активной вкладки и оставался в логике
-  /// своего исходного раздела.
-  final AppNavTab originTab;
+  // `originTab` удалён в чанке B рефакторинга
+  // (см. `docs/go-router-shell-refactor.md`): подсветка вкладки
+  // нижнего навбара теперь определяется текущим маршрутом
+  // `StatefulShellRoute`, а не пробрасывается через конструктор.
 
   const RecipeDetailsPage({
     super.key,
     required this.recipe,
     this.api,
     this.repository,
-    this.originTab = AppNavTab.recipes,
   });
 
   @override
@@ -180,16 +174,10 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
           ),
         ),
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        current: widget.originTab,
-        onTap: (tab) {
-          if (tab == AppNavTab.profile) {
-            openProfilePage(context);
-            return;
-          }
-          Navigator.of(context).maybePop();
-        },
-      ),
+      // Нижний навбар рисуется единым `AppShell` (см. чанк A).
+      // Возврат на предыдущий экран идёт через `context.pop()`
+      // или системный back; переключение вкладок через AppShell
+      // переключает ветки `StatefulShellRoute`.
       body: SafeArea(
         top: false,
         child: Stack(

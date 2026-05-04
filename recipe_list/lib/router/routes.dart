@@ -9,15 +9,22 @@ abstract final class Routes {
   /// Главная вкладка: лента рецептов + splash.
   static const String recipes = '/recipes';
 
+  /// Подмаршрут (без префикса `/`) деталей рецепта внутри ветки.
+  /// Используется как `path` у `GoRoute` в обеих ветках
+  /// (recipes / favorites).
+  static const String detailsSubpath = 'details/:id';
+
   /// Детали рецепта по id (вкладка Recipes). Параметр пути `:id`.
   static String recipeDetails(int id) => '/recipes/details/$id';
 
-  // Ниже — заглушки на чанки B/C/D. Пока используются как
-  // placeholder-ссылки в комментариях; конкретные ветки
-  // подключаются позже.
-
-  /// Вкладка «Избранное» (чанк B).
+  /// Вкладка «Избранное».
   static const String favorites = '/favorites';
+
+  /// Детали рецепта по id (вкладка Favorites). Тот же экран,
+  /// что и [recipeDetails], но навбар подсвечивает Favorites,
+  /// а возврат идёт в стек этой ветки. Так уходит leaky-abstraction
+  /// `originTab`.
+  static String favoritesDetails(int id) => '/favorites/details/$id';
 
   /// Вкладка «Профиль» (чанк C).
   static const String profile = '/profile';

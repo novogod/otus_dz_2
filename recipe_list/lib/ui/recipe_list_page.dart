@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
@@ -12,11 +13,11 @@ import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../main.dart' show restartApp;
 import '../models/recipe.dart';
+import '../router/routes.dart';
 import 'add_recipe_page.dart';
 import 'app_theme.dart';
 import 'login_page.dart';
 import 'recipe_card.dart';
-import 'recipe_details_page.dart';
 import 'search_app_bar.dart';
 import 'signup_page.dart';
 
@@ -509,15 +510,11 @@ class _RecipeListPageState extends State<RecipeListPage> {
       if (fetched != null) full = fetched;
     }
     if (!context.mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => RecipeDetailsPage(
-          recipe: full,
-          api: widget.api,
-          repository: widget.repository,
-        ),
-      ),
-    );
+    // Пробрасываем полный [Recipe] через `extra`, чтобы
+    // [RecipeDetailsPage] открывался мгновенно без повторного
+    // fetch-а. URL `/recipes/details/<id>` остаётся валидным
+    // и для deep-link-ов в будущем (чанк D плана).
+    context.push(Routes.recipeDetails(full.id), extra: full);
   }
 
   /// Тап по подсказке: работает как фильтр — заменяет основной

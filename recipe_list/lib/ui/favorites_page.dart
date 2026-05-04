@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
@@ -9,12 +10,11 @@ import '../data/repository/owned_recipes_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
+import '../router/routes.dart';
 import 'add_recipe_page.dart';
-import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
 import 'login_page.dart';
 import 'recipe_card.dart';
-import 'recipe_details_page.dart';
 import 'recipe_list_page.dart';
 import 'search_app_bar.dart';
 import 'signup_page.dart';
@@ -176,10 +176,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
           ],
         ),
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        current: AppNavTab.favorites,
-        onTap: (tab) => _onNavTap(context, tab),
-      ),
+      // Нижний навбар рисуется единым `AppShell`
+      // (см. `docs/go-router-shell-refactor.md`, чанк A).
     );
   }
 
@@ -267,22 +265,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   void _openDetails(BuildContext context, Recipe recipe) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        // Пробрасываем api/repository, иначе на странице деталей
-        // lazy-load `instructions` из `recipe_bodies` не сработает
-        // (FutureBuilder живёт в ветке `widget.repository != null`),
-        // и из избранного открывался бы рецепт без инструкций —
-        // FavoritesStore.list джойнит только `recipes`, тело
-        // подгружается лениво уже на странице деталей.
-        builder: (_) => RecipeDetailsPage(
-          recipe: recipe,
-          api: widget.api,
-          repository: widget.repository,
-          originTab: AppNavTab.favorites,
-        ),
-      ),
-    );
+    // Детали из избранного живут в своёй ветке `StatefulShellRoute`
+    // (см. `lib/router/app_router.dart`) — благодаря этому нижний
+    // навбар продолжает подсвечивать Favorites, и leaky-abstraction
+    // `originTab` больше не нужен. Полный [Recipe] пробрасываем
+    // через `extra`: `FavoritesStore.list` джойнит только
+    // `recipes`, тело подгружается лениво уже на
+    // странице деталей (через `RecipeRepository`).
+    context.push(Routes.favoritesDetails(recipe.id), extra: recipe);
   }
 
   Future<void> _openAddRecipe(BuildContext context) async {
@@ -376,27 +366,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text(s.addRecipeError)));
     }
-  }
-
-  void _onNavTap(BuildContext context, AppNavTab tab) {
-    if (tab == AppNavTab.favorites) return;
-    if (tab == AppNavTab.recipes) {
-      Navigator.of(context).maybePop();
-      return;
-    }
-    if (tab == AppNavTab.profile) {
-      openProfilePage(context);
-      return;
-    }
-    final s = S.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(s.tabComingSoon),
-          duration: const Duration(seconds: 2),
-        ),
-      );
   }
 }
 

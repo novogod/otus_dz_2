@@ -8,6 +8,7 @@ import '../auth/admin_session.dart';
 import '../config/feed_config.dart';
 import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
+import '../data/app_services.dart';
 import '../data/local/recipe_db.dart';
 import '../data/repository/favorites_store.dart';
 import '../data/repository/owned_recipes_store.dart';
@@ -871,6 +872,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             ),
           );
         }
+        _publishServices(result.repository);
         return RecipeListPage(
           recipes: result.recipes,
           api: widget.api,
@@ -878,6 +880,23 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         );
       },
     );
+  }
+
+  /// Публикуем актуальные `api`/`repository` в глобальный
+  /// [appServicesNotifier] (см. `lib/data/app_services.dart`).
+  /// Делаем это в `build`, потому что репозиторий приходит
+  /// асинхронно через `_lastResult` — при первом успешном
+  /// раскладе он будет non-null. Шелл-роутинг (`AppShell` →
+  /// `FavoritesPage`/`RecipeDetailsPage`) живёт вне обычного
+  /// Navigator-стека и не может получить эти зависимости через
+  /// конструктор, поэтому забирает их из notifier.
+  void _publishServices(RecipeRepository? repository) {
+    final current = appServicesNotifier.value;
+    final next = AppServices(api: widget.api, repository: repository);
+    if (current?.api == next.api && current?.repository == next.repository) {
+      return;
+    }
+    appServicesNotifier.value = next;
   }
 }
 

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/app_services.dart';
 import '../i18n.dart';
 import '../main.dart' show splashAndRecipesKey;
+import '../models/recipe.dart';
 import '../ui/app_shell.dart';
+import '../ui/favorites_page.dart';
 import '../ui/login_page.dart' show openProfilePage;
+import '../ui/recipe_details_page.dart';
 import '../ui/splash_and_recipes.dart';
 import 'routes.dart';
 
@@ -37,6 +41,13 @@ final GoRouter appRouter = GoRouter(
               pageBuilder: (context, state) => NoTransitionPage<void>(
                 child: SplashAndRecipes(key: splashAndRecipesKey),
               ),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: Routes.detailsSubpath,
+                  builder: (context, state) =>
+                      _buildDetailsPage(context, state),
+                ),
+              ],
             ),
           ],
         ),
@@ -51,14 +62,26 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // [2] Favorites — placeholder, заменяется в чанке B
-        //     на реальный `FavoritesPage`.
+        // [2] Favorites — реальный экран «Избранного». Зависимости
+        //     (`api`/`repository`) забираются из [appServicesNotifier],
+        //     который наполняется `RecipeListLoader`-ом при первом
+        //     успешном раскладе ленты. До этого момента
+        //     `FavoritesPage` корректно работает без api (FAB
+        //     добавления просто не рендерится).
         StatefulShellBranch(
           routes: <RouteBase>[
             GoRoute(
               path: Routes.favorites,
-              pageBuilder: (context, state) =>
-                  const NoTransitionPage<void>(child: _FavoritesStubPage()),
+              pageBuilder: (context, state) => const NoTransitionPage<void>(
+                child: _FavoritesBranchRoot(),
+              ),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: Routes.detailsSubpath,
+                  builder: (context, state) =>
+                      _buildDetailsPage(context, state),
+                ),
+              ],
             ),
           ],
         ),
@@ -95,14 +118,52 @@ class _ComingSoonPage extends StatelessWidget {
 /// Заглушка для вкладки «Избранное» на чанке A. Будет заменена
 /// в чанке B на реальный `FavoritesPage` со state-сохранением
 /// между переключениями вкладок.
-class _FavoritesStubPage extends StatelessWidget {
-  const _FavoritesStubPage();
+class _FavoritesBranchRoot extends StatelessWidget {
+  const _FavoritesBranchRoot();
 
   @override
   Widget build(BuildContext context) {
-    final s = S.of(context);
-    return Scaffold(body: Center(child: Text(s.tabComingSoon)));
+    // `FavoritesPage` ждёт `api`/`repository`, которые
+    // публикуются `RecipeListLoader` через [appServicesNotifier]
+    // (см. `lib/data/app_services.dart`). На холодный старт
+    // notifier ещё пуст — рендерим страницу без зависимостей,
+    // FAB добавления просто не появится. Когда сервисы доедут,
+    // [ValueListenableBuilder] перерисует ветку с уже не-null
+    // api/repo.
+    return ValueListenableBuilder<AppServices?>(
+      valueListenable: appServicesNotifier,
+      builder: (context, services, _) {
+        return FavoritesPage(
+          api: services?.api,
+          repository: services?.repository,
+        );
+      },
+    );
   }
+}
+
+/// Сборка экрана деталей рецепта для go_router-веток. Полный
+/// `Recipe` пробрасывается через `state.extra` (так делают
+/// тапы с ленты/избранного), что позволяет открыть детали
+/// без повторного fetch-а. При deep-link / refresh-е страницы
+/// extra будет null — в этом случае показываем `Scaffold` с
+/// «загрузка…», т.к. реальный fetch по id появится в чанке D.
+Widget _buildDetailsPage(BuildContext context, GoRouterState state) {
+  final recipe = state.extra;
+  if (recipe is Recipe) {
+    final services = appServicesNotifier.value;
+    return RecipeDetailsPage(
+      recipe: recipe,
+      api: services?.api,
+      repository: services?.repository,
+    );
+  }
+  // Deep-link без extra — детали без фоновой подгрузки пока
+  // не реализованы (см. чанк D плана). Возвращаемся на ветку.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (context.mounted && context.canPop()) context.pop();
+  });
+  return const Scaffold(body: Center(child: CircularProgressIndicator()));
 }
 
 /// Заглушка для вкладки «Профиль» на чанке A. При маунтинге
