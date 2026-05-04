@@ -1,5 +1,84 @@
 # Project Log
 
+## Admin "Recipes Added" feature — track user-created recipes
+
+**Date:** 2026-05-04
+
+**Status:** ✅ Fully implemented, tested, and deployed
+
+Реализована полная цепочка для отслеживания рецептов, добавленных пользователями:
+- Пользователь добавляет рецепт → рецепт автоматически добавляется в избранное
+- Admin видит кнопку "Recipes added" в профиле
+- Admin может просмотреть полный список добавленных рецептов с информацией о создателе
+- Backend отслеживает всех создателей в таблице `recipe_app_recipe_creators`
+
+### Flutter (`otus_dz/recipe_list`)
+
+- `lib/ui/add_recipe_page.dart` (строки 485-492)
+  - После создания нового рецепта (не при редактировании), если пользователь
+    залогинен, рецепт автоматически добавляется в избранное:
+    ```dart
+    if (existing == null) {
+      try {
+        final store = favoritesStoreNotifier.value ?? 
+                      await ensureFavoritesStoreInitialized();
+        if (store != null && userLoggedInNotifier.value) {
+          await store.add(localized.id, appLang.value);
+        }
+      } catch (_) {}
+    }
+    ```
+
+- `lib/ui/admin_after_login_page.dart` (строки 157-175)
+  - Кнопка "Recipes added" с иконкой `Icons.library_books_outlined`
+  - Открывает `AdminAddedRecipesPage` с полным списком рецептов, добавленных пользователями
+
+- `lib/ui/admin_added_recipes_page.dart` (новый)
+  - Экран со списком рецептов, добавленных пользователями
+  - Карточки включают:
+    - Имя рецепта и ссылку на карточку рецепта
+    - Имя создателя, email и ссылку на профиль пользователя
+    - Дату создания
+    - Кнопки "Open recipe card" и "Open user card"
+  - Refresh action и обработка ошибок/пустого списка
+
+- `lib/auth/admin_session.dart` (строки 134-177, 726-773)
+  - DTO `AdminAddedRecipeItem` с полями: recipeId, recipeName, creatorType,
+    creatorUserId, creatorName, creatorEmail, createdAt и т.д.
+  - Функция `fetchRecipeAdminAddedRecipes()` — запрашивает
+    `GET /api/recipe-admin/recipes-added` и возвращает список
+
+### Backend (`mahallem_ist/local_user_portal`)
+
+- `routes/recipes.js`
+  - На POST /recipes, после успешного создания рецепта:
+    - Создаётся запись в таблице `recipe_app_recipe_creators` с информацией
+      о создателе (user_id, actor_email, actor_type='user', created_at)
+
+- `routes/auth.js` (строки 2506-2590)
+  - Добавлен endpoint `GET /api/recipe-admin/recipes-added`
+  - Требуется admin token с scope: viewer, operator, super_admin
+  - Query params: limit (default 200, max 500), offset (default 0)
+  - SQL JOIN по `recipe_app_recipe_creators` + `recipe_app_users` + `recipes`
+  - Возвращает recipes с полной информацией о создателе
+
+### Database
+
+- Таблица `recipe_app_recipe_creators` (создана в миграции)
+  - recipe_id INT
+  - actor_type TEXT ('user' | 'admin')
+  - user_id TEXT (nullable, для пользовательских рецептов)
+  - admin_id TEXT (nullable, для админских рецептов)
+  - actor_email TEXT
+  - created_at TIMESTAMP
+
+### Docs
+
+- `docs/admin-recipes-added-feature.md` (новый)
+  - Полная документация feature с примерами API и кода
+
+---
+
 ## Admin after-login panel + users management + backend admin endpoints
 
 **Date:** 2026-05-03
