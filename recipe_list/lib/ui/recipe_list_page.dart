@@ -13,9 +13,7 @@ import '../i18n.dart';
 import '../main.dart' show restartApp;
 import '../models/recipe.dart';
 import 'add_recipe_page.dart';
-import 'app_bottom_nav_bar.dart';
 import 'app_theme.dart';
-import 'favorites_page.dart';
 import 'login_page.dart';
 import 'recipe_card.dart';
 import 'recipe_details_page.dart';
@@ -407,41 +405,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
           ],
         ),
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        current: AppNavTab.recipes,
-        onTap: (tab) => _onNavTap(context, tab),
-      ),
     );
-  }
-
-  void _onNavTap(BuildContext context, AppNavTab tab) {
-    if (tab == AppNavTab.recipes) return;
-    if (tab == AppNavTab.favorites) {
-      if (!userLoggedInNotifier.value) {
-        _showFavoritesRegistrationRequired(context);
-        return;
-      }
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) =>
-              FavoritesPage(api: widget.api, repository: widget.repository),
-        ),
-      );
-      return;
-    }
-    if (tab == AppNavTab.profile) {
-      openProfilePage(context);
-      return;
-    }
-    final s = S.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(s.tabComingSoon),
-          duration: const Duration(seconds: 2),
-        ),
-      );
   }
 
   Widget _buildRecipesCollection(List<Recipe> list) {
