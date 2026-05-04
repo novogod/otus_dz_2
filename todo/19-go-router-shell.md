@@ -1,9 +1,20 @@
 # 19 — Рефакторинг навигации на `go_router` + `StatefulShellRoute`
 
-> **Статус:** 📋 не начат.
+> **Статус:** ✅ выполнено 2026-05-04 (чанки A–E).
 > **См.:** [docs/go-router-shell-refactor.md](../docs/go-router-shell-refactor.md).
 > **Приоритет:** P2 (улучшение архитектуры).
 > **Scope:** только `[client]`, серверных правок нет.
+>
+> **Коммиты:**
+> * Чанк A — `fe1235d` — go_router shell с веткой Recipes.
+> * Чанк B — `514b720` — Favorites как `StatefulShellBranch`,
+>   `originTab` удалён.
+> * Чанк C — `15a66d9` — Profile-ветка с `/profile/login` и
+>   `/profile/admin` (slide-up через `CustomTransitionPage`).
+> * Чанк D — `6b7f888` — Source/Add/Edit как nested-routes
+>   под обеими ветками (recipes/favorites).
+> * Чанк E — cleanup и финальная документация (см.
+>   `docs/go-router-shell-refactor.md` → раздел «Карта маршрутов»).
 
 Цель: убрать дублирование `AppBottomNavBar` (4 копии),
 устранить `RecipeDetailsPage.originTab` как leaky abstraction,

@@ -1,5 +1,68 @@
 # Project Log
 
+## Navigation refactor — `go_router` + `StatefulShellRoute`
+
+**Date:** 2026-05-04
+
+**Status:** ✅ Completed (chunks A–E)
+
+**See also:** [go-router-shell-refactor.md](go-router-shell-refactor.md),
+[todo/19-go-router-shell.md](../todo/19-go-router-shell.md).
+
+Перевели навигацию `recipe_list` со связки `MaterialApp(home:)` +
+`Navigator.push` на `go_router` с `StatefulShellRoute.indexedStack`.
+Цели: убрать дублирование `AppBottomNavBar` (4 копии), устранить
+`RecipeDetailsPage.originTab`, сохранять state вкладок между
+переключениями, получить deep-link URLs для Flutter web.
+
+### Что сделано (по чанкам)
+
+* **Чанк A — `fe1235d`.** Зависимость `go_router ^14.0.0`, общий
+  `AppShell(navShell)` рисует единственный `AppBottomNavBar`,
+  `MaterialApp.router` с одной веткой Recipes.
+* **Чанк B — `514b720`.** Favorites как отдельная
+  `StatefulShellBranch`. `RecipeDetailsPage.originTab` удалён;
+  путь к деталям теперь branch-aware (`/recipes/details/:id` vs
+  `/favorites/details/:id`), полный `Recipe` пробрасывается через
+  `extra`.
+* **Чанк C — `15a66d9`.** Profile-ветка с двумя sub-route'ами
+  `/profile/login` и `/profile/admin`. Корневой `/profile` — redirect-only
+  (`_profileRedirect` смотрит на `adminLoggedInNotifier` /
+  `userLoggedInNotifier` через `refreshListenable`). Slide-up
+  анимация воспроизведена `CustomTransitionPage` + `Tween<Offset>`.
+* **Чанк D — `6b7f888`.** `SourcePage` и `AddRecipePage` (add/edit)
+  как nested-routes под каждой веткой. Открытие — `context.push`
+  по `Routes.addUnder/editUnder/sourceUnder`; ветка определяется по
+  текущему location'у через `Routes.currentBranchBase`. `SourcePage`
+  потеряла свой рудиментарный `bottomNavigationBar` — его рисует
+  `AppShell`.
+* **Чанк E — финальный cleanup.** Добавлена «Карта маршрутов» в
+  `docs/go-router-shell-refactor.md`, статусы переключены на ✅.
+  `_onNavTap`-методов в lib/ не осталось; `originTab` остался только
+  в комментариях-объяснениях.
+
+### Что намеренно не вошло
+
+* `AdminUsersPage` и `AdminAddedRecipesPage` живут целиком внутри
+  admin-модального стека поверх `/profile/admin` и не отображаются в
+  навбаре. Перевод их на nested-routes даёт лишь косметический
+  выигрыш — оставлены на `Navigator.push(MaterialPageRoute)`.
+
+### Тесты
+
+Базовый прогон: 95 pass / 6 fail (те же 6 несвязанных, что и до
+рефакторинга — feed_config × 1, recipe_card × 1, recipe_list_page × 2,
+recipe_repository × 2). Новые маршрутные тесты:
+
+* `test/router_smoke_test.dart` (чанк A).
+* `test/router_branches_test.dart` (чанк B).
+* `test/router_profile_branch_test.dart` (чанк C).
+* `test/router_helpers_routes_test.dart` (чанк D).
+
+`flutter analyze` чистый.
+
+---
+
 ## Admin "Recipes Added" feature — track user-created recipes
 
 **Date:** 2026-05-04

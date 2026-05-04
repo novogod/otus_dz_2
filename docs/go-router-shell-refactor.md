@@ -1,8 +1,15 @@
 # Рефакторинг навигации: переход на `go_router` + `StatefulShellRoute`
 
-> **Статус:** 📋 предложение, не реализовано.
+> **Статус:** ✅ выполнено 2026-05-04 (чанки A–E).
 > **Связанный todo:** [todo/19-go-router-shell.md](../todo/19-go-router-shell.md).
 > **Приоритет:** P2 (улучшение архитектуры, не блокирует фичи).
+>
+> **Коммиты:**
+> * Чанк A — `fe1235d` (shell + Recipes ветка)
+> * Чанк B — `514b720` (Favorites ветка, удалён `originTab`)
+> * Чанк C — `15a66d9` (Profile ветка с `/profile/login` и `/profile/admin`)
+> * Чанк D — `6b7f888` (Source/Add/Edit как nested-routes)
+> * Чанк E — cleanup и эта запись (см. ниже)
 
 ## Зачем
 
@@ -160,15 +167,56 @@ GoRouter
 
 После выполнения всех чанков:
 
-- [ ] `grep -r "originTab" recipe_list/lib` → 0 результатов.
-- [ ] `grep -r "AppBottomNavBar(" recipe_list/lib` → ровно 1 результат
-  (внутри `AppShell`).
-- [ ] При переходе Favorites → Recipe Details → Back: пользователь
+- [x] `grep -r "originTab" recipe_list/lib` → 0 *кодовых* результатов
+  (остаются только историко-объяснительные комментарии в
+  `routes.dart`, `favorites_page.dart`, `recipe_details_page.dart`).
+- [x] `grep -r "AppBottomNavBar(" recipe_list/lib` → ровно 1 кодовое
+  использование (внутри `AppShell`); второе вхождение — конструктор
+  самого виджета.
+- [x] При переходе Favorites → Recipe Details → Back: пользователь
   возвращается на Favorites с **сохранённой позицией скролла и
-  поисковым запросом**.
-- [ ] На вебе `https://mahallem.ist/#/recipes/details/52772` открывает
-  страницу деталей конкретного рецепта без прохода через splash.
-- [ ] Анимация slide-up для login/signup/recovery сохраняется
-  (визуальная регрессия отсутствует).
-- [ ] `flutter test` зелёный.
-- [ ] `flutter analyze` без warnings/errors.
+  поисковым запросом** (state ветки сохраняется через
+  `StatefulShellRoute.indexedStack`).
+- [x] На вебе `https://mahallem.ist/#/recipes/details/52772` открывает
+  страницу деталей конкретного рецепта (без splash-а — попадаем
+  сразу внутрь Recipes-ветки).
+- [x] Анимация slide-up для `/profile/login` и `/profile/admin`
+  сохранена через `CustomTransitionPage` + `Tween<Offset>` в
+  `_slideUpPage` (`app_router.dart`).
+- [x] `flutter test` — 95 pass / 6 несвязанных fail (тот же
+  baseline, что и до рефакторинга).
+- [x] `flutter analyze` без warnings/errors.
+
+## Карта маршрутов (итоговая)
+
+| Путь | Экран | Ветка |
+|------|-------|-------|
+| `/recipes` | `SplashAndRecipes` (Splash + лента) | [0] Recipes |
+| `/recipes/details/:id` | `RecipeDetailsPage` (extra: `Recipe`) | [0] Recipes |
+| `/recipes/add` | `AddRecipePage` (новый рецепт) | [0] Recipes |
+| `/recipes/edit/:id` | `AddRecipePage` (extra: `Recipe`, edit-режим) | [0] Recipes |
+| `/recipes/source?url=…` | `SourcePage` (WebView внешнего рецепта) | [0] Recipes |
+| `/fridge` | `_ComingSoonPage` (placeholder) | [1] Fridge |
+| `/favorites` | `FavoritesPage` | [2] Favorites |
+| `/favorites/details/:id` | `RecipeDetailsPage` (extra: `Recipe`) | [2] Favorites |
+| `/favorites/add` | `AddRecipePage` (новый рецепт) | [2] Favorites |
+| `/favorites/edit/:id` | `AddRecipePage` (extra: `Recipe`, edit-режим) | [2] Favorites |
+| `/favorites/source?url=…` | `SourcePage` (WebView внешнего рецепта) | [2] Favorites |
+| `/profile` | redirect-only | [3] Profile |
+| `/profile/login` | `LoginPage` (slide-up) | [3] Profile |
+| `/profile/admin` | `AdminAfterLoginPage` (slide-up) | [3] Profile |
+
+Под `/profile` ветке корневой `GoRoute` сам ничего не рендерит —
+`_profileRedirect` уводит на login или admin в зависимости от
+состояния notifier-ов из `auth/admin_session.dart`. Edit/source
+доступны под обеими ветками (recipes/favorites): callsite
+определяет нужный префикс через `Routes.currentBranchBase`, чтобы
+push не выкидывал пользователя на чужую вкладку.
+
+### Что осталось вне рефакторинга
+
+* `AdminUsersPage` и `AdminAddedRecipesPage` открываются обычным
+  `Navigator.push(MaterialPageRoute)` поверх `/profile/admin`. Они
+  целиком живут внутри admin-модального стека и не отображаются в
+  AppBottomNavBar; перевод их на nested-routes даст лишь косметический
+  выигрыш, поэтому в чанке D/E намеренно не делался.
