@@ -192,25 +192,33 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   Widget _buildFavoritesCollection(List<Recipe> list) {
-    if (!kIsWeb) {
-      return ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        itemCount: list.length,
-        itemBuilder: (context, i) {
-          final recipe = list[i];
-          return RecipeCard(
-            recipe: recipe,
-            onTap: () => _openDetails(context, recipe),
-            onEdit: () => _openEditRecipe(context, recipe),
-            onDelete: () => _confirmAndDeleteFromCard(context, recipe),
-          );
-        },
-      );
-    }
+    // Use responsive layout based on screen width instead of platform
+    // Mobile portrait: use ListView; larger screens/landscape: use GridView
+    const tabletBreakpoint = 768.0; // breakpoint for switching to grid
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final useGrid = constraints.maxWidth >= tabletBreakpoint || kIsWeb;
+
+        if (!useGrid) {
+          // Mobile portrait: single column list
+          return ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            itemCount: list.length,
+            itemBuilder: (context, i) {
+              final recipe = list[i];
+              return RecipeCard(
+                recipe: recipe,
+                onTap: () => _openDetails(context, recipe),
+                onEdit: () => _openEditRecipe(context, recipe),
+                onDelete: () => _confirmAndDeleteFromCard(context, recipe),
+              );
+            },
+          );
+        }
+
+        // Tablet/landscape/web: responsive grid layout
         const spacing = AppSpacing.md;
         const minCardWidth = 300.0;
         const maxCardWidth = 420.0;

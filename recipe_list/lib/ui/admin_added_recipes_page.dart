@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../auth/admin_session.dart';
@@ -161,90 +162,122 @@ class _AdminAddedRecipesPageState extends State<AdminAddedRecipesPage> {
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
               )
-            : ListView.separated(
-                padding: const EdgeInsets.all(AppSpacing.pagePadding),
-                itemBuilder: (context, index) {
-                  final item = _items[index];
-                  final opening = _openingRecipeId == item.recipeId;
-                  final creatorTitle =
-                      (item.creatorName != null &&
-                          item.creatorName!.trim().isNotEmpty)
-                      ? item.creatorName!.trim()
-                      : item.creatorEmail ?? 'Unknown user';
-                  final createdAtLabel =
-                      item.createdAt?.toLocal().toString() ?? '';
+            : _buildItemsList(_items),
+      ),
+    );
+  }
 
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.recipeName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            'By: $creatorTitle',
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          if ((item.creatorEmail ?? '').isNotEmpty)
-                            Text(
-                              item.creatorEmail!,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          if (createdAtLabel.isNotEmpty)
-                            Text(
-                              'Added: $createdAtLabel',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Wrap(
-                            spacing: AppSpacing.sm,
-                            runSpacing: AppSpacing.sm,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed: opening
-                                    ? null
-                                    : () => _openRecipe(item),
-                                icon: opening
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.restaurant_menu),
-                                label: const Text('Open recipe card'),
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: () => _openCreator(item),
-                                icon: const Icon(Icons.person_outline),
-                                label: const Text('Open user card'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSpacing.sm),
-                itemCount: _items.length,
+  Widget _buildItemsList(List<AdminAddedRecipeItem> items) {
+    // Use responsive layout based on screen width instead of platform
+    // Mobile portrait: use ListView; larger screens/landscape: use GridView
+    const tabletBreakpoint = 768.0; // breakpoint for switching to grid
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useGrid = constraints.maxWidth >= tabletBreakpoint || kIsWeb;
+
+        if (!useGrid) {
+          // Mobile portrait: single column list
+          return ListView.separated(
+            padding: const EdgeInsets.all(AppSpacing.pagePadding),
+            itemBuilder: (context, index) => _buildItemCard(items[index]),
+            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+            itemCount: items.length,
+          );
+        }
+
+        // Tablet/landscape/web: responsive grid layout
+        const spacing = AppSpacing.md;
+        const minCardWidth = 300.0;
+        const maxCardWidth = 420.0;
+        final available = (constraints.maxWidth - AppSpacing.pagePadding * 2)
+            .clamp(0.0, double.infinity);
+
+        int columns = ((available + spacing) / (maxCardWidth + spacing))
+            .ceil()
+            .clamp(1, 8);
+        double itemWidth = (available - spacing * (columns - 1)) / columns;
+        while (columns > 1 && itemWidth < minCardWidth) {
+          columns -= 1;
+          itemWidth = (available - spacing * (columns - 1)) / columns;
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(AppSpacing.pagePadding),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+          ),
+          itemCount: items.length,
+          itemBuilder: (context, index) => _buildItemCard(items[index]),
+        );
+      },
+    );
+  }
+
+  Widget _buildItemCard(AdminAddedRecipeItem item) {
+    final opening = _openingRecipeId == item.recipeId;
+    final creatorTitle =
+        (item.creatorName != null && item.creatorName!.trim().isNotEmpty)
+        ? item.creatorName!.trim()
+        : item.creatorEmail ?? 'Unknown user';
+    final createdAtLabel = item.createdAt?.toLocal().toString() ?? '';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item.recipeName,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'By: $creatorTitle',
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            if ((item.creatorEmail ?? '').isNotEmpty)
+              Text(
+                item.creatorEmail!,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            if (createdAtLabel.isNotEmpty)
+              Text(
+                'Added: $createdAtLabel',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: opening ? null : () => _openRecipe(item),
+                  icon: opening
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.restaurant_menu),
+                  label: const Text('Open recipe card'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _openCreator(item),
+                  icon: const Icon(Icons.person_outline),
+                  label: const Text('Open user card'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Конфигурация бэкенда `RecipeApi`.
 ///
 /// По умолчанию приложение работает с собственным сервером mahallem
@@ -5,6 +7,9 @@
 /// контент по `?lang=`. Это поведение единое для всех платформ
 /// (iOS / Android / desktop) — никакого `--dart-define` для запуска
 /// не требуется.
+///
+/// На web-платформе по умолчанию использует локальный backend
+/// (`http://localhost:4000/recipes`) для разработки.
 ///
 /// Переопределить адрес можно через
 /// `--dart-define=MAHALLEM_RECIPES_BASE=https://example.com/recipes`.
@@ -14,6 +19,9 @@
 class RecipeApiConfig {
   /// База TheMealDB — fallback, если mahallem явно отключён.
   static const String mealDbBaseUrl = 'https://www.themealdb.com/api/json/v1/1';
+
+  /// Локальный backend для web разработки.
+  static const String localWebBaseUrl = 'http://localhost:4000/recipes';
 
   /// Прод-эндпоинт mahallem по умолчанию.
   static const String mahallemDefaultBaseUrl = 'https://mahallem.ist/recipes';
@@ -25,10 +33,18 @@ class RecipeApiConfig {
     defaultValue: '__unset__',
   );
 
-  /// Итоговая база mahallem с учётом dart-define.
-  static String get mahallemBaseUrl => _mahallemBaseFromEnv == '__unset__'
-      ? mahallemDefaultBaseUrl
-      : _mahallemBaseFromEnv;
+  /// Итоговая база mahallem с учётом dart-define и платформы.
+  /// На web использует локальный backend, на других платформах — prod.
+  static String get mahallemBaseUrl {
+    if (_mahallemBaseFromEnv != '__unset__') {
+      return _mahallemBaseFromEnv; // явно переданный через dart-define
+    }
+    // На web использует локальный backend для разработки
+    if (kIsWeb) {
+      return localWebBaseUrl;
+    }
+    return mahallemDefaultBaseUrl;
+  }
 
   /// Активный режим: mahallem по умолчанию; mealDb только если
   /// явно передан пустой `MAHALLEM_RECIPES_BASE=`.

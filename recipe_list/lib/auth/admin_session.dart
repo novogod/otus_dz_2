@@ -27,10 +27,20 @@ String? get currentSessionAdminPassword => _sessionAdminPassword;
 
 Database? _db;
 
-const String _kAuthBase = String.fromEnvironment(
+const String _kAuthBaseEnv = String.fromEnvironment(
   'MAHALLEM_AUTH_BASE',
-  defaultValue: 'https://mahallem.ist',
+  defaultValue: '__unset__',
 );
+const String _kLocalWebAuthBase = 'http://localhost:4000';
+
+/// Auth base: localhost:4000 for web development, production for other platforms.
+String get _kAuthBase {
+  if (_kAuthBaseEnv != '__unset__') {
+    return _kAuthBaseEnv; // явно переданный через dart-define
+  }
+  return kIsWeb ? _kLocalWebAuthBase : 'https://mahallem.ist';
+}
+
 const String _kAuthLoginPath = String.fromEnvironment(
   'MAHALLEM_AUTH_LOGIN_PATH',
   defaultValue: '/users/login',
