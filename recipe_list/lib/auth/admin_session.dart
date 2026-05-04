@@ -131,6 +131,52 @@ class AdminRecipeUser {
   }
 }
 
+class AdminAddedRecipeItem {
+  const AdminAddedRecipeItem({
+    required this.recipeId,
+    required this.recipeName,
+    this.recipeThumb,
+    this.recipeLink,
+    required this.creatorType,
+    this.creatorUserId,
+    this.creatorName,
+    this.creatorEmail,
+    this.creatorLink,
+    this.createdAt,
+  });
+
+  final int recipeId;
+  final String recipeName;
+  final String? recipeThumb;
+  final String? recipeLink;
+  final String creatorType;
+  final String? creatorUserId;
+  final String? creatorName;
+  final String? creatorEmail;
+  final String? creatorLink;
+  final DateTime? createdAt;
+
+  static AdminAddedRecipeItem fromJson(Map<String, dynamic> json) {
+    DateTime? parseDate(dynamic v) {
+      if (v is! String || v.isEmpty) return null;
+      return DateTime.tryParse(v);
+    }
+
+    return AdminAddedRecipeItem(
+      recipeId: (json['recipeId'] as num?)?.toInt() ?? 0,
+      recipeName: (json['recipeName'] ?? '').toString(),
+      recipeThumb: json['recipeThumb']?.toString(),
+      recipeLink: json['recipeLink']?.toString(),
+      creatorType: (json['creatorType'] ?? '').toString(),
+      creatorUserId: json['creatorUserId']?.toString(),
+      creatorName: json['creatorName']?.toString(),
+      creatorEmail: json['creatorEmail']?.toString(),
+      creatorLink: json['creatorLink']?.toString(),
+      createdAt: parseDate(json['createdAt']),
+    );
+  }
+}
+
 Future<void> bootstrapAdminSession({required Database db}) async {
   _db = db;
   _sessionAdminPassword = null;
@@ -265,14 +311,111 @@ Future<bool> loginAsAdmin({
   return ok;
 }
 
-Future<void> logoutAdmin() async {
+Future<void> logoutAdmin({bool clearSavedSession = true}) async {
   final db = _db;
   if (db != null) {
-    await db.update('auth_credentials', {'active': 0});
+    await db.transaction((txn) async {
+      final values = <String, Object?>{'active': 0};
+      if (clearSavedSession) {
+        values['token'] = null;
+      }
+      await txn.update('auth_credentials', values, where: 'active = 1');
+    });
   }
   _setSessionState(login: null, token: null, isAdmin: false);
   currentRecipeAdminTokenNotifier.value = null;
   _sessionAdminPassword = null;
+}
+
+/// Restores a previously authorized session from local mirrored credentials.
+///
+/// Intended to be used only after successful device-biometric authentication
+/// (Face ID / Touch ID / fingerprint). Returns `true` when a token-backed
+/// session was restored and state notifiers were updated.
+Future<bool> loginWithSavedTokenSession() async {
+  final db = _db;
+  if (db == null) return false;
+
+  final rows = await db.query(
+    'auth_credentials',
+    columns: ['login', 'token', 'preferred_language', 'is_admin'],
+    where: 'token IS NOT NULL AND token <> ""',
+    orderBy: 'updated_at DESC',
+    limit: 1,
+  );
+  if (rows.isEmpty) return false;
+
+  final row = rows.first;
+  final login = row['login'] as String?;
+  final token = row['token'] as String?;
+  final preferredLang = row['preferred_language'] as String?;
+  final isAdmin = (row['is_admin'] as int? ?? 0) == 1;
+  if (login == null || login.isEmpty || token == null || token.isEmpty) {
+    return false;
+  }
+
+  await _setActiveLogin(db, login);
+  if (preferredLang != null) {
+    final lang = AppLang.values
+        .where((l) => l.name == preferredLang)
+        .firstOrNull;
+    if (lang != null) cycleAppLangTo(lang);
+  }
+
+  _setSessionState(
+    login: login,
+    token: isAdmin ? null : token,
+    isAdmin: isAdmin,
+  );
+  if (isAdmin) {
+    currentRecipeAdminTokenNotifier.value = token;
+  }
+  _sessionAdminPassword = null;
+  return true;
+}
+
+Future<bool> hasSavedBiometricSession({String? login}) async {
+  final db = _db;
+  if (db == null) return false;
+  final targetLogin = (login ?? currentUserLoginNotifier.value)?.trim();
+  if (targetLogin == null || targetLogin.isEmpty) return false;
+
+  final rows = await db.query(
+    'auth_credentials',
+    columns: ['token'],
+    where: 'login = ? AND token IS NOT NULL AND token <> ""',
+    whereArgs: [targetLogin],
+    limit: 1,
+  );
+  return rows.isNotEmpty;
+}
+
+Future<bool> saveCurrentSessionForBiometricLogin() async {
+  final db = _db;
+  if (db == null) return false;
+
+  final login = currentUserLoginNotifier.value?.trim();
+  if (login == null || login.isEmpty) return false;
+
+  final isAdmin = adminLoggedInNotifier.value;
+  final token = isAdmin
+      ? currentRecipeAdminTokenNotifier.value
+      : currentUserTokenNotifier.value;
+  if (token == null || token.isEmpty) return false;
+
+  final updated = await db.update(
+    'auth_credentials',
+    {
+      'token': token,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+      'is_admin': isAdmin ? 1 : 0,
+    },
+    where: 'login = ?',
+    whereArgs: [login],
+  );
+  if (updated == 0) return false;
+  await _setActiveLogin(db, login);
+  return true;
 }
 
 bool get canSyncFavoritesRemotely =>
@@ -577,6 +720,53 @@ Future<List<AdminRecipeUser>> fetchRecipeAdminUsers({
   return usersRaw
       .whereType<Map<String, dynamic>>()
       .map(AdminRecipeUser.fromJson)
+      .toList(growable: false);
+}
+
+Future<List<AdminAddedRecipeItem>> fetchRecipeAdminAddedRecipes({
+  required String adminLogin,
+  required String adminPassword,
+}) async {
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) return const [];
+  final token = await _ensureRecipeAdminToken(
+    adminLogin: adminLogin,
+    adminPassword: adminPassword,
+  );
+  if (token == null || token.isEmpty) {
+    throw StateError('admin_list_unauthorized');
+  }
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: _kAuthBase,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      validateStatus: (_) => true,
+      headers: {'Authorization': 'Bearer $token'},
+    ),
+  );
+
+  final res = await dio.get<Map<String, dynamic>>(
+    '/api/recipe-admin/recipes-added',
+  );
+  final status = res.statusCode ?? 0;
+  if (status == 401 || status == 403) {
+    currentRecipeAdminTokenNotifier.value = null;
+    throw StateError('admin_list_unauthorized');
+  }
+  if (status < 200 || status >= 300) {
+    throw StateError('admin_list_failed');
+  }
+
+  final decoded = res.data;
+  if (decoded is! Map<String, dynamic>) {
+    throw StateError('admin_list_invalid_response');
+  }
+  final rows = decoded['recipes'];
+  if (rows is! List) return const [];
+  return rows
+      .whereType<Map<String, dynamic>>()
+      .map(AdminAddedRecipeItem.fromJson)
       .toList(growable: false);
 }
 

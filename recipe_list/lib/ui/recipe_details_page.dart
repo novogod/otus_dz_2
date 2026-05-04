@@ -560,22 +560,33 @@ class _OwnerActions extends StatelessWidget {
           return ValueListenableBuilder<bool>(
             valueListenable: adminLoggedInNotifier,
             builder: (context, isAdmin, __) {
-              if (!isAdmin) return const SizedBox.shrink();
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _CircleIconButton(
-                    icon: Icons.delete_outline,
-                    tooltip: s.adminDeleteAction,
-                    onPressed: () => _confirmAndDelete(context),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  _CircleIconButton(
-                    icon: Icons.edit,
-                    tooltip: s.adminEditAction,
-                    onPressed: () => _openEdit(context),
-                  ),
-                ],
+              return ValueListenableBuilder<bool>(
+                valueListenable: userLoggedInNotifier,
+                builder: (context, userLoggedIn, ___) {
+                  final isUserCandidate =
+                      userLoggedIn &&
+                      !isAdmin &&
+                      recipe.id >= OwnedRecipesStore.userMealIdFloor;
+                  if (!isAdmin && !isUserCandidate) {
+                    return const SizedBox.shrink();
+                  }
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _CircleIconButton(
+                        icon: Icons.delete_outline,
+                        tooltip: s.adminDeleteAction,
+                        onPressed: () => _confirmAndDelete(context),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      _CircleIconButton(
+                        icon: Icons.edit,
+                        tooltip: s.adminEditAction,
+                        onPressed: () => _openEdit(context),
+                      ),
+                    ],
+                  );
+                },
               );
             },
           );
@@ -586,23 +597,40 @@ class _OwnerActions extends StatelessWidget {
             return ValueListenableBuilder<bool>(
               valueListenable: adminLoggedInNotifier,
               builder: (context, isAdmin, ___) {
-                final isOwner = ids.contains(recipe.id);
-                if (!isOwner && !isAdmin) return const SizedBox.shrink();
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _CircleIconButton(
-                      icon: Icons.delete_outline,
-                      tooltip: s.adminDeleteAction,
-                      onPressed: () => _confirmAndDelete(context),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    _CircleIconButton(
-                      icon: Icons.edit,
-                      tooltip: s.adminEditAction,
-                      onPressed: () => _openEdit(context),
-                    ),
-                  ],
+                return ValueListenableBuilder<bool>(
+                  valueListenable: userLoggedInNotifier,
+                  builder: (context, userLoggedIn, ____) {
+                    final isOwner = ids.contains(recipe.id);
+                    // Also show buttons for any user-level recipe id (≥ floor)
+                    // when a regular (non-admin) user is logged in. The server
+                    // is the authority — it rejects writes for recipes the user
+                    // doesn't own. This handles recipes created before
+                    // owned_recipes was initialised (store was null, ?.add()
+                    // was a no-op) and the startup backfill missed them.
+                    final isUserCandidate =
+                        userLoggedIn &&
+                        !isAdmin &&
+                        recipe.id >= OwnedRecipesStore.userMealIdFloor;
+                    if (!isOwner && !isAdmin && !isUserCandidate) {
+                      return const SizedBox.shrink();
+                    }
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _CircleIconButton(
+                          icon: Icons.delete_outline,
+                          tooltip: s.adminDeleteAction,
+                          onPressed: () => _confirmAndDelete(context),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        _CircleIconButton(
+                          icon: Icons.edit,
+                          tooltip: s.adminEditAction,
+                          onPressed: () => _openEdit(context),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
             );

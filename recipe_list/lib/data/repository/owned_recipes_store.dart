@@ -35,7 +35,32 @@ class OwnedRecipesStore {
   static const int userMealIdFloor = 1000000;
 
   Future<Set<int>> ensureLoaded() async {
-    if (_loaded) return ids.value;
+    if (_loaded) {
+      // Even after the initial load, re-scan for newly cached user recipes
+      // that were added to the `recipes` table after the first pass (e.g.
+      // created when the store was null and ?.add() was a silent no-op).
+      final candidateRows = await _db.query(
+        'recipes',
+        columns: const ['id'],
+        where: 'id >= ?',
+        whereArgs: [userMealIdFloor],
+      );
+      final candidates = {for (final r in candidateRows) r['id']! as int};
+      final newOnes = candidates.difference(ids.value);
+      if (newOnes.isNotEmpty) {
+        final batch = _db.batch();
+        final nowMs = _now().millisecondsSinceEpoch;
+        for (final id in newOnes) {
+          batch.insert('owned_recipes', {
+            'id': id,
+            'created_at': nowMs,
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+        await batch.commit(noResult: true);
+        ids.value = {...ids.value, ...newOnes};
+      }
+      return ids.value;
+    }
     // Бэкфил: до v7-миграции таблица `owned_recipes` не существовала,
     // но сами пользовательские рецепты уже могли быть созданы (их id
     // ≥ [userMealIdFloor]). Один раз при первой загрузке заносим

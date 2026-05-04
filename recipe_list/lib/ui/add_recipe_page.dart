@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/recipe_events.dart';
@@ -479,7 +481,12 @@ class _AddRecipePageState extends State<AddRecipePage> {
         // Авто-добавление в избранное только при создании.
         // При edit пользователь сам решает, оставлять ли сердце.
         try {
-          await favoritesStoreNotifier.value?.ensureLoaded(appLang.value);
+          final store =
+              favoritesStoreNotifier.value ??
+              await ensureFavoritesStoreInitialized();
+          if (store != null && userLoggedInNotifier.value) {
+            await store.add(localized.id, appLang.value);
+          }
         } catch (_) {}
         try {
           await ownedRecipesStoreNotifier.value?.add(localized.id);
@@ -493,12 +500,23 @@ class _AddRecipePageState extends State<AddRecipePage> {
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text(s.addRecipeSuccess)));
       Navigator.of(context).pop(localized);
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
+      String detail = s.addRecipeError;
+      if (e is DioException) {
+        final code = e.response?.statusCode;
+        final msg = e.response?.data?.toString() ?? e.message ?? '';
+        detail = '${s.addRecipeError} [$code] $msg';
+      }
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(s.addRecipeError)));
+        ..showSnackBar(
+          SnackBar(
+            content: Text(detail),
+            duration: const Duration(seconds: 10),
+          ),
+        );
     }
   }
 

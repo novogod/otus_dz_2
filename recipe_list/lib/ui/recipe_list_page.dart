@@ -572,6 +572,10 @@ class _RecipeListPageState extends State<RecipeListPage> {
   /// и в том случае, когда [AddRecipePage] был открыт из
   /// «Избранного» (тогда этот метод вообще не вызывается).
   Future<void> _openAddRecipe(BuildContext context) async {
+    if (!userLoggedInNotifier.value) {
+      _showFavoritesRegistrationRequired(context);
+      return;
+    }
     await Navigator.of(context).push<Recipe>(
       MaterialPageRoute<Recipe>(
         builder: (_) =>

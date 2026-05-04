@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../auth/admin_session.dart';
 import '../i18n.dart';
+import 'admin_added_recipes_page.dart';
 import 'admin_users_page.dart';
 import 'app_theme.dart';
 
@@ -24,7 +25,7 @@ Future<void> openAdminAfterLoginPage(
   }
 }
 
-class AdminAfterLoginPage extends StatelessWidget {
+class AdminAfterLoginPage extends StatefulWidget {
   const AdminAfterLoginPage({
     super.key,
     required this.adminLogin,
@@ -33,6 +34,14 @@ class AdminAfterLoginPage extends StatelessWidget {
 
   final String adminLogin;
   final String adminPassword;
+
+  @override
+  State<AdminAfterLoginPage> createState() => _AdminAfterLoginPageState();
+}
+
+class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
+  bool _busy = false;
+  bool _biometricSaved = false;
 
   // §9a top-bar title: Roboto 400/20, #165932
   static const _titleStyle = TextStyle(
@@ -66,6 +75,53 @@ class AdminAfterLoginPage extends StatelessWidget {
   );
 
   @override
+  void initState() {
+    super.initState();
+    _refreshBiometricSaved();
+  }
+
+  Future<void> _refreshBiometricSaved() async {
+    final saved = await hasSavedBiometricSession(login: widget.adminLogin);
+    if (!mounted) return;
+    setState(() => _biometricSaved = saved);
+  }
+
+  Future<void> _saveForBiometric() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final ok = await saveCurrentSessionForBiometricLogin();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    await _refreshBiometricSaved();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            ok
+                ? 'Current admin session is saved for Face ID / Fingerprint login.'
+                : 'Could not save biometric session. Please sign in online and try again.',
+          ),
+        ),
+      );
+  }
+
+  Future<void> _logout() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final preserveBiometric = _biometricSaved;
+    await logoutAdmin(clearSavedSession: !preserveBiometric);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    final s = S.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(s.logoutButton)));
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = S.of(context);
     return Scaffold(
@@ -88,14 +144,42 @@ class AdminAfterLoginPage extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => AdminUsersPage(
-                        adminLogin: adminLogin,
-                        adminPassword: adminPassword,
+                        adminLogin: widget.adminLogin,
+                        adminPassword: widget.adminPassword,
                       ),
                     ),
                   );
                 },
                 icon: const Icon(Icons.people_alt_outlined),
                 label: Text(s.adminEditUsersList),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton.icon(
+                style: _primaryButtonStyle,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => AdminAddedRecipesPage(
+                        adminLogin: widget.adminLogin,
+                        adminPassword: widget.adminPassword,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.library_books_outlined),
+                label: const Text('Recipes added'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton.icon(
+                onPressed: _busy ? null : _saveForBiometric,
+                icon: Icon(
+                  _biometricSaved ? Icons.verified_user : Icons.fingerprint,
+                ),
+                label: Text(
+                  _biometricSaved
+                      ? 'Face ID / Fingerprint is saved for admin login'
+                      : 'Save admin login for Face ID / Fingerprint',
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               FilledButton.icon(
@@ -110,14 +194,7 @@ class AdminAfterLoginPage extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               FilledButton.icon(
                 style: _dangerButtonStyle,
-                onPressed: () async {
-                  await logoutAdmin();
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text(s.logoutButton)));
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
+                onPressed: _busy ? null : _logout,
                 icon: const Icon(Icons.logout),
                 label: Text(s.logoutButton),
               ),

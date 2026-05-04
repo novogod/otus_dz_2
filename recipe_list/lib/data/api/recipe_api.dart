@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
+import '../../auth/admin_session.dart';
 import '../../i18n.dart';
 import '../../models/recipe.dart';
 import 'meal_db_client.dart';
@@ -122,6 +123,7 @@ class RecipeApi {
     final res = await _client.dio.post<Map<String, dynamic>>(
       '',
       data: {'meal': _mealToJson(draft)},
+      options: _authOptions(),
     );
     final data = res.data;
     final stored = data?['meal'];
@@ -154,7 +156,7 @@ class RecipeApi {
     final res = await _client.dio.post<Map<String, dynamic>>(
       '',
       data: form,
-      options: Options(contentType: 'multipart/form-data'),
+      options: _authOptions(contentType: 'multipart/form-data'),
     );
     final data = res.data;
     final stored = data?['meal'];
@@ -162,6 +164,22 @@ class RecipeApi {
       throw StateError('createRecipeWithPhoto: malformed response');
     }
     return Recipe.fromMealDb(stored);
+  }
+
+  /// Returns Dio [Options] carrying the active auth token for
+  /// write operations (create / update / delete). Prefers the
+  /// admin recipe-admin bearer token; falls back to the regular
+  /// user token header used by the mahallem favorites API.
+  Options _authOptions({String? contentType}) {
+    final adminToken = currentRecipeAdminTokenNotifier.value;
+    final userToken = currentUserTokenNotifier.value;
+    final headers = <String, dynamic>{};
+    if (adminToken != null && adminToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $adminToken';
+    } else if (userToken != null && userToken.isNotEmpty) {
+      headers['x-recipes-user-token'] = userToken;
+    }
+    return Options(headers: headers, contentType: contentType);
   }
 
   /// Сериализация черновика в TheMealDB-shape JSON, общая для
@@ -191,6 +209,7 @@ class RecipeApi {
     final res = await _client.dio.put<Map<String, dynamic>>(
       '/${draft.id}',
       data: {'meal': _mealToJson(draft)},
+      options: _authOptions(),
     );
     final stored = res.data?['meal'];
     if (stored is! Map<String, dynamic>) {
@@ -221,7 +240,7 @@ class RecipeApi {
     final res = await _client.dio.put<Map<String, dynamic>>(
       '/${draft.id}',
       data: form,
-      options: Options(contentType: 'multipart/form-data'),
+      options: _authOptions(contentType: 'multipart/form-data'),
     );
     final stored = res.data?['meal'];
     if (stored is! Map<String, dynamic>) {
@@ -236,7 +255,7 @@ class RecipeApi {
     if (_client.backend != RecipeBackend.mahallem) {
       throw StateError('deleteRecipe requires the mahallem backend');
     }
-    await _client.dio.delete<void>('/$id');
+    await _client.dio.delete<void>('/$id', options: _authOptions());
   }
 
   Future<List<Recipe>> _filter(String key, String value) async {

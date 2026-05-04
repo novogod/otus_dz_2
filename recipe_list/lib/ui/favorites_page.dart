@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
+import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
 import '../data/recipe_events.dart';
 import '../data/repository/favorites_store.dart';
@@ -16,6 +17,7 @@ import 'recipe_card.dart';
 import 'recipe_details_page.dart';
 import 'recipe_list_page.dart';
 import 'search_app_bar.dart';
+import 'signup_page.dart';
 
 /// Экран «Избранное» (chunk D из todo/15).
 ///
@@ -276,6 +278,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   Future<void> _openAddRecipe(BuildContext context) async {
+    if (!userLoggedInNotifier.value) {
+      _showFavoritesRegistrationRequired(context);
+      return;
+    }
     final api = widget.api;
     if (api == null) return;
     await Navigator.of(context).push<Recipe>(
@@ -286,6 +292,25 @@ class _FavoritesPageState extends State<FavoritesPage> {
     // Новый рецепт не попадает автоматически в избранное — список
     // обновится сам через `favoritesStoreNotifier`, когда
     // пользователь нажмёт сердце на странице деталей.
+  }
+
+  void _showFavoritesRegistrationRequired(BuildContext context) {
+    final s = S.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(s.favoritesRegistrationRequired),
+          action: SnackBarAction(
+            label: s.signUp,
+            onPressed: () async {
+              final created = await openSignUpPage(context);
+              if (!context.mounted || !created) return;
+              await openLoginPage(context);
+            },
+          ),
+        ),
+      );
   }
 
   Future<void> _openEditRecipe(BuildContext context, Recipe recipe) async {
