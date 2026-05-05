@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../app_theme.dart';
 import 'pwa_install.dart';
+import 'web_share_api.dart';
 
 /// Public-facing share URL. We always share the production landing
 /// page, even when the app is opened on `localhost` for dev — sending
@@ -29,12 +30,36 @@ Future<void> _open(Uri u) async {
   await launchUrl(u, mode: LaunchMode.externalApplication);
 }
 
+/// Tries the OS share sheet (`navigator.share`) first — that's what
+/// surfaces installed apps (Instagram, WhatsApp, Messages, …) on
+/// iPad/iPhone Safari and Android Chrome. Returns `true` when the
+/// system sheet handled the share so the caller can skip the web
+/// fallback.
+Future<bool> _trySystemShare({String? title, String? text, String? url}) {
+  if (!canWebShare()) return Future.value(false);
+  return webShare(title: title, text: text, url: url);
+}
+
 Future<void> _shareFacebook() async {
+  if (await _trySystemShare(
+    title: _kShareTitle,
+    text: _kShareText,
+    url: _shareUrl(),
+  )) {
+    return;
+  }
   final url = Uri.encodeComponent(_shareUrl());
   await _open(Uri.parse('https://www.facebook.com/sharer/sharer.php?u=$url'));
 }
 
 Future<void> _shareVk() async {
+  if (await _trySystemShare(
+    title: _kShareTitle,
+    text: _kShareText,
+    url: _shareUrl(),
+  )) {
+    return;
+  }
   final url = Uri.encodeComponent(_shareUrl());
   final title = Uri.encodeComponent(_kShareTitle);
   final desc = Uri.encodeComponent(_kShareText);
@@ -46,14 +71,30 @@ Future<void> _shareVk() async {
 }
 
 Future<void> _shareWhatsApp() async {
+  if (await _trySystemShare(
+    title: _kShareTitle,
+    text: _kShareText,
+    url: _shareUrl(),
+  )) {
+    return;
+  }
+  // wa.me is the universal-link form WhatsApp recommends — it hands
+  // off to the installed app via OS universal links when available.
   final text = Uri.encodeComponent('$_kShareText ${_shareUrl()}');
-  await _open(Uri.parse('https://api.whatsapp.com/send?text=$text'));
+  await _open(Uri.parse('https://wa.me/?text=$text'));
 }
 
 Future<void> _shareInstagram(BuildContext context) async {
-  // Instagram has no web share-by-URL endpoint. Best-effort: copy
-  // the link to clipboard and open instagram.com so the user can
-  // paste into a story/DM.
+  // Instagram has no public web→app share endpoint. Prefer the
+  // system share sheet (the user can pick Instagram from there);
+  // otherwise fall back to "copy link & open instagram.com".
+  if (await _trySystemShare(
+    title: _kShareTitle,
+    text: _kShareText,
+    url: _shareUrl(),
+  )) {
+    return;
+  }
   await Clipboard.setData(ClipboardData(text: _shareUrl()));
   if (context.mounted) {
     ScaffoldMessenger.of(context)
