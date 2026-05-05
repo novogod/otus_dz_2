@@ -89,7 +89,12 @@ Future<void> deleteRecipeDatabaseWebOnly() async {
 /// screen instead of the admin panel).
 /// v11: idempotent re-apply of `is_admin` — v10 fresh-install schema was
 /// missing the column; this migration ensures any v10 DB gets it.
-const int kRecipeDbSchemaVersion = 11;
+/// v12: add `user_profile` and `recipe_creator_cache` tables for the
+/// User Card / "Added by" feature (see
+/// docs/user-card-and-social-signals.md §1, §3 and chunk B). Both
+/// are additive — `recipes` / `favorites` / `owned_recipes` /
+/// `auth_credentials` are preserved on upgrade.
+const int kRecipeDbSchemaVersion = 12;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -177,6 +182,40 @@ CREATE TABLE auth_credentials (
 );
 ''';
 
+/// v12: per-user profile cache. Single row keyed by `user_id` —
+/// the app stores the currently logged-in user's profile fields
+/// (display name, language, avatar S3 path, member-since,
+/// recipes_added denorm) so the User Card screen renders without
+/// a network round-trip on every navigation. `cached_at` lets the
+/// caller invalidate via TTL. See
+/// docs/user-card-and-social-signals.md §2.2.
+const String _kUserProfileSchema = '''
+CREATE TABLE user_profile (
+  user_id TEXT PRIMARY KEY,
+  display_name TEXT,
+  language TEXT,
+  avatar_path TEXT,
+  member_since INTEGER,
+  recipes_added INTEGER,
+  cached_at INTEGER
+);
+''';
+
+/// v12: cache of "creator" metadata for user-added recipes
+/// (id ≥ 1_000_000). Keyed by creator's user_id so the recipe
+/// details "Added by" footer (see §3) and the optional card chip
+/// can render without an extra network hop per scroll. TTL 24 h,
+/// refreshed lazily by the loader.
+const String _kRecipeCreatorCacheSchema = '''
+CREATE TABLE recipe_creator_cache (
+  creator_user_id TEXT PRIMARY KEY,
+  display_name TEXT,
+  avatar_path TEXT,
+  recipes_added INTEGER,
+  cached_at INTEGER
+);
+''';
+
 const List<String> _kIndexes = [
   'CREATE INDEX idx_recipes_lang_name_lower ON recipes(lang, name_lower);',
   'CREATE INDEX idx_recipes_last_used_at ON recipes(last_used_at);',
@@ -191,6 +230,8 @@ Future<void> applyRecipeSchema(Database db) async {
   await db.execute(_kFavoritesSchema);
   await db.execute(_kOwnedRecipesSchema);
   await db.execute(_kAuthCredentialsSchema);
+  await db.execute(_kUserProfileSchema);
+  await db.execute(_kRecipeCreatorCacheSchema);
   for (final stmt in _kIndexes) {
     await db.execute(stmt);
   }
@@ -237,6 +278,31 @@ Future<void> applyFavoritesSchema(Database db) async {
   await db.execute(
     'CREATE INDEX IF NOT EXISTS idx_favorites_lang_saved_at '
     'ON favorites(lang, saved_at DESC)',
+  );
+}
+
+/// v11 → v12: idempotent additive migration that creates
+/// `user_profile` + `recipe_creator_cache`. Both tables back the
+/// User Card / "Added by" feature — see chunk B in
+/// docs/user-card-and-social-signals.md.
+Future<void> applyUserProfileAndCreatorCacheSchema(Database db) async {
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS user_profile ('
+    'user_id TEXT PRIMARY KEY, '
+    'display_name TEXT, '
+    'language TEXT, '
+    'avatar_path TEXT, '
+    'member_since INTEGER, '
+    'recipes_added INTEGER, '
+    'cached_at INTEGER)',
+  );
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS recipe_creator_cache ('
+    'creator_user_id TEXT PRIMARY KEY, '
+    'display_name TEXT, '
+    'avatar_path TEXT, '
+    'recipes_added INTEGER, '
+    'cached_at INTEGER)',
   );
 }
 
@@ -352,6 +418,12 @@ Future<void> _onRecipeDbUpgrade(
     } catch (_) {
       // Column already exists — nothing to do.
     }
+  }
+  // v11 → v12: additive — adds user_profile + recipe_creator_cache
+  // tables for the User Card / "Added by" feature. Existing data is
+  // untouched.
+  if (oldVersion < 12) {
+    await applyUserProfileAndCreatorCacheSchema(db);
   }
 }
 
