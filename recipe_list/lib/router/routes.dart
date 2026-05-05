@@ -110,19 +110,16 @@ abstract final class Routes {
   /// Regex-альтернация для `GoRoute.path` (без скобок). Совпадает
   /// с `supportedLocales`. Пример пути:
   /// `'/:lang(${Routes.localePathPattern})/recipes/:id'`.
-  static const String localePathPattern =
-      r'ar|de|en|es|fa|fr|it|ku|ru|tr';
+  static const String localePathPattern = r'ar|de|en|es|fa|fr|it|ku|ru|tr';
 
   /// Канонический URL рецепта в локали `lang`. Используется
   /// pre-renderer'ом и `<xhtml:link rel="alternate">` блоками
   /// в sitemap.xml.
-  static String localizedRecipe(String lang, int id) =>
-      '/$lang/recipes/$id';
+  static String localizedRecipe(String lang, int id) => '/$lang/recipes/$id';
 
   /// Канонический URL списка рецептов в локали `lang`.
   static String localizedRecipes(String lang) => '/$lang/recipes';
 
   /// True, если строка — поддерживаемая локаль (для guard'ов).
-  static bool isSupportedLocale(String lang) =>
-      supportedLocales.contains(lang);
+  static bool isSupportedLocale(String lang) => supportedLocales.contains(lang);
 }

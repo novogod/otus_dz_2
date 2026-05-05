@@ -1,20 +1,20 @@
 // Unit + integration tests for the pre-render service (todo/20 chunk E).
 // Pure render-utils tests run without Chromium. The HTTP test stubs
 // renderHtml/loadSitemap so it doesn't need a real browser either.
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
-import http from 'node:http';
+import test from 'node:test';
 import {
-  SUPPORTED_LOCALES,
-  isSupportedLocale,
-  parseRecipePath,
-  cacheKey,
-  cacheFileName,
-  scrubFlutterShell,
-  buildSpaUrl,
+    SUPPORTED_LOCALES,
+    buildSpaUrl,
+    cacheFileName,
+    cacheKey,
+    isSupportedLocale,
+    parseRecipePath,
+    scrubFlutterShell,
 } from '../lib/render-utils.js';
 import { buildApp } from '../server.js';
 

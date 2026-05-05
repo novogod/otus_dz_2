@@ -188,6 +188,130 @@
           typeof navigator.share === 'function';
       } catch (_) { return false; }
     };
+
+    // ─── Per-recipe SEO injection (todo/20 chunk F) ─────────────
+    // Called from Dart (RecipeDetailsPage) once the recipe payload
+    // is on screen. Mutates document.head with title, description,
+    // canonical, hreflang × 10 + x-default, OG tags, Twitter card,
+    // and a JSON-LD Recipe blob. Then sets <meta name="ssr-ready">
+    // so the bot pre-renderer (todo/20 chunk E) knows it's safe to
+    // capture document.documentElement.outerHTML.
+    //
+    // Idempotent: removes anything tagged data-recipe-seo="1" before
+    // re-emitting, so locale switches replace head atoms instead of
+    // appending them.
+    (function () {
+      var SUPPORTED = ['ar','de','en','es','fa','fr','it','ku','ru','tr'];
+      var ORIGIN = 'https://recipies.mahallem.ist';
+      function clearTagged() {
+        var nodes = document.head.querySelectorAll('[data-recipe-seo="1"]');
+        for (var i = 0; i < nodes.length; i++) nodes[i].remove();
+        var ssr = document.head.querySelector('meta[name="ssr-ready"]');
+        if (ssr) ssr.remove();
+      }
+      function el(tag, attrs, text) {
+        var n = document.createElement(tag);
+        n.setAttribute('data-recipe-seo', '1');
+        for (var k in attrs) {
+          if (Object.prototype.hasOwnProperty.call(attrs, k) && attrs[k] != null) {
+            n.setAttribute(k, attrs[k]);
+          }
+        }
+        if (text != null) n.textContent = text;
+        return n;
+      }
+      window.clearRecipeSeo = function () {
+        try { clearTagged(); } catch (_) {}
+      };
+      window.setRecipeSeo = function (data) {
+        try {
+          if (!data || typeof data !== 'object') return;
+          var locale = data.locale && SUPPORTED.indexOf(data.locale) >= 0
+            ? data.locale : 'en';
+          var id = Number(data.id);
+          if (!Number.isFinite(id) || id <= 0) return;
+          var title = (data.title || 'Otus Food').toString();
+          var description = (data.description || '').toString().slice(0, 320);
+          var image = (data.image || ORIGIN + '/og-image.jpg').toString();
+          var canonical = ORIGIN + '/' + locale + '/recipes/' + id;
+          clearTagged();
+          // <title> can't carry the data attribute marker (it's a
+          // singleton element). We update its text and tag the element
+          // by setting the marker on it after, so the next clear sweep
+          // finds it.
+          if (document.title !== title + ' — Otus Food') {
+            document.title = title + ' — Otus Food';
+          }
+          var head = document.head;
+          if (description) {
+            head.appendChild(el('meta', { name: 'description', content: description }));
+          }
+          head.appendChild(el('link', { rel: 'canonical', href: canonical }));
+          for (var i = 0; i < SUPPORTED.length; i++) {
+            var lng = SUPPORTED[i];
+            head.appendChild(el('link', {
+              rel: 'alternate',
+              hreflang: lng,
+              href: ORIGIN + '/' + lng + '/recipes/' + id,
+            }));
+          }
+          head.appendChild(el('link', {
+            rel: 'alternate',
+            hreflang: 'x-default',
+            href: ORIGIN + '/en/recipes/' + id,
+          }));
+          // Open Graph
+          head.appendChild(el('meta', { property: 'og:type', content: 'article' }));
+          head.appendChild(el('meta', { property: 'og:title', content: title }));
+          if (description) {
+            head.appendChild(el('meta', { property: 'og:description', content: description }));
+          }
+          head.appendChild(el('meta', { property: 'og:url', content: canonical }));
+          head.appendChild(el('meta', { property: 'og:image', content: image }));
+          head.appendChild(el('meta', { property: 'og:locale', content: locale }));
+          // Twitter
+          head.appendChild(el('meta', { name: 'twitter:card', content: 'summary_large_image' }));
+          head.appendChild(el('meta', { name: 'twitter:title', content: title }));
+          if (description) {
+            head.appendChild(el('meta', { name: 'twitter:description', content: description }));
+          }
+          head.appendChild(el('meta', { name: 'twitter:image', content: image }));
+          // JSON-LD Recipe
+          var jsonld = {
+            '@context': 'https://schema.org',
+            '@type': 'Recipe',
+            name: title,
+            inLanguage: locale,
+            url: canonical,
+            image: [image],
+            author: { '@type': 'Organization', name: 'Otus Food' },
+          };
+          if (description) jsonld.description = description;
+          if (Array.isArray(data.ingredients) && data.ingredients.length > 0) {
+            jsonld.recipeIngredient = data.ingredients
+              .map(function (s) { return (s || '').toString().trim(); })
+              .filter(function (s) { return s.length > 0; });
+          }
+          if (Array.isArray(data.instructions) && data.instructions.length > 0) {
+            jsonld.recipeInstructions = data.instructions
+              .map(function (s) { return (s || '').toString().trim(); })
+              .filter(function (s) { return s.length > 0; })
+              .map(function (s) { return { '@type': 'HowToStep', text: s }; });
+          }
+          if (data.category) jsonld.recipeCategory = data.category.toString();
+          if (data.area) jsonld.recipeCuisine = data.area.toString();
+          var script = el('script', { type: 'application/ld+json' });
+          script.textContent = JSON.stringify(jsonld);
+          head.appendChild(script);
+          // Bot snapshot signal — keep this last so the prerender
+          // doesn't capture a half-built head.
+          head.appendChild(el('meta', { name: 'ssr-ready', content: '1' }));
+        } catch (e) {
+          // Never block the SPA on SEO injection failures.
+          if (window.console) window.console.warn('setRecipeSeo failed:', e);
+        }
+      };
+    })();
   </script>
 </head>
 <body>

@@ -12,6 +12,7 @@ import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import '../router/routes.dart';
+import '../seo/seo_head.dart';
 import '../utils/imgproxy.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
@@ -79,6 +80,10 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     appLang.addListener(_onLangChanged);
     recipeUpdatedNotifier.addListener(_onRecipeUpdated);
     activeDetailsCount.value = activeDetailsCount.value + 1;
+    // todo/20 chunk F — emit per-recipe SEO atoms (title, OG, hreflang,
+    // JSON-LD Recipe) into document.head + the `ssr-ready` marker the
+    // bot pre-renderer waits for. No-op on non-web targets.
+    _emitSeo();
   }
 
   @override
@@ -86,7 +91,40 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     appLang.removeListener(_onLangChanged);
     recipeUpdatedNotifier.removeListener(_onRecipeUpdated);
     activeDetailsCount.value = activeDetailsCount.value - 1;
+    // Drop the per-recipe head atoms so home / list pages don't keep
+    // a recipe canonical/hreflang stuck on the document.
+    clearRecipeSeo();
     super.dispose();
+  }
+
+  void _emitSeo() {
+    final r = _recipe;
+    final ingredients = r.ingredients
+        .map((ing) {
+          final m = ing.measure.trim();
+          final n = ing.name.trim();
+          return m.isEmpty ? n : '$m $n'.trim();
+        })
+        .where((s) => s.isNotEmpty)
+        .toList(growable: false);
+    final instructions = (r.instructions ?? '')
+        .split(RegExp(r'\r?\n+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList(growable: false);
+    setRecipeSeo(
+      RecipeSeo(
+        id: r.id,
+        locale: appLang.value.name,
+        title: r.name,
+        description: instructions.isEmpty ? null : instructions.first,
+        image: r.photo.isEmpty ? null : r.photo,
+        category: r.category,
+        area: r.area,
+        ingredients: ingredients,
+        instructions: instructions,
+      ),
+    );
   }
 
   /// Если на [AddRecipePage] (edit-режим) сохранили этот же
@@ -100,6 +138,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
       _recipe = updated;
       _renderedLang = appLang.value;
     });
+    _emitSeo();
   }
 
   Future<void> _onLangChanged() async {
@@ -154,6 +193,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
       if (got != null) _recipe = got;
       _translating = false;
     });
+    if (got != null) _emitSeo();
   }
 
   @override
