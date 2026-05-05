@@ -116,17 +116,25 @@ async function renderHtml({ locale, id }) {
     await page.setUserAgent('RecipeListPrerender/1.0 (+https://recipies.mahallem.ist)');
     await page.setViewport({ width: 1200, height: 1800, deviceScaleFactor: 1 });
     await page.goto(url, {
-      waitUntil: 'networkidle2',
+      // domcontentloaded fires as soon as the SPA shell is parsed; we
+      // then wait for the SPA-emitted ssr-ready signal (or a short
+      // fallback delay if the SPA build doesn't ship that signal yet —
+      // chunk F adds it). Using `networkidle2` here was unreliable
+      // because Flutter web keeps issuing small fetches during canvas
+      // init for ~minutes and never reaches network idle.
+      waitUntil: 'domcontentloaded',
       timeout: RENDER_TIMEOUT_MS,
     });
-    // Prefer the SPA-emitted readiness signal; fall back to whatever
-    // we already have at networkidle if the SPA build doesn't ship it.
+    // Prefer the SPA-emitted readiness signal; fall back to a short
+    // grace period if the SPA build doesn't ship it yet.
     try {
       await page.waitForSelector('meta[name="ssr-ready"]', {
         timeout: SSR_READY_TIMEOUT_MS,
       });
     } catch (_e) {
-      // Acceptable degraded mode — the SPA shell is captured as-is.
+      // Acceptable degraded mode — give the SPA a moment to paint
+      // anything it can before we snapshot.
+      await new Promise((r) => setTimeout(r, 1500));
     }
     const html = await page.content();
     return scrubFlutterShell(html);
