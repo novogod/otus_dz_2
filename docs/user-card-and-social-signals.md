@@ -540,3 +540,561 @@ The proposal is grounded in these files:
 - Local SQLite —
   [recipe_list/lib/data/local/recipe_db.dart](../recipe_list/lib/data/local/recipe_db.dart),
   current schema v11.
+
+---
+
+## 9. Chunked TODO with tests
+
+This section turns §6 into actionable, ship-one-at-a-time chunks.
+Each chunk has:
+
+- a goal (what's "done" looks like),
+- a list of code TODOs,
+- a list of tests that must pass before the chunk is merged,
+- explicit prerequisites and rollback plan.
+
+Conventions:
+
+- Unit / widget tests live next to the existing
+  [recipe_list/test/](../recipe_list/test/) structure
+  (`test/<area>/<thing>_test.dart`). Use `flutter test` from the
+  app root.
+- Backend tests live in the `mahallem-user-portal` repo under
+  `test/` and run via `npm test`.
+- Each chunk is one PR / one commit on `main`. CI must be green
+  before the next chunk starts.
+- A chunk is **not** done until manual smoke on the installed PWA
+  passes (see §11).
+
+Status legend: ⬜ not started · 🟡 in progress · ✅ done.
+
+### Chunk A — Photo picker helper extraction
+
+**Goal:** one shared `pickAndCompressPhoto()` helper used by both
+`AddRecipePage` and the (future) `UserCardPage`. No behavioural
+change to `AddRecipePage`.
+
+**Status:** ⬜
+
+**Prereqs:** none.
+
+**Code TODO**
+
+- ⬜ Create `recipe_list/lib/ui/photo_picker_sheet.dart` exporting
+  `Future<Uint8List?> pickAndCompressPhoto(BuildContext, {required
+  String cameraLabel, required String galleryLabel, String?
+  removeLabel})`.
+- ⬜ Move the camera/gallery bottom-sheet builder out of
+  `add_recipe_page.dart` into the helper. Keep the current
+  `photo_downscaler.dart` call.
+- ⬜ Update `AddRecipePage` to call the helper; pass the existing
+  `s.addRecipePhotoFromCamera` / `s.addRecipePhotoFromGallery` keys.
+- ⬜ Verify no other call sites broke (`grep ImagePicker` to confirm
+  only the helper now imports it).
+
+**Tests**
+
+- ⬜ `test/ui/photo_picker_sheet_test.dart` — widget test that pumps
+  a `Scaffold` with a button calling the helper, verifies the
+  bottom sheet shows both labels and (when `removeLabel != null`)
+  the remove option. Mock `ImagePicker` via a fake `pickerOverride`
+  parameter (add a `@visibleForTesting` injection seam if needed).
+- ⬜ `test/ui/add_recipe_page_test.dart` — extend the existing test
+  (or add one if missing) to assert the bottom sheet still appears
+  when the user taps the photo placeholder.
+- ⬜ Run `flutter analyze` — zero new warnings.
+
+**Rollback:** revert the single commit. The helper has no consumers
+besides `AddRecipePage`.
+
+---
+
+### Chunk B — DB migration v11 → v12 (user_profile + recipe_creator_cache)
+
+**Goal:** schema bumped, migration safe on existing v11 IndexedDB
+snapshots, both tables empty but queryable.
+
+**Status:** ⬜
+
+**Prereqs:** none. Safe to land before backend.
+
+**Code TODO**
+
+- ⬜ Bump `kRecipeDbSchemaVersion = 12` in
+  [recipe_db.dart](../recipe_list/lib/data/local/recipe_db.dart).
+- ⬜ Add `applyUserProfileSchema(Database)` and
+  `applyRecipeCreatorCacheSchema(Database)`; call them from
+  `applyRecipeSchema` (fresh installs) and from `_onRecipeDbUpgrade`
+  (`if (oldV < 12) { … }`).
+- ⬜ DDL:
+  - `user_profile (user_id TEXT PRIMARY KEY, display_name TEXT,
+    language TEXT, avatar_path TEXT, member_since INTEGER,
+    recipes_added INTEGER, cached_at INTEGER)`.
+  - `recipe_creator_cache (creator_user_id TEXT PRIMARY KEY,
+    display_name TEXT, avatar_path TEXT, recipes_added INTEGER,
+    cached_at INTEGER)`.
+- ⬜ Smoke that the Chunk-3-style runtime corruption recovery still
+  applies (no new code; just confirm `_runLoad` shell still wraps
+  the new queries when they're added in later chunks).
+
+**Tests**
+
+- ⬜ `test/data/local/recipe_db_migration_test.dart`:
+  - Open an in-memory DB at v11 (apply v11 schema only), close.
+  - Re-open with v12 schema; assert `PRAGMA table_info(user_profile)`
+    and `PRAGMA table_info(recipe_creator_cache)` return the
+    expected columns.
+  - Insert + select one row in each table.
+- ⬜ `test/data/local/recipe_db_fresh_install_test.dart` — open at
+  v12 from scratch, assert both tables exist.
+- ⬜ Existing `recipe_db` tests still green (no regression on
+  recipes / favorites / owned tables).
+
+**Rollback:** revert. Users on prod that already migrated to v12
+get a no-op (the tables become unused but harmless); one extra
+recovery wipe via `deleteRecipeDatabaseWebOnly` is the worst case.
+
+---
+
+### Chunk C — Backend: avatar bucket + user endpoints (mahallem-user-portal)
+
+**Goal:** `food-avatars` bucket live, three endpoints shipped,
+`recipes_users.avatar_path` column added. No client changes.
+
+**Status:** ⬜
+
+**Prereqs:** Hetzner Object Storage credentials for the new bucket.
+
+**Code TODO** (in the **mahallem-user-portal** repo, not this one)
+
+- ⬜ Create `food-avatars` bucket; copy the `recipe-photos`
+  bucket's CORS + public-read policy.
+- ⬜ Migration: `ALTER TABLE recipes_users ADD COLUMN avatar_path
+  TEXT NULL`.
+- ⬜ Migration: `ALTER TABLE recipes_users ADD COLUMN
+  recipes_added INTEGER NOT NULL DEFAULT 0` (denormalised count
+  needed by §3 & §1.4).
+- ⬜ Trigger / handler: increment / decrement `recipes_added` on
+  user-recipe insert / delete (`recipes.id >= 1_000_000` and
+  `created_by = user_id`).
+- ⬜ `POST /recipes/users/avatar` — multipart upload; validate MIME
+  (`image/jpeg|png|webp`); cap 5 MB; re-encode through imgproxy;
+  PUT to S3 at `food-avatars/${user_id}/${ts}.jpg`; update
+  `recipes_users.avatar_path`; return `{ avatarPath, avatarUrl }`.
+- ⬜ `DELETE /recipes/users/avatar` — best-effort S3 delete;
+  null the column.
+- ⬜ `GET /recipes/users/me` — `{ id, email, displayName, language,
+  avatarPath, recipesAdded, memberSince }`.
+- ⬜ Auth on all three: existing `x-recipes-user-token` middleware.
+- ⬜ Update OpenAPI / docs in that repo.
+
+**Tests** (in `mahallem-user-portal`)
+
+- ⬜ `test/avatar_upload.test.js`:
+  - 200 happy path: small JPEG → 200, returns avatarPath, S3
+    object exists, DB row updated.
+  - 415 wrong content-type (`text/plain` payload).
+  - 413 oversize (6 MB).
+  - 401 missing token.
+- ⬜ `test/avatar_delete.test.js` — 200 clears column; 404 when
+  no avatar set.
+- ⬜ `test/users_me.test.js` — returns the seven fields; counts
+  user-added recipes correctly when seed has two id ≥ 1_000_000
+  recipes by that user.
+- ⬜ `test/recipes_added_trigger.test.js` — insert / delete a
+  user recipe, observe the count change.
+
+**Rollback:** revert the migration is non-trivial (column add is
+fine to leave); revert the routes by removing them and redeploying.
+The food app doesn't call these yet, so no client breakage.
+
+---
+
+### Chunk D — User Card page + routing + post-signup Add flow
+
+**Goal:** `Routes.profile` resolves to `UserCardPage` for non-admin
+users; admin path keeps existing screen with a new "User card"
+button; signup screen pushes the post-signup variant.
+
+**Status:** ⬜
+
+**Prereqs:** Chunk A (picker), Chunk B (DB), Chunk C (`/recipes/users/me`
++ `/avatar`).
+
+**Code TODO**
+
+- ⬜ Add `Routes.profile = '/profile'` to
+  [routes.dart](../recipe_list/lib/router/routes.dart) with a shell
+  branch.
+- ⬜ Create `recipe_list/lib/ui/user_card_page.dart`:
+  - constructor `UserCardPage({initialEditMode = false,
+    isPostSignup = false})`.
+  - state: avatar bytes, displayName, language, edit-mode flag.
+  - calls `RecipeApi.getMe()` on init; renders read-only or edit.
+  - "Save" → `RecipeApi.updateMe()` + `RecipeApi.uploadAvatar()`
+    (only when bytes changed); shows `s.profileSavedToast`.
+  - "Logout" reuses the existing logout helper.
+  - "Skip" / "Add" buttons gated by `isPostSignup`.
+- ⬜ Wire `tabProfile` shell logic:
+  - `adminLoggedInNotifier == false && userTokenNotifier != null`
+    → `UserCardPage()`.
+  - admin path: add a top-of-screen "User card" `OutlinedButton`
+    on `AdminAfterLoginPage` that pushes `UserCardPage()`.
+- ⬜ Update `signup_page.dart` success handler:
+  - replace `context.go(Routes.recipes)` with
+    `context.go(Routes.profile, extra: {'initialEditMode': true,
+    'isPostSignup': true})`.
+- ⬜ Add new i18n keys in `i18n.dart`'s manual `_byLang` per §1.5
+  (English + Russian first; other 8 locales fall back to English
+  initially — slang cron will fill them later).
+
+**Tests**
+
+- ⬜ `test/ui/user_card_page_test.dart`:
+  - renders read-only with mocked `getMe` payload — labels shown,
+    "Edit" button present, no "Save" button.
+  - tap "Edit" → fields become editable, "Save" appears, camera
+    FAB on avatar appears.
+  - "Save" calls `RecipeApi.updateMe` once with the edited fields
+    and shows the saved toast.
+  - `isPostSignup: true` shows "Skip" / "Add" instead of
+    "Edit" / "Save"; "Skip" calls `context.go(Routes.recipes)`.
+- ⬜ `test/ui/admin_after_login_user_card_link_test.dart` — the
+  new "User card" button is present and pushes the page.
+- ⬜ `test/ui/signup_post_redirect_test.dart` — successful signup
+  navigates to the profile route with the post-signup extras.
+- ⬜ `flutter analyze` clean.
+
+**Rollback:** revert. `Routes.profile` falls back to the previous
+admin-only branch; signup goes back to `Routes.recipes`.
+
+---
+
+### Chunk E — Recipe model: creator + ratings + favorites_count fields
+
+**Goal:** `Recipe` carries the new fields end-to-end (JSON parse +
+in-memory model + DB column where relevant). Widgets that consume
+them ship in later chunks.
+
+**Status:** ⬜
+
+**Prereqs:** Chunk C (server returns the fields). Acceptable to land
+client-only with default-null values first if backend lags ≤ 1 day.
+
+**Code TODO**
+
+- ⬜ Extend `Recipe` in
+  [recipe.dart](../recipe_list/lib/models/recipe.dart):
+  - `String? creatorUserId, creatorDisplayName, creatorAvatarPath`
+  - `int? creatorRecipesAdded`
+  - `int favoritesCount` (default 0)
+  - `int ratingsCount, ratingsSum` (default 0)
+  - `int? myRating` (auth-dependent)
+- ⬜ Update `fromJson` / `toJson` (or freezed/json_serializable
+  generation if used). Keep parsing tolerant — missing fields →
+  null / 0.
+- ⬜ Add columns to the `recipes` cache table in
+  [recipe_db.dart](../recipe_list/lib/data/local/recipe_db.dart):
+  bump `kRecipeDbSchemaVersion = 13` and migrate `12 → 13` with
+  `ALTER TABLE recipes ADD COLUMN ...` for each scalar (use
+  `IF NOT EXISTS` pattern).
+- ⬜ Update `RecipeRepository.upsertAll` / `listCached` /
+  `lookupCached` to read/write the new columns.
+
+**Tests**
+
+- ⬜ `test/models/recipe_json_test.dart`:
+  - parses a payload with all new fields populated.
+  - parses a payload missing every new field (defaults applied,
+    no exception).
+  - round-trips `toJson` → `fromJson` with values intact.
+- ⬜ `test/data/local/recipe_db_v13_migration_test.dart` — open at
+  v12 (after Chunk B), then re-open at v13, assert new columns
+  exist.
+- ⬜ `test/data/repository/recipe_repository_cache_test.dart` —
+  insert a recipe with all new fields, read back via `listCached`,
+  assert equality.
+
+**Rollback:** revert. Migration is additive; columns can be left
+unused.
+
+---
+
+### Chunk F — "Added by" footer (details + optional card chip)
+
+**Goal:** recipe details page shows the creator row for user-added
+recipes (id ≥ 1_000_000); recipe card chip is behind a feature flag
+(off by default).
+
+**Status:** ⬜
+
+**Prereqs:** Chunk E (model fields).
+
+**Code TODO**
+
+- ⬜ Create `recipe_list/lib/ui/social/added_by_row.dart`:
+  - stateless, props `(name, avatarPath, recipesAdded)`.
+  - 64×64 imgproxy avatar, name + count text.
+  - hidden completely if `name == null`.
+- ⬜ Render in `recipe_details_page.dart` only when
+  `recipe.id >= 1_000_000`. Below ingredients, above instructions.
+- ⬜ Add `bool showCreatorChip` to `RecipeCard`, default `false`;
+  when true and `recipe.id >= 1_000_000`, render a tiny chip below
+  the title. Off everywhere by default.
+- ⬜ i18n keys per §3.4.
+- ⬜ Cache reads/writes via `recipe_creator_cache` (Chunk B).
+
+**Tests**
+
+- ⬜ `test/ui/social/added_by_row_test.dart`:
+  - renders name + "12 recipes" with a network image stub.
+  - returns `SizedBox.shrink` when name is null.
+- ⬜ `test/ui/recipe_details_added_by_test.dart`:
+  - recipe with `id < 1_000_000` and creator fields populated →
+    no row.
+  - recipe with `id >= 1_000_000` and creator fields → row
+    rendered.
+- ⬜ Golden test
+  `test/golden/added_by_row_golden_test.dart` (light theme only,
+  iPhone 14 dimensions).
+
+**Rollback:** revert. Chip flag stays off; the model fields remain
+populated but unused.
+
+---
+
+### Chunk G — Star rating widget + endpoints + store
+
+**Goal:** users can rate 1–5 stars on the details page; logged-out
+users see the registration snackbar; aggregates render on the card.
+
+**Status:** ⬜
+
+**Prereqs:** Chunk E (model fields). Backend ratings tables /
+endpoints land **as part of this chunk** in mahallem-user-portal.
+
+**Code TODO** (server, in mahallem-user-portal)
+
+- ⬜ Migration: create `recipe_ratings` table per §4.4; add
+  `ratings_count`, `ratings_sum` to `recipes`.
+- ⬜ Trigger / handler: keep aggregates in sync.
+- ⬜ `GET /recipes/:id/rating` — `{ avg, count, my? }`.
+- ⬜ `POST /recipes/:id/rating` — body `{ stars }`, upsert.
+- ⬜ `DELETE /recipes/:id/rating` — remove.
+- ⬜ Project `ratingsCount`, `ratingsSum`, `myRating` (when
+  authenticated) into `/recipes/lookup/:id` and `/recipes/page`.
+
+**Code TODO** (client)
+
+- ⬜ `recipe_list/lib/data/repository/rating_store.dart` —
+  per-recipe optimistic store (similar to `favorites_store`),
+  exposes `myRating(id)`, `setRating(id, stars)`, `clearRating(id)`.
+- ⬜ `recipe_list/lib/ui/social/recipe_rating_row.dart` — stateless
+  row with 5 tappable stars, average and votes count.
+- ⬜ Wire into `recipe_details_page.dart` below `AddedByRow`.
+- ⬜ Recipe card: render avg + count without interactive stars (a
+  separate compact widget; tap is a no-op on the card).
+- ⬜ Logged-out tap → `showRegistrationRequiredSnackBar`.
+- ⬜ i18n per §4.6.
+
+**Tests** (server)
+
+- ⬜ `test/recipe_rating.test.js`:
+  - first POST creates row, count + sum updated.
+  - second POST same user upserts (count unchanged, sum updated).
+  - DELETE removes row, count -1, sum -= old stars.
+  - 401 without auth.
+  - 422 stars out of range.
+
+**Tests** (client)
+
+- ⬜ `test/ui/social/recipe_rating_row_test.dart`:
+  - logged-out tap on a star → snackbar shown, no API call.
+  - logged-in tap → `RatingStore.setRating` called with star value;
+    optimistic UI updates.
+  - re-tap same star → `clearRating` called.
+  - on API failure, UI reverts and shows an error snackbar.
+- ⬜ `test/data/repository/rating_store_test.dart` — optimistic
+  flow: set → in-memory updated → server failure → revert.
+- ⬜ Golden test
+  `test/golden/recipe_rating_row_golden_test.dart` (idle, voted,
+  logged-out variants).
+
+**Rollback:** revert client; server endpoints can stay (no
+references). `ratings_count` / `ratings_sum` columns remain at 0.
+
+---
+
+### Chunk H — Favorite-count pill on the recipe card
+
+**Goal:** card shows pill (`<count> ♡`) when count > 0 and user is
+logged in; otherwise the existing 32×32 square. Logged-out behaviour
+unchanged.
+
+**Status:** ⬜
+
+**Prereqs:** Chunk E (`Recipe.favoritesCount`). Backend already
+counts favorites in the `favorites` table; server change is a
+denormalised `favorites_count` column on `recipes` updated by the
+same handler that toggles favorites — small companion to Chunk C
+(can be folded into the same backend PR).
+
+**Code TODO** (server)
+
+- ⬜ Migration: `ALTER TABLE recipes ADD COLUMN favorites_count
+  INTEGER NOT NULL DEFAULT 0`.
+- ⬜ Update favorite/unfavorite handler to bump the count in the
+  same SQL transaction.
+- ⬜ Project `favoritesCount` in `/recipes/lookup/:id` and
+  `/recipes/page`.
+
+**Code TODO** (client)
+
+- ⬜ Refactor the round badge in `recipe_card.dart` into
+  `RecipeFavoriteButton(favoritesCount, showCount)`.
+- ⬜ Pill layout per §5.2 when `showCount && favoritesCount > 0`;
+  square fallback otherwise.
+- ⬜ Tap behaviour unchanged.
+- ⬜ Tooltip reuses `s.favoritesAddTooltip` /
+  `s.favoritesRemoveTooltip`.
+
+**Tests** (server)
+
+- ⬜ `test/favorites_count.test.js` — toggle on / off updates
+  `favorites_count`; concurrent toggles end at the right value
+  (use a small race test).
+
+**Tests** (client)
+
+- ⬜ `test/ui/recipe_favorite_button_test.dart`:
+  - `showCount = false` → square 32×32, no number.
+  - `showCount = true, favoritesCount = 0` → square (no number).
+  - `showCount = true, favoritesCount = 7` → pill with "7" and
+    outline heart.
+  - `showCount = true, isFavorite = true, favoritesCount = 8` →
+    pill with "8" and filled heart.
+  - logged-out tap → snackbar, no toggle call.
+  - logged-in tap → optimistic flip + count delta.
+- ⬜ Golden test
+  `test/golden/recipe_favorite_pill_golden_test.dart` (4 visual
+  states above).
+
+**Rollback:** revert. Card returns to round badge; server column
+stays at 0 and is harmless.
+
+---
+
+### Chunk I — i18n: 13 + 4 + 1 keys × 10 locales
+
+**Goal:** all new strings translated to en/ru/de/es/fr/it/tr/ar/fa/ku
+(production parity).
+
+**Status:** ⬜
+
+**Prereqs:** Chunks D, F, G, H (so we know the final key list).
+Manual `_byLang` entries can land earlier with EN-only fallback;
+this chunk is the **promotion to the slang JSON files**.
+
+**Code TODO**
+
+- ⬜ Move all keys from manual `_byLang` in `i18n.dart` to the
+  per-locale `i18n/*.i18n.json` (slang source of truth).
+- ⬜ Run the existing slang i18n cron / Gemini cascade for the 8
+  non-en/ru locales; review by eye for AR/FA/KU plural & RTL.
+- ⬜ Re-run codegen (`dart run slang`) and commit the generated
+  files.
+
+**Tests**
+
+- ⬜ `test/i18n/key_coverage_test.dart`:
+  - asserts every new key (hard-coded list) resolves to a non-empty
+    string in all 10 locales.
+  - asserts plural forms (`recipeVotesCount`, `recipeAuthorRecipes`)
+    resolve for 0/1/2/5/11 in en, ru, ar.
+- ⬜ Translation review checklist filed in
+  [docs/i18n_proposal.md](./i18n_proposal.md) (or a comment on the
+  PR for the chunk).
+
+**Rollback:** revert keeps EN fallback (slang fallback chain), so no
+user-visible breakage.
+
+---
+
+### Chunk J — Tests + manual smoke on installed PWA
+
+**Goal:** belt-and-braces. All chunks above include their unit /
+widget / golden tests; this chunk is the **integration sweep**.
+
+**Status:** ⬜
+
+**Prereqs:** Chunks A–I merged.
+
+**Code TODO**
+
+- ⬜ Add an integration test
+  `test/integration/post_signup_flow_test.dart` that walks: signup
+  → user card edit mode → save → recipes list visible.
+- ⬜ Add an integration test
+  `test/integration/rate_and_favorite_flow_test.dart` that walks:
+  details page → tap 4 stars → success snackbar → tap heart pill →
+  card pill increments.
+- ⬜ Add `test/integration/added_by_visibility_test.dart`:
+  user-added recipe shows the row; TheMealDB recipe doesn't.
+
+**Manual smoke (must be re-run after each merge)**
+
+- ⬜ Installed PWA on iOS Safari (per
+  [pwa-installed-bugs-2026-05.md](./pwa-installed-bugs-2026-05.md)
+  — the safe-area / reload / SQLite recovery still hold).
+- ⬜ Installed PWA on Android Chrome.
+- ⬜ Profile tab as logged-out user → login page.
+- ⬜ Profile tab as logged-in non-admin → user card.
+- ⬜ Profile tab as admin → admin page with "User card" button.
+- ⬜ Signup new user → post-signup user card → Skip → recipes.
+- ⬜ Rate a recipe, refresh the app, rating persists.
+- ⬜ Favorite a recipe, count pill increments on the card.
+- ⬜ Avatar upload → reflected on user card and on the "added by"
+  row of the user's own recipe.
+- ⬜ Delete avatar → falls back to default placeholder everywhere.
+- ⬜ Languages: switch UI to ar/fa/ku, confirm RTL on user card and
+  rating row, plurals on votes count.
+
+**Done criteria:** all integration tests green, all manual checkboxes
+ticked, prerender cache cleared on prod
+(`docker exec recipe_list_prerender sh -c "rm -f /var/cache/prerender/*"`),
+no Sentry / console error spike for 24 h.
+
+---
+
+## 10. Risks & mitigations
+
+| Risk                                                    | Mitigation                                                                 |
+|---------------------------------------------------------|----------------------------------------------------------------------------|
+| Avatar upload fails silently → user thinks it saved.    | `Save` button awaits both `updateMe` and `uploadAvatar`; toast only on success; revert local bytes on error. |
+| `recipes_added` denorm drifts from reality.             | Backend test (Chunk C) covers insert + delete; nightly reconciliation job in mahallem-user-portal optional. |
+| Rating endpoint abuse (spam votes).                     | Server upserts on `(recipe_id, user_id)` PK — one vote per user; rate-limit per token (existing middleware). |
+| IndexedDB schema bumps colliding with Chunk-3 recovery. | Already covered: open-time and runtime corruption paths wipe + rebuild on `malformed`. Always run the v11→v12→v13 migration sequence in tests. |
+| Translation regressions for new keys.                   | Chunk I `key_coverage_test.dart` enforces non-empty for all 10 locales before merge. |
+| Card layout breakage from the new pill.                 | Golden tests in Chunk H. Changes gated behind golden review. |
+
+---
+
+## 11. Manual smoke script (copy-paste for each release)
+
+```
+# 1. Build & deploy
+cd recipe_list && flutter build web --release
+ssh prod 'cd /var/www/recipie/otus_dz_2 && git pull && \
+  docker compose -f docker-compose.web.yml up -d --build flutter-web && \
+  docker exec recipe_list_prerender sh -c "rm -f /var/cache/prerender/*"'
+
+# 2. Smoke (browser tab + installed PWA)
+open https://recipies.mahallem.ist/en/recipes
+#   - login as a non-admin user
+#   - tap Profile → user card renders
+#   - tap Edit → save a new display name → toast appears, name persists after reload
+#   - upload a photo → avatar updates everywhere
+#   - rate a recipe 4 stars → average updates, count increments
+#   - favorite a recipe → pill on the card shows count
+```
+
