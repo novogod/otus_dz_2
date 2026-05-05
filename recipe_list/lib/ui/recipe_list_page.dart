@@ -201,14 +201,20 @@ class _RecipeListPageState extends State<RecipeListPage> {
   }
 
   void _onFocusChange() {
-    if (_focusNode.hasFocus || !kIsWeb) {
-      // Focus gained, or native platform: rebuild immediately.
+    if (_focusNode.hasFocus) {
+      // Focus gained: rebuild immediately so the predictions panel
+      // appears as soon as the user taps the search field.
       setState(() {});
     } else {
-      // On web the browser fires blur synchronously on pointerdown,
-      // before the ListTile tap gesture completes. Delay the rebuild
-      // so _onPredictionTap can fire first; otherwise the predictions
-      // panel is removed from the tree mid-gesture and the tap is lost.
+      // Focus lost: defer the rebuild so a tap on a prediction
+      // ListTile can complete before the panel is removed from the
+      // tree. Two ways focus is lost mid-gesture:
+      //   - web: browser fires blur synchronously on pointerdown;
+      //   - native: TextField.onTapOutside synchronously unfocuses
+      //     when the tap lands on the predictions overlay.
+      // In both cases, an immediate setState would unmount the
+      // ListTile before its onTap callback runs and the prediction
+      // would be lost.
       Future.delayed(const Duration(milliseconds: 200), () {
         if (mounted) setState(() {});
       });
