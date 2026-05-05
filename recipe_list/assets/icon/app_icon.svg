@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Background: brand green rounded square -->
+  <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224" fill="#2ECC71"/>
+
+  <!-- Steam: 3 wavy strokes rising from bowl -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round">
+    <path d="M 380 360
+             C 340 320, 420 280, 380 240
+             C 340 200, 420 160, 380 120"/>
+    <path d="M 512 380
+             C 472 340, 552 300, 512 260
+             C 472 220, 552 180, 512 140"/>
+    <path d="M 644 360
+             C 604 320, 684 280, 644 240
+             C 604 200, 684 160, 644 120"/>
+  </g>
+
+  <!-- Bowl: white half-ellipse with rim -->
+  <!-- Rim (top oval) -->
+  <ellipse cx="512" cy="500" rx="320" ry="42" fill="#FFFFFF"/>
+  <!-- Body (bottom half-ellipse) -->
+  <path d="M 192 500
+           A 320 320 0 0 0 832 500
+           Z" fill="#FFFFFF"/>
+  <!-- Inner shadow on rim -->
+  <ellipse cx="512" cy="500" rx="300" ry="30" fill="#E8F8EF"/>
+
+  <!-- Plate under bowl -->
+  <ellipse cx="512" cy="820" rx="400" ry="40" fill="#FFFFFF"/>
+</svg>

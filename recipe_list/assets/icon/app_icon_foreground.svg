@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Transparent background; content sits inside Android adaptive safe-zone (~66% center) -->
+  <!-- Steam -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round">
+    <path d="M 410 470
+             C 360 420, 460 370, 410 320
+             C 360 270, 460 220, 410 170"/>
+    <path d="M 552 490
+             C 502 440, 602 390, 552 340
+             C 502 290, 602 240, 552 190"/>
+    <path d="M 694 470
+             C 644 420, 744 370, 694 320
+             C 644 270, 744 220, 694 170"/>
+  </g>
+
+  <!-- Bowl rim -->
+  <ellipse cx="552" cy="610" rx="320" ry="42" fill="#FFFFFF"/>
+  <!-- Bowl body -->
+  <path d="M 232 610
+           A 320 320 0 0 0 872 610
+           Z" fill="#FFFFFF"/>
+  <!-- Inner highlight on rim -->
+  <ellipse cx="552" cy="610" rx="300" ry="30" fill="#E8F8EF"/>
+
+  <!-- Plate -->
+  <ellipse cx="552" cy="900" rx="380" ry="36" fill="#FFFFFF" opacity="0.92"/>
+</svg>
