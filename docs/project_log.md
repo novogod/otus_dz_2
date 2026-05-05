@@ -1,5 +1,45 @@
 # Project Log
 
+## flutter_svg drops `<marker>`-based stars in `assets/flags/us.svg`
+
+**Date:** 2026-05-04
+
+**Status:** ✅ Fixed
+
+**Symptom.** В рантайме `LangIconButton` для английского флага в
+консоль печаталось `unhandled element <marker/>` и сами 50 звёзд
+кантона не отрисовывались — синий прямоугольник без узора.
+
+**Root cause.** `flutter_svg` (через `vector_graphics_compiler`)
+поддерживает подмножество SVG: элементы `<marker>`, `<pattern>`,
+`<filter>`, `<symbol>` и `<foreignObject>` парсер пропускает с
+warning'ом. В исходном `us.svg` звёзды задавались как
+`marker-mid="url(#us-a)"` на «зигзаговой» полилинии, и весь их
+геометрический след молча отбрасывался.
+
+**Fix.** Переписан `assets/flags/us.svg` в чистые элементы:
+- 13 чередующихся `<rect>` для полос (#B22234 / #FFFFFF);
+- кантон 2964×2100 (#3C3B6E) и 50 явных `<polygon>` пятиконечных
+  звёзд на каноническом 9-рядном сетчатом каркасе (точные
+  координаты по спеке Wikipedia).
+
+Заодно `assets/flags/sa.svg` лишился невалидной разметки сабли
+(`<rect width="-60">` — отрицательная ширина, которую парсер
+тихо отбрасывал) и теперь рисуется набором `polygon` + `rect` +
+`circle`.
+
+**Regression guard.** Добавлен `test/flag_svgs_test.dart`: для
+каждого `assets/flags/*.svg` вызывает
+`vector_graphics_compiler.encodeSvg(..., warningsAsErrors: true)`
+и падает, если парсер встречает неподдерживаемый элемент или
+невалидный атрибут.
+
+**Caveat.** `iq.svg` и `sa.svg` всё ещё содержат `<text>` с
+арабской каллиграфией. flutter_svg такие тексты рендерит без
+warning'а, но без harfbuzz-shaping'а — лигатуры могут «рассыпаться».
+Для текущего использования (24-px кружок рядом с language
+toggle) это незаметно; полноценная замена на `<path>` отложена.
+
 ## SnackBar hangs forever inside `StatefulShellRoute.indexedStack`
 
 **Date:** 2026-05-04
