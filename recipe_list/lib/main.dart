@@ -86,8 +86,19 @@ class RecipeApp extends StatelessWidget {
       routerConfig: appRouter,
       // AppLangScope раньше оборачивал `home:`. С `MaterialApp.router`
       // home недоступен — оборачиваем выдачу роутера через builder.
-      builder: (context, child) =>
-          AppLangScope(child: child ?? const SizedBox.shrink()),
+      // Дополнительно навешиваем tap-outside-to-dismiss-keyboard:
+      // тап по любому месту вне текущего фокусируемого поля убирает
+      // клавиатуру. `HitTestBehavior.translucent` — чтобы жест ловился
+      // на «пустых» зонах (фон Scaffold-а), но не блокировал тапы по
+      // кнопкам/спискам.
+      builder: (context, child) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          final focus = FocusManager.instance.primaryFocus;
+          if (focus != null && focus.hasFocus) focus.unfocus();
+        },
+        child: AppLangScope(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

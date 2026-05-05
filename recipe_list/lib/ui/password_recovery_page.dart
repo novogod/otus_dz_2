@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
 import '../i18n.dart';
+import '../router/routes.dart';
 import 'app_theme.dart';
 import 'splash_page.dart';
 
@@ -140,7 +142,18 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
         focusElevation: 12,
         hoverElevation: 14,
         highlightElevation: 18,
-        onPressed: () => Navigator.of(context).pop(),
+        // PasswordRecoveryPage push-ится поверх LoginPage на
+        // root-Navigator. `Navigator.pop` возвращает на LoginPage.
+        // Запасной путь — на ленту рецептов, чтобы пользователь
+        // никогда не упирался в серый плейсхолдер `/profile`.
+        onPressed: () {
+          final nav = Navigator.of(context);
+          if (nav.canPop()) {
+            nav.pop();
+          } else {
+            context.go(Routes.recipes);
+          }
+        },
         child: const Icon(Icons.chevron_left, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startTop,

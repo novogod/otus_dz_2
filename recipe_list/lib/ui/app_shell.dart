@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart' show userLoggedInNotifier;
-import '../i18n.dart';
 import '../main.dart' show bottomNavVisibleNotifier;
 import 'app_bottom_nav_bar.dart';
-import 'signup_page.dart' show openSignUpPage;
-import 'login_page.dart' show openLoginPage;
+import 'registration_required_snackbar.dart';
 
 /// Корневой Scaffold приложения для shell-навигации
 /// `StatefulShellRoute.indexedStack`. Рисует один общий
@@ -53,29 +51,10 @@ class AppShell extends StatelessWidget {
   /// нужно делать на этом же уровне.
   void _onTabTap(BuildContext context, AppNavTab tab) {
     if (tab == AppNavTab.favorites && !userLoggedInNotifier.value) {
-      _showFavoritesRegistrationRequired(context);
+      showRegistrationRequiredSnackBar(context);
       return;
     }
     final idx = tab.index;
     navShell.goBranch(idx, initialLocation: idx == navShell.currentIndex);
-  }
-
-  void _showFavoritesRegistrationRequired(BuildContext context) {
-    final s = S.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(s.favoritesRegistrationRequired),
-          action: SnackBarAction(
-            label: s.signUp,
-            onPressed: () async {
-              final created = await openSignUpPage(context);
-              if (!context.mounted || !created) return;
-              await openLoginPage(context);
-            },
-          ),
-        ),
-      );
   }
 }

@@ -148,8 +148,17 @@ final GoRouter appRouter = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: Routes.profile,
-              // Никогда не рендерится — redirect всегда уводит
-              // на login или admin. Builder нужен формально.
+              // `_profileRedirect` (top-level) уже уводит c
+              // голого `/profile` на `login`/`admin`. Здесь же
+              // builder обязан рендерить нейтральный фон под
+              // оверлейным login/admin-маршрутом, который
+              // живёт на rootNavigator (см. `parentNavigatorKey`
+              // ниже). Никаких bounce-ов отсюда быть не должно:
+              // `context.go(...)` из post-frame-callback гонится
+              // с redirect-ом и перетягивает приложение прочь от
+              // только что отрисованного `/profile/login`
+              // (баг «click on profile icon when no session
+              // opens an empty screen»).
               builder: (context, state) =>
                   const Scaffold(body: SizedBox.shrink()),
               routes: <RouteBase>[
@@ -191,15 +200,40 @@ final GoRouter appRouter = GoRouter(
 );
 
 /// Заглушка для ещё не реализованных вкладок (Fridge).
-/// Показывает локализованное «скоро будет» и кнопку назад
-/// на ветку Recipes.
+/// Показывает локализованный текст «скоро будет» (`tabComingSoon`)
+/// крупно по центру с иконкой и заголовком вкладки в AppBar,
+/// чтобы пользователь точно видел контент, а не пустой экран.
 class _ComingSoonPage extends StatelessWidget {
   const _ComingSoonPage();
 
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    return Scaffold(body: Center(child: Text(s.tabComingSoon)));
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text(s.tabFridge)),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(
+                Icons.construction,
+                size: 64,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                s.tabComingSoon,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

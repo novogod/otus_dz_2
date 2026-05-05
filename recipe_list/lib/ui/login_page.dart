@@ -367,20 +367,18 @@ class _LoginPageState extends State<LoginPage> {
                 // LoginPage живёт на root-навигаторе как
                 // sub-route ветки `/profile` (см.
                 // `app_router.dart`, `parentNavigatorKey:
-                // rootNavigatorKey`). Просто `Navigator.pop`
-                // снял бы overlay-страницу, но go_router
-                // оставил бы текущий location на `/profile`,
-                // у которого builder — пустой `Scaffold` →
-                // пользователь видел бы серый экран. Поэтому
-                // если над shell нет ничего поп-ового, явно
-                // уезжаем обратно на ленту рецептов.
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go(Routes.recipes);
-                  }
-                },
+                // rootNavigatorKey`). При попытке `context.pop()`
+                // go_router снимает страницу логина, но текущий
+                // location остаётся `/profile`, у которого
+                // builder — заглушка `Scaffold(SizedBox.shrink())`,
+                // — пользователь видит серый экран.
+                // `context.canPop()` тут не помогает: оно
+                // возвращает `true` для go_router-роута логина
+                // и тоже приводит к серому экрану.
+                // Семантически back с логина = «не хочу
+                // авторизовываться» → всегда уезжаем на ленту
+                // рецептов.
+                onPressed: () => context.go(Routes.recipes),
                 child: const Icon(Icons.chevron_left, size: 28),
               ),
               floatingActionButtonLocation:

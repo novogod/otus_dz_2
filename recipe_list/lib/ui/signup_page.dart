@@ -3,9 +3,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
 import '../i18n.dart';
+import '../router/routes.dart';
 import 'app_theme.dart';
 import 'splash_page.dart';
 
@@ -126,7 +128,19 @@ class _SignUpPageState extends State<SignUpPage> {
         focusElevation: 12,
         hoverElevation: 14,
         highlightElevation: 18,
-        onPressed: () => Navigator.of(context).pop(),
+        // SignupPage push-ится поверх LoginPage на root-Navigator
+        // (см. `openSignUpPage`). `Navigator.pop` штатно возвращает
+        // на LoginPage. Если по какой-то причине под нами уже
+        // ничего нет — уезжаем на ленту рецептов вместо серого
+        // экрана плейсхолдера `/profile`.
+        onPressed: () {
+          final nav = Navigator.of(context);
+          if (nav.canPop()) {
+            nav.pop();
+          } else {
+            context.go(Routes.recipes);
+          }
+        },
         child: const Icon(Icons.chevron_left, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startTop,

@@ -13,11 +13,10 @@ import '../models/recipe.dart';
 import '../router/routes.dart';
 import 'add_recipe_page.dart';
 import 'app_theme.dart';
-import 'login_page.dart';
 import 'recipe_card.dart';
 import 'recipe_list_page.dart';
+import 'registration_required_snackbar.dart';
 import 'search_app_bar.dart';
-import 'signup_page.dart';
 
 /// Экран «Избранное» (chunk D из todo/15).
 ///
@@ -106,6 +105,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
         onChanged: (q) => setState(() => _query = q),
         onSubmitted: (q) => setState(() => _query = q),
         disableLangAndReload: true,
+        // FavoritesPage — корень shell-ветки, в её навигаторе
+        // нечего pop-ать. По дизайну (см. docs/login-auth.md
+        // и user journey) кнопка «назад» в шапке избранного
+        // должна возвращать пользователя на ленту рецептов.
+        onBack: () => context.go(Routes.recipes),
       ),
       body: SafeArea(
         top: false,
@@ -290,22 +294,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   void _showFavoritesRegistrationRequired(BuildContext context) {
-    final s = S.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(s.favoritesRegistrationRequired),
-          action: SnackBarAction(
-            label: s.signUp,
-            onPressed: () async {
-              final created = await openSignUpPage(context);
-              if (!context.mounted || !created) return;
-              await openLoginPage(context);
-            },
-          ),
-        ),
-      );
+    showRegistrationRequiredSnackBar(context);
   }
 
   Future<void> _openEditRecipe(BuildContext context, Recipe recipe) async {

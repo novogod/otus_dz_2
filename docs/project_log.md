@@ -1,5 +1,130 @@
 # Project Log
 
+## Go-router follow-up H — UX-регрессии после shell-рефакторинга
+
+**Date:** 2026-05-04
+
+**Status:** ✅ Fixed
+
+После ручного прогона на iPhone (release) и Pixel 8 (debug) всплыли
+пять багов в навигации/UX, связанных с тем, что после перехода на
+`StatefulShellRoute.indexedStack` в дереве одновременно живут
+несколько `Scaffold`-ов и `Navigator`-ов. Все пять починены одним
+заходом.
+
+### 1. Snackbar `favoritesRegistrationRequired` «висит вечно»
+
+**Symptom.** Гость тапает Add-FAB / сердце / вкладку Favorites — на
+4 с показывается snackbar «Registration required…», но фактически он
+не дисмиссится никогда: остаётся поверх навбара даже после смены
+вкладки.
+
+**Root cause.** Авто-таймер у `ScaffoldMessenger`-а стартует только
+в `_handleSnackBarStatusChanged` при `AnimationStatus.completed`
+slide-in-анимации. До рефакторинга в дереве был один `Scaffold`
+(`RecipeListPage`), который и хостил мессенджер; теперь
+одновременно зарегистрированы 2–3 `Scaffold`-а (`AppShell` + текущая
+ветка + при наличии `LoginPage` поверх root-Navigator-а). При смене
+топ-приоритетного `Scaffold`-а мессенджер перетаскивает snackbar на
+новый host и **сбрасывает** анимацию — `completed` так и не
+наступает, таймер не запускается.
+
+**Fix.** Вынесли единый helper
+[`recipe_list/lib/ui/registration_required_snackbar.dart`](../recipe_list/lib/ui/registration_required_snackbar.dart),
+который рядом с `messenger.showSnackBar(...)` ставит собственный
+real-time `Timer(const Duration(seconds: 4), () => controller.close())`.
+`ScaffoldFeatureController.close()` форсирует закрытие независимо
+от состояния анимации. Таймер отменяется через
+`controller.closed.whenComplete`, если snackbar закрылся «своим
+ходом» (тап по action / другой `showSnackBar`). Все три call-site
+(`AppShell._onTabTap`, `RecipeListPage._showFavoritesRegistrationRequired`,
+`FavoritesPage._showFavoritesRegistrationRequired`) теперь
+делегируют в этот helper.
+
+### 2. Тап по Profile-иконке у гостя → пустой экран
+
+**Symptom.** На холодном старте без сессии тап по вкладке
+«Profile» ведёт на серый пустой экран вместо `LoginPage`.
+
+**Root cause.** В `appRouter` builder заглушки `/profile` имел
+defensive post-frame callback с `context.go(Routes.recipes)` —
+он гонился с `_profileRedirect` (который корректно уводил на
+`/profile/login`) и перетягивал приложение прочь от только что
+показанного login-маршрута. Login живёт на root-Navigator-е через
+`parentNavigatorKey`, поэтому branch-плейсхолдер `/profile`
+рендерится одновременно с ним и его post-frame-bounce срабатывает
+**после** редиректа.
+
+**Fix.** Из builder-а `/profile`-маршрута убран post-frame bounce.
+Builder теперь возвращает только нейтральный `Scaffold(body:
+SizedBox.shrink())` под оверлейным login/admin. Вся auth-aware
+логика осталась в `_profileRedirect`.
+
+### 3. Вкладка «Fridge» показывала пустой экран
+
+**Symptom.** Тап по «Fridge» открывает совершенно пустой `Scaffold`
+(маленький `Center(child: Text(...))` без AppBar практически
+невиден на устройстве).
+
+**Fix.** `_ComingSoonPage` в
+[`recipe_list/lib/router/app_router.dart`](../recipe_list/lib/router/app_router.dart)
+теперь рендерит полноценный экран: `AppBar` с заголовком вкладки,
+крупная иконка `Icons.construction` и локализованный
+`s.tabComingSoon` ("This section is coming soon" /
+"Этот раздел пока в разработке") по центру.
+
+### 4. Кнопка «назад» в шапке Favorites не работала
+
+**Symptom.** Тап по back-стрелке в `SearchAppBar` на вкладке
+«Избранное» — ничего не происходит.
+
+**Root cause.** `AppPageBar` по умолчанию делает
+`Navigator.of(context).maybePop()`. `FavoritesPage` — корень
+shell-ветки, в её branch-Navigator-е стек состоит из одной
+страницы — pop-ать нечего, поэтому жест глотался без эффекта.
+
+**Fix.** В
+[`recipe_list/lib/ui/favorites_page.dart`](../recipe_list/lib/ui/favorites_page.dart)
+`SearchAppBar` теперь получает явный
+`onBack: () => context.go(Routes.recipes)` — кнопка «назад»
+переключает пользователя на ленту рецептов.
+
+### 5. Клавиатура не закрывалась по тапу вне поля поиска
+
+**Symptom.** На любом экране с `TextField` (Favorites / Recipes /
+Login) после фокуса в поле и тапа по фоновой области клавиатура
+оставалась видимой.
+
+**Fix.** В `MaterialApp.router.builder`-е (см.
+[`recipe_list/lib/main.dart`](../recipe_list/lib/main.dart)) выдача
+роутера теперь обёрнута в `GestureDetector` с
+`HitTestBehavior.translucent`, который по тапу делает
+`FocusManager.instance.primaryFocus?.unfocus()`. `translucent`
+гарантирует, что тапы по кнопкам/спискам продолжают доезжать до
+своих хитов.
+
+### Затронутые файлы
+
+- `recipe_list/lib/main.dart` — global tap-outside-to-dismiss-keyboard.
+- `recipe_list/lib/router/app_router.dart` — снят bounce из builder-а
+  `/profile`; `_ComingSoonPage` переделан в полноценный экран.
+- `recipe_list/lib/ui/registration_required_snackbar.dart` — новый
+  файл, единый helper с real-time страховочным `Timer`-ом.
+- `recipe_list/lib/ui/app_shell.dart` — использует helper.
+- `recipe_list/lib/ui/recipe_list_page.dart` — использует helper.
+- `recipe_list/lib/ui/favorites_page.dart` — использует helper +
+  явный `onBack` у `SearchAppBar`.
+
+### Verification
+
+- `flutter analyze` — clean.
+- `flutter test` — 105 pass / 6 baseline fail (без изменений
+  относительно follow-up G).
+- Live-проверка на Pixel 8 (debug) и iPhone (release) подтвердила
+  фиксы по всем пяти симптомам.
+
+---
+
 ## Go-router follow-up G — три регрессии после `3dd4308`
 
 **Date:** 2026-05-04

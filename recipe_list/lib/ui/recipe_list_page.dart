@@ -16,10 +16,9 @@ import '../models/recipe.dart';
 import '../router/routes.dart';
 import 'add_recipe_page.dart';
 import 'app_theme.dart';
-import 'login_page.dart';
 import 'recipe_card.dart';
+import 'registration_required_snackbar.dart';
 import 'search_app_bar.dart';
-import 'signup_page.dart';
 
 /// Страница со списком рецептов. Принимает готовый список через конструктор —
 /// загрузка данных вынесена выше (см. `RecipeListLoader`).
@@ -485,22 +484,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
   }
 
   void _showFavoritesRegistrationRequired(BuildContext context) {
-    final s = S.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(s.favoritesRegistrationRequired),
-          action: SnackBarAction(
-            label: s.signUp,
-            onPressed: () async {
-              final created = await openSignUpPage(context);
-              if (!context.mounted || !created) return;
-              await openLoginPage(context);
-            },
-          ),
-        ),
-      );
+    showRegistrationRequiredSnackBar(context);
   }
 
   Future<void> _openDetails(BuildContext context, Recipe recipe) async {
