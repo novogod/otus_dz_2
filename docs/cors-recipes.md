@@ -105,3 +105,68 @@ access-control-max-age: 86400
 (sqflite, webview_flutter, dart:io.File при загрузке фото) — это
 отдельные задачи, см. вершину этого документа и
 `docs/reload-no-network.md`.
+
+## Follow-up 2026-05-05 — duplicate `Access-Control-Allow-Origin`
+
+После деплоя web-сборки на `https://recipies.mahallem.ist` все
+вызовы к `https://mahallem.ist/recipes/*` (включая `/visit`,
+`/page`, `/filter`) падали в DevTools с:
+
+```
+The 'Access-Control-Allow-Origin' header contains multiple values
+'https://recipies.mahallem.ist, https://recipies.mahallem.ist',
+but only one is allowed.
+```
+
+**Root cause.** Хост-nginx
+(`/etc/nginx/sites-enabled/mahallem.ist`) устанавливает CORS-заголовки
+через `add_header Access-Control-Allow-Origin $cors_origin always;`
+(блок 8–16 строк). Одновременно upstream Express
+(`local_user_portal`) тоже отдаёт `cors()`-заголовки. Когда оба
+источника шлют одинаковые header'ы, nginx с `always` НЕ
+заменяет upstream-ные, а добавляет свои поверх — браузер видит
+`A-C-A-O: <origin>, <origin>` и считает их множественным
+значением. Native-Dio эту проверку не выполняет, поэтому
+iOS/Android/desktop работали нормально.
+
+**Fix.** В блоках `location /` и `location ~* \.(jpg|...)$` сразу
+после `proxy_pass http://127.0.0.1:4001;` добавлены:
+
+```nginx
+proxy_hide_header Access-Control-Allow-Origin;
+proxy_hide_header Access-Control-Allow-Credentials;
+proxy_hide_header Access-Control-Allow-Headers;
+proxy_hide_header Access-Control-Allow-Methods;
+proxy_hide_header Vary;
+```
+
+Теперь upstream-CORS отбрасывается, а наружу уходит только
+nginx-вариант (с `$cors_origin` allow-list). Конфиг проверен
+`nginx -t`, `systemctl reload nginx`. Бэкап оригинала:
+`/tmp/mahallem.ist.bak.<unix-ts>`.
+
+**Verification.**
+
+```bash
+curl -sI -X POST -H 'Origin: https://recipies.mahallem.ist' \
+  https://mahallem.ist/recipes/visit | grep -i access-control
+# access-control-allow-origin: https://recipies.mahallem.ist   ← один!
+# access-control-allow-credentials: true
+# access-control-allow-headers: Authorization,Content-Type,...
+# access-control-allow-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+```
+
+Браузер на `https://recipies.mahallem.ist`: `/visit` 200 +
+`{"count":N}`, `/recipes/page`/`filter` тоже 200, ноль CORS-ошибок
+в DevTools, splash снова показывает «Visitors: N».
+
+**Замечание про паттерны.** Изначальный документ описывал
+паттерн A (`Allow-Origin: *`, без credentials) — но у
+`/users/login`, `/forgot-password`, `/reset-password` и
+`/visit` нужен credentials-поток (sessions, set-cookie). Поэтому
+прод de-facto живёт на паттерне B (allow-list через
+`$cors_origin` + `credentials: true` + Vary: Origin).
+Если когда-то вернёмся к чистому паттерну A для
+read-only `/recipes/*`, важно убрать дубль на стороне Express
+(`cors()`), а не только в nginx.
+

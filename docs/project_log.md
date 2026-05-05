@@ -1,5 +1,84 @@
 # Project Log
 
+## Web deploy — duplicate CORS + бинд recipe_list_web на 8088
+
+**Date:** 2026-05-05
+
+**Status:** ✅ Fixed
+
+После пересборки и `up -d --force-recreate` контейнера
+`recipe_list_web` на проде всплыли две независимых проблемы.
+
+### 1. Контейнер не был доступен по 8088
+
+Хостовый nginx (`sites-enabled/recipies.mahallem.ist`) проксирует
+на `127.0.0.1:8088`, но в репозитории
+[`docker-compose.web.yml`](../docker-compose.web.yml) был случайно
+закоммичен порт `127.0.0.1:53889:80`. После `git pull` + recreate
+контейнер забиндился на 53889 → `Connection refused` на 8088 →
+старый билд продолжал отдаваться (Cloudflare/браузер кэш ассетов
+с прошлого раза).
+
+**Fix.** Вернул `127.0.0.1:8088:80` в compose, прокомментировал
+зачем именно этот порт. Recreate — сразу `200 OK` на
+`http://127.0.0.1:8088/`.
+
+### 2. Все CORS-запросы из `https://recipies.mahallem.ist` падали
+
+DevTools на свежем билде:
+
+```
+'Access-Control-Allow-Origin' header contains multiple values
+'https://recipies.mahallem.ist, https://recipies.mahallem.ist',
+but only one is allowed.
+```
+
+`/visit`, `/recipes/page`, `/recipes/filter?c=...` — всё net::ERR_FAILED.
+На iOS/Android Dio CORS не проверяет, поэтому в моб-приложениях
+проблемы не было видно.
+
+**Root cause.** Хост-nginx
+(`/etc/nginx/sites-enabled/mahallem.ist`) ставит CORS через
+`add_header Access-Control-Allow-Origin $cors_origin always;`.
+Одновременно upstream Express (`local_user_portal`, контейнер
+`mahallem-user-portal`) добавляет свои `cors()`-заголовки. Nginx
+с `add_header always` не заменяет upstream-headers, а добавляет
+свои поверх — браузер видит дублированный header.
+
+**Fix.** В обоих `location` блоках `mahallem.ist` после
+`proxy_pass http://127.0.0.1:4001;` добавлен:
+
+```nginx
+proxy_hide_header Access-Control-Allow-Origin;
+proxy_hide_header Access-Control-Allow-Credentials;
+proxy_hide_header Access-Control-Allow-Headers;
+proxy_hide_header Access-Control-Allow-Methods;
+proxy_hide_header Vary;
+```
+
+Upstream-CORS обрезается, наружу идёт только nginx-вариант.
+Конфиг прошёл `nginx -t`, перечитан через `systemctl reload nginx`.
+Бэкап оригинала: `/tmp/mahallem.ist.bak.<ts>` на хосте. Подробнее
+— [`docs/cors-recipes.md`](./cors-recipes.md) §Follow-up 2026-05-05.
+
+**Verification.**
+
+* `curl -sI -X POST -H 'Origin: https://recipies.mahallem.ist'
+  https://mahallem.ist/recipes/visit` — единственный
+  `access-control-allow-origin: https://recipies.mahallem.ist`.
+* Браузер: `/visit → 200 {"count":N}`, ноль CORS-ошибок,
+  splash снова показывает «Visitors: N» с blink-анимацией.
+
+**Files.**
+
+* [`docker-compose.web.yml`](../docker-compose.web.yml) — bind на 8088.
+* [`docs/cors-recipes.md`](./cors-recipes.md) — раздел Follow-up
+  2026-05-05.
+* `/etc/nginx/sites-enabled/mahallem.ist` (host, вне репо) —
+  `proxy_hide_header` после `proxy_pass`.
+
+---
+
 ## Web auth follow-up — recovery «session expired» + залипший Login
 
 **Date:** 2026-05-05
