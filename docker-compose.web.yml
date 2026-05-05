@@ -23,14 +23,13 @@ services:
       - flutter-web
     environment:
       - PORT=8089
-      # Public origin so the SPA's CORS-enabled XHR to
-      # https://mahallem.ist/recipes/lookup/<id> matches the
-      # allow-list configured for production (recipies.mahallem.ist).
-      # Going through our own nginx is fine — the headless browser
-      # ships UA `RecipeListPrerender/1.0` which doesn't match the
-      # bot regex, so the request lands on the SPA upstream (8088),
-      # not back into the prerender (no recursion).
-      - SPA_ORIGIN=https://recipies.mahallem.ist
+      # Internal origin — the Flutter SPA's cross-origin XHR may fail
+      # CORS from this origin, but that doesn't matter: chunk F head
+      # atoms are injected server-side from a parallel
+      # /recipes/lookup/<id> fetch (see prerender/server.js +
+      # render-utils.injectRecipeSeo). Headless Chromium is now only
+      # responsible for emitting the SPA body shell, not the head.
+      - SPA_ORIGIN=http://recipe_list_web
       # The recipes API lives in the mahallem-user-portal stack on the
       # `local_docker_admin_backend_mahallem_network` bridge. We attach
       # to that bridge below so the in-container hostname
