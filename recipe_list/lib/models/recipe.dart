@@ -38,6 +38,52 @@ class Recipe {
   /// Ссылка на исходный сайт (`strSource`), если задана.
   final String? sourceUrl;
 
+  // ---------------------------------------------------------------
+  // Social-signal fields (chunk E of
+  // docs/user-card-and-social-signals.md).
+  //
+  // These travel through the network model and the in-memory feed
+  // but are intentionally NOT persisted in the local SQLite cache:
+  // counts and "my rating" go stale immediately, so we always read
+  // them from the server's lookup / page response. Cached rows
+  // restore these as defaults (0 / null) and the loader refreshes
+  // them on the next list fetch.
+  // ---------------------------------------------------------------
+
+  /// Server-side user_id of the recipe author. Null for TheMealDB
+  /// recipes (id < 1_000_000) and for any user-added recipe whose
+  /// creator metadata isn't yet projected by the server.
+  final String? creatorUserId;
+
+  /// Display name of the author, projected by the server alongside
+  /// the recipe. See docs/user-card-and-social-signals.md §3.3.
+  final String? creatorDisplayName;
+
+  /// Avatar S3 path of the author. Composed via [imgproxyUrl] when
+  /// rendered (we never store the full imgproxy URL on disk).
+  final String? creatorAvatarPath;
+
+  /// Total number of recipes added by the author (denormalised on
+  /// the `recipes_users` table server-side). Used in the
+  /// "Added by" footer and the optional card chip.
+  final int? creatorRecipesAdded;
+
+  /// Total favourites for this recipe across all users. Defaults to
+  /// 0 when the server hasn't projected the count (e.g. TheMealDB
+  /// recipes pre-population). Drives the favorite-count pill on the
+  /// recipe card (chunk H).
+  final int favoritesCount;
+
+  /// Total number of ratings (chunk G). Defaults to 0.
+  final int ratingsCount;
+
+  /// Sum of star values across all ratings (chunk G). Defaults to 0.
+  /// Average is computed on render as `ratingsSum / ratingsCount`.
+  final int ratingsSum;
+
+  /// Current user's rating, if logged in and rated. Null otherwise.
+  final int? myRating;
+
   const Recipe({
     required this.id,
     required this.name,
@@ -49,6 +95,14 @@ class Recipe {
     this.ingredients = const [],
     this.youtubeUrl,
     this.sourceUrl,
+    this.creatorUserId,
+    this.creatorDisplayName,
+    this.creatorAvatarPath,
+    this.creatorRecipesAdded,
+    this.favoritesCount = 0,
+    this.ratingsCount = 0,
+    this.ratingsSum = 0,
+    this.myRating,
   });
 
   /// `true`, если у рецепта есть только базовые поля (ответ `filter.php`).
@@ -94,6 +148,17 @@ class Recipe {
       ingredients: ingredients,
       youtubeUrl: nullIfBlank(json['strYoutube']),
       sourceUrl: nullIfBlank(json['strSource']),
+      // Social signals — projected by the mahallem-user-portal server
+      // for user-added recipes (id ≥ 1_000_000). TheMealDB upstream
+      // doesn't set them; tolerant parsing leaves defaults.
+      creatorUserId: nullIfBlank(json['creatorUserId']),
+      creatorDisplayName: nullIfBlank(json['creatorDisplayName']),
+      creatorAvatarPath: nullIfBlank(json['creatorAvatarPath']),
+      creatorRecipesAdded: _intOrNull(json['creatorRecipesAdded']),
+      favoritesCount: _intOr(json['favoritesCount'], 0),
+      ratingsCount: _intOr(json['ratingsCount'], 0),
+      ratingsSum: _intOr(json['ratingsSum'], 0),
+      myRating: _intOrNull(json['myRating']),
     );
   }
 
@@ -119,7 +184,15 @@ class Recipe {
           other.instructions == instructions &&
           _listEquals(other.ingredients, ingredients) &&
           other.youtubeUrl == youtubeUrl &&
-          other.sourceUrl == sourceUrl;
+          other.sourceUrl == sourceUrl &&
+          other.creatorUserId == creatorUserId &&
+          other.creatorDisplayName == creatorDisplayName &&
+          other.creatorAvatarPath == creatorAvatarPath &&
+          other.creatorRecipesAdded == creatorRecipesAdded &&
+          other.favoritesCount == favoritesCount &&
+          other.ratingsCount == ratingsCount &&
+          other.ratingsSum == ratingsSum &&
+          other.myRating == myRating;
 
   @override
   int get hashCode => Object.hash(
@@ -133,6 +206,16 @@ class Recipe {
     Object.hashAll(ingredients),
     youtubeUrl,
     sourceUrl,
+    Object.hash(
+      creatorUserId,
+      creatorDisplayName,
+      creatorAvatarPath,
+      creatorRecipesAdded,
+      favoritesCount,
+      ratingsCount,
+      ratingsSum,
+      myRating,
+    ),
   );
 }
 
@@ -161,3 +244,16 @@ bool _listEquals<T>(List<T> a, List<T> b) {
   }
   return true;
 }
+
+/// Tolerant int parser used by [Recipe.fromMealDb] for social-signal
+/// fields. Accepts ints, num/double truncated to int, and strings;
+/// returns `null` for missing / unparseable values.
+int? _intOrNull(Object? v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v.trim());
+  return null;
+}
+
+int _intOr(Object? v, int fallback) => _intOrNull(v) ?? fallback;

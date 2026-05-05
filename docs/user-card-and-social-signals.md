@@ -776,30 +776,36 @@ admin-only branch; signup goes back to `Routes.recipes`.
 in-memory model + DB column where relevant). Widgets that consume
 them ship in later chunks.
 
-**Status:** ⬜
+**Status:** ✅ done (commit pending). DB v13 migration intentionally
+deferred — see "Implementation note" below.
 
 **Prereqs:** Chunk C (server returns the fields). Acceptable to land
 client-only with default-null values first if backend lags ≤ 1 day.
 
+**Implementation note (deferral):** the model fields are NOT
+persisted in the local SQLite cache. Counts go stale immediately,
+so we always read them from the server's `/lookup` / `/page`
+response; cached recipe rows reconstruct with `favoritesCount = 0`,
+`ratingsCount = 0`, `ratingsSum = 0`, `myRating = null`, and the
+loader refreshes them on the next list fetch. This keeps the
+SQLite cache schema at v12 and avoids a migration that would have
+to be invalidated on every count tick.
+
 **Code TODO**
 
-- ⬜ Extend `Recipe` in
+- ✅ Extend `Recipe` in
   [recipe.dart](../recipe_list/lib/models/recipe.dart):
   - `String? creatorUserId, creatorDisplayName, creatorAvatarPath`
   - `int? creatorRecipesAdded`
   - `int favoritesCount` (default 0)
   - `int ratingsCount, ratingsSum` (default 0)
   - `int? myRating` (auth-dependent)
-- ⬜ Update `fromJson` / `toJson` (or freezed/json_serializable
-  generation if used). Keep parsing tolerant — missing fields →
-  null / 0.
-- ⬜ Add columns to the `recipes` cache table in
-  [recipe_db.dart](../recipe_list/lib/data/local/recipe_db.dart):
-  bump `kRecipeDbSchemaVersion = 13` and migrate `12 → 13` with
-  `ALTER TABLE recipes ADD COLUMN ...` for each scalar (use
-  `IF NOT EXISTS` pattern).
-- ⬜ Update `RecipeRepository.upsertAll` / `listCached` /
-  `lookupCached` to read/write the new columns.
+- ✅ Update `fromMealDb` to project the new fields tolerantly
+  (strings / ints / null / missing → safe defaults).
+- ⏭ Skipped: `recipes`-table column additions + DB v13 migration
+  (deferred as above).
+- ⏭ Skipped: `RecipeRepository.upsertAll` / `listCached` /
+  `lookupCached` — no schema change to wire up.
 
 **Tests**
 

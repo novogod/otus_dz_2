@@ -83,4 +83,91 @@ void main() {
       expect(r.isLite, isTrue);
     });
   });
+
+  // chunk E of docs/user-card-and-social-signals.md — model carries
+  // creator + ratings + favoritesCount fields. Tolerant parsing
+  // ensures TheMealDB payloads (which never set these) keep working.
+  group('Recipe social signals', () {
+    test('absent social fields default to 0 / null', () {
+      final r = Recipe.fromMealDb(_full);
+      expect(r.creatorUserId, isNull);
+      expect(r.creatorDisplayName, isNull);
+      expect(r.creatorAvatarPath, isNull);
+      expect(r.creatorRecipesAdded, isNull);
+      expect(r.favoritesCount, 0);
+      expect(r.ratingsCount, 0);
+      expect(r.ratingsSum, 0);
+      expect(r.myRating, isNull);
+    });
+
+    test('parses populated social fields from server projection', () {
+      final json = <String, dynamic>{
+        ..._full,
+        'creatorUserId': 'user-7',
+        'creatorDisplayName': 'John Doe',
+        'creatorAvatarPath': 'food-avatars/user-7/1700000000.jpg',
+        'creatorRecipesAdded': 12,
+        'favoritesCount': 127,
+        'ratingsCount': 30,
+        'ratingsSum': 130,
+        'myRating': 5,
+      };
+      final r = Recipe.fromMealDb(json);
+      expect(r.creatorUserId, 'user-7');
+      expect(r.creatorDisplayName, 'John Doe');
+      expect(r.creatorAvatarPath, 'food-avatars/user-7/1700000000.jpg');
+      expect(r.creatorRecipesAdded, 12);
+      expect(r.favoritesCount, 127);
+      expect(r.ratingsCount, 30);
+      expect(r.ratingsSum, 130);
+      expect(r.myRating, 5);
+    });
+
+    test('tolerant int parsing accepts strings', () {
+      final json = <String, dynamic>{
+        ..._full,
+        'favoritesCount': '42',
+        'ratingsCount': '10',
+        'ratingsSum': '37',
+        'myRating': '4',
+        'creatorRecipesAdded': '3',
+      };
+      final r = Recipe.fromMealDb(json);
+      expect(r.favoritesCount, 42);
+      expect(r.ratingsCount, 10);
+      expect(r.ratingsSum, 37);
+      expect(r.myRating, 4);
+      expect(r.creatorRecipesAdded, 3);
+    });
+
+    test('garbage values fall back to defaults', () {
+      final json = <String, dynamic>{
+        ..._full,
+        'favoritesCount': 'not-a-number',
+        'ratingsCount': null,
+        'myRating': 'x',
+      };
+      final r = Recipe.fromMealDb(json);
+      expect(r.favoritesCount, 0);
+      expect(r.ratingsCount, 0);
+      expect(r.myRating, isNull);
+    });
+
+    test('equality factors in social fields', () {
+      const a = Recipe(
+        id: 1,
+        name: 'A',
+        photo: 'x',
+        favoritesCount: 5,
+      );
+      const b = Recipe(
+        id: 1,
+        name: 'A',
+        photo: 'x',
+        favoritesCount: 6,
+      );
+      expect(a == b, isFalse);
+      expect(a.hashCode == b.hashCode, isFalse);
+    });
+  });
 }
