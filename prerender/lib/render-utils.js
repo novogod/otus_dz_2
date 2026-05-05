@@ -293,6 +293,13 @@ export function injectRecipeSeo(html, recipe) {
   );
   // Drop the static <title> too — we replace it with our own.
   out = out.replace(/<title\b[^>]*>[\s\S]*?<\/title>/i, '');
+  // Drop the static landing-page <link rel="canonical">; otherwise the
+  // bot sees two canonicals (the index.html default and our per-recipe
+  // one) which is ambiguous to crawlers.
+  out = out.replace(
+    /<link\b(?=[^>]*\brel="canonical")(?![^>]*\bdata-recipe-seo="1")[^>]*>\s*/i,
+    '',
+  );
   const headClose = out.search(/<\/head>/i);
   if (headClose < 0) return out;
   return `${out.slice(0, headClose)}${fragment}\n${out.slice(headClose)}`;
