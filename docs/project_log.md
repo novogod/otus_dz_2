@@ -1,5 +1,117 @@
 # Project Log
 
+## Web: share dropdown + iOS PWA install modal polish + backfill cron
+
+**Date:** 2026-05-05
+
+**Status:** ✅ Shipped (commits `b42a327` → `ef2123e`)
+
+Серия правок поверх предыдущей PWA/share-итерации:
+
+1. **`Sign Up` переведён внутри snackbar регистрации** (`b42a327`).
+   Хардкод "tap **Sign Up**" в snackbar'е "registration required"
+   был на всех 10 локалях. Добавлен slang-ключ `signUpButton` и
+   подставлен в snackbar через rich-text.
+2. **Share через Web Share API** (`ca09447`). `share_plus` теперь
+   получает `ShareParams(title, text, uri, subject)` — вместо
+   plain-text blob установленные приложения получают структурный
+   share.
+3. **Четыре соц-кнопки → одна native share** (`6859fe1`). Отдельные
+   FB/Instagram/VK/WhatsApp в AppBar свернули в один
+   `Icons.share` — system share sheet и так показывает все
+   установленные приложения.
+4. **PWA install button + auto-language modal на iOS** (`38bace8`).
+   Safari не стреляет `beforeinstallprompt`, поэтому на iOS
+   button раньше всегда был скрыт. Добавлены JS-helpers
+   `isIosBrowser()` и `isPwaStandalone()`, по тапу всплывает
+   локализованный modal "Tap **Share** → **Add to Home Screen**".
+   4 новых slang-ключа для модала: `pwaInstallTitleIos`,
+   `pwaInstallStepShare`, `pwaInstallStepAddToHomeScreen`,
+   `pwaInstallGotIt`.
+5. **Fallback dropdown с 10 соц-сетями** (`00f8420` →
+   доработан в `ef2123e`). Был баг: на Chrome desktop / Firefox
+   desktop / Safari share-кнопка молча копировала ссылку в
+   clipboard (потому что `share_plus` на web падает в clipboard,
+   когда `navigator.share` отсутствует). Сначала ввели JS-helper
+   `canWebShare()` и переключали ветку, но в Chrome/Safari даже
+   когда API есть, цепочка `await canWebShareWeb()` →
+   `await SharePlus.instance.share()` теряла transient user
+   activation, и `navigator.share()` молча no-op'ил. Финальное
+   решение в `ef2123e` — на web (`kIsWeb=true`) **всегда** показываем
+   свой dropdown; `share_plus` остался только для нативных
+   iOS/Android, где transient activation не теряется. Записи в
+   меню — plain https deep-links: на мобильных каждая открывает
+   настоящее приложение (WhatsApp/Telegram/…), на desktop —
+   web-composer соответствующей сети. Превью на стороне
+   получателя строится по `og:image` / `og:title` /
+   `og:description` из [recipe_list/web/index.html](../recipe_list/web/index.html).
+   10 целей в порядке: WhatsApp, Telegram, Facebook, X, Reddit,
+   LinkedIn, VK, Pinterest, Email, Copy link. 4 новых
+   slang-ключа: `shareTooltip`, `shareEmail`, `shareCopyLink`,
+   `shareLinkCopied`.
+6. **iOS install modal: чёрный текст + 1px зелёная рамка**
+   (`ef2123e`). Текст инструкций был render в светло-сером (тема
+   AlertDialog по умолчанию) и сливался с белым фоном. Жёстко
+   подставили `AppColors.textPrimary` в title, section headings,
+   bullet markers и step text. Вокруг диалога 1 px бордер
+   `AppColors.primary` (`#2ECC71`) через
+   `shape: RoundedRectangleBorder(side: ...)`.
+7. **Серверные правки (вне этого репозитория)** —
+   `mahallem-user-portal`:
+   - `_ensureLang(row, lang, { allowTranslate = true })` →
+     `repo.page` теперь зовёт с `allowTranslate:false`, чтобы
+     bulk-эндпоинт всегда отвечал в миллисекундах даже при
+     деградации Gemini cascade. Все 10 локалей вернулись к
+     HTTP 200 за <1.1 c (`commit 99a1c28`, smoke в логе).
+   - Per-row `RECIPES_TRANSLATE_BUDGET_MS` cap на translate
+     fan-out внутри ingest cron'а (todo выше отмечен ✅).
+   - Daily ingest cron (`0 4 * * *` Europe/Istanbul) уже
+     переводит новые рецепты во все 9 не-EN локалей.
+8. **Recipes backfill cron** на хосте. `/root/backfill_recipes.sh`
+   обходит все рецепты, у которых `i18n` не содержит хотя бы один
+   из 9 целевых языков, и зовёт `GET /recipes/lookup/$id?lang=$L`
+   через внутренний адрес контейнера (`172.25.0.41:4000`),
+   чтобы перевести и сохранить. Запускается ежедневно в 05:30 UTC
+   (≈ 90 минут после ingest cron'а 04:00 UTC) через
+   `/etc/cron.d/recipes-backfill`. Логи —
+   `/var/log/recipes_backfill.log` (per-row trace, перетирается
+   каждый запуск) и `/var/log/recipes_backfill.cron.log` (cron
+   stdout/stderr, append). Это закрывает дыры от echo-rejected
+   ответов Gemini и timeouts во время 503-storm.
+9. **Клиентский лог пустого bulk-fetch** (`973da01`). Раньше
+   пустой ответ от `/recipes/page` молча схлопывался и UI падал
+   в 14-fan-out по категориям (отсюда легендарные «88 рецептов»
+   на не-EN локалях). Теперь `recipe_list_loader.dart` пишет
+   `debugPrint` с lang/error/stack и отдельный лог при 200 OK с
+   пустым `recipes`.
+
+### Затронутые файлы (web)
+
+- [recipe_list/web/index.html](../recipe_list/web/index.html) —
+  `canWebShare()`, `isIosBrowser()`, `isPwaStandalone()`.
+- [recipe_list/lib/ui/web_share/web_action_buttons.dart](../recipe_list/lib/ui/web_share/web_action_buttons.dart) —
+  `_socialTargets`, `_showShareMenu`, `_onShareTap`,
+  `_showIosInstallInstructions`, `_InstructionsBlock`.
+- [recipe_list/lib/ui/web_share/pwa_install_web.dart](../recipe_list/lib/ui/web_share/pwa_install_web.dart),
+  [recipe_list/lib/ui/web_share/pwa_install_stub.dart](../recipe_list/lib/ui/web_share/pwa_install_stub.dart) —
+  `canWebShareWeb()`, `isIosBrowserWeb()`, `isPwaStandaloneWeb()`.
+- [recipe_list/lib/i18n/*.i18n.json](../recipe_list/lib/i18n/) —
+  4 PWA-install-modal ключа + 4 share-dropdown ключа во всех 10
+  локалях, регенерация slang.
+- [recipe_list/lib/i18n.dart](../recipe_list/lib/i18n.dart) —
+  фасад-геттеры для новых ключей.
+- [recipe_list/lib/ui/recipe_list_loader.dart](../recipe_list/lib/ui/recipe_list_loader.dart) —
+  лог пустого bulk-fetch.
+
+### Связанные документы
+
+- [docs/themealdb-ingest-cron-and-translate-gap.md](./themealdb-ingest-cron-and-translate-gap.md)
+- [docs/recipe-list-88-recipes-non-en-locales.md](./recipe-list-88-recipes-non-en-locales.md)
+- [docs/share-pwa-and-backfill.md](./share-pwa-and-backfill.md) —
+  consolidated change-log по share/PWA/backfill.
+
+---
+
 ## Web: PWA install + социальные share-кнопки в AppBar `/recipes`
 
 **Date:** 2026-05-05
