@@ -24,6 +24,36 @@ final DatabaseFactory _webDbFactory = databaseFactoryFfiWebNoWebWorker;
 /// Имя файла локальной БД.
 const String kRecipeDbFileName = 'recipes.db';
 
+/// True if [error] is the SQLite "database disk image is malformed"
+/// (SQLITE_CORRUPT, code 11) or an equivalent "not a database" /
+/// "file is not a database" surface error. Centralised here so call
+/// sites in the loader / repository can react identically: drop the
+/// IndexedDB snapshot and continue without the local cache. See
+/// docs/web-favorites.md.
+bool isCorruptDbError(Object error) {
+  final msg = error.toString().toLowerCase();
+  return msg.contains('malformed') ||
+      msg.contains('sqlite_error: 11') ||
+      msg.contains('sqliteexception(11)') ||
+      msg.contains('not a database');
+}
+
+/// Best-effort delete the IndexedDB-persisted recipe DB on web.
+/// No-op on iOS/Android/desktop (those use the file system; the
+/// caller doesn't recover them this way). Used by the loader when
+/// a corruption error escapes from a query — see
+/// [isCorruptDbError]. The next call to [openRecipeDatabase] will
+/// re-create a clean schema.
+Future<void> deleteRecipeDatabaseWebOnly() async {
+  if (!kIsWeb) return;
+  try {
+    await _webDbFactory.deleteDatabase(kRecipeDbFileName);
+  } catch (_) {
+    // Best-effort: even if delete reports an error, the next open
+    // will overwrite the schema.
+  }
+}
+
 /// Версия схемы. Любое изменение `_kSchema` требует bump-а и
 /// миграции в `_onUpgrade`.
 ///
@@ -222,14 +252,35 @@ Future<Database> openRecipeDatabase() async {
     // Используем локальный factory (без изменения глобального
     // `databaseFactory`) и без web-worker пути, который на текущем
     // Chrome окружении даёт `unsupported result null (null)`.
-    return _webDbFactory.openDatabase(
-      kRecipeDbFileName,
-      options: OpenDatabaseOptions(
-        version: kRecipeDbSchemaVersion,
-        onCreate: (db, _) => applyRecipeSchema(db),
-        onUpgrade: _onRecipeDbUpgrade,
-      ),
-    );
+    try {
+      return await _webDbFactory.openDatabase(
+        kRecipeDbFileName,
+        options: OpenDatabaseOptions(
+          version: kRecipeDbSchemaVersion,
+          onCreate: (db, _) => applyRecipeSchema(db),
+          onUpgrade: _onRecipeDbUpgrade,
+        ),
+      );
+    } on Object catch (e) {
+      // SQLITE_CORRUPT (code 11) / "database disk image is malformed":
+      // the IndexedDB-persisted snapshot is unreadable. This has been
+      // observed on installed PWAs after browser quota eviction or a
+      // worker-mode → no-worker-mode migration that left a half-written
+      // page. Cache loss is acceptable; the app re-fetches recipes from
+      // the network. Drop the corrupted DB and recreate it fresh.
+      if (!isCorruptDbError(e)) rethrow;
+      // ignore: avoid_print
+      print('[recipe_db] corrupted IndexedDB snapshot — recreating: $e');
+      await deleteRecipeDatabaseWebOnly();
+      return _webDbFactory.openDatabase(
+        kRecipeDbFileName,
+        options: OpenDatabaseOptions(
+          version: kRecipeDbSchemaVersion,
+          onCreate: (db, _) => applyRecipeSchema(db),
+          onUpgrade: _onRecipeDbUpgrade,
+        ),
+      );
+    }
   }
   final dir = await getApplicationSupportDirectory();
   final path = p.join(dir.path, kRecipeDbFileName);

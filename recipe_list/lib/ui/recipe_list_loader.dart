@@ -581,6 +581,33 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   }
 
   Future<_LoadResult> _runLoad({bool forceReseed = false}) async {
+    try {
+      return await _runLoadImpl(forceReseed: forceReseed);
+    } on Object catch (e) {
+      if (!isCorruptDbError(e)) rethrow;
+      // The IndexedDB-persisted recipe DB was opened successfully
+      // earlier (so countFor returned a number) but a subsequent
+      // SELECT hit a corrupted page and threw SqfliteFfiException
+      // "database disk image is malformed (code 11)". The
+      // FutureBuilder would render this as a full-screen "Ошибка
+      // загрузки" with no way out. Drop the local snapshot and
+      // retry once: the next pass will rebuild the schema and
+      // re-fetch recipes from the network. Cache loss is
+      // acceptable here — the user explicitly hit reload or the
+      // app just cold-started.
+      // ignore: avoid_print
+      print('[recipe-list] sqlite corruption at runtime — wiping cache: $e');
+      await deleteRecipeDatabaseWebOnly();
+      // The previously-cached Database instance is now invalid;
+      // null out the global notifiers so the next _runLoadImpl
+      // call rebuilds them via _defaultRepoBuilder.
+      favoritesStoreNotifier.value = null;
+      ownedRecipesStoreNotifier.value = null;
+      return _runLoadImpl(forceReseed: forceReseed);
+    }
+  }
+
+  Future<_LoadResult> _runLoadImpl({bool forceReseed = false}) async {
     final repo = await (widget.repositoryBuilder ?? _defaultRepoBuilder)(
       widget.api,
     );
