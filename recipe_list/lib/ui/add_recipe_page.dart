@@ -18,6 +18,7 @@ import '../models/recipe.dart';
 import '../utils/imgproxy.dart';
 import '../utils/photo_downscaler.dart';
 import 'app_theme.dart';
+import 'photo_picker_sheet.dart';
 
 /// Экран «Добавить рецепт». Доступен из FAB-а с плюсом на
 /// [RecipeListPage] (см. design_system.md §9b/§9n). Заполняется
@@ -310,62 +311,28 @@ class _AddRecipePageState extends State<AddRecipePage> {
   }
 
   /// Bottom-sheet «Откуда взять фото?» с пунктами camera / gallery /
-  /// remove (последний только в filled-state).
+  /// remove (последний только в filled-state). Сама раскладка листа
+  /// живёт в `photo_picker_sheet.dart`, чтобы её можно было
+  /// переиспользовать для аватара пользователя — см.
+  /// [docs/user-card-and-social-signals.md] §1/§2.
   Future<void> _showPhotoSourceSheet() async {
     final s = S.of(context);
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                ),
-                child: Text(
-                  s.addRecipePhotoSourceTitle,
-                  style: Theme.of(ctx).textTheme.titleMedium,
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: Text(s.addRecipePhotoFromCamera),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _pickPhoto(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: Text(s.addRecipePhotoFromGallery),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _pickPhoto(ImageSource.gallery);
-                },
-              ),
-              if (_hasPickedPhoto)
-                ListTile(
-                  leading: const Icon(
-                    Icons.delete_outline,
-                    color: AppColors.primaryDark,
-                  ),
-                  title: Text(s.addRecipePhotoRemove),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    _clearPickedPhoto();
-                  },
-                ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-          ),
-        );
-      },
+    final action = await showPhotoPickerSheet(
+      context,
+      title: s.addRecipePhotoSourceTitle,
+      cameraLabel: s.addRecipePhotoFromCamera,
+      galleryLabel: s.addRecipePhotoFromGallery,
+      removeLabel: _hasPickedPhoto ? s.addRecipePhotoRemove : null,
     );
+    if (action == null || !mounted) return;
+    switch (action) {
+      case PhotoPickerAction.camera:
+        await _pickPhoto(ImageSource.camera);
+      case PhotoPickerAction.gallery:
+        await _pickPhoto(ImageSource.gallery);
+      case PhotoPickerAction.remove:
+        _clearPickedPhoto();
+    }
   }
 
   void _clearPickedPhoto() {
