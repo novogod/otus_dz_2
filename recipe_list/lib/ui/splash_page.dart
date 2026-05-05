@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../data/api/recipe_api.dart';
 import 'app_theme.dart';
 
 /// Splash-экран по дизайну Figma (frame `135:691`).
@@ -26,11 +27,20 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   ui.Image? _foodImage;
+  int? _visitorCount;
 
   @override
   void initState() {
     super.initState();
     _loadImage();
+    _loadVisitorCount();
+  }
+
+  Future<void> _loadVisitorCount() async {
+    final api = RecipeApi();
+    final count = await api.incrementVisitorCount();
+    if (!mounted || count == null) return;
+    setState(() => _visitorCount = count);
   }
 
   Future<void> _loadImage() async {
@@ -59,9 +69,78 @@ class _SplashPageState extends State<SplashPage> {
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: SplashMaskedLogo(image: _foodImage),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SplashMaskedLogo(image: _foodImage),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  height: 28,
+                  child: SplashVisitorCounter(count: _visitorCount),
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Мигающий белый счётчик визитеров под лого splash.
+///
+/// Стиль взят из design system (`docs/design_system.md` §2:
+/// «Brand title» / «Timer label» — Roboto, белый цвет на сочном
+/// фоне splash). Используем ранее описанный `splashFontFamily`
+/// (Roboto), вес 700, 18px — читаемо на градиенте и не
+/// перекривает лого.
+class SplashVisitorCounter extends StatefulWidget {
+  const SplashVisitorCounter({super.key, required this.count});
+
+  final int? count;
+
+  @override
+  State<SplashVisitorCounter> createState() => _SplashVisitorCounterState();
+}
+
+class _SplashVisitorCounterState extends State<SplashVisitorCounter>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _blink;
+
+  @override
+  void initState() {
+    super.initState();
+    _blink = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _blink.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final count = widget.count;
+    if (count == null) return const SizedBox.shrink();
+    final textStyle = const TextStyle(
+      fontFamily: AppTextStyles.fontFamily,
+      fontWeight: FontWeight.w700,
+      fontSize: 18,
+      height: 23 / 18,
+      color: Colors.white,
+    );
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.35, end: 1.0).animate(
+        CurvedAnimation(parent: _blink, curve: Curves.easeInOut),
+      ),
+      child: Text(
+        'Visitors: $count',
+        textAlign: TextAlign.center,
+        style: textStyle,
       ),
     );
   }

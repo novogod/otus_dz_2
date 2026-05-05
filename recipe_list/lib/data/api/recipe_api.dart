@@ -258,6 +258,24 @@ class RecipeApi {
     await _client.dio.delete<void>('/$id', options: _authOptions());
   }
 
+  /// mahallem-only: атомарно увеличивает счётчик визитов и
+  /// возвращает новое значение. Используется на splash-экране
+  /// (`SplashPage`), который мигает белым числом под лого. Если
+  /// backend != mahallem или сервер недоступен — возвращает null,
+  /// чтобы splash остался без числа без падения UI.
+  Future<int?> incrementVisitorCount() async {
+    if (_client.backend != RecipeBackend.mahallem) return null;
+    try {
+      final res = await _client.dio.post<Map<String, dynamic>>('/visit');
+      final count = res.data?['count'];
+      if (count is int) return count;
+      if (count is num) return count.toInt();
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<List<Recipe>> _filter(String key, String value) async {
     final mahallem = _client.backend == RecipeBackend.mahallem;
     final res = await _client.dio.get<Map<String, dynamic>>(

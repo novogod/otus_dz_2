@@ -294,8 +294,9 @@ class AppDurations {
   AppDurations._();
 
   /// Время показа splash до начала перехода. Из Figma
-  /// (frame `135:691`, interaction `AFTER_TIMEOUT` = 1.5с).
-  static const Duration splash = Duration(milliseconds: 1500);
+  /// (frame `135:691`, interaction `AFTER_TIMEOUT` = 1.5с);
+  /// поднято до 4с, чтобы успеть показать счётчик визитов.
+  static const Duration splash = Duration(milliseconds: 4000);
 
   /// Длительность перехода splash → список (Figma transition
   /// `MOVE_IN`/`TOP`, duration `0.7с`, easing `EASE_IN_AND_OUT`).
