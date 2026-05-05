@@ -13,7 +13,7 @@ import 'app_theme.dart';
 /// Сам список предсказаний (dropdown) не входит в [PreferredSize] —
 /// он рендерится в теле страницы, чтобы перекрывать список рецептов
 /// и адаптировать высоту под количество совпадений.
-class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
+class SearchAppBar extends StatefulWidget implements PreferredSizeWidget {
   /// Контроллер поля поиска. Управляется снаружи (страницей), чтобы
   /// можно было программно очистить/заполнить значение.
   final TextEditingController controller;
@@ -47,23 +47,69 @@ class SearchAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
+  State<SearchAppBar> createState() => _SearchAppBarState();
+}
+
+class _SearchAppBarState extends State<SearchAppBar> {
+  /// Длительность анимации сжатия/разжатия поля поиска и появления
+  /// кнопок справа. Согласована с дефолтным `kThemeAnimationDuration`
+  /// Material, чтобы лента/детали ощущались как один UI-стек.
+  static const Duration _animDuration = Duration(milliseconds: 200);
+
+  @override
+  void initState() {
+    super.initState();
+    widget.focusNode.addListener(_onFocusChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant SearchAppBar old) {
+    super.didUpdateWidget(old);
+    if (old.focusNode != widget.focusNode) {
+      old.focusNode.removeListener(_onFocusChanged);
+      widget.focusNode.addListener(_onFocusChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode.removeListener(_onFocusChanged);
+    super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final focused = widget.focusNode.hasFocus;
     return AppPageBar(
-      onBack: onBack,
+      onBack: widget.onBack,
       titleSpacing: 0,
       centerTitle: false,
-      showReload: showReload,
-      disableLangAndReload: disableLangAndReload,
-      title: Center(
-        child: FractionallySizedBox(
-          widthFactor: 0.85,
+      showReload: widget.showReload,
+      disableLangAndReload: widget.disableLangAndReload,
+      // При фокусе скрываем lang/reload/share, чтобы поле поиска
+      // могло занять всю ширину справа от кнопки «назад».
+      hideActions: focused,
+      title: AnimatedAlign(
+        duration: _animDuration,
+        curve: Curves.easeOut,
+        alignment: Alignment.centerLeft,
+        child: AnimatedFractionallySizedBox(
+          duration: _animDuration,
+          curve: Curves.easeOut,
+          widthFactor: focused ? 1.0 : 0.85,
+          alignment: Alignment.centerLeft,
           child: _SearchField(
-            controller: controller,
-            focusNode: focusNode,
+            controller: widget.controller,
+            focusNode: widget.focusNode,
             hint: s.searchHint,
-            onChanged: onChanged,
-            onSubmitted: onSubmitted,
+            onChanged: widget.onChanged,
+            onSubmitted: widget.onSubmitted,
           ),
         ),
       ),
@@ -101,6 +147,13 @@ class _SearchField extends StatelessWidget {
         textInputAction: TextInputAction.search,
         onChanged: onChanged,
         onSubmitted: onSubmitted,
+        // Тап вне поля поиска снимает фокус → AppBar возвращает
+        // боковые кнопки (lang/reload/share). Без этого PointerDown
+        // приходит в страницу, но фокус остаётся, и кнопки не
+        // восстанавливаются.
+        onTapOutside: (_) {
+          if (focusNode.hasFocus) focusNode.unfocus();
+        },
         style: const TextStyle(
           fontFamily: AppTextStyles.fontFamily,
           fontSize: 14,

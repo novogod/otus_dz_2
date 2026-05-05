@@ -47,6 +47,13 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
   /// chunk D).
   final bool disableLangAndReload;
 
+  /// Если `true` — actions (reload/lang/share) полностью скрыты,
+  /// освобождая горизонтальное пространство под `title`. Используется
+  /// `SearchAppBar`, когда поле поиска получает фокус — пользователь
+  /// печатает запрос, прочие кнопки в этот момент не нужны и только
+  /// сжимают place для текста.
+  final bool hideActions;
+
   const AppPageBar({
     super.key,
     required this.title,
@@ -55,6 +62,7 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
     this.onBack,
     this.showReload = false,
     this.disableLangAndReload = false,
+    this.hideActions = false,
   });
 
   /// Удвоенный отступ от кнопки языка до правого края экрана.
@@ -119,31 +127,33 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         leadingWidth: 40 + AppSpacing.sm + AppSpacing.sm,
         title: title,
-        actions: [
-          if (disableLangAndReload)
-            IgnorePointer(
-              child: Opacity(
-                opacity: 0.38,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (showReload) const WebActionButtons(),
-                    if (showReload) const ReloadIconButton(),
-                    if (showReload) const SizedBox(width: AppSpacing.sm),
-                    const LangIconButton(),
-                    const SizedBox(width: _trailingGap),
-                  ],
-                ),
-              ),
-            )
-          else ...[
-            if (showReload) const WebActionButtons(),
-            if (showReload) const ReloadIconButton(),
-            if (showReload) const SizedBox(width: AppSpacing.sm),
-            const LangIconButton(),
-            const SizedBox(width: _trailingGap),
-          ],
-        ],
+        actions: hideActions
+            ? const <Widget>[SizedBox(width: _trailingGap)]
+            : [
+                if (disableLangAndReload)
+                  IgnorePointer(
+                    child: Opacity(
+                      opacity: 0.38,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (showReload) const WebActionButtons(),
+                          if (showReload) const ReloadIconButton(),
+                          if (showReload) const SizedBox(width: AppSpacing.sm),
+                          const LangIconButton(),
+                          const SizedBox(width: _trailingGap),
+                        ],
+                      ),
+                    ),
+                  )
+                else ...[
+                  if (showReload) const WebActionButtons(),
+                  if (showReload) const ReloadIconButton(),
+                  if (showReload) const SizedBox(width: AppSpacing.sm),
+                  const LangIconButton(),
+                  const SizedBox(width: _trailingGap),
+                ],
+              ],
         bottom: showReload
             ? const _ReloadProgressBar(height: _kReloadProgressHeight)
             : null,
