@@ -113,6 +113,7 @@ class _AdminAddedRecipesPageState extends State<AdminAddedRecipesPage> {
         builder: (_) => AdminUsersPage(
           adminLogin: widget.adminLogin,
           adminPassword: widget.adminPassword,
+          focusUserId: item.creatorUserId,
         ),
       ),
     );

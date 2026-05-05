@@ -9,10 +9,15 @@ class AdminUsersPage extends StatefulWidget {
     super.key,
     required this.adminLogin,
     required this.adminPassword,
+    this.focusUserId,
   });
 
   final String adminLogin;
   final String adminPassword;
+
+  /// If provided, the page auto-opens the edit “user card” dialog
+  /// for that user once after the initial load.
+  final String? focusUserId;
 
   @override
   State<AdminUsersPage> createState() => _AdminUsersPageState();
@@ -23,6 +28,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   final Set<String> _selectedIds = <String>{};
   bool _busy = false;
   String? _loadError;
+  bool _focusUserHandled = false;
 
   @override
   void initState() {
@@ -43,6 +49,25 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
         _loadError = null;
         _selectedIds.removeWhere((id) => !_users.any((u) => u.id == id));
       });
+      // Auto-open the requested user card once after first successful
+      // load. If the id isn't present (deleted user, wrong id, …)
+      // we silently fall through to showing the full list.
+      if (!_focusUserHandled && widget.focusUserId != null) {
+        final id = widget.focusUserId!;
+        AdminRecipeUser? match;
+        for (final u in users) {
+          if (u.id == id) {
+            match = u;
+            break;
+          }
+        }
+        _focusUserHandled = true;
+        if (match != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _editUser(match!);
+          });
+        }
+      }
     } catch (e, st) {
       debugPrint('[AdminUsersPage] _reload error: $e\n$st');
       if (!mounted) return;
