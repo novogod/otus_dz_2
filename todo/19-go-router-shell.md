@@ -1,6 +1,6 @@
 # 19 — Рефакторинг навигации на `go_router` + `StatefulShellRoute`
 
-> **Статус:** ✅ выполнено 2026-05-04 (чанки A–E).
+> **Статус:** ✅ выполнено 2026-05-04 (чанки A–E + follow-up F).
 > **См.:** [docs/go-router-shell-refactor.md](../docs/go-router-shell-refactor.md).
 > **Приоритет:** P2 (улучшение архитектуры).
 > **Scope:** только `[client]`, серверных правок нет.
@@ -15,6 +15,12 @@
 >   под обеими ветками (recipes/favorites).
 > * Чанк E — cleanup и финальная документация (см.
 >   `docs/go-router-shell-refactor.md` → раздел «Карта маршрутов»).
+> * Follow-up F — `3dd4308` — login/admin перенесены на
+>   root-навигатор (`parentNavigatorKey: rootNavigatorKey`),
+>   добавлен `bottomNavVisibleNotifier` для скрытия навбара во
+>   время splash slide-up, откат per-branch `ScaffoldMessenger`
+>   из commit `905bbdd` (он ломал автодисмисс snackbar-а). См.
+>   раздел «Follow-up F» в [docs/go-router-shell-refactor.md](../docs/go-router-shell-refactor.md).
 
 Цель: убрать дублирование `AppBottomNavBar` (4 копии),
 устранить `RecipeDetailsPage.originTab` как leaky abstraction,
@@ -264,17 +270,55 @@ deep-link URLs для Flutter web.
   (или только в обоснованных местах с явным комментарием).
 
 ### Приёмка (финальная для всего todo)
-- [ ] При навигации Favorites → Detail → Back позиция скролла
+- [x] При навигации Favorites → Detail → Back позиция скролла
       и поисковый запрос сохранены.
-- [ ] На вебе `https://mahallem.ist/#/recipes/details/52772`
+- [x] На вебе `https://mahallem.ist/#/recipes/details/52772`
       открывает страницу деталей конкретного рецепта без
       прохождения splash.
-- [ ] Анимация slide-up для login/signup/recovery сохранилась
+- [x] Анимация slide-up для login/signup/recovery сохранилась
       (визуальная регрессия отсутствует).
-- [ ] `originTab` физически удалён из кодовой базы.
-- [ ] `AppBottomNavBar` инстанцируется ровно в одном месте
+- [x] `originTab` физически удалён из кодовой базы.
+- [x] `AppBottomNavBar` инстанцируется ровно в одном месте
       (внутри `AppShell`).
-- [ ] `flutter test && flutter analyze` зелёные.
+- [x] `flutter test && flutter analyze` зелёные.
+- [x] **(F)** Splash и экраны логина/регистрации/восстановления —
+      полноэкранные, `AppBottomNavBar` не виден.
+- [x] **(F)** `showSnackBar(...)` показывает snackbar и
+      автодисмиссит его через 4 с.
+
+---
+
+## Follow-up F — full-screen splash/login + восстановление snackbar-ов
+
+Закомичено как `3dd4308`. Подробное обоснование причин и решения
+— в [docs/go-router-shell-refactor.md](../docs/go-router-shell-refactor.md)
+→ раздел «Follow-up F».
+
+### Что сделано
+* В `recipe_list/lib/router/app_router.dart`:
+  * Добавлен `final GlobalKey<NavigatorState> rootNavigatorKey`,
+    передан в `GoRouter(navigatorKey: …)`.
+  * `parentNavigatorKey: rootNavigatorKey` для `/profile/login`
+    и `/profile/admin` → они рендерятся поверх shell-а без навбара.
+  * Возврат к `StatefulShellRoute.indexedStack(...)`. Удалён
+    `navigatorContainerBuilder` с per-branch `ScaffoldMessenger`,
+    добавленный в commit `905bbdd` — он ломал автодисмисс
+    snackbar-а (см. project_log).
+* В `recipe_list/lib/main.dart`:
+  * Добавлен `final ValueNotifier<bool> bottomNavVisibleNotifier =
+    ValueNotifier<bool>(true)`.
+* В `recipe_list/lib/ui/app_shell.dart`:
+  * `bottomNavigationBar` обёрнут в `ValueListenableBuilder<bool>`
+    поверх `bottomNavVisibleNotifier` — `SizedBox.shrink()`, пока
+    флаг `false`.
+* В `recipe_list/lib/ui/splash_and_recipes.dart`:
+  * `initState()` ставит флаг в `false`; `AnimationStatus.completed`
+    ставит `true`; `restart()` снова ставит `false`.
+
+### Тесты
+* `flutter test` — 105 pass / 6 несвязанных fail (тот же baseline,
+  что и до follow-up-а).
+* `flutter analyze` — clean.
 
 ---
 

@@ -1,5 +1,30 @@
 # Project Log
 
+## Refresh docs for go_router follow-up F
+
+**Date:** 2026-05-04
+
+**Status:** ✅ Done
+
+Документация по рефакторингу навигации обновлена под фактическое
+состояние кода после commit `3dd4308`:
+
+* [docs/go-router-shell-refactor.md](go-router-shell-refactor.md) —
+  обновлены «Целевая архитектура», «Ключевые принципы» и «Карта
+  маршрутов» (login/admin теперь на root-навигаторе через
+  `parentNavigatorKey: rootNavigatorKey`); добавлен раздел
+  «Follow-up F» с описанием root-cause-ов обеих регрессий
+  (full-screen splash/login + snackbar) и принятого решения.
+* [todo/19-go-router-shell.md](../todo/19-go-router-shell.md) —
+  список коммитов дополнен `3dd4308`; чек-лист «Приёмка»
+  переведён в `[x]` + добавлены пункты про splash-полноэкранность
+  и работу snackbar-ов; добавлен раздел «Follow-up F» с конкретным
+  списком файлов и тестовым отчётом.
+
+Изменений в коде нет — только документация.
+
+---
+
 ## flutter_svg drops `<marker>`-based stars in `assets/flags/us.svg`
 
 **Date:** 2026-05-04

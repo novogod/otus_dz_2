@@ -1,6 +1,6 @@
 # Рефакторинг навигации: переход на `go_router` + `StatefulShellRoute`
 
-> **Статус:** ✅ выполнено 2026-05-04 (чанки A–E).
+> **Статус:** ✅ выполнено 2026-05-04 (чанки A–E + follow-up F).
 > **Связанный todo:** [todo/19-go-router-shell.md](../todo/19-go-router-shell.md).
 > **Приоритет:** P2 (улучшение архитектуры, не блокирует фичи).
 >
@@ -10,6 +10,8 @@
 > * Чанк C — `15a66d9` (Profile ветка с `/profile/login` и `/profile/admin`)
 > * Чанк D — `6b7f888` (Source/Add/Edit как nested-routes)
 > * Чанк E — cleanup и эта запись (см. ниже)
+> * Follow-up F — `3dd4308` (full-screen splash/login + восстановлены
+>   snackbars, см. раздел «Follow-up» ниже)
 
 ## Зачем
 
@@ -61,40 +63,57 @@
 ### Целевая архитектура
 
 ```
-GoRouter
-└── StatefulShellRoute.indexedStack
-    ├── builder: AppShell (Scaffold + AppBottomNavBar — ОДИН раз)
-    └── branches:
-        ├── ShellBranch[recipes]
-        │   ├── /recipes                      → RecipeListPage
-        │   └── /recipes/details/:id          → RecipeDetailsPage
-        ├── ShellBranch[fridge]
-        │   └── /fridge                       → FridgePage (заглушка)
-        ├── ShellBranch[favorites]
-        │   ├── /favorites                    → FavoritesPage
-        │   └── /favorites/details/:id        → RecipeDetailsPage
-        └── ShellBranch[profile]
-            ├── /profile                      → ProfilePage
-            ├── /profile/login                → LoginPage
-            ├── /profile/signup               → SignUpPage
-            └── /profile/recover              → PasswordRecoveryPage
+GoRouter (rootNavigatorKey)
+├── StatefulShellRoute.indexedStack
+│   ├── builder: AppShell (Scaffold + AppBottomNavBar — ОДИН раз,
+│   │            видимость управляется bottomNavVisibleNotifier)
+│   └── branches:
+│       ├── ShellBranch[recipes]
+│       │   ├── /recipes                      → SplashAndRecipes
+│       │   ├── /recipes/details/:id          → RecipeDetailsPage
+│       │   ├── /recipes/add | edit/:id       → AddRecipePage
+│       │   └── /recipes/source?url=…         → SourcePage
+│       ├── ShellBranch[fridge]
+│       │   └── /fridge                       → _ComingSoonPage
+│       ├── ShellBranch[favorites]
+│       │   ├── /favorites                    → FavoritesPage
+│       │   ├── /favorites/details/:id        → RecipeDetailsPage
+│       │   ├── /favorites/add | edit/:id     → AddRecipePage
+│       │   └── /favorites/source?url=…       → SourcePage
+│       └── ShellBranch[profile]
+│           └── /profile                      → redirect-only
+└── полноэкранные роуты (parentNavigatorKey: rootNavigatorKey)
+    ├── /profile/login                        → LoginPage (slide-up)
+    └── /profile/admin                        → AdminAfterLoginPage (slide-up)
 ```
 
 ### Ключевые принципы
 
 1. **Один `AppBottomNavBar` на всё приложение** — внутри builder
-   `StatefulShellRoute.indexedStack`.
-2. **Нет `originTab`** — стек каждой ветки сам помнит, откуда
+   `StatefulShellRoute.indexedStack`, обёрнут в
+   `ValueListenableBuilder<bool>` поверх `bottomNavVisibleNotifier`,
+   чтобы splash-анимация slide-up могла временно скрыть навбар.
+2. **Полноэкранные роуты на root-навигаторе.** Login и admin
+   объявлены с `parentNavigatorKey: rootNavigatorKey` — они
+   рендерятся **поверх** shell-а, без `AppShell.Scaffold` вокруг,
+   и поэтому не показывают `AppBottomNavBar`. Push-based потоки
+   из `LoginPage` (signup, password recovery) автоматически
+   уезжают на root-навигатор, потому что `Navigator.of(loginCtx)`
+   теперь резолвится в root.
+3. **Один корневой `ScaffoldMessenger`** — тот, который создаёт
+   `MaterialApp.router`. Snackbar-ы показываются на always-painting
+   Scaffold-е `AppShell`-а; per-branch messenger-ы **не
+   используются** (см. раздел «Follow-up F» ниже).
+4. **Нет `originTab`** — стек каждой ветки сам помнит, откуда
    пришли. `RecipeDetailsPage` под `/recipes/details/:id` рисуется
    в ветке Recipes, а под `/favorites/details/:id` — в ветке
    Favorites. NavBar подсвечивает активную ветку автоматически
    (`navShell.currentIndex`).
-3. **Состояние сохраняется** — `IndexedStack` под капотом
+5. **Состояние сохраняется** — `IndexedStack` под капотом
    `StatefulShellRoute` держит каждую ветку живой между переходами.
-4. **Deep linking** — на вебе `https://mahallem.ist/#/recipes/52772`
-   открывает страницу деталей конкретного рецепта; в мобильных
-   платформах работает push-нотификация на ссылку.
-5. **Type-safe навигация** — переходы через
+6. **Deep linking** — на вебе `https://mahallem.ist/#/recipes/52772`
+   открывает страницу деталей конкретного рецепта.
+7. **Type-safe навигация** — переходы через
    `context.go('/favorites')` / `context.push('/recipes/details/52772')`
    вместо `Navigator.of(context).push(MaterialPageRoute(builder: ...))`.
 
@@ -203,15 +222,19 @@ GoRouter
 | `/favorites/edit/:id` | `AddRecipePage` (extra: `Recipe`, edit-режим) | [2] Favorites |
 | `/favorites/source?url=…` | `SourcePage` (WebView внешнего рецепта) | [2] Favorites |
 | `/profile` | redirect-only | [3] Profile |
-| `/profile/login` | `LoginPage` (slide-up) | [3] Profile |
-| `/profile/admin` | `AdminAfterLoginPage` (slide-up) | [3] Profile |
+| `/profile/login` | `LoginPage` (slide-up, **root navigator**, full-screen) | — |
+| `/profile/admin` | `AdminAfterLoginPage` (slide-up, **root navigator**, full-screen) | — |
 
 Под `/profile` ветке корневой `GoRoute` сам ничего не рендерит —
 `_profileRedirect` уводит на login или admin в зависимости от
-состояния notifier-ов из `auth/admin_session.dart`. Edit/source
-доступны под обеими ветками (recipes/favorites): callsite
-определяет нужный префикс через `Routes.currentBranchBase`, чтобы
-push не выкидывал пользователя на чужую вкладку.
+состояния notifier-ов из `auth/admin_session.dart`. Поскольку
+login/admin живут на root-навигаторе (`parentNavigatorKey:
+rootNavigatorKey`), они открываются **поверх** shell-а — без
+`AppBottomNavBar` снизу. При `logout` `_profileRedirect` пропихивает
+обратно на `/profile/login`. Edit/source доступны под обеими
+ветками (recipes/favorites): callsite определяет нужный префикс
+через `Routes.currentBranchBase`, чтобы push не выкидывал
+пользователя на чужую вкладку.
 
 ### Что осталось вне рефакторинга
 
@@ -220,3 +243,68 @@ push не выкидывал пользователя на чужую вклад
   целиком живут внутри admin-модального стека и не отображаются в
   AppBottomNavBar; перевод их на nested-routes даст лишь косметический
   выигрыш, поэтому в чанке D/E намеренно не делался.
+
+---
+
+## Follow-up F (`3dd4308`) — full-screen splash/login + восстановление snackbar-ов
+
+После выкатки чанков A–E всплыли **две** регрессии:
+
+1. На splash-экране и на всех экранах авторизации
+   (`LoginPage`/`SignupPage`/`PasswordRecoveryPage`/
+   `AdminAfterLoginPage`) снизу торчал `AppBottomNavBar` — UX
+   сломан, эти экраны должны быть полноэкранными.
+2. Любой `showSnackBar(...)` ничего не показывал.
+
+Промежуточный «фикс» (commit `905bbdd`) обернул каждую ветку shell-а
+в собственный `ScaffoldMessenger`. Это добавило ещё одну регрессию
+(snackbar-ы и автодисмисс) и не починило проблему с навбаром.
+
+**Как починили (правильно):**
+
+* **Login и admin переехали на root-навигатор.** Объявлен
+  `final GlobalKey<NavigatorState> rootNavigatorKey` в
+  `app_router.dart`, передан в `GoRouter(navigatorKey: …)`.
+  Sub-route'ы `/profile/login` и `/profile/admin` получили
+  `parentNavigatorKey: rootNavigatorKey` — они рендерятся
+  **поверх** shell-а, без `AppShell.Scaffold` вокруг, без
+  `AppBottomNavBar`. Slide-up через `_slideUpPage`
+  (`CustomTransitionPage` + `Tween<Offset>(0,1) → 0`) сохранён.
+  Push-based signup/recovery автоматически едут на root, потому
+  что `Navigator.of(loginCtx)` теперь резолвится в root-Navigator.
+* **Splash-aware видимость навбара.** Глобальный
+  `ValueNotifier<bool> bottomNavVisibleNotifier` (default `true`)
+  в `main.dart`. `SplashAndRecipesState.initState()` ставит `false`,
+  `AnimationStatus.completed` slide-controller-а ставит `true`,
+  `restart()` снова сбрасывает `false`. `AppShell` оборачивает
+  `bottomNavigationBar` в `ValueListenableBuilder` и рисует
+  `SizedBox.shrink()`, пока флаг `false`.
+* **Откат per-branch ScaffoldMessenger.** Возвращаемся к
+  default-поведению: один корневой `ScaffoldMessenger`, который
+  даёт `MaterialApp.router`. Snackbar-ы садятся на always-painting
+  `AppShell.Scaffold`; page-Scaffold-ы веток отфильтровываются
+  встроенным `_isRoot()` в `ScaffoldMessenger`. Автодисмисс через
+  4 с снова работает.
+
+Подробное обоснование, почему per-branch messenger ломал и
+автодисмисс, и сам факт показа snackbar-а — см.
+[docs/project_log.md](project_log.md) → запись «Splash + login
+below bottom nav, snackbars don't show». Главный вывод: исходный
+диагноз «hang forever из-за `IndexedStack`» был ошибочным —
+`IndexedStack` оборачивает детей в `Visibility(maintainAnimation:
+true)`, тикеры offstage-веток не пауз­ятся; default behaviour
+работал корректно с самого начала.
+
+**Файлы, затронутые follow-up-ом:**
+
+* [recipe_list/lib/router/app_router.dart](../recipe_list/lib/router/app_router.dart)
+  — `rootNavigatorKey`, возврат к `StatefulShellRoute.indexedStack`,
+  `parentNavigatorKey` на login/admin, удалён
+  `navigatorContainerBuilder` + per-branch `ScaffoldMessenger`.
+* [recipe_list/lib/main.dart](../recipe_list/lib/main.dart)
+  — добавлен `bottomNavVisibleNotifier`.
+* [recipe_list/lib/ui/app_shell.dart](../recipe_list/lib/ui/app_shell.dart)
+  — `ValueListenableBuilder` вокруг `bottomNavigationBar`.
+* [recipe_list/lib/ui/splash_and_recipes.dart](../recipe_list/lib/ui/splash_and_recipes.dart)
+  — переключение `bottomNavVisibleNotifier` в initState/restart/
+  status-listener.
