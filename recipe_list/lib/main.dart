@@ -6,10 +6,15 @@ import 'i18n/strings.g.dart';
 import 'router/app_router.dart';
 import 'ui/app_theme.dart';
 import 'ui/splash_and_recipes.dart';
+import 'ui/web_share/pwa_install.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   initI18n();
+  // Web-only: start polling the JS shim that captured
+  // `beforeinstallprompt` so the Install-PWA button knows when to
+  // surface itself. No-op on iOS/Android/desktop (stub).
+  initPwaInstallWatcher();
   runApp(TranslationProvider(child: const RecipeApp()));
 }
 

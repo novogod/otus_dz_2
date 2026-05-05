@@ -31,6 +31,33 @@
 
   <title>recipe_list</title>
   <link rel="manifest" href="manifest.json">
+  <script>
+    // Capture the PWA install prompt so Flutter can fire it later
+    // from the Install-PWA button (see WebActionButtons).
+    window.deferredPwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.deferredPwaPrompt = e;
+    });
+    window.addEventListener('appinstalled', function () {
+      window.deferredPwaPrompt = null;
+    });
+    window.isPwaInstallAvailable = function () {
+      return !!window.deferredPwaPrompt;
+    };
+    window.triggerPwaInstall = async function () {
+      if (!window.deferredPwaPrompt) return 'unavailable';
+      var ev = window.deferredPwaPrompt;
+      window.deferredPwaPrompt = null;
+      ev.prompt();
+      try {
+        var r = await ev.userChoice;
+        return r && r.outcome ? r.outcome : 'unknown';
+      } catch (_) {
+        return 'error';
+      }
+    };
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

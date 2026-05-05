@@ -4,6 +4,7 @@ import '../i18n.dart';
 import 'app_theme.dart';
 import 'lang_icon_button.dart';
 import 'reload_icon_button.dart';
+import 'web_share/web_action_buttons.dart';
 
 /// Унифицированный AppBar для всех экранов приложения. Реализует
 /// общий дизайн из `docs/design_system.md`: белый фон, тёмно-зелёный
@@ -126,6 +127,7 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (showReload) const WebActionButtons(),
                     if (showReload) const ReloadIconButton(),
                     if (showReload) const SizedBox(width: AppSpacing.sm),
                     const LangIconButton(),
@@ -135,6 +137,7 @@ class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             )
           else ...[
+            if (showReload) const WebActionButtons(),
             if (showReload) const ReloadIconButton(),
             if (showReload) const SizedBox(width: AppSpacing.sm),
             const LangIconButton(),
