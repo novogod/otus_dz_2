@@ -172,6 +172,14 @@ void main() {
           ),
           findsOneWidget,
         );
+
+        // showRegistrationRequiredSnackBar arms a 4-second safety
+        // Timer that force-closes the snackbar even when the
+        // ScaffoldMessenger animation never reaches `completed` (see
+        // registration_required_snackbar.dart). Drain it before the
+        // test tears down to keep `!timersPending` happy.
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
       },
     );
   });

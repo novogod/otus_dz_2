@@ -10,8 +10,7 @@ import '../i18n.dart';
 import '../models/recipe.dart';
 import '../utils/imgproxy.dart';
 import 'app_theme.dart';
-import 'login_page.dart';
-import 'signup_page.dart';
+import 'registration_required_snackbar.dart';
 
 /// Карточка рецепта TheMealDB.
 ///
@@ -365,22 +364,16 @@ class FavoriteBadge extends StatelessWidget {
 
   Future<void> _showRegistrationRequired(BuildContext context) async {
     if (!context.mounted) return;
-    final s = S.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(s.favoritesRegistrationRequired),
-          action: SnackBarAction(
-            label: s.signUp,
-            onPressed: () async {
-              final created = await openSignUpPage(context);
-              if (!context.mounted || !created) return;
-              await openLoginPage(context);
-            },
-          ),
-        ),
-      );
+    // Use the shared helper so the snackbar carries an explicit
+    // safety Timer that force-closes after 4 s. The naked
+    // `showSnackBar` path relied on `ScaffoldMessenger`'s built-in
+    // auto-dismiss, which only fires when the slide-in animation
+    // reaches `AnimationStatus.completed`. With multiple Scaffolds
+    // mounted (AppShell + branch + LoginPage on root) and a
+    // multi-line non-EN content, the messenger keeps re-hosting the
+    // SnackBar and the animation never completes — so the timer
+    // never starts and the snackbar hangs forever in non-EN locales.
+    showRegistrationRequiredSnackBar(context);
   }
 }
 
