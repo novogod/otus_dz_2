@@ -285,6 +285,66 @@ deep-link URLs для Flutter web.
       полноэкранные, `AppBottomNavBar` не виден.
 - [x] **(F)** `showSnackBar(...)` показывает snackbar и
       автодисмиссит его через 4 с.
+- [x] **(G)** Back-FAB на `LoginPage` возвращает на shell, а не
+      на серый `/profile`-плейсхолдер.
+- [x] **(G)** Гость, тапнувший по «Избранному», видит snackbar
+      `favoritesRegistrationRequired` + экшен «Sign Up».
+- [x] **(G)** Кнопка «Reload» на splash больше не валит
+      `setState() called during build`.
+
+---
+
+## Follow-up G — back-button, favorites guest-gate, setState-during-build
+
+Закомичено как `3a07ab5`. Подробное обоснование причин и решения
+— в [docs/go-router-shell-refactor.md](../docs/go-router-shell-refactor.md)
+→ раздел «Follow-up G».
+
+### Что было сломано
+1. **`setState() called during build` на reload.**
+   `_RecipeListLoaderState._publishServices` писал в
+   `appServicesNotifier.value` синхронно из
+   `FutureBuilder.builder`; `ValueListenableBuilder`-консьюмеры
+   получали `notifyListeners` посреди билда родителя.
+2. **Back-FAB на `LoginPage` → серый экран.** Login на
+   root-навигаторе через `parentNavigatorKey`; `Navigator.pop`
+   оставлял go_router на `/profile` с `Scaffold(SizedBox.shrink())`.
+3. **Тап по «Избранному» гостем — никакой реакции.**
+   `docs/login-auth.md` §5 требует snackbar
+   `favoritesRegistrationRequired` + «Sign Up». Гард жил в
+   `RecipeListPage._onNavTap`; при переезде навбара в `AppShell`
+   условный гард потеряли (визуальную часть перенесли, поведение —
+   нет).
+
+### Что сделано
+* `recipe_list/lib/ui/recipe_list_loader.dart`:
+  `_publishServices` обёрнут в
+  `WidgetsBinding.instance.addPostFrameCallback` с
+  `mounted`-проверкой и сравнением `(api, repository)`.
+* `recipe_list/lib/ui/login_page.dart`: back-FAB —
+  `if (context.canPop()) context.pop(); else context.go(Routes.recipes);`.
+  `signup_page.dart`/`password_recovery_page.dart` не трогаем —
+  они push-ятся поверх LoginPage и их `pop` корректен.
+* `recipe_list/lib/ui/app_shell.dart`: `_onTabTap(context, tab)`
+  проверяет `favorites && !userLoggedInNotifier.value` и
+  показывает snackbar с экшеном Sign Up; иначе зовёт
+  `navShell.goBranch(idx, initialLocation: idx == currentIndex)`.
+* `recipe_list/test/router_smoke_test.dart` и
+  `recipe_list/test/router_branches_test.dart`: перед тапом по
+  «Избранному» ставят `userLoggedInNotifier.value = true` с
+  `addTearDown(() => ... = false)` — иначе их блокирует новый
+  guest-gate.
+
+### Замечание про add-FAB snackbar
+Жалоба «add-FAB snackbar hangs forever» **не воспроизводится** на
+текущей базе: per-branch `ScaffoldMessenger`, ломавший
+автодисмисс, был откачен в follow-up F. Снэкбары идут на корневой
+`ScaffoldMessenger`, таймер на 4 с работает. Если повторится —
+нужен конкретный текст snackbar-а и экран.
+
+### Тесты
+* `flutter analyze` — clean.
+* `flutter test` — 105 pass / 6 несвязанных fail (тот же baseline).
 
 ---
 

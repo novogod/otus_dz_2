@@ -1,5 +1,135 @@
 # Project Log
 
+## Go-router follow-up G — три регрессии после `3dd4308`
+
+**Date:** 2026-05-04
+
+**Status:** ✅ Fixed (commit `3a07ab5`)
+
+После ручного прогона на Android-эмуляторе всплыли три бага и одно
+свежее исключение. Все четыре прокинуты вместе.
+
+### 1. `setState() called during build` при тапе на «Reload»
+
+**Symptom.** Кнопка «Reload» на splash валит ассерт:
+`setState() or markNeedsBuild() called during build` —
+`ValueListenableBuilder<AppServices?>` пытается ребилдиться, пока
+родительский `FutureBuilder<_LoadResult>` ещё в фазе билда.
+
+**Root cause.**
+[`recipe_list/lib/ui/recipe_list_loader.dart`](recipe_list_loader.dart)
+`_RecipeListLoaderState._publishServices(...)` писал прямо в
+`appServicesNotifier.value` синхронно из `FutureBuilder.builder`.
+Подписчики (`FavoritesBranchRoot`, page-builders для details/add)
+получали `notifyListeners` посреди билда — Flutter ругается.
+
+**Fix.** Откладываем мутацию через
+`WidgetsBinding.instance.addPostFrameCallback`, на конце кадра
+делаем `mounted`-проверку и сравниваем `(api, repository)` с
+текущим значением — чтобы не публиковать одно и то же дважды
+(reload вызывается часто).
+
+### 2. Кнопка «назад» с экрана логина → серый экран
+
+**Symptom.** На `LoginPage` тап по back-FAB закрывает экран, и
+вместо `RecipeListPage` появляется пустой серый экран — навбар
+есть, контента нет.
+
+**Root cause.** `LoginPage` живёт на root-навигаторе через
+`parentNavigatorKey: rootNavigatorKey` (см. follow-up F). Старый
+`Navigator.of(context).pop()` снимает оверлей логина, и go_router
+оказывается на `/profile`, у которого `builder` —
+`Scaffold(body: SizedBox.shrink())` (заглушка для родительского
+маршрута, рендер которого никогда не должен случиться). Отсюда
+серый экран. `_profileRedirect` срабатывает только при
+`router.refresh()`, а не при pop-е дочернего маршрута root-Navigator-а.
+
+**Fix.** В
+[`recipe_list/lib/ui/login_page.dart`](login_page.dart) back-FAB
+теперь делает:
+
+```dart
+if (context.canPop()) {
+  context.pop();
+} else {
+  context.go(Routes.recipes);
+}
+```
+
+`signup_page.dart`/`password_recovery_page.dart` не трогаем — они
+push-ятся поверх LoginPage (на тот же root-Navigator), их `pop`
+возвращает на LoginPage, не на `/profile`.
+
+### 3. Тап по «Избранному» гостем — нет snackbar-а
+
+**Symptom.** Гость (не залогинен) тапает таб «Избранное» —
+открывается пустой `FavoritesPage` без какой-либо реакции. По
+[docs/login-auth.md](login-auth.md) §5 здесь должен показываться
+snackbar `favoritesRegistrationRequired` с экшеном «Sign Up».
+
+**Root cause.** Старая проверка жила в
+`RecipeListPage._onNavTap` (commit `8fc7b21`). После того как
+follow-up F-ом навбар переехал в `AppShell`, гард при переезде
+просто потеряли. Heart-badge на карточках продолжал работать
+(там отдельная проверка), а вот сама вкладка — нет.
+
+**Fix.** В
+[`recipe_list/lib/ui/app_shell.dart`](../recipe_list/lib/ui/app_shell.dart)
+введён `_onTabTap(context, tab)`: если
+`tab == AppNavTab.favorites && !userLoggedInNotifier.value`,
+показываем тот же snackbar+action, что и раньше; иначе
+`navShell.goBranch(...)`.
+
+### 4. Тесты, упавшие после фикса №3
+
+`router_smoke_test.dart` и `router_branches_test.dart` тапали
+«Избранное» без авторизации — новый гард их блокировал. В обоих
+тестах теперь:
+
+```dart
+userLoggedInNotifier.value = true;
+addTearDown(() => userLoggedInNotifier.value = false);
+```
+
+### Add-FAB snackbar «hangs forever»
+
+В отчёте пользователя был четвёртый пункт — snackbar на add-FAB
+не дисмиссился. **Не воспроизводится** на текущей кодовой базе:
+per-branch `ScaffoldMessenger`, который ломал автодисмисс, был
+откачен в follow-up F (`3dd4308`). Сейчас snackbar-ы садятся на
+единственный корневой `ScaffoldMessenger` от `MaterialApp.router`
+поверх всегда-рисующегося `AppShell.Scaffold` — таймер на 4 с
+работает. Если ситуация повторится — нужно прислать конкретный
+текст snackbar-а и экран, чтобы копнуть глубже.
+
+### Тесты
+
+* `flutter analyze` — clean.
+* `flutter test` — 105 pass / 6 несвязанных fail (тот же baseline,
+  что был до follow-up-а).
+
+### Файлы
+
+* [recipe_list/lib/ui/recipe_list_loader.dart](../recipe_list/lib/ui/recipe_list_loader.dart)
+  — `_publishServices` обёрнут в `addPostFrameCallback`.
+* [recipe_list/lib/ui/login_page.dart](../recipe_list/lib/ui/login_page.dart)
+  — back-FAB c `canPop`-fallback.
+* [recipe_list/lib/ui/app_shell.dart](../recipe_list/lib/ui/app_shell.dart)
+  — `_onTabTap` + guest-gate snackbar.
+* [recipe_list/test/router_smoke_test.dart](../recipe_list/test/router_smoke_test.dart),
+  [recipe_list/test/router_branches_test.dart](../recipe_list/test/router_branches_test.dart)
+  — `userLoggedInNotifier` setup.
+
+### Урок
+
+При переносе виджета из одного места в другое нужно ехать вместе
+со всеми его побочными эффектами (auth-гарды, side-effects), а не
+только с визуальной частью. И любая мутация глобального
+`ValueNotifier` из `build`/`FutureBuilder.builder` — потенциальный
+`setState during build`; использовать `addPostFrameCallback`.
+
+---
+
 ## Refresh docs for go_router follow-up F
 
 **Date:** 2026-05-04

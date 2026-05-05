@@ -308,3 +308,106 @@ true)`, тикеры offstage-веток не пауз­ятся; default behavi
 * [recipe_list/lib/ui/splash_and_recipes.dart](../recipe_list/lib/ui/splash_and_recipes.dart)
   — переключение `bottomNavVisibleNotifier` в initState/restart/
   status-listener.
+
+---
+
+## Follow-up G (`3a07ab5`) — back-button серый экран, favorites guest-gate, setState-during-build
+
+После follow-up F ручной прогон на Android-эмуляторе вскрыл три
+бага и одно свежее исключение. Все четыре закоммичены вместе.
+
+### G.1 — `setState() called during build` на reload
+
+`_RecipeListLoaderState._publishServices(...)` писал в
+`appServicesNotifier.value` синхронно из `FutureBuilder.builder`.
+`ValueListenableBuilder<AppServices?>`-консьюмеры
+(`FavoritesBranchRoot`, page-builders для details/add) получали
+`notifyListeners` посреди билда родителя — Flutter валит ассерт.
+
+**Fix:** мутацию откладываем через
+`WidgetsBinding.instance.addPostFrameCallback`, в коллбэке делаем
+`mounted`-проверку и сравниваем `(api, repository)` с текущим
+значением, чтобы не публиковать одно и то же дважды.
+
+### G.2 — back с `LoginPage` ведёт на серый экран
+
+Login живёт на root-навигаторе через
+`parentNavigatorKey: rootNavigatorKey` (см. follow-up F).
+`Navigator.of(context).pop()` снимает оверлей, и go_router
+оказывается на `/profile`, у которого `builder` —
+`Scaffold(body: SizedBox.shrink())` (заглушка для родительского
+маршрута, рендер которого никогда не должен случиться).
+`_profileRedirect` срабатывает только при `router.refresh()`, а не
+при pop-е дочернего маршрута root-навигатора, — отсюда серый экран.
+
+**Fix:** в `LoginPage` back-FAB:
+
+```dart
+if (context.canPop()) {
+  context.pop();
+} else {
+  context.go(Routes.recipes);
+}
+```
+
+`SignupPage`/`PasswordRecoveryPage` не трогаем — они push-ятся
+поверх `LoginPage` на тот же root-Navigator, их `pop` возвращает
+на `LoginPage`, не на `/profile`.
+
+### G.3 — guest-gate «Избранного» потерян при переезде навбара
+
+[docs/login-auth.md](login-auth.md) §5 требует: гость, тапнувший
+по табу «Избранное», должен увидеть snackbar
+`favoritesRegistrationRequired` + экшен «Sign Up». Старая проверка
+жила в `RecipeListPage._onNavTap` (до рефакторинга навбар сидел
+там). Когда чанк A перенёс `AppBottomNavBar` в `AppShell`,
+визуальную часть мы перенесли, а условный гард забыли — таб стал
+открываться без всякой реакции.
+
+**Fix:** `AppShell._onTabTap(context, tab)` проверяет
+`tab == AppNavTab.favorites && !userLoggedInNotifier.value` и
+зовёт `_showFavoritesRegistrationRequired(context)` с тем же
+snackbar+action, что и heart-badge гард.
+
+### G.4 — обновлены два router-теста
+
+`router_smoke_test.dart` и `router_branches_test.dart` тапали
+«Избранное» без авторизации; новый гард их блокировал. В обоих
+тестах теперь:
+
+```dart
+userLoggedInNotifier.value = true;
+addTearDown(() => userLoggedInNotifier.value = false);
+```
+
+### Add-FAB snackbar «hangs forever»
+
+В bug-report-е был четвёртый пункт — snackbar на add-FAB не
+дисмиссится. **Не воспроизводится** в текущей кодовой базе:
+per-branch `ScaffoldMessenger`, ломавший автодисмисс, был откачен
+в follow-up F. Сейчас snackbar-ы садятся на единственный корневой
+`ScaffoldMessenger` от `MaterialApp.router` поверх
+всегда-рисующегося `AppShell.Scaffold` — таймер на 4 с работает.
+Если повторится — нужны конкретный текст snackbar-а и экран,
+чтобы копнуть глубже.
+
+### Файлы, затронутые follow-up-ом G
+
+* [recipe_list/lib/ui/recipe_list_loader.dart](../recipe_list/lib/ui/recipe_list_loader.dart)
+  — `_publishServices` обёрнут в `addPostFrameCallback`.
+* [recipe_list/lib/ui/login_page.dart](../recipe_list/lib/ui/login_page.dart)
+  — back-FAB через `canPop` + `context.go(Routes.recipes)`-fallback.
+* [recipe_list/lib/ui/app_shell.dart](../recipe_list/lib/ui/app_shell.dart)
+  — `_onTabTap` с guest-gate-ом + локальный `showSnackBar`-helper.
+* [recipe_list/test/router_smoke_test.dart](../recipe_list/test/router_smoke_test.dart),
+  [recipe_list/test/router_branches_test.dart](../recipe_list/test/router_branches_test.dart)
+  — `userLoggedInNotifier` setup перед тапом по «Избранному».
+
+### Урок
+
+При переносе виджета из одного места в другое нужно тащить вместе
+с ним все его побочные эффекты (auth-гарды, side-effects), а не
+только визуальную часть. И любая мутация глобального
+`ValueNotifier`-а внутри `build`/`FutureBuilder.builder` —
+потенциальный `setState during build`; использовать
+`addPostFrameCallback`.
