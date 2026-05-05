@@ -56,6 +56,27 @@ final GoRouter appRouter = GoRouter(
   ]),
   redirect: _profileRedirect,
   routes: <RouteBase>[
+    // ── todo/20 chunk D: locale-prefix routing ──
+    // Pre-rendered URLs из sitemap.xml вида `/<lang>/recipes/<id>`
+    // (а также `/<lang>/recipes`) перенаправляются внутрь SPA-shell.
+    // Локаль захватывается query-параметром `?lang=`, чтобы при
+    // желании UI смог её подхватить (LocaleManager уже умеет).
+    // Старые share-link'и `/recipes/details/<id>` остаются рабочими.
+    GoRoute(
+      path: '/:lang(${Routes.localePathPattern})/recipes/:id',
+      redirect: (context, state) {
+        final id = state.pathParameters['id'] ?? '';
+        final lang = state.pathParameters['lang'] ?? '';
+        return '${Routes.recipes}/details/$id?lang=$lang';
+      },
+    ),
+    GoRoute(
+      path: '/:lang(${Routes.localePathPattern})/recipes',
+      redirect: (context, state) {
+        final lang = state.pathParameters['lang'] ?? '';
+        return '${Routes.recipes}?lang=$lang';
+      },
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navShell) {
         return AppShell(navShell: navShell);

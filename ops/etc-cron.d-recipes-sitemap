@@ -1,0 +1,17 @@
+# /etc/cron.d/recipes-sitemap
+#
+# todo/20 chunk B — daily regeneration of per-recipe sitemap.xml.
+# Runs 30 minutes after recipes-backfill (05:30 UTC), so newly
+# fetched/updated rows are reflected in the same day.
+#
+# Install on the prod host:
+#   sudo install -o root -g root -m 0644 \
+#     ops/etc-cron.d-recipes-sitemap /etc/cron.d/recipes-sitemap
+#   sudo install -o root -g root -m 0750 \
+#     ops/build_recipe_sitemap.sh /root/build_recipe_sitemap.sh
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=ops@mahallem.ist
+
+0 6 * * * root /root/build_recipe_sitemap.sh >>/var/log/recipes_sitemap.log 2>&1

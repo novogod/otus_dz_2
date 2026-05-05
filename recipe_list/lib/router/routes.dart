@@ -78,4 +78,51 @@ abstract final class Routes {
     if (currentLocation.startsWith(favorites)) return favorites;
     return recipes;
   }
+
+  // ─── todo/20 chunk D: locale-prefix routing для SEO ───
+  //
+  // Pre-render (todo/20 chunk E) обслуживает Googlebot/FB на путях
+  // вида `/<lang>/recipes/<id>`. Для людей такие URL'ы попадают
+  // в SPA через top-level GoRoute, который редиректит на штатный
+  // `/recipes/details/<id>` (а локаль выставляется через query
+  // `?lang=<lang>`). Так старые share-link'и (`/recipes/details/<id>`)
+  // продолжают работать, а pre-rendered URL'ы из sitemap.xml
+  // (todo/20 chunk F) не возвращают 404.
+  //
+  // Список языков синхронизирован с `LocaleManager.supported`
+  // (см. `lib/i18n/locale_manager.dart` / `i18n.dart`).
+
+  /// Поддерживаемые локали в alphabetical-порядке. Используются
+  /// генератором sitemap'а и top-level redirect-роутом.
+  static const List<String> supportedLocales = <String>[
+    'ar',
+    'de',
+    'en',
+    'es',
+    'fa',
+    'fr',
+    'it',
+    'ku',
+    'ru',
+    'tr',
+  ];
+
+  /// Regex-альтернация для `GoRoute.path` (без скобок). Совпадает
+  /// с `supportedLocales`. Пример пути:
+  /// `'/:lang(${Routes.localePathPattern})/recipes/:id'`.
+  static const String localePathPattern =
+      r'ar|de|en|es|fa|fr|it|ku|ru|tr';
+
+  /// Канонический URL рецепта в локали `lang`. Используется
+  /// pre-renderer'ом и `<xhtml:link rel="alternate">` блоками
+  /// в sitemap.xml.
+  static String localizedRecipe(String lang, int id) =>
+      '/$lang/recipes/$id';
+
+  /// Канонический URL списка рецептов в локали `lang`.
+  static String localizedRecipes(String lang) => '/$lang/recipes';
+
+  /// True, если строка — поддерживаемая локаль (для guard'ов).
+  static bool isSupportedLocale(String lang) =>
+      supportedLocales.contains(lang);
 }

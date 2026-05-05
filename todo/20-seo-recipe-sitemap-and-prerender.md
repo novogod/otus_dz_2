@@ -1,6 +1,7 @@
 # 20 — Per-recipe SEO: dynamic sitemap + multi-locale pre-render
 
-> **Статус:** 🟡 не начато.
+> **Статус:** � Phase 1 готова в коде (чанки A, B, D); чанки C, E, F
+> требуют операционного доступа к проду и пока не выполнены.
 > **См.:** [docs/seo-recipe-sitemap-and-prerender.md](../docs/seo-recipe-sitemap-and-prerender.md), [docs/seo.md](../docs/seo.md).
 > **Приоритет:** P2 (рост органического трафика, корректные
 > share-card'ы для каждого рецепта).
