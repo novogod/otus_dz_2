@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,7 +18,32 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Otus Food — recipes from around the world. Browse, search, save and cook with step-by-step instructions.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <!-- ─── SEO: core meta ──────────────────────────────────────────
+       Distinct property from mahallem.ist (the parent portal). This
+       host (recipies.mahallem.ist) is its own SEO surface; Google
+       Search Console / Bing Webmaster / Yandex Webmaster all need
+       to be registered against THIS hostname separately. See
+       docs/seo.md.
+  -->
+  <title>Otus Food — recipes from around the world</title>
+  <meta name="description" content="Otus Food — free recipes from around the world. Browse, search, save and cook with step-by-step instructions, ingredient lists and a built-in shopping list. Available as a PWA.">
+  <meta name="keywords" content="recipes, cooking, food, world cuisine, step by step recipes, free recipes, meal ideas, otus food, recipies mahallem, mahallem food">
+  <meta name="author" content="Otus Food">
+  <meta name="application-name" content="Otus Food">
+  <meta name="theme-color" content="#2ECC71">
+  <meta name="color-scheme" content="light">
+
+  <!-- robots: allow indexing + large image previews in Google
+       results. max-snippet:-1 / max-video-preview:-1 are the
+       Google-recommended defaults that don't restrict the SERP. -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1">
+
+  <!-- Canonical: keep this in sync with og:url so social scrapers
+       and search engines agree on the primary URL. -->
+  <link rel="canonical" href="https://recipies.mahallem.ist/">
 
   <!-- Open Graph (Facebook, WhatsApp, VK, Telegram, LinkedIn, …) -->
   <meta property="og:type" content="website">
@@ -33,9 +58,19 @@
   <meta property="og:image:height" content="1024">
   <meta property="og:image:alt" content="Jerk chicken with rice and peas — Otus Food">
   <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ru_RU">
+  <meta property="og:locale:alternate" content="de_DE">
+  <meta property="og:locale:alternate" content="es_ES">
+  <meta property="og:locale:alternate" content="fr_FR">
+  <meta property="og:locale:alternate" content="it_IT">
+  <meta property="og:locale:alternate" content="tr_TR">
+  <meta property="og:locale:alternate" content="ar_AR">
+  <meta property="og:locale:alternate" content="fa_IR">
 
-  <!-- Twitter / X card (also picked up by some chat apps) -->
-  <meta name="twitter:card" content="summary">
+  <!-- Twitter / X card (also picked up by some chat apps).
+       summary_large_image renders the 1024×1024 og-image as a
+       hero card on X / Mastodon / Slack-link unfurl. -->
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Otus Food — recipes from around the world">
   <meta name="twitter:description" content="Browse, search and cook recipes from around the world. Step-by-step instructions, ingredients, comments.">
   <meta name="twitter:image" content="https://recipies.mahallem.ist/og-image.jpg">
@@ -43,6 +78,7 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Otus Food">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -50,7 +86,43 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>Otus Food — recipes from around the world</title>
+  <!-- Sitemap discovery hint (also referenced from robots.txt). -->
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+
+  <!-- ─── SEO: structured data (JSON-LD) ──────────────────────────
+       Google uses these to render rich results (sitelinks search
+       box, organization knowledge panel). Distinct @id from
+       mahallem.ist so Google treats this as its own entity.
+  -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://recipies.mahallem.ist/#website",
+        "url": "https://recipies.mahallem.ist/",
+        "name": "Otus Food",
+        "description": "Free recipes from around the world — browse, search, save and cook with step-by-step instructions.",
+        "inLanguage": ["en", "ru", "de", "es", "fr", "it", "tr", "ar", "fa", "ku"],
+        "publisher": { "@id": "https://recipies.mahallem.ist/#organization" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://recipies.mahallem.ist/#organization",
+        "name": "Otus Food",
+        "url": "https://recipies.mahallem.ist/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://recipies.mahallem.ist/icons/Icon-512.png",
+          "width": 512,
+          "height": 512
+        }
+      }
+    ]
+  }
+  </script>
+
   <link rel="manifest" href="manifest.json">
   <script>
     // Capture the PWA install prompt so Flutter can fire it later
