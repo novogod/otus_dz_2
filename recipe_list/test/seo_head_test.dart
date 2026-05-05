@@ -34,11 +34,7 @@ void main() {
   });
 
   test('RecipeSeo.toJson omits null and empty-list fields', () {
-    final seo = RecipeSeo(
-      id: 1,
-      locale: 'ru',
-      title: 'X',
-    );
+    final seo = RecipeSeo(id: 1, locale: 'ru', title: 'X');
     final m = seo.toJson();
     expect(m.containsKey('description'), false);
     expect(m.containsKey('image'), false);

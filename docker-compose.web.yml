@@ -43,6 +43,15 @@ services:
     networks:
       - default
       - mahallem
+    # Prerender hits https://recipies.mahallem.ist for the SPA so the
+    # SPA's XHR Origin matches the prod CORS allow-list. Docker's
+    # embedded DNS (127.0.0.11) can be flaky for the multi-network
+    # container layout we use here — pin the loopback to the Docker
+    # bridge gateway so traffic always lands on host nginx, which
+    # then UA-splits to flutter-web (the prerender's UA does NOT
+    # match the bot regex, so no recursion).
+    extra_hosts:
+      - "recipies.mahallem.ist:host-gateway"
     ports:
       # Host nginx UA-split routes to 8089.
       - "127.0.0.1:8089:8089"

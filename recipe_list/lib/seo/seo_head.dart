@@ -13,7 +13,8 @@
 // implementation in `seo_head_stub.dart`, web implementation in
 // `seo_head_web.dart`. Tests on the VM use the stub.
 import 'seo_head_stub.dart'
-    if (dart.library.js_interop) 'seo_head_web.dart' as impl;
+    if (dart.library.js_interop) 'seo_head_web.dart'
+    as impl;
 
 class RecipeSeo {
   final int id;
