@@ -364,7 +364,23 @@ class _LoginPageState extends State<LoginPage> {
                 focusElevation: 12,
                 hoverElevation: 14,
                 highlightElevation: 18,
-                onPressed: () => Navigator.of(context).pop(),
+                // LoginPage живёт на root-навигаторе как
+                // sub-route ветки `/profile` (см.
+                // `app_router.dart`, `parentNavigatorKey:
+                // rootNavigatorKey`). Просто `Navigator.pop`
+                // снял бы overlay-страницу, но go_router
+                // оставил бы текущий location на `/profile`,
+                // у которого builder — пустой `Scaffold` →
+                // пользователь видел бы серый экран. Поэтому
+                // если над shell нет ничего поп-ового, явно
+                // уезжаем обратно на ленту рецептов.
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(Routes.recipes);
+                  }
+                },
                 child: const Icon(Icons.chevron_left, size: 28),
               ),
               floatingActionButtonLocation:

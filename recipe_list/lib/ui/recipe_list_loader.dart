@@ -884,19 +884,30 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
 
   /// Публикуем актуальные `api`/`repository` в глобальный
   /// [appServicesNotifier] (см. `lib/data/app_services.dart`).
-  /// Делаем это в `build`, потому что репозиторий приходит
-  /// асинхронно через `_lastResult` — при первом успешном
-  /// раскладе он будет non-null. Шелл-роутинг (`AppShell` →
-  /// `FavoritesPage`/`RecipeDetailsPage`) живёт вне обычного
-  /// Navigator-стека и не может получить эти зависимости через
-  /// конструктор, поэтому забирает их из notifier.
+  /// Вызывается из `build()`, поэтому реальную запись в
+  /// `ValueNotifier` откладываем до конца кадра через
+  /// `addPostFrameCallback` — иначе слушатели нотифаера
+  /// (`ValueListenableBuilder<AppServices?>` в `_FavoritesBranchRoot`
+  /// и `RecipeDetailsPage`/`AddRecipePage` сборщиках) попытаются
+  /// перерендериться **во время** текущего билд-фрейма и
+  /// Flutter упадёт с `setState() called during build`. Шелл
+  /// живёт вне обычного Navigator-стека и не может получить
+  /// эти зависимости через конструктор, поэтому забирает их
+  /// из notifier.
   void _publishServices(RecipeRepository? repository) {
     final current = appServicesNotifier.value;
     final next = AppServices(api: widget.api, repository: repository);
     if (current?.api == next.api && current?.repository == next.repository) {
       return;
     }
-    appServicesNotifier.value = next;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Повторно сравниваем — пока кадр заканчивался, кто-то
+      // мог уже опубликовать тот же набор сервисов.
+      final now = appServicesNotifier.value;
+      if (now?.api == next.api && now?.repository == next.repository) return;
+      appServicesNotifier.value = next;
+    });
   }
 }
 

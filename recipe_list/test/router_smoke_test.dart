@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:recipe_list/auth/admin_session.dart' show userLoggedInNotifier;
 import 'package:recipe_list/i18n.dart';
 import 'package:recipe_list/i18n/strings.g.dart';
 import 'package:recipe_list/router/routes.dart';
@@ -106,6 +107,11 @@ void main() {
   });
 
   testWidgets('switching tabs through nav bar uses goBranch', (tester) async {
+    // Гость не может зайти в Favorites (см. AppShell гард,
+    // `docs/login-auth.md` §5). Симулируем залогиненную сессию,
+    // чтобы проверить именно работу goBranch.
+    userLoggedInNotifier.value = true;
+    addTearDown(() => userLoggedInNotifier.value = false);
     final router = _buildTestRouter();
     await tester.pumpWidget(_wrap(router));
     await tester.pump();
