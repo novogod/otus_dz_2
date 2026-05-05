@@ -146,21 +146,26 @@ class _ShareTarget {
 }
 
 Future<void> _onShareTap(BuildContext context) async {
-  // 1) On iOS/Android and on web browsers that expose navigator.share
-  //    (Android Chrome, iOS Safari, modern Edge, Win10+/macOS13+ Chrome)
-  //    let the OS render its native share sheet — that's what surfaces
-  //    every installed app (Instagram, WhatsApp, Messages, …).
-  if (!kIsWeb || canWebShareWeb()) {
+  // On native iOS/Android the system share sheet is reliable and
+  // surfaces every installed app, so we keep it there.
+  if (!kIsWeb) {
     await _systemShare();
     return;
   }
-  // 2) Otherwise (Linux Chrome, Firefox desktop, older Edge, …) the
-  //    Web Share API isn't available, so share_plus would silently
-  //    fall back to clipboard. Show our own dropdown of social-network
-  //    URL intents instead — each opens the corresponding network in
-  //    a new tab, pre-filled with the page link; previews render on
-  //    the recipient side from the og:image / og:title / og:description
-  //    meta tags in web/index.html.
+  // On web we ALWAYS show our own dropdown of social-network URL
+  // intents. Reasons:
+  //  1. navigator.share is missing on Linux Chrome, Firefox desktop,
+  //     older Edge and any non-https origin.
+  //  2. Even where it exists (Safari, Chrome on Win/macOS), the call
+  //     must run synchronously inside the original click event to
+  //     keep "transient user activation". Going through share_plus's
+  //     async chain can drop that activation, in which case Safari
+  //     and Chrome silently no-op and the user sees nothing happen.
+  // The dropdown entries are plain https deep-links, so they open
+  // the corresponding native app on mobile (WhatsApp/Telegram/…)
+  // and the network's web composer on desktop. Preview cards on the
+  // recipient side render from the og:image / og:title /
+  // og:description meta tags in web/index.html.
   await _showShareMenu(context);
 }
 
@@ -332,7 +337,17 @@ Future<void> _showIosInstallInstructions(BuildContext context) {
   return showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(s.pwaInstallTitle),
+      // 1px primary-green border around the whole modal, matching
+      // the rest of the app's accent colour. Default AlertDialog
+      // corner radius is 28.
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(28),
+        side: const BorderSide(color: AppColors.primary, width: 1),
+      ),
+      title: Text(
+        s.pwaInstallTitle,
+        style: const TextStyle(color: AppColors.textPrimary),
+      ),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,6 +399,7 @@ class _InstructionsBlock extends StatelessWidget {
           heading,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -393,8 +409,18 @@ class _InstructionsBlock extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('•  '),
-                Expanded(child: Text(step, style: theme.textTheme.bodyMedium)),
+                const Text(
+                  '•  ',
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
+                Expanded(
+                  child: Text(
+                    step,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
