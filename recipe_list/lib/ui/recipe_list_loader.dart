@@ -210,9 +210,16 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             // сброс делался только в `.then` / `.catchError`;
             // если `_runLoad` повисал на сетевом ожидании внутри
             // `_seedFromCategories`, спиннер крутился сколь угодно.
-            if (seq == _translateSeq) {
-              reloadingFeed.value = false;
-            }
+            //
+            // ВАЖНО: НЕ guard-ить по `seq == _translateSeq`. Если
+            // во время reload пользователь переключил язык или
+            // вернулся с details-page с deferred lang, _translateSeq
+            // продвинулся вперёд и stale-seq guard оставлял
+            // `reloadingFeed.value = true` навсегда — спиннер
+            // крутился, новых reload не начиналось (наблюдалось
+            // в installed-PWA). Состояние крутилки чисто UI'ное;
+            // безопасно гасить независимо от того, чей это future.
+            reloadingFeed.value = false;
           });
     });
   }
