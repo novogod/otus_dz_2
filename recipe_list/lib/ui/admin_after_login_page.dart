@@ -126,7 +126,13 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
     final s = S.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.adminPanelTitle, style: _titleStyle),
+        title: ValueListenableBuilder<bool>(
+          valueListenable: adminLoggedInNotifier,
+          builder: (context, isAdmin, _) => Text(
+            isAdmin ? s.adminPanelTitle : s.tabProfile,
+            style: _titleStyle,
+          ),
+        ),
         centerTitle: true,
       ),
       body: SafeArea(
