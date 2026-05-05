@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../auth/admin_session.dart' show userLoggedInNotifier;
+import '../auth/admin_session.dart'
+    show adminLoggedInNotifier, userLoggedInNotifier;
 import '../main.dart' show bottomNavVisibleNotifier;
 import 'app_bottom_nav_bar.dart';
 import 'registration_required_snackbar.dart';
@@ -43,12 +44,20 @@ class AppShell extends StatelessWidget {
           return ValueListenableBuilder<bool>(
             valueListenable: userLoggedInNotifier,
             builder: (context, userLoggedIn, _) {
-              if (onProfileBranch && !userLoggedIn) {
-                return const SizedBox.shrink();
-              }
-              return AppBottomNavBar(
-                current: tab,
-                onTap: (next) => _onTabTap(context, next),
+              return ValueListenableBuilder<bool>(
+                valueListenable: adminLoggedInNotifier,
+                builder: (context, adminLoggedIn, _) {
+                  // На ветке profile без авторизации показывается
+                  // LoginPage / SignUpPage / PasswordRecoveryPage —
+                  // они должны быть full-screen, без навбара.
+                  if (onProfileBranch && !userLoggedIn && !adminLoggedIn) {
+                    return const SizedBox.shrink();
+                  }
+                  return AppBottomNavBar(
+                    current: tab,
+                    onTap: (next) => _onTabTap(context, next),
+                  );
+                },
               );
             },
           );

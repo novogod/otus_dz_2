@@ -650,6 +650,7 @@ Future<PasswordResetResult> resetPasswordWithCode({
   required String code,
   required String newPassword,
   required String recoveryEmail,
+  String? sessionCookie,
 }) async {
   final normalizedCode = code.trim();
   if (!RegExp(r'^\d{4}$').hasMatch(normalizedCode)) {
@@ -673,17 +674,28 @@ Future<PasswordResetResult> resetPasswordWithCode({
   );
 
   try {
-    // Backend expects email, code, and newPassword in request body
-    // The backend uses email to validate the recovery session from /forgot-password
+    // Backend reads `email` from `req.session.resetPasswordEmail`
+    // (set by `/forgot-password`). The body field is unused —
+    // we MUST resend the Express session cookie captured from
+    // the forgot-password response, otherwise the server
+    // returns `auth.sessionExpired`. Email is still included
+    // in the body for forward-compat / logging.
     final requestData = {
       'code': normalizedCode,
       'newPassword': newPassword,
       'email': recoveryEmail,
     };
 
+    final headers = <String, String>{};
+    final cookie = sessionCookie?.trim();
+    if (cookie != null && cookie.isNotEmpty && cookie.contains('=')) {
+      headers['Cookie'] = cookie;
+    }
+
     final res = await dio.post<Map<String, dynamic>>(
       _normalizePath(_kAuthResetPasswordPath),
       data: requestData,
+      options: headers.isEmpty ? null : Options(headers: headers),
     );
     final status = res.statusCode ?? 0;
     final body = res.data;

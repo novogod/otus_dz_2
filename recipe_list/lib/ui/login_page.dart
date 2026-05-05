@@ -321,6 +321,7 @@ class _LoginPageState extends State<LoginPage> {
         final recoveredEmail = await openPasswordRecoveryPage(
           context,
           email: email,
+          sessionCookie: result.sessionCookie,
         );
         if (!mounted) return;
         if (recoveredEmail != null) {

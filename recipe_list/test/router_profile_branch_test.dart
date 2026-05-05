@@ -168,7 +168,8 @@ void main() {
       Routes.profileLogin,
     );
     expect(find.text('login-stub'), findsOneWidget);
-    expect(find.byType(AppBottomNavBar), findsOneWidget);
+    // Гость на ветке profile — навбар скрыт (LoginPage full-screen).
+    expect(find.byType(AppBottomNavBar), findsNothing);
   });
 
   testWidgets('tapping Profile while admin lands on /profile/admin', (

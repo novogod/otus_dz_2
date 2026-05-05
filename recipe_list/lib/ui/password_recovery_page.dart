@@ -13,13 +13,14 @@ import 'splash_page.dart';
 Future<String?> openPasswordRecoveryPage(
   BuildContext context, {
   required String email,
+  String? sessionCookie,
 }) {
   return Navigator.of(context).push<String>(
     PageRouteBuilder<String>(
       transitionDuration: AppDurations.splashTransition,
       reverseTransitionDuration: AppDurations.splashTransition,
       pageBuilder: (context, animation, secondaryAnimation) =>
-          PasswordRecoveryPage(email: email),
+          PasswordRecoveryPage(email: email, sessionCookie: sessionCookie),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final curved = CurvedAnimation(
           parent: animation,
@@ -37,8 +38,13 @@ Future<String?> openPasswordRecoveryPage(
 
 class PasswordRecoveryPage extends StatefulWidget {
   final String email;
+  final String? sessionCookie;
 
-  const PasswordRecoveryPage({super.key, required this.email});
+  const PasswordRecoveryPage({
+    super.key,
+    required this.email,
+    this.sessionCookie,
+  });
 
   @override
   State<PasswordRecoveryPage> createState() => _PasswordRecoveryPageState();
@@ -94,6 +100,7 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
       code: _codeController.text,
       newPassword: _newPasswordController.text,
       recoveryEmail: widget.email,
+      sessionCookie: widget.sessionCookie,
     );
     if (!mounted) return;
     setState(() => _busy = false);
