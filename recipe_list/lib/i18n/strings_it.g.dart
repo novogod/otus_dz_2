@@ -49,6 +49,10 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 	@override String get pwaInstallChromeStep2 => 'Tocca «Aggiungi a Home»';
 	@override String get pwaInstallChromeStep3 => 'Tocca «Aggiungi» per confermare';
 	@override String get pwaInstallGotIt => 'Ho capito';
+	@override String get shareTooltip => 'Condividi';
+	@override String get shareEmail => 'Email';
+	@override String get shareCopyLink => 'Copia link';
+	@override String get shareLinkCopied => 'Link copiato negli appunti';
 	@override String get back => 'Indietro';
 	@override String get dismiss => 'Ignora';
 	@override String get tabRecipes => 'Ricette';
@@ -186,6 +190,10 @@ extension on TranslationsIt {
 			'pwaInstallChromeStep2' => 'Tocca «Aggiungi a Home»',
 			'pwaInstallChromeStep3' => 'Tocca «Aggiungi» per confermare',
 			'pwaInstallGotIt' => 'Ho capito',
+			'shareTooltip' => 'Condividi',
+			'shareEmail' => 'Email',
+			'shareCopyLink' => 'Copia link',
+			'shareLinkCopied' => 'Link copiato negli appunti',
 			'back' => 'Indietro',
 			'dismiss' => 'Ignora',
 			'tabRecipes' => 'Ricette',

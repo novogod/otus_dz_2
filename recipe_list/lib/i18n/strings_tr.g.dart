@@ -49,6 +49,10 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get pwaInstallChromeStep2 => '«Ana Ekrana Ekle»\'ye dokunun';
 	@override String get pwaInstallChromeStep3 => 'Onaylamak için «Ekle»\'ye dokunun';
 	@override String get pwaInstallGotIt => 'Anladım';
+	@override String get shareTooltip => 'Paylaş';
+	@override String get shareEmail => 'E-posta';
+	@override String get shareCopyLink => 'Bağlantıyı kopyala';
+	@override String get shareLinkCopied => 'Bağlantı panoya kopyalandı';
 	@override String get back => 'Geri';
 	@override String get dismiss => 'Kapat';
 	@override String get tabRecipes => 'Tarifler';
@@ -186,6 +190,10 @@ extension on TranslationsTr {
 			'pwaInstallChromeStep2' => '«Ana Ekrana Ekle»\'ye dokunun',
 			'pwaInstallChromeStep3' => 'Onaylamak için «Ekle»\'ye dokunun',
 			'pwaInstallGotIt' => 'Anladım',
+			'shareTooltip' => 'Paylaş',
+			'shareEmail' => 'E-posta',
+			'shareCopyLink' => 'Bağlantıyı kopyala',
+			'shareLinkCopied' => 'Bağlantı panoya kopyalandı',
 			'back' => 'Geri',
 			'dismiss' => 'Kapat',
 			'tabRecipes' => 'Tarifler',

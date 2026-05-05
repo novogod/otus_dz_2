@@ -83,6 +83,18 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Got it'
 	String get pwaInstallGotIt => 'Got it';
 
+	/// en: 'Share'
+	String get shareTooltip => 'Share';
+
+	/// en: 'Email'
+	String get shareEmail => 'Email';
+
+	/// en: 'Copy link'
+	String get shareCopyLink => 'Copy link';
+
+	/// en: 'Link copied to clipboard'
+	String get shareLinkCopied => 'Link copied to clipboard';
+
 	/// en: 'Recipes'
 	String get tabRecipes => 'Recipes';
 
@@ -420,6 +432,10 @@ extension on Translations {
 			'pwaInstallChromeStep2' => 'Tap «Add to Home Screen»',
 			'pwaInstallChromeStep3' => 'Tap «Add» to confirm',
 			'pwaInstallGotIt' => 'Got it',
+			'shareTooltip' => 'Share',
+			'shareEmail' => 'Email',
+			'shareCopyLink' => 'Copy link',
+			'shareLinkCopied' => 'Link copied to clipboard',
 			'tabRecipes' => 'Recipes',
 			'tabFridge' => 'Fridge',
 			'tabFavorites' => 'Favorites',

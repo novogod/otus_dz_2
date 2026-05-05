@@ -49,6 +49,10 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get pwaInstallChromeStep2 => '«افزودن به صفحه خانه» را بزنید';
 	@override String get pwaInstallChromeStep3 => 'برای تأیید «افزودن» را بزنید';
 	@override String get pwaInstallGotIt => 'متوجه شدم';
+	@override String get shareTooltip => 'اشتراک‌گذاری';
+	@override String get shareEmail => 'ایمیل';
+	@override String get shareCopyLink => 'کپی لینک';
+	@override String get shareLinkCopied => 'لینک کپی شد';
 	@override String get back => 'بازگشت';
 	@override String get dismiss => 'بستن';
 	@override String get tabRecipes => 'دستور پخت‌ها';
@@ -186,6 +190,10 @@ extension on TranslationsFa {
 			'pwaInstallChromeStep2' => '«افزودن به صفحه خانه» را بزنید',
 			'pwaInstallChromeStep3' => 'برای تأیید «افزودن» را بزنید',
 			'pwaInstallGotIt' => 'متوجه شدم',
+			'shareTooltip' => 'اشتراک‌گذاری',
+			'shareEmail' => 'ایمیل',
+			'shareCopyLink' => 'کپی لینک',
+			'shareLinkCopied' => 'لینک کپی شد',
 			'back' => 'بازگشت',
 			'dismiss' => 'بستن',
 			'tabRecipes' => 'دستور پخت‌ها',

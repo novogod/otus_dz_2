@@ -17,6 +17,9 @@ external bool _jsIsIosBrowser();
 @JS('isPwaStandalone')
 external bool _jsIsPwaStandalone();
 
+@JS('canWebShare')
+external bool _jsCanWebShare();
+
 final ValueNotifier<bool> pwaInstallAvailable = ValueNotifier<bool>(false);
 
 Timer? _watcher;
@@ -59,6 +62,14 @@ bool isIosBrowserWeb() {
 bool isPwaStandaloneWeb() {
   try {
     return _jsIsPwaStandalone();
+  } catch (_) {
+    return false;
+  }
+}
+
+bool canWebShareWeb() {
+  try {
+    return _jsCanWebShare();
   } catch (_) {
     return false;
   }

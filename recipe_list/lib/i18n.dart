@@ -233,6 +233,10 @@ class S {
   String get pwaInstallChromeStep2 => _t.pwaInstallChromeStep2;
   String get pwaInstallChromeStep3 => _t.pwaInstallChromeStep3;
   String get pwaInstallGotIt => _t.pwaInstallGotIt;
+  String get shareTooltip => _t.shareTooltip;
+  String get shareEmail => _t.shareEmail;
+  String get shareCopyLink => _t.shareCopyLink;
+  String get shareLinkCopied => _t.shareLinkCopied;
 
   // Bottom navbar.
   String get tabRecipes => _t.tabRecipes;

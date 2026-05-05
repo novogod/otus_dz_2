@@ -49,6 +49,10 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get pwaInstallChromeStep2 => 'Wählen Sie «Zum Home-Bildschirm»';
 	@override String get pwaInstallChromeStep3 => 'Tippen Sie zur Bestätigung auf «Hinzufügen»';
 	@override String get pwaInstallGotIt => 'Verstanden';
+	@override String get shareTooltip => 'Teilen';
+	@override String get shareEmail => 'E-Mail';
+	@override String get shareCopyLink => 'Link kopieren';
+	@override String get shareLinkCopied => 'Link in die Zwischenablage kopiert';
 	@override String get back => 'Zurück';
 	@override String get dismiss => 'Schließen';
 	@override String get tabRecipes => 'Rezepte';
@@ -186,6 +190,10 @@ extension on TranslationsDe {
 			'pwaInstallChromeStep2' => 'Wählen Sie «Zum Home-Bildschirm»',
 			'pwaInstallChromeStep3' => 'Tippen Sie zur Bestätigung auf «Hinzufügen»',
 			'pwaInstallGotIt' => 'Verstanden',
+			'shareTooltip' => 'Teilen',
+			'shareEmail' => 'E-Mail',
+			'shareCopyLink' => 'Link kopieren',
+			'shareLinkCopied' => 'Link in die Zwischenablage kopiert',
 			'back' => 'Zurück',
 			'dismiss' => 'Schließen',
 			'tabRecipes' => 'Rezepte',

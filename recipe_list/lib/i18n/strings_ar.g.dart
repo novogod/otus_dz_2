@@ -49,6 +49,10 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get pwaInstallChromeStep2 => 'اضغط «إضافة إلى الشاشة الرئيسية»';
 	@override String get pwaInstallChromeStep3 => 'اضغط «إضافة» للتأكيد';
 	@override String get pwaInstallGotIt => 'فهمت';
+	@override String get shareTooltip => 'مشاركة';
+	@override String get shareEmail => 'بريد إلكتروني';
+	@override String get shareCopyLink => 'نسخ الرابط';
+	@override String get shareLinkCopied => 'تم نسخ الرابط';
 	@override String get back => 'رجوع';
 	@override String get dismiss => 'إغلاق';
 	@override String get tabRecipes => 'وصفات';
@@ -190,6 +194,10 @@ extension on TranslationsAr {
 			'pwaInstallChromeStep2' => 'اضغط «إضافة إلى الشاشة الرئيسية»',
 			'pwaInstallChromeStep3' => 'اضغط «إضافة» للتأكيد',
 			'pwaInstallGotIt' => 'فهمت',
+			'shareTooltip' => 'مشاركة',
+			'shareEmail' => 'بريد إلكتروني',
+			'shareCopyLink' => 'نسخ الرابط',
+			'shareLinkCopied' => 'تم نسخ الرابط',
 			'back' => 'رجوع',
 			'dismiss' => 'إغلاق',
 			'tabRecipes' => 'وصفات',

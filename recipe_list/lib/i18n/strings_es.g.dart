@@ -49,6 +49,10 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 	@override String get pwaInstallChromeStep2 => 'Pulsa «Añadir a pantalla de inicio»';
 	@override String get pwaInstallChromeStep3 => 'Pulsa «Añadir» para confirmar';
 	@override String get pwaInstallGotIt => 'Entendido';
+	@override String get shareTooltip => 'Compartir';
+	@override String get shareEmail => 'Correo';
+	@override String get shareCopyLink => 'Copiar enlace';
+	@override String get shareLinkCopied => 'Enlace copiado al portapapeles';
 	@override String get back => 'Atrás';
 	@override String get dismiss => 'Descartar';
 	@override String get tabRecipes => 'Recetas';
@@ -186,6 +190,10 @@ extension on TranslationsEs {
 			'pwaInstallChromeStep2' => 'Pulsa «Añadir a pantalla de inicio»',
 			'pwaInstallChromeStep3' => 'Pulsa «Añadir» para confirmar',
 			'pwaInstallGotIt' => 'Entendido',
+			'shareTooltip' => 'Compartir',
+			'shareEmail' => 'Correo',
+			'shareCopyLink' => 'Copiar enlace',
+			'shareLinkCopied' => 'Enlace copiado al portapapeles',
 			'back' => 'Atrás',
 			'dismiss' => 'Descartar',
 			'tabRecipes' => 'Recetas',

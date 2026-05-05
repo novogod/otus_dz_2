@@ -26,3 +26,8 @@ bool isIosBrowserWeb() => false;
 /// True when the page is already running as an installed PWA — in
 /// that case the install button must not surface.
 bool isPwaStandaloneWeb() => false;
+
+/// True when the browser exposes `navigator.share` (Web Share API).
+/// On non-web targets returns `true` because share_plus has a real
+/// platform sheet there.
+bool canWebShareWeb() => true;

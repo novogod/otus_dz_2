@@ -49,6 +49,10 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get pwaInstallChromeStep2 => 'Appuyez sur «Sur l\'écran d\'accueil»';
 	@override String get pwaInstallChromeStep3 => 'Appuyez sur «Ajouter» pour confirmer';
 	@override String get pwaInstallGotIt => 'Compris';
+	@override String get shareTooltip => 'Partager';
+	@override String get shareEmail => 'E-mail';
+	@override String get shareCopyLink => 'Copier le lien';
+	@override String get shareLinkCopied => 'Lien copié dans le presse-papiers';
 	@override String get back => 'Retour';
 	@override String get dismiss => 'Ignorer';
 	@override String get tabRecipes => 'Recettes';
@@ -186,6 +190,10 @@ extension on TranslationsFr {
 			'pwaInstallChromeStep2' => 'Appuyez sur «Sur l\'écran d\'accueil»',
 			'pwaInstallChromeStep3' => 'Appuyez sur «Ajouter» pour confirmer',
 			'pwaInstallGotIt' => 'Compris',
+			'shareTooltip' => 'Partager',
+			'shareEmail' => 'E-mail',
+			'shareCopyLink' => 'Copier le lien',
+			'shareLinkCopied' => 'Lien copié dans le presse-papiers',
 			'back' => 'Retour',
 			'dismiss' => 'Ignorer',
 			'tabRecipes' => 'Recettes',

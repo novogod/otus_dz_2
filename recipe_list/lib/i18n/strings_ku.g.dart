@@ -49,6 +49,10 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get pwaInstallChromeStep2 => '«زیادکردن بۆ شاشەی سەرەکی» دابگرە';
 	@override String get pwaInstallChromeStep3 => 'بۆ پشتڕاستکردنەوە «زیادکردن» دابگرە';
 	@override String get pwaInstallGotIt => 'تێگەیشتم';
+	@override String get shareTooltip => 'هاوبەشکردن';
+	@override String get shareEmail => 'ئیمێڵ';
+	@override String get shareCopyLink => 'لێبگرەی بەستەر';
+	@override String get shareLinkCopied => 'بەستەر لێدرا';
 	@override String get back => 'گەڕانەوە';
 	@override String get dismiss => 'ڕەتکردنەوە';
 	@override String get tabRecipes => 'ڕێچەتەکان';
@@ -186,6 +190,10 @@ extension on TranslationsKu {
 			'pwaInstallChromeStep2' => '«زیادکردن بۆ شاشەی سەرەکی» دابگرە',
 			'pwaInstallChromeStep3' => 'بۆ پشتڕاستکردنەوە «زیادکردن» دابگرە',
 			'pwaInstallGotIt' => 'تێگەیشتم',
+			'shareTooltip' => 'هاوبەشکردن',
+			'shareEmail' => 'ئیمێڵ',
+			'shareCopyLink' => 'لێبگرەی بەستەر',
+			'shareLinkCopied' => 'بەستەر لێدرا',
 			'back' => 'گەڕانەوە',
 			'dismiss' => 'ڕەتکردنەوە',
 			'tabRecipes' => 'ڕێچەتەکان',

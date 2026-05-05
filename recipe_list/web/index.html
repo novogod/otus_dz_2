@@ -106,6 +106,16 @@
       } catch (_) {}
       return false;
     };
+    // True when the browser exposes the Web Share API. Used to
+    // decide between the native share sheet (share_plus) and a
+    // dropdown of social-network URL intents (Linux Chrome,
+    // Firefox desktop, older Edge, etc.).
+    window.canWebShare = function () {
+      try {
+        return typeof navigator !== 'undefined' &&
+          typeof navigator.share === 'function';
+      } catch (_) { return false; }
+    };
   </script>
 </head>
 <body>

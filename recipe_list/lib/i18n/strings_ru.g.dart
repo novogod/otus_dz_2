@@ -51,6 +51,10 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get pwaInstallChromeStep2 => 'Выберите «На экран Домой»';
 	@override String get pwaInstallChromeStep3 => 'Нажмите «Добавить» для подтверждения';
 	@override String get pwaInstallGotIt => 'Понятно';
+	@override String get shareTooltip => 'Поделиться';
+	@override String get shareEmail => 'Эл. почта';
+	@override String get shareCopyLink => 'Копировать ссылку';
+	@override String get shareLinkCopied => 'Ссылка скопирована';
 	@override String get tabRecipes => 'Рецепты';
 	@override String get tabFridge => 'Холодильник';
 	@override String get tabFavorites => 'Избранное';
@@ -190,6 +194,10 @@ extension on TranslationsRu {
 			'pwaInstallChromeStep2' => 'Выберите «На экран Домой»',
 			'pwaInstallChromeStep3' => 'Нажмите «Добавить» для подтверждения',
 			'pwaInstallGotIt' => 'Понятно',
+			'shareTooltip' => 'Поделиться',
+			'shareEmail' => 'Эл. почта',
+			'shareCopyLink' => 'Копировать ссылку',
+			'shareLinkCopied' => 'Ссылка скопирована',
 			'tabRecipes' => 'Рецепты',
 			'tabFridge' => 'Холодильник',
 			'tabFavorites' => 'Избранное',
