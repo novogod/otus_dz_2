@@ -25,12 +25,17 @@ services:
       - PORT=8089
       - SPA_ORIGIN=http://recipe_list_web
       # The recipes API lives in the mahallem-user-portal stack on the
-      # shared docker bridge. Hardcoded internal IP per memory/repo
-      # prod-access.md; override via env if the stack moves.
-      - RECIPES_API_BASE=http://172.25.0.41:4000
+      # `local_docker_admin_backend_mahallem_network` bridge. We attach
+      # to that bridge below so the in-container hostname
+      # `mahallem-user-portal:4000` resolves; the bare-IP fallback
+      # documented in memory/repo prod-access.md works too.
+      - RECIPES_API_BASE=http://mahallem-user-portal:4000
       - CACHE_DIR=/var/cache/prerender
     volumes:
       - prerender_cache:/var/cache/prerender
+    networks:
+      - default
+      - mahallem
     ports:
       # Host nginx UA-split routes to 8089.
       - "127.0.0.1:8089:8089"
@@ -39,3 +44,9 @@ services:
 volumes:
   prerender_cache:
     name: recipe_list_prerender_cache
+
+networks:
+  default:
+  mahallem:
+    name: local_docker_admin_backend_mahallem_network
+    external: true
