@@ -80,6 +80,10 @@ class WebActionButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!kIsWeb) return const SizedBox.shrink();
+    // Hide on phone-sized viewports (both narrow web layouts and
+    // phone-sized PWA installs). Tablets and desktops keep the row.
+    final shortestSide = MediaQuery.of(context).size.shortestSide;
+    if (shortestSide < 600) return const SizedBox.shrink();
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
