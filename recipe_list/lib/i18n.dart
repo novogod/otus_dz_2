@@ -278,6 +278,10 @@ class S {
   // Card ingredient count (CLDR plural).
   String ingredientCount(int n) => _t.ingredientCount(n: n);
 
+  // "Added by" footer (chunk F of user-card-and-social-signals).
+  String get recipeAddedByPrefix => _t.recipeAddedByPrefix;
+  String recipeAuthorRecipes(int n) => _t.recipeAuthorRecipes(n: n);
+
   // Accessibility labels.
   String switchLanguageTo(String label) =>
       _t.a11y.switchLanguageTo(label: label);

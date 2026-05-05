@@ -832,23 +832,29 @@ unused.
 recipes (id ≥ 1_000_000); recipe card chip is behind a feature flag
 (off by default).
 
-**Status:** ⬜
+**Status:** 🟡 partially landed — `AddedByRow` widget + details
+wiring shipped (commit pending). Card chip and `recipe_creator_cache`
+TTL reads/writes deferred to a follow-up since they aren't on any
+critical path until backend chunk C lands.
 
-**Prereqs:** Chunk E (model fields).
+**Prereqs:** Chunk E (model fields). ✅
 
 **Code TODO**
 
-- ⬜ Create `recipe_list/lib/ui/social/added_by_row.dart`:
-  - stateless, props `(name, avatarPath, recipesAdded)`.
-  - 64×64 imgproxy avatar, name + count text.
-  - hidden completely if `name == null`.
-- ⬜ Render in `recipe_details_page.dart` only when
-  `recipe.id >= 1_000_000`. Below ingredients, above instructions.
-- ⬜ Add `bool showCreatorChip` to `RecipeCard`, default `false`;
-  when true and `recipe.id >= 1_000_000`, render a tiny chip below
-  the title. Off everywhere by default.
-- ⬜ i18n keys per §3.4.
+- ✅ Create
+  [recipe_list/lib/ui/social/added_by_row.dart](../recipe_list/lib/ui/social/added_by_row.dart):
+  stateless, props `(name, avatarPath, recipesAdded)`, 64×64 imgproxy
+  avatar, hidden completely when `name == null`.
+- ✅ Render in `recipe_details_page.dart` only when
+  `recipe.id >= 1_000_000` AND `creatorDisplayName != null`. Below
+  ingredients, above instructions.
+- ⬜ Add `bool showCreatorChip` to `RecipeCard` (default `false`).
+  Deferred — no UI surface uses it yet.
 - ⬜ Cache reads/writes via `recipe_creator_cache` (Chunk B).
+  Deferred — server projects creator on every list fetch already,
+  per chunk C plan.
+- ✅ i18n keys per §3.4: `recipeAddedByPrefix`, `recipeAuthorRecipes`
+  added to all 10 locale JSONs and regenerated via `dart run slang`.
 
 **Tests**
 

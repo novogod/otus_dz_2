@@ -117,6 +117,11 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchClear => 'Löschen';
 	@override String get searchNoMatches => 'Keine Treffer';
 	@override String get favoritesEmpty => 'Noch keine Favoriten';
+	@override String get recipeAddedByPrefix => 'von';
+	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n,
+		one: '${n} Rezept',
+		other: '${n} Rezepte',
+	);
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n,
 		one: '${n} Zutat',
 		other: '${n} Zutaten',
@@ -258,6 +263,8 @@ extension on TranslationsDe {
 			'searchClear' => 'Löschen',
 			'searchNoMatches' => 'Keine Treffer',
 			'favoritesEmpty' => 'Noch keine Favoriten',
+			'recipeAddedByPrefix' => 'von',
+			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n, one: '${n} Rezept', other: '${n} Rezepte', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n, one: '${n} Zutat', other: '${n} Zutaten', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Sprache wechseln zu ${label}',
 			'a11y.reloadFeed' => 'Liste aktualisieren',

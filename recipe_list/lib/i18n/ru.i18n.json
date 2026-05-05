@@ -79,6 +79,13 @@
   "searchClear": "Очистить",
   "searchNoMatches": "Совпадений не найдено",
   "favoritesEmpty": "Пока ничего не добавлено",
+  "recipeAddedByPrefix": "автор",
+  "recipeAuthorRecipes": {
+    "one": "${n} рецепт",
+    "few": "${n} рецепта",
+    "many": "${n} рецептов",
+    "other": "${n} рецепта"
+  },
   "ingredientCount": {
     "one": "${n} ингредиент",
     "few": "${n} ингредиента",

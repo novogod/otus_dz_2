@@ -29,8 +29,7 @@ const _full = <String, dynamic>{
 const _lite = <String, dynamic>{
   'idMeal': '52959',
   'strMeal': 'Baked salmon with fennel & tomatoes',
-  'strMealThumb':
-      'https://www.themealdb.com/images/media/meals/1548772327.jpg',
+  'strMealThumb': 'https://www.themealdb.com/images/media/meals/1548772327.jpg',
 };
 
 void main() {
@@ -154,18 +153,8 @@ void main() {
     });
 
     test('equality factors in social fields', () {
-      const a = Recipe(
-        id: 1,
-        name: 'A',
-        photo: 'x',
-        favoritesCount: 5,
-      );
-      const b = Recipe(
-        id: 1,
-        name: 'A',
-        photo: 'x',
-        favoritesCount: 6,
-      );
+      const a = Recipe(id: 1, name: 'A', photo: 'x', favoritesCount: 5);
+      const b = Recipe(id: 1, name: 'A', photo: 'x', favoritesCount: 6);
       expect(a == b, isFalse);
       expect(a.hashCode == b.hashCode, isFalse);
     });

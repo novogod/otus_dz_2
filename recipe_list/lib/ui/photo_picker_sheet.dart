@@ -39,22 +39,17 @@ Future<PhotoPickerAction?> showPhotoPickerSheet(
                 AppSpacing.lg,
                 AppSpacing.sm,
               ),
-              child: Text(
-                title,
-                style: Theme.of(ctx).textTheme.titleMedium,
-              ),
+              child: Text(title, style: Theme.of(ctx).textTheme.titleMedium),
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera),
               title: Text(cameraLabel),
-              onTap: () =>
-                  Navigator.of(ctx).pop(PhotoPickerAction.camera),
+              onTap: () => Navigator.of(ctx).pop(PhotoPickerAction.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
               title: Text(galleryLabel),
-              onTap: () =>
-                  Navigator.of(ctx).pop(PhotoPickerAction.gallery),
+              onTap: () => Navigator.of(ctx).pop(PhotoPickerAction.gallery),
             ),
             if (removeLabel != null)
               ListTile(
@@ -63,8 +58,7 @@ Future<PhotoPickerAction?> showPhotoPickerSheet(
                   color: AppColors.primaryDark,
                 ),
                 title: Text(removeLabel),
-                onTap: () =>
-                    Navigator.of(ctx).pop(PhotoPickerAction.remove),
+                onTap: () => Navigator.of(ctx).pop(PhotoPickerAction.remove),
               ),
             const SizedBox(height: AppSpacing.sm),
           ],
@@ -119,8 +113,7 @@ Future<PickedPhoto?> pickAndCompressPhoto({
     return PickedPhoto(bytes: bytes, filename: name);
   } on PlatformException catch (e) {
     final code = e.code.toLowerCase();
-    final kind =
-        (code.contains('access_denied') || code.contains('permission'))
+    final kind = (code.contains('access_denied') || code.contains('permission'))
         ? PhotoPickError.accessDenied
         : PhotoPickError.generic;
     onError?.call(kind);

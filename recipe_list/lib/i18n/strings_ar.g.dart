@@ -117,6 +117,11 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchClear => 'مسح';
 	@override String get searchNoMatches => 'لا توجد نتائج مطابقة';
 	@override String get favoritesEmpty => 'لا توجد مفضلات بعد';
+	@override String get recipeAddedByPrefix => 'بواسطة';
+	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n,
+		one: '${n} وصفة',
+		other: '${n} وصفات',
+	);
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n,
 		zero: '${n} مكون',
 		one: '${n} مكون',
@@ -262,6 +267,8 @@ extension on TranslationsAr {
 			'searchClear' => 'مسح',
 			'searchNoMatches' => 'لا توجد نتائج مطابقة',
 			'favoritesEmpty' => 'لا توجد مفضلات بعد',
+			'recipeAddedByPrefix' => 'بواسطة',
+			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, one: '${n} وصفة', other: '${n} وصفات', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, zero: '${n} مكون', one: '${n} مكون', two: '${n} مكونان', few: '${n} مكونات', many: '${n} مكوناً', other: '${n} مكون', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'تغيير اللغة إلى ${label}',
 			'a11y.reloadFeed' => 'إعادة تحميل القائمة',

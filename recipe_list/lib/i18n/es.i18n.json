@@ -79,6 +79,11 @@
   "searchClear": "Limpiar",
   "searchNoMatches": "No hay coincidencias",
   "favoritesEmpty": "Aún no hay favoritos",
+  "recipeAddedByPrefix": "por",
+  "recipeAuthorRecipes": {
+    "one": "${n} receta",
+    "other": "${n} recetas"
+  },
   "ingredientCount": {
     "one": "${n} ingrediente",
     "other": "${n} ingredientes"

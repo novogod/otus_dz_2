@@ -117,6 +117,11 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchClear => 'پاککردنەوە';
 	@override String get searchNoMatches => 'هیچ گونجاوێک نییە';
 	@override String get favoritesEmpty => 'هێشتا هیچ بەدڵبووەکێک نییە';
+	@override String get recipeAddedByPrefix => 'لە لایەن';
+	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n,
+		one: '${n} ڕێسا',
+		other: '${n} ڕێسا',
+	);
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n,
 		one: '${n} پێکهاتە',
 		other: '${n} پێکهاتە',
@@ -258,6 +263,8 @@ extension on TranslationsKu {
 			'searchClear' => 'پاککردنەوە',
 			'searchNoMatches' => 'هیچ گونجاوێک نییە',
 			'favoritesEmpty' => 'هێشتا هیچ بەدڵبووەکێک نییە',
+			'recipeAddedByPrefix' => 'لە لایەن',
+			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n, one: '${n} ڕێسا', other: '${n} ڕێسا', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n, one: '${n} پێکهاتە', other: '${n} پێکهاتە', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'گۆڕینی زمان بۆ ${label}',
 			'a11y.reloadFeed' => 'نوێکردنەوەی لیست',

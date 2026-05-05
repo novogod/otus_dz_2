@@ -79,6 +79,11 @@
   "searchClear": "پاک کردن",
   "searchNoMatches": "موردی یافت نشد",
   "favoritesEmpty": "هنوز موردی به علاقه‌مندی‌ها افزوده نشده",
+  "recipeAddedByPrefix": "توسط",
+  "recipeAuthorRecipes": {
+    "one": "${n} دستور پخت",
+    "other": "${n} دستور پخت"
+  },
   "ingredientCount": {
     "one": "${n} ماده اولیه",
     "other": "${n} ماده اولیه"

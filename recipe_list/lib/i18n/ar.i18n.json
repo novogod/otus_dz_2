@@ -79,6 +79,11 @@
   "searchClear": "مسح",
   "searchNoMatches": "لا توجد نتائج مطابقة",
   "favoritesEmpty": "لا توجد مفضلات بعد",
+  "recipeAddedByPrefix": "بواسطة",
+  "recipeAuthorRecipes": {
+    "one": "${n} وصفة",
+    "other": "${n} وصفات"
+  },
   "ingredientCount": {
     "zero": "${n} مكون",
     "one": "${n} مكون",

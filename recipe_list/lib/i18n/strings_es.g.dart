@@ -117,6 +117,11 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchClear => 'Limpiar';
 	@override String get searchNoMatches => 'No hay coincidencias';
 	@override String get favoritesEmpty => 'Aún no hay favoritos';
+	@override String get recipeAddedByPrefix => 'por';
+	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n,
+		one: '${n} receta',
+		other: '${n} recetas',
+	);
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n,
 		one: '${n} ingrediente',
 		other: '${n} ingredientes',
@@ -258,6 +263,8 @@ extension on TranslationsEs {
 			'searchClear' => 'Limpiar',
 			'searchNoMatches' => 'No hay coincidencias',
 			'favoritesEmpty' => 'Aún no hay favoritos',
+			'recipeAddedByPrefix' => 'por',
+			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '${n} receta', other: '${n} recetas', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '${n} ingrediente', other: '${n} ingredientes', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Cambiar idioma a ${label}',
 			'a11y.reloadFeed' => 'Recargar lista',

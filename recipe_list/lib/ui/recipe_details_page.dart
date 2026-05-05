@@ -17,6 +17,7 @@ import '../utils/imgproxy.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
 import 'recipe_card.dart' show FavoriteBadge;
+import 'social/added_by_row.dart';
 
 /// Глобальный счётчик активных страниц деталей рецепта.
 ///
@@ -328,6 +329,23 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                         ),
                         const SizedBox(height: AppSpacing.md),
                         _IngredientsBlock(items: recipe.ingredients),
+                      ],
+                      // chunk F of user-card-and-social-signals.md:
+                      // "Added by" footer is shown only for
+                      // user-uploaded recipes (id ≥ 1_000_000) AND
+                      // when the server has projected creator
+                      // metadata. The widget itself returns
+                      // SizedBox.shrink when name is null, but we
+                      // also gate by id so TheMealDB recipes never
+                      // attempt to render a non-existent author.
+                      if (recipe.id >= 1000000 &&
+                          recipe.creatorDisplayName != null) ...[
+                        const SizedBox(height: AppSpacing.xl),
+                        AddedByRow(
+                          name: recipe.creatorDisplayName,
+                          avatarPath: recipe.creatorAvatarPath,
+                          recipesAdded: recipe.creatorRecipesAdded,
+                        ),
                       ],
                       if (recipe.instructions != null) ...[
                         const SizedBox(height: AppSpacing.xl),

@@ -281,6 +281,15 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'No favorites yet'
 	String get favoritesEmpty => 'No favorites yet';
 
+	/// en: 'by'
+	String get recipeAddedByPrefix => 'by';
+
+	/// en: '(one) {${n} recipe} (other) {${n} recipes}'
+	String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n,
+		one: '${n} recipe',
+		other: '${n} recipes',
+	);
+
 	/// en: '(one) {${n} ingredient} (other) {${n} ingredients}'
 	String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n,
 		one: '${n} ingredient',
@@ -498,6 +507,8 @@ extension on Translations {
 			'searchClear' => 'Clear',
 			'searchNoMatches' => 'No matches',
 			'favoritesEmpty' => 'No favorites yet',
+			'recipeAddedByPrefix' => 'by',
+			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '${n} recipe', other: '${n} recipes', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '${n} ingredient', other: '${n} ingredients', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Switch language to ${label}',
 			'a11y.flagOf' => ({required Object label}) => '${label} flag',

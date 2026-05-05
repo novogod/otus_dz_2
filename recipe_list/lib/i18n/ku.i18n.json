@@ -79,6 +79,11 @@
   "searchClear": "پاککردنەوە",
   "searchNoMatches": "هیچ گونجاوێک نییە",
   "favoritesEmpty": "هێشتا هیچ بەدڵبووەکێک نییە",
+  "recipeAddedByPrefix": "لە لایەن",
+  "recipeAuthorRecipes": {
+    "one": "${n} ڕێسا",
+    "other": "${n} ڕێسا"
+  },
   "ingredientCount": {
     "one": "${n} پێکهاتە",
     "other": "${n} پێکهاتە"

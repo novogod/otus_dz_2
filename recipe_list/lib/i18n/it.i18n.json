@@ -79,6 +79,11 @@
   "searchClear": "Cancella",
   "searchNoMatches": "Nessun risultato",
   "favoritesEmpty": "Ancora nessun preferito",
+  "recipeAddedByPrefix": "da",
+  "recipeAuthorRecipes": {
+    "one": "${n} ricetta",
+    "other": "${n} ricette"
+  },
   "ingredientCount": {
     "one": "${n} ingrediente",
     "other": "${n} ingredienti"
