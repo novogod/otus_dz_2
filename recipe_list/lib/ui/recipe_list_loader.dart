@@ -616,8 +616,22 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             await _persist(repo, page.recipes, lang);
             return _LoadResult(recipes: page.recipes, repository: repo);
           }
-        } on Object {
+          // Empty page — log so we don't silently drop into the slow
+          // 14-category fan-out fallback for languages that secretly
+          // serve empty results.
+          debugPrint(
+            '[recipe-list] /recipes/page returned empty for lang=$lang '
+            '(seedTarget=${widget.config.seedTarget}); '
+            'falling back to category fan-out',
+          );
+        } on Object catch (e, st) {
           // Bulk endpoint unavailable — fall through to legacy path.
+          // Log the error so production regressions (e.g. 504s, TLS
+          // failures, schema drift) are visible in the browser console
+          // instead of being swallowed.
+          debugPrint(
+            '[recipe-list] /recipes/page failed for lang=$lang: $e\n$st',
+          );
         }
       }
       final recipes = await _seedFromCategories(
