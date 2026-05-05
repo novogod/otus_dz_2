@@ -167,10 +167,16 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: kSplashGradient),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-            child: Center(
+          child: Center(
+            child: ConstrainedBox(
+              // Cap the auth-form column at a phone-vertical width so
+              // it never stretches edge-to-edge on iPad horizontal /
+              // desktop. On narrow phones the ConstrainedBox is a
+              // no-op and the form still respects the symmetric `xl`
+              // gutters.
+              constraints: const BoxConstraints(maxWidth: kAuthFormMaxWidth),
               child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -199,73 +205,70 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
                     const SizedBox(height: AppSpacing.lg),
                     Form(
                       key: _formKey,
-                      child: SizedBox(
-                        width: 320,
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: _codeController,
-                              keyboardType: TextInputType.number,
-                              maxLength: 4,
-                              textInputAction: TextInputAction.next,
-                              decoration: InputDecoration(
-                                labelText: s.passwordRecoveryCodeLabel,
-                                hintText: s.passwordRecoveryCodeHint,
-                                fillColor: AppColors.surface,
-                                counterText: '',
-                              ),
-                              validator: (v) {
-                                final value = (v ?? '').trim();
-                                if (!RegExp(r'^\d{4}$').hasMatch(value)) {
-                                  return s.passwordRecoveryInvalidCode;
-                                }
-                                return null;
-                              },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextFormField(
+                            controller: _codeController,
+                            keyboardType: TextInputType.number,
+                            maxLength: 4,
+                            textInputAction: TextInputAction.next,
+                            decoration: InputDecoration(
+                              labelText: s.passwordRecoveryCodeLabel,
+                              hintText: s.passwordRecoveryCodeHint,
+                              fillColor: AppColors.surface,
+                              counterText: '',
                             ),
-                            const SizedBox(height: AppSpacing.md),
-                            TextFormField(
-                              controller: _newPasswordController,
-                              obscureText: _obscurePassword,
-                              textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (_) => _submit(),
-                              decoration: InputDecoration(
-                                labelText: s.passwordRecoveryNewPassword,
-                                fillColor: AppColors.surface,
-                                suffixIcon: IconButton(
-                                  onPressed: () {
-                                    setState(
-                                      () =>
-                                          _obscurePassword = !_obscurePassword,
-                                    );
-                                  },
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                  ),
+                            validator: (v) {
+                              final value = (v ?? '').trim();
+                              if (!RegExp(r'^\d{4}$').hasMatch(value)) {
+                                return s.passwordRecoveryInvalidCode;
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: _newPasswordController,
+                            obscureText: _obscurePassword,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => _submit(),
+                            decoration: InputDecoration(
+                              labelText: s.passwordRecoveryNewPassword,
+                              fillColor: AppColors.surface,
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  );
+                                },
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
                               ),
-                              validator: (v) {
-                                if ((v ?? '').length < 6) {
-                                  return s.passwordRecoveryPasswordTooShort;
-                                }
-                                return null;
-                              },
                             ),
-                            const SizedBox(height: AppSpacing.lg),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.primaryDark,
-                                  minimumSize: const Size(double.infinity, 67),
-                                ),
-                                onPressed: _busy ? null : _submit,
-                                child: Text(s.passwordRecoverySubmit),
+                            validator: (v) {
+                              if ((v ?? '').length < 6) {
+                                return s.passwordRecoveryPasswordTooShort;
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primaryDark,
+                                minimumSize: const Size(double.infinity, 67),
                               ),
+                              onPressed: _busy ? null : _submit,
+                              child: Text(s.passwordRecoverySubmit),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
