@@ -64,7 +64,7 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get loginInvalidCredentials => 'اسم المستخدم أو كلمة المرور غير صحيحة';
 	@override String get loginSuccessAdmin => 'تم تفعيل وضع المسؤول';
 	@override String get loginSuccessUser => 'تم تسجيل الدخول بنجاح';
-	@override String get favoritesRegistrationRequired => 'التسجيل مطلوب لهذه الميزة، يرجى الضغط على زر Sign Up';
+	@override String favoritesRegistrationRequired({required Object button}) => 'التسجيل مطلوب لهذه الميزة، يرجى الضغط على زر ${button}';
 	@override String get forgotPassword => 'نسيت كلمة المرور';
 	@override String get passwordRecoveryTitle => 'استعادة كلمة المرور';
 	@override String get passwordRecoveryInstruction => 'أدخل رمز الاستعادة المكوّن من 4 أرقام من بريدك الإلكتروني';
@@ -194,7 +194,7 @@ extension on TranslationsAr {
 			'loginInvalidCredentials' => 'اسم المستخدم أو كلمة المرور غير صحيحة',
 			'loginSuccessAdmin' => 'تم تفعيل وضع المسؤول',
 			'loginSuccessUser' => 'تم تسجيل الدخول بنجاح',
-			'favoritesRegistrationRequired' => 'التسجيل مطلوب لهذه الميزة، يرجى الضغط على زر Sign Up',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'التسجيل مطلوب لهذه الميزة، يرجى الضغط على زر ${button}',
 			'forgotPassword' => 'نسيت كلمة المرور',
 			'passwordRecoveryTitle' => 'استعادة كلمة المرور',
 			'passwordRecoveryInstruction' => 'أدخل رمز الاستعادة المكوّن من 4 أرقام من بريدك الإلكتروني',

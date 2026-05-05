@@ -64,7 +64,7 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get loginInvalidCredentials => 'ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە';
 	@override String get loginSuccessAdmin => 'دۆخی ئەدمین چالاک کرا';
 	@override String get loginSuccessUser => 'چوونەژوورەوە سەرکەوتوو بوو';
-	@override String get favoritesRegistrationRequired => 'بۆ ئەم تایبەتمەندییە تۆمارکردن پێویستە، تکایە دوگمەی Sign Up دابگرە';
+	@override String favoritesRegistrationRequired({required Object button}) => 'بۆ ئەم تایبەتمەندییە تۆمارکردن پێویستە، تکایە دوگمەی ${button} دابگرە';
 	@override String get forgotPassword => 'وشەی نهێنیم لەبیر چووە';
 	@override String get passwordRecoveryTitle => 'گەڕاندنەوەی وشەی نهێنی';
 	@override String get passwordRecoveryInstruction => 'کۆدی ٤ ژمارەیی گەڕاندنەوەکە لە ئیمەیڵەکەت داخڵ بکە';
@@ -190,7 +190,7 @@ extension on TranslationsKu {
 			'loginInvalidCredentials' => 'ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە',
 			'loginSuccessAdmin' => 'دۆخی ئەدمین چالاک کرا',
 			'loginSuccessUser' => 'چوونەژوورەوە سەرکەوتوو بوو',
-			'favoritesRegistrationRequired' => 'بۆ ئەم تایبەتمەندییە تۆمارکردن پێویستە، تکایە دوگمەی Sign Up دابگرە',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'بۆ ئەم تایبەتمەندییە تۆمارکردن پێویستە، تکایە دوگمەی ${button} دابگرە',
 			'forgotPassword' => 'وشەی نهێنیم لەبیر چووە',
 			'passwordRecoveryTitle' => 'گەڕاندنەوەی وشەی نهێنی',
 			'passwordRecoveryInstruction' => 'کۆدی ٤ ژمارەیی گەڕاندنەوەکە لە ئیمەیڵەکەت داخڵ بکە',

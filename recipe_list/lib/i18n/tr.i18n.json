@@ -26,7 +26,7 @@
   "loginInvalidCredentials": "Kullanıcı adı veya şifre hatalı",
   "loginSuccessAdmin": "Yönetici modu etkin",
   "loginSuccessUser": "Başarıyla giriş yapıldı",
-  "favoritesRegistrationRequired": "Bu özellik için kayıt gerekiyor, lütfen Sign Up düğmesine dokunun",
+  "favoritesRegistrationRequired": "Bu özellik için kayıt gerekiyor, lütfen ${button} düğmesine dokunun",
   "forgotPassword": "Şifremi unuttum",
   "passwordRecoveryTitle": "Şifre kurtarma",
   "passwordRecoveryInstruction": "E-postanızdaki 4 haneli kurtarma kodunu girin",

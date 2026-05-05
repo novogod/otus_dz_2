@@ -26,7 +26,7 @@
   "loginInvalidCredentials": "اسم المستخدم أو كلمة المرور غير صحيحة",
   "loginSuccessAdmin": "تم تفعيل وضع المسؤول",
   "loginSuccessUser": "تم تسجيل الدخول بنجاح",
-  "favoritesRegistrationRequired": "التسجيل مطلوب لهذه الميزة، يرجى الضغط على زر Sign Up",
+  "favoritesRegistrationRequired": "التسجيل مطلوب لهذه الميزة، يرجى الضغط على زر ${button}",
   "forgotPassword": "نسيت كلمة المرور",
   "passwordRecoveryTitle": "استعادة كلمة المرور",
   "passwordRecoveryInstruction": "أدخل رمز الاستعادة المكوّن من 4 أرقام من بريدك الإلكتروني",

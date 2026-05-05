@@ -64,7 +64,7 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get loginInvalidCredentials => 'Identifiant ou mot de passe incorrect';
 	@override String get loginSuccessAdmin => 'Mode administrateur activé';
 	@override String get loginSuccessUser => 'Connexion réussie';
-	@override String get favoritesRegistrationRequired => 'L\'inscription est requise pour cette fonctionnalité, veuillez appuyer sur le bouton Sign Up';
+	@override String favoritesRegistrationRequired({required Object button}) => 'L\'inscription est requise pour cette fonctionnalité, veuillez appuyer sur le bouton ${button}';
 	@override String get forgotPassword => 'J\'ai oublié mon mot de passe';
 	@override String get passwordRecoveryTitle => 'Récupération du mot de passe';
 	@override String get passwordRecoveryInstruction => 'Saisissez le code de récupération à 4 chiffres reçu par e-mail';
@@ -190,7 +190,7 @@ extension on TranslationsFr {
 			'loginInvalidCredentials' => 'Identifiant ou mot de passe incorrect',
 			'loginSuccessAdmin' => 'Mode administrateur activé',
 			'loginSuccessUser' => 'Connexion réussie',
-			'favoritesRegistrationRequired' => 'L\'inscription est requise pour cette fonctionnalité, veuillez appuyer sur le bouton Sign Up',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'L\'inscription est requise pour cette fonctionnalité, veuillez appuyer sur le bouton ${button}',
 			'forgotPassword' => 'J\'ai oublié mon mot de passe',
 			'passwordRecoveryTitle' => 'Récupération du mot de passe',
 			'passwordRecoveryInstruction' => 'Saisissez le code de récupération à 4 chiffres reçu par e-mail',

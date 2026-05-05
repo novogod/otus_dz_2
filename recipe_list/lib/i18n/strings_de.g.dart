@@ -64,7 +64,7 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get loginInvalidCredentials => 'Login oder Passwort ungültig';
 	@override String get loginSuccessAdmin => 'Admin-Modus aktiviert';
 	@override String get loginSuccessUser => 'Erfolgreich angemeldet';
-	@override String get favoritesRegistrationRequired => 'Für diese Funktion ist eine Registrierung erforderlich. Bitte tippen Sie auf die Schaltfläche Sign Up';
+	@override String favoritesRegistrationRequired({required Object button}) => 'Für diese Funktion ist eine Registrierung erforderlich. Bitte tippen Sie auf die Schaltfläche ${button}';
 	@override String get forgotPassword => 'Passwort vergessen?';
 	@override String get passwordRecoveryTitle => 'Passwort wiederherstellen';
 	@override String get passwordRecoveryInstruction => 'Geben Sie den 4-stelligen Wiederherstellungscode aus Ihrer E-Mail ein';
@@ -190,7 +190,7 @@ extension on TranslationsDe {
 			'loginInvalidCredentials' => 'Login oder Passwort ungültig',
 			'loginSuccessAdmin' => 'Admin-Modus aktiviert',
 			'loginSuccessUser' => 'Erfolgreich angemeldet',
-			'favoritesRegistrationRequired' => 'Für diese Funktion ist eine Registrierung erforderlich. Bitte tippen Sie auf die Schaltfläche Sign Up',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'Für diese Funktion ist eine Registrierung erforderlich. Bitte tippen Sie auf die Schaltfläche ${button}',
 			'forgotPassword' => 'Passwort vergessen?',
 			'passwordRecoveryTitle' => 'Passwort wiederherstellen',
 			'passwordRecoveryInstruction' => 'Geben Sie den 4-stelligen Wiederherstellungscode aus Ihrer E-Mail ein',

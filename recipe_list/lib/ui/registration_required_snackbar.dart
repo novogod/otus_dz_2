@@ -45,7 +45,7 @@ void showRegistrationRequiredSnackBar(BuildContext context) {
       // всё-таки доедет до `completed` раньше нашего таймера,
       // он закроет сам в эту же секунду.
       duration: kRegistrationRequiredSnackBarDuration,
-      content: Text(s.favoritesRegistrationRequired),
+      content: Text(s.favoritesRegistrationRequired(button: s.signUp)),
       action: SnackBarAction(
         label: s.signUp,
         onPressed: () async {

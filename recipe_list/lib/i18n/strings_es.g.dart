@@ -64,7 +64,7 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 	@override String get loginInvalidCredentials => 'Usuario o contraseña incorrectos';
 	@override String get loginSuccessAdmin => 'Modo administrador activado';
 	@override String get loginSuccessUser => 'Sesión iniciada correctamente';
-	@override String get favoritesRegistrationRequired => 'Se requiere registro para esta función; por favor, pulse el botón Sign Up';
+	@override String favoritesRegistrationRequired({required Object button}) => 'Se requiere registro para esta función; por favor, pulse el botón ${button}';
 	@override String get forgotPassword => 'Olvidé mi contraseña';
 	@override String get passwordRecoveryTitle => 'Recuperación de contraseña';
 	@override String get passwordRecoveryInstruction => 'Introduce el código de recuperación de 4 dígitos enviado a tu correo';
@@ -190,7 +190,7 @@ extension on TranslationsEs {
 			'loginInvalidCredentials' => 'Usuario o contraseña incorrectos',
 			'loginSuccessAdmin' => 'Modo administrador activado',
 			'loginSuccessUser' => 'Sesión iniciada correctamente',
-			'favoritesRegistrationRequired' => 'Se requiere registro para esta función; por favor, pulse el botón Sign Up',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'Se requiere registro para esta función; por favor, pulse el botón ${button}',
 			'forgotPassword' => 'Olvidé mi contraseña',
 			'passwordRecoveryTitle' => 'Recuperación de contraseña',
 			'passwordRecoveryInstruction' => 'Introduce el código de recuperación de 4 dígitos enviado a tu correo',

@@ -64,7 +64,7 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get loginInvalidCredentials => 'Kullanıcı adı veya şifre hatalı';
 	@override String get loginSuccessAdmin => 'Yönetici modu etkin';
 	@override String get loginSuccessUser => 'Başarıyla giriş yapıldı';
-	@override String get favoritesRegistrationRequired => 'Bu özellik için kayıt gerekiyor, lütfen Sign Up düğmesine dokunun';
+	@override String favoritesRegistrationRequired({required Object button}) => 'Bu özellik için kayıt gerekiyor, lütfen ${button} düğmesine dokunun';
 	@override String get forgotPassword => 'Şifremi unuttum';
 	@override String get passwordRecoveryTitle => 'Şifre kurtarma';
 	@override String get passwordRecoveryInstruction => 'E-postanızdaki 4 haneli kurtarma kodunu girin';
@@ -190,7 +190,7 @@ extension on TranslationsTr {
 			'loginInvalidCredentials' => 'Kullanıcı adı veya şifre hatalı',
 			'loginSuccessAdmin' => 'Yönetici modu etkin',
 			'loginSuccessUser' => 'Başarıyla giriş yapıldı',
-			'favoritesRegistrationRequired' => 'Bu özellik için kayıt gerekiyor, lütfen Sign Up düğmesine dokunun',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'Bu özellik için kayıt gerekiyor, lütfen ${button} düğmesine dokunun',
 			'forgotPassword' => 'Şifremi unuttum',
 			'passwordRecoveryTitle' => 'Şifre kurtarma',
 			'passwordRecoveryInstruction' => 'E-postanızdaki 4 haneli kurtarma kodunu girin',

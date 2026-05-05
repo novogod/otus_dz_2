@@ -311,7 +311,8 @@ class S {
   String get loginInvalidCredentials => _t.loginInvalidCredentials;
   String get loginSuccessAdmin => _t.loginSuccessAdmin;
   String get loginSuccessUser => _t.loginSuccessUser;
-  String get favoritesRegistrationRequired => _t.favoritesRegistrationRequired;
+  String favoritesRegistrationRequired({required Object button}) =>
+      _t.favoritesRegistrationRequired(button: button);
   String get forgotPassword => _t.forgotPassword;
   String get passwordRecoveryTitle => _t.passwordRecoveryTitle;
   String get passwordRecoveryInstruction => _t.passwordRecoveryInstruction;

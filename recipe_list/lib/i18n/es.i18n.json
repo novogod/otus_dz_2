@@ -26,7 +26,7 @@
   "loginInvalidCredentials": "Usuario o contraseña incorrectos",
   "loginSuccessAdmin": "Modo administrador activado",
   "loginSuccessUser": "Sesión iniciada correctamente",
-  "favoritesRegistrationRequired": "Se requiere registro para esta función; por favor, pulse el botón Sign Up",
+  "favoritesRegistrationRequired": "Se requiere registro para esta función; por favor, pulse el botón ${button}",
   "forgotPassword": "Olvidé mi contraseña",
   "passwordRecoveryTitle": "Recuperación de contraseña",
   "passwordRecoveryInstruction": "Introduce el código de recuperación de 4 dígitos enviado a tu correo",

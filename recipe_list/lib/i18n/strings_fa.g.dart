@@ -64,7 +64,7 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get loginInvalidCredentials => 'نام کاربری یا رمز عبور نادرست است';
 	@override String get loginSuccessAdmin => 'حالت مدیر فعال شد';
 	@override String get loginSuccessUser => 'ورود با موفقیت انجام شد';
-	@override String get favoritesRegistrationRequired => 'برای این قابلیت ثبت‌نام لازم است، لطفاً روی دکمه Sign Up بزنید';
+	@override String favoritesRegistrationRequired({required Object button}) => 'برای این قابلیت ثبت‌نام لازم است، لطفاً روی دکمه ${button} بزنید';
 	@override String get forgotPassword => 'رمز عبورم را فراموش کرده‌ام';
 	@override String get passwordRecoveryTitle => 'بازیابی رمز عبور';
 	@override String get passwordRecoveryInstruction => 'کد بازیابی ۴ رقمی ارسال‌شده به ایمیل را وارد کنید';
@@ -190,7 +190,7 @@ extension on TranslationsFa {
 			'loginInvalidCredentials' => 'نام کاربری یا رمز عبور نادرست است',
 			'loginSuccessAdmin' => 'حالت مدیر فعال شد',
 			'loginSuccessUser' => 'ورود با موفقیت انجام شد',
-			'favoritesRegistrationRequired' => 'برای این قابلیت ثبت‌نام لازم است، لطفاً روی دکمه Sign Up بزنید',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'برای این قابلیت ثبت‌نام لازم است، لطفاً روی دکمه ${button} بزنید',
 			'forgotPassword' => 'رمز عبورم را فراموش کرده‌ام',
 			'passwordRecoveryTitle' => 'بازیابی رمز عبور',
 			'passwordRecoveryInstruction' => 'کد بازیابی ۴ رقمی ارسال‌شده به ایمیل را وارد کنید',

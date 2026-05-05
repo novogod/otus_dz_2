@@ -64,7 +64,7 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 	@override String get loginInvalidCredentials => 'Login o password non validi';
 	@override String get loginSuccessAdmin => 'Modalità amministratore attivata';
 	@override String get loginSuccessUser => 'Accesso effettuato con successo';
-	@override String get favoritesRegistrationRequired => 'Registrazione richiesta per questa funzione, tocca il pulsante Sign Up';
+	@override String favoritesRegistrationRequired({required Object button}) => 'Registrazione richiesta per questa funzione, tocca il pulsante ${button}';
 	@override String get forgotPassword => 'Ho dimenticato la password';
 	@override String get passwordRecoveryTitle => 'Recupero password';
 	@override String get passwordRecoveryInstruction => 'Inserisci il codice di recupero a 4 cifre ricevuto via email';
@@ -190,7 +190,7 @@ extension on TranslationsIt {
 			'loginInvalidCredentials' => 'Login o password non validi',
 			'loginSuccessAdmin' => 'Modalità amministratore attivata',
 			'loginSuccessUser' => 'Accesso effettuato con successo',
-			'favoritesRegistrationRequired' => 'Registrazione richiesta per questa funzione, tocca il pulsante Sign Up',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'Registrazione richiesta per questa funzione, tocca il pulsante ${button}',
 			'forgotPassword' => 'Ho dimenticato la password',
 			'passwordRecoveryTitle' => 'Recupero password',
 			'passwordRecoveryInstruction' => 'Inserisci il codice di recupero a 4 cifre ricevuto via email',

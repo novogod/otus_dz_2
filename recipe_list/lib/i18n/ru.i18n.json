@@ -26,7 +26,7 @@
   "loginInvalidCredentials": "Неверный логин или пароль",
   "loginSuccessAdmin": "Режим администратора включён",
   "loginSuccessUser": "Вход выполнен",
-  "favoritesRegistrationRequired": "Для этой функции нужна регистрация, пожалуйста нажмите кнопку Sign Up",
+  "favoritesRegistrationRequired": "Для этой функции нужна регистрация, пожалуйста нажмите кнопку ${button}",
   "forgotPassword": "Я забыл пароль",
   "passwordRecoveryTitle": "Восстановление пароля",
   "passwordRecoveryInstruction": "Введите 4-значный код восстановления из вашего email",

@@ -26,7 +26,7 @@
   "loginInvalidCredentials": "Invalid login or password",
   "loginSuccessAdmin": "Admin mode enabled",
   "loginSuccessUser": "Logged in successfully",
-  "favoritesRegistrationRequired": "Registration required for this feature, please tap Sign Up button",
+  "favoritesRegistrationRequired": "Registration required for this feature, please tap ${button} button",
   "forgotPassword": "I forgot password",
   "passwordRecoveryTitle": "Password recovery",
   "passwordRecoveryInstruction": "Enter 4 digits recovery code from your email",

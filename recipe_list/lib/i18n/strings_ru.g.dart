@@ -64,7 +64,7 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get loginInvalidCredentials => 'Неверный логин или пароль';
 	@override String get loginSuccessAdmin => 'Режим администратора включён';
 	@override String get loginSuccessUser => 'Вход выполнен';
-	@override String get favoritesRegistrationRequired => 'Для этой функции нужна регистрация, пожалуйста нажмите кнопку Sign Up';
+	@override String favoritesRegistrationRequired({required Object button}) => 'Для этой функции нужна регистрация, пожалуйста нажмите кнопку ${button}';
 	@override String get forgotPassword => 'Я забыл пароль';
 	@override String get passwordRecoveryTitle => 'Восстановление пароля';
 	@override String get passwordRecoveryInstruction => 'Введите 4-значный код восстановления из вашего email';
@@ -192,7 +192,7 @@ extension on TranslationsRu {
 			'loginInvalidCredentials' => 'Неверный логин или пароль',
 			'loginSuccessAdmin' => 'Режим администратора включён',
 			'loginSuccessUser' => 'Вход выполнен',
-			'favoritesRegistrationRequired' => 'Для этой функции нужна регистрация, пожалуйста нажмите кнопку Sign Up',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'Для этой функции нужна регистрация, пожалуйста нажмите кнопку ${button}',
 			'forgotPassword' => 'Я забыл пароль',
 			'passwordRecoveryTitle' => 'Восстановление пароля',
 			'passwordRecoveryInstruction' => 'Введите 4-значный код восстановления из вашего email',

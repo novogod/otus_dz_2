@@ -26,7 +26,7 @@
   "loginInvalidCredentials": "Login oder Passwort ungültig",
   "loginSuccessAdmin": "Admin-Modus aktiviert",
   "loginSuccessUser": "Erfolgreich angemeldet",
-  "favoritesRegistrationRequired": "Für diese Funktion ist eine Registrierung erforderlich. Bitte tippen Sie auf die Schaltfläche Sign Up",
+  "favoritesRegistrationRequired": "Für diese Funktion ist eine Registrierung erforderlich. Bitte tippen Sie auf die Schaltfläche ${button}",
   "forgotPassword": "Passwort vergessen?",
   "passwordRecoveryTitle": "Passwort wiederherstellen",
   "passwordRecoveryInstruction": "Geben Sie den 4-stelligen Wiederherstellungscode aus Ihrer E-Mail ein",

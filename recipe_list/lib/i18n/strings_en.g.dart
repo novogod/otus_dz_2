@@ -122,8 +122,8 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Logged in successfully'
 	String get loginSuccessUser => 'Logged in successfully';
 
-	/// en: 'Registration required for this feature, please tap Sign Up button'
-	String get favoritesRegistrationRequired => 'Registration required for this feature, please tap Sign Up button';
+	/// en: 'Registration required for this feature, please tap ${button} button'
+	String favoritesRegistrationRequired({required Object button}) => 'Registration required for this feature, please tap ${button} button';
 
 	/// en: 'I forgot password'
 	String get forgotPassword => 'I forgot password';
@@ -400,7 +400,7 @@ extension on Translations {
 			'loginInvalidCredentials' => 'Invalid login or password',
 			'loginSuccessAdmin' => 'Admin mode enabled',
 			'loginSuccessUser' => 'Logged in successfully',
-			'favoritesRegistrationRequired' => 'Registration required for this feature, please tap Sign Up button',
+			'favoritesRegistrationRequired' => ({required Object button}) => 'Registration required for this feature, please tap ${button} button',
 			'forgotPassword' => 'I forgot password',
 			'passwordRecoveryTitle' => 'Password recovery',
 			'passwordRecoveryInstruction' => 'Enter 4 digits recovery code from your email',

@@ -26,7 +26,7 @@
   "loginInvalidCredentials": "ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە",
   "loginSuccessAdmin": "دۆخی ئەدمین چالاک کرا",
   "loginSuccessUser": "چوونەژوورەوە سەرکەوتوو بوو",
-  "favoritesRegistrationRequired": "بۆ ئەم تایبەتمەندییە تۆمارکردن پێویستە، تکایە دوگمەی Sign Up دابگرە",
+  "favoritesRegistrationRequired": "بۆ ئەم تایبەتمەندییە تۆمارکردن پێویستە، تکایە دوگمەی ${button} دابگرە",
   "forgotPassword": "وشەی نهێنیم لەبیر چووە",
   "passwordRecoveryTitle": "گەڕاندنەوەی وشەی نهێنی",
   "passwordRecoveryInstruction": "کۆدی ٤ ژمارەیی گەڕاندنەوەکە لە ئیمەیڵەکەت داخڵ بکە",

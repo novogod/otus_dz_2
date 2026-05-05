@@ -26,7 +26,7 @@
   "loginInvalidCredentials": "نام کاربری یا رمز عبور نادرست است",
   "loginSuccessAdmin": "حالت مدیر فعال شد",
   "loginSuccessUser": "ورود با موفقیت انجام شد",
-  "favoritesRegistrationRequired": "برای این قابلیت ثبت‌نام لازم است، لطفاً روی دکمه Sign Up بزنید",
+  "favoritesRegistrationRequired": "برای این قابلیت ثبت‌نام لازم است، لطفاً روی دکمه ${button} بزنید",
   "forgotPassword": "رمز عبورم را فراموش کرده‌ام",
   "passwordRecoveryTitle": "بازیابی رمز عبور",
   "passwordRecoveryInstruction": "کد بازیابی ۴ رقمی ارسال‌شده به ایمیل را وارد کنید",

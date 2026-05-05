@@ -26,7 +26,7 @@
   "loginInvalidCredentials": "Login o password non validi",
   "loginSuccessAdmin": "Modalità amministratore attivata",
   "loginSuccessUser": "Accesso effettuato con successo",
-  "favoritesRegistrationRequired": "Registrazione richiesta per questa funzione, tocca il pulsante Sign Up",
+  "favoritesRegistrationRequired": "Registrazione richiesta per questa funzione, tocca il pulsante ${button}",
   "forgotPassword": "Ho dimenticato la password",
   "passwordRecoveryTitle": "Recupero password",
   "passwordRecoveryInstruction": "Inserisci il codice di recupero a 4 cifre ricevuto via email",
