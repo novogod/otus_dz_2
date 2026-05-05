@@ -314,7 +314,15 @@ class _LoginPageState extends State<LoginPage> {
       _authBusy = false;
       _biometricSaved = preserveBiometric;
     });
-    Navigator.of(context).pop(false);
+    // После logout уводим пользователя на ленту рецептов,
+    // а не оставляем на LoginPage. Если страница была пушнута
+    // поверх стека (popOnSuccess), сначала pop'аем её — иначе
+    // переключаем go_router-ветку напрямую.
+    if (widget.popOnSuccess && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(false);
+    }
+    if (!mounted) return;
+    context.go(Routes.recipes);
   }
 
   Future<void> _forgotPassword() async {

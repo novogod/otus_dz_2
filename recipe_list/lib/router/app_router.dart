@@ -223,18 +223,22 @@ class _ProfileBranchRoot extends StatelessWidget {
                   valueListenable: currentUserLoginNotifier,
                   builder: (context, login, _) {
                     final hasAdmin = adminLoggedInNotifier.value;
-                    final hasUser = userLoggedInNotifier.value;
-                    final hasToken = token != null && token.isNotEmpty;
                     final loginTrim = login?.trim() ?? '';
-                    final canShowProfile =
-                        (hasAdmin || hasUser || hasToken) &&
-                        loginTrim.isNotEmpty;
-                    if (canShowProfile) {
+                    // Только админ получает «Profile»-страницу с
+                    // админ-кнопками (AdminAfterLoginPage).
+                    // Обычный залогиненный юзер видит LoginPage в
+                    // logout-режиме (он сам переключается по
+                    // userLoggedIn && !adminLoggedIn) — это и есть
+                    // «Logout screen» для regular user.
+                    if (hasAdmin && loginTrim.isNotEmpty) {
                       return AdminAfterLoginPage(
                         adminLogin: loginTrim,
                         adminPassword: currentSessionAdminPassword ?? '',
                       );
                     }
+                    // hasUser/hasToken без login — кейс редкий
+                    // (битая сессия): пусть LoginPage предложит
+                    // авторизоваться повторно.
                     return LoginPage(
                       initialLogin: loginTrim.isNotEmpty ? loginTrim : null,
                     );
