@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
 import '../i18n.dart';
+import '../router/routes.dart';
 import 'admin_added_recipes_page.dart';
 import 'admin_users_page.dart';
 import 'app_theme.dart';
@@ -196,8 +198,8 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
                   FilledButton.icon(
                     style: _primaryButtonStyle,
                     onPressed: () {
-                      // Return to the food cards list (root route with recipe feed).
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      // Open the recipes list (go_router root).
+                      context.go(Routes.recipes);
                     },
                     icon: const Icon(Icons.restaurant_menu),
                     label: Text(s.adminEditCards),

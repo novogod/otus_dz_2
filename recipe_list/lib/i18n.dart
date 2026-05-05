@@ -380,9 +380,9 @@ class S {
     AppLang.tr: 'Kullanıcı listesini düzenle',
   });
   String get adminEditCards => _byLang({
-    AppLang.en: 'Edit cards',
-    AppLang.ru: 'Редактировать карточки',
-    AppLang.tr: 'Kartları düzenle',
+    AppLang.en: 'Edit recipes',
+    AppLang.ru: 'Редактировать рецепты',
+    AppLang.tr: 'Tarifleri düzenle',
   });
   String get adminUsersTitle => _byLang({
     AppLang.en: 'Users list',
