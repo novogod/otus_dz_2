@@ -136,61 +136,18 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // [3] Profile — auth-aware ветка с двумя sub-роутами:
-        //     `/profile/login` (форма входа) и `/profile/admin`
-        //     (после-логин экран). Корневой `/profile` сам
-        //     ничего не рендерит — `_profileRedirect` уводит
-        //     либо на login, либо на admin в зависимости от
-        //     состояния notifier-ов из `admin_session.dart`.
-        //     Slide-up анимация sub-роутов сохранена через
-        //     `CustomTransitionPage` (см. `_slideUpPage`).
+        // [3] Profile — auth-aware ветка. Один роут `/profile`,
+        //     `_ProfileBranchRoot` сам выбирает между LoginPage
+        //     и AdminAfterLoginPage по auth-нотифаерам. Без
+        //     subroutes /profile/login и /profile/admin —
+        //     раньше они выезжали slide-up на rootNavigator и
+        //     закрывались back-кнопкой, открывая ту же страницу
+        //     уже без back-кнопки (двойной Profile).
         StatefulShellBranch(
           routes: <RouteBase>[
             GoRoute(
               path: Routes.profile,
-              // На голом `/profile` рендерим auth-aware fallback:
-              // если есть админ-токен — `AdminAfterLoginPage`,
-              // иначе — `LoginPage`. Это страховка от ситуации,
-              // когда `_profileRedirect` по какой-либо причине
-              // не доводит навигацию до `/profile/login` (видели
-              // grey-screen на не-EN локалях после смены языка
-              // — top-level redirect срабатывал, но overlay-роут
-              // c `parentNavigatorKey: rootNavigatorKey` не
-              // успевал смонтироваться). Подписка на
-              // auth-нотифаеры выполняется самой страницей —
-              // `refreshListenable` всё равно пересоберёт
-              // редирект, как только пользователь войдёт.
               builder: (context, state) => const _ProfileBranchRoot(),
-              routes: <RouteBase>[
-                GoRoute(
-                  path: 'login',
-                  parentNavigatorKey: rootNavigatorKey,
-                  pageBuilder: (context, state) => _slideUpPage<void>(
-                    key: const ValueKey('profile-login'),
-                    child: LoginPage(
-                      initialLogin:
-                          currentUserLoginNotifier.value?.trim().isNotEmpty ==
-                              true
-                          ? currentUserLoginNotifier.value!.trim()
-                          : null,
-                    ),
-                  ),
-                ),
-                GoRoute(
-                  path: 'admin',
-                  parentNavigatorKey: rootNavigatorKey,
-                  pageBuilder: (context, state) {
-                    final login = currentUserLoginNotifier.value?.trim() ?? '';
-                    return _slideUpPage<void>(
-                      key: const ValueKey('profile-admin'),
-                      child: AdminAfterLoginPage(
-                        adminLogin: login,
-                        adminPassword: currentSessionAdminPassword ?? '',
-                      ),
-                    );
-                  },
-                ),
-              ],
             ),
           ],
         ),
@@ -377,51 +334,22 @@ Widget _buildSourcePage(GoRouterState state) {
   return SourcePage(url: url);
 }
 
-/// Auth-aware redirect для профильной ветки. Запускается
-/// `GoRouter` на каждой навигации и при срабатывании
-/// `refreshListenable` (см. конфигурацию выше). Логика:
-///
-/// * Корень `/profile` сам по себе не имеет UI — он всегда
-///   уводит на `/profile/login` или `/profile/admin`.
-/// * Если пользователь оказался на `/profile/login`, но
-///   admin-токен/пароль появились (= успешный логин), уводим
-///   на `/profile/admin`.
-/// * Если на `/profile/admin`, но admin-доступ пропал (logout
-///   очистил `currentRecipeAdminTokenNotifier` и
-///   `adminLoggedInNotifier`), уводим обратно на login.
-/// * Прочие пути (вне `/profile`) пропускаем как есть.
-String? _profileRedirect(BuildContext context, GoRouterState state) {
-  final path = state.uri.path;
-  if (!path.startsWith(Routes.profile)) return null;
-  final hasAdmin = adminLoggedInNotifier.value;
-  final hasUser = userLoggedInNotifier.value;
-  final token = currentRecipeAdminTokenNotifier.value;
-  final hasToken = token != null && token.isNotEmpty;
-  final login = currentUserLoginNotifier.value?.trim() ?? '';
-  // Любой залогиненный (admin или обычный user) уводится
-  // на `/profile/admin` — это пост-логин экран профиля.
-  // Admin-only кнопки на нём скрыты для не-админов
-  // (см. `AdminAfterLoginPage`).
-  final canShowProfile =
-      (hasAdmin || hasUser || hasToken) && login.isNotEmpty;
-  if (path == Routes.profile) {
-    return canShowProfile ? Routes.profileAdmin : Routes.profileLogin;
-  }
-  if (path == Routes.profileLogin && canShowProfile) {
-    return Routes.profileAdmin;
-  }
-  if (path == Routes.profileAdmin && !canShowProfile) {
-    return Routes.profileLogin;
-  }
-  return null;
-}
+/// Auth-aware redirect для профильной ветки. На текущем шаге
+/// единственный профильный роут — `/profile`, а
+/// `_ProfileBranchRoot` сам выбирает между LoginPage и
+/// AdminAfterLoginPage по auth-нотифаерам, поэтому redirect
+/// тривиален: пропускаем всё как есть. Сохранён как hook на
+/// случай возврата к sub-роутам и для совместимости с
+/// `refreshListenable`-подпиской.
+String? _profileRedirect(BuildContext context, GoRouterState state) => null;
 
 /// Slide-up `CustomTransitionPage` — общий конструктор для
-/// `/profile/login` и `/profile/admin`. Параметры тayouта
+/// `/profile/login` и `/profile/admin`. Параметры тayouta
 /// (длительность, кривая, направление) совпадают с тем, что
 /// раньше задавалось в `buildLoginRoute`/`_signUpRoute`/
 /// `openPasswordRecoveryPage`, чтобы UX слайд-апа не дрейфовал
 /// между «модальным» и «вкладочным» открытием.
+// ignore: unused_element
 CustomTransitionPage<T> _slideUpPage<T>({
   required Widget child,
   LocalKey? key,

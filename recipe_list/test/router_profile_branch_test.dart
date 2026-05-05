@@ -1,24 +1,9 @@
-// Тесты профильной ветки роутера: чанк C
-// `todo/19-go-router-shell.md`.
+// Тесты профильной ветки роутера.
 //
-// Покрытие:
-// * Тап по вкладке Profile с пустыми auth-нотифаерами уводит
-//   на `/profile/login` (через `_profileRedirect`).
-// * Если admin-нотифаеры выставлены ДО навигации, переход
-//   уходит сразу на `/profile/admin`.
-// * Включение `adminLoggedInNotifier`/`currentUserLoginNotifier`
-//   уже на `/profile/login` перерисовывает редирект благодаря
-//   `refreshListenable` и заводит на `/profile/admin`.
-// * `AppBottomNavBar` остаётся ровно один экземпляр на любой
-//   из sub-роутов (главное достижение чанка A — здесь не
-//   ломается).
-//
-// Тестовый роутер — самостоятельная сборка, чтобы избежать
-// зависимостей реального `appRouter` от splash-таймеров и
-// сетевых вызовов в `SplashAndRecipes`/`FavoritesPage`. Логика
-// редиректа дублируется 1-в-1 c `_profileRedirect`
-// в `lib/router/app_router.dart`. Если та логика
-// перенастраивается — этот тест нужно править синхронно.
+// После упрощения (удалены sub-routes /profile/login и
+// /profile/admin) — единственный профильный роут `/profile`
+// рендерит auth-aware виджет, который сам выбирает между
+// LoginPage и AdminAfterLoginPage по auth-нотифаерам.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,28 +15,36 @@ import 'package:recipe_list/router/routes.dart';
 import 'package:recipe_list/ui/app_bottom_nav_bar.dart';
 import 'package:recipe_list/ui/app_shell.dart';
 
-/// Точная копия `_profileRedirect`. Дублирование намеренное —
-/// не хочется делать функцию публичной только ради теста.
-String? _profileRedirect(BuildContext context, GoRouterState state) {
-  final path = state.uri.path;
-  if (!path.startsWith(Routes.profile)) return null;
-  final hasAdmin = adminLoggedInNotifier.value;
-  final hasUser = userLoggedInNotifier.value;
-  final token = currentRecipeAdminTokenNotifier.value;
-  final hasToken = token != null && token.isNotEmpty;
-  final login = currentUserLoginNotifier.value?.trim() ?? '';
-  final canShowProfile =
-      (hasAdmin || hasUser || hasToken) && login.isNotEmpty;
-  if (path == Routes.profile) {
-    return canShowProfile ? Routes.profileAdmin : Routes.profileLogin;
+class _ProfileStub extends StatelessWidget {
+  const _ProfileStub();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: adminLoggedInNotifier,
+      builder: (context, _, __) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: userLoggedInNotifier,
+          builder: (context, _, __) {
+            return ValueListenableBuilder<String?>(
+              valueListenable: currentUserLoginNotifier,
+              builder: (context, login, _) {
+                final hasAuth =
+                    (adminLoggedInNotifier.value ||
+                        userLoggedInNotifier.value) &&
+                    (login?.trim().isNotEmpty ?? false);
+                return Scaffold(
+                  body: Center(
+                    child: Text(hasAuth ? 'admin-stub' : 'login-stub'),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
-  if (path == Routes.profileLogin && canShowProfile) {
-    return Routes.profileAdmin;
-  }
-  if (path == Routes.profileAdmin && !canShowProfile) {
-    return Routes.profileLogin;
-  }
-  return null;
 }
 
 GoRouter _buildTestRouter() {
@@ -63,7 +56,6 @@ GoRouter _buildTestRouter() {
       currentRecipeAdminTokenNotifier,
       currentUserLoginNotifier,
     ]),
-    redirect: _profileRedirect,
     routes: <RouteBase>[
       StatefulShellRoute.indexedStack(
         builder: (context, state, navShell) => AppShell(navShell: navShell),
@@ -102,28 +94,7 @@ GoRouter _buildTestRouter() {
             routes: <RouteBase>[
               GoRoute(
                 path: Routes.profile,
-                builder: (context, state) =>
-                    const Scaffold(body: SizedBox.shrink()),
-                routes: <RouteBase>[
-                  GoRoute(
-                    path: 'login',
-                    pageBuilder: (context, state) =>
-                        const NoTransitionPage<void>(
-                          child: Scaffold(
-                            body: Center(child: Text('login-stub')),
-                          ),
-                        ),
-                  ),
-                  GoRoute(
-                    path: 'admin',
-                    pageBuilder: (context, state) =>
-                        const NoTransitionPage<void>(
-                          child: Scaffold(
-                            body: Center(child: Text('admin-stub')),
-                          ),
-                        ),
-                  ),
-                ],
+                builder: (context, state) => const _ProfileStub(),
               ),
             ],
           ),
@@ -154,7 +125,7 @@ void main() {
   setUp(_resetAuth);
   tearDown(_resetAuth);
 
-  testWidgets('tapping Profile with no auth lands on /profile/login', (
+  testWidgets('tapping Profile with no auth shows login-stub on /profile', (
     tester,
   ) async {
     final router = _buildTestRouter();
@@ -167,14 +138,14 @@ void main() {
 
     expect(
       router.routerDelegate.currentConfiguration.uri.path,
-      Routes.profileLogin,
+      Routes.profile,
     );
     expect(find.text('login-stub'), findsOneWidget);
     // Гость на ветке profile — навбар скрыт (LoginPage full-screen).
     expect(find.byType(AppBottomNavBar), findsNothing);
   });
 
-  testWidgets('tapping Profile while admin lands on /profile/admin', (
+  testWidgets('tapping Profile while admin shows admin-stub on /profile', (
     tester,
   ) async {
     adminLoggedInNotifier.value = true;
@@ -190,43 +161,38 @@ void main() {
 
     expect(
       router.routerDelegate.currentConfiguration.uri.path,
-      Routes.profileAdmin,
+      Routes.profile,
     );
     expect(find.text('admin-stub'), findsOneWidget);
     expect(find.byType(AppBottomNavBar), findsOneWidget);
   });
 
-  testWidgets('flipping auth notifiers on /profile/login redirects to admin', (
+  testWidgets('flipping admin auth on /profile swaps stub login -> admin', (
     tester,
   ) async {
     final router = _buildTestRouter();
     await tester.pumpWidget(_wrap(router));
     await tester.pump();
 
-    // Идём на login.
     final s = S.of(tester.element(find.byType(AppShell)));
     await tester.tap(find.text(s.tabProfile));
     await tester.pumpAndSettle();
     expect(find.text('login-stub'), findsOneWidget);
 
-    // Имитируем «успешный логин админа» — flipаем нотифаеры,
-    // refreshListenable должен перерисовать redirect.
     adminLoggedInNotifier.value = true;
     currentUserLoginNotifier.value = 'bob';
     await tester.pumpAndSettle();
 
     expect(
       router.routerDelegate.currentConfiguration.uri.path,
-      Routes.profileAdmin,
+      Routes.profile,
     );
     expect(find.text('admin-stub'), findsOneWidget);
     expect(find.text('login-stub'), findsNothing);
     expect(find.byType(AppBottomNavBar), findsOneWidget);
   });
 
-  testWidgets('logout on /profile/admin redirects back to /profile/login', (
-    tester,
-  ) async {
+  testWidgets('logout on /profile swaps stub admin -> login', (tester) async {
     adminLoggedInNotifier.value = true;
     currentUserLoginNotifier.value = 'carol';
 
@@ -239,8 +205,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('admin-stub'), findsOneWidget);
 
-    // Имитируем logout: чистим нотифаеры. refreshListenable
-    // запускает redirect, путь меняется на /profile/login.
     adminLoggedInNotifier.value = false;
     currentUserLoginNotifier.value = null;
     currentRecipeAdminTokenNotifier.value = null;
@@ -248,17 +212,14 @@ void main() {
 
     expect(
       router.routerDelegate.currentConfiguration.uri.path,
-      Routes.profileLogin,
+      Routes.profile,
     );
     expect(find.text('login-stub'), findsOneWidget);
   });
 
   // Regression: после входа обычным пользователем (не админом)
-  // adminLoggedInNotifier остаётся false, но userLoggedInNotifier
-  // = true. Раньше canShowAdmin учитывал только admin-флаги, и
-  // пользователь оставался на /profile/login. Теперь любой
-  // залогиненный пользователь уходит на /profile/admin.
-  testWidgets('flipping userLoggedInNotifier on /profile/login redirects to admin', (
+  // adminLoggedInNotifier=false, userLoggedInNotifier=true.
+  testWidgets('flipping user auth on /profile swaps stub login -> admin', (
     tester,
   ) async {
     final router = _buildTestRouter();
@@ -270,15 +231,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('login-stub'), findsOneWidget);
 
-    // Имитируем «успешный логин обычного пользователя».
     userLoggedInNotifier.value = true;
     currentUserLoginNotifier.value = 'dave';
     await tester.pumpAndSettle();
 
-    expect(
-      router.routerDelegate.currentConfiguration.uri.path,
-      Routes.profileAdmin,
-    );
     expect(find.text('admin-stub'), findsOneWidget);
   });
 }
