@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -234,9 +235,29 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     if (widget.api.backend == RecipeBackend.mahallem &&
         widget.config.useBulkPage) {
       try {
+        // 1) Cheap probe to learn the catalog size.
+        // 2) Choose a random offset window so each reload
+        //    surfaces a different slice of the 600+ recipes —
+        //    иначе сервер всегда отдаёт те же первые 200, и
+        //    кнопка «обновить» только перетасовывает их.
+        final probe = await widget.api.fetchPage(
+          lang: lang,
+          limit: 1,
+          offset: 0,
+        );
+        final total = probe.total;
+        final seedTarget = widget.config.seedTarget;
+        final maxOffset = total > seedTarget ? total - seedTarget : 0;
+        final offset = maxOffset > 0 ? math.Random().nextInt(maxOffset + 1) : 0;
+        // ignore: avoid_print
+        print(
+          '[reload] /recipes/page total=$total, picking offset=$offset '
+          '(limit=$seedTarget)',
+        );
         final page = await widget.api.fetchPage(
           lang: lang,
-          limit: widget.config.seedTarget,
+          limit: seedTarget,
+          offset: offset,
         );
         if (page.recipes.isNotEmpty) {
           final shuffled = List<Recipe>.from(page.recipes)..shuffle();

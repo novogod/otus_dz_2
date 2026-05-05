@@ -134,9 +134,10 @@ class _SplashVisitorCounterState extends State<SplashVisitorCounter>
       color: Colors.white,
     );
     return FadeTransition(
-      opacity: Tween<double>(begin: 0.35, end: 1.0).animate(
-        CurvedAnimation(parent: _blink, curve: Curves.easeInOut),
-      ),
+      opacity: Tween<double>(
+        begin: 0.35,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: _blink, curve: Curves.easeInOut)),
       child: Text(
         'Visitors: $count',
         textAlign: TextAlign.center,
