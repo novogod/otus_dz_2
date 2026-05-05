@@ -1,9 +1,11 @@
 # 20 — Per-recipe SEO: dynamic sitemap + multi-locale pre-render
 
-> **Статус:** 🟢 Phase 1 (чанки A, B, D) задеплоена на прод 2026-05-05:
-> sitemap.xml = 121809 bytes / 616 URL, cron `/etc/cron.d/recipes-sitemap`
-> установлен, locale-prefix `/{lang}/recipes/{id}` редиректит в SPA.
-> Чанки C, E, F — следующие.
+> **Статус:** 🟢 Phase 1 (чанки A, B, D) и чанк E задеплоены на прод
+> 2026-05-05. Sitemap = 121809 bytes / 616 URL, cron `/etc/cron.d/recipes-sitemap`.
+> Prerender-контейнер `recipe_list_prerender:8089` отвечает 14s cold /
+> 13ms cache-hit; nginx UA-split (Googlebot/Bingbot/Yandex/Applebot/FB/
+> Twitter/WhatsApp) разворачивает ботов на prerender, людей — на SPA.
+> Per-recipe `<title>`, JSON-LD `Recipe`, hreflang — чанки C и F.
 > **См.:** [docs/seo-recipe-sitemap-and-prerender.md](../docs/seo-recipe-sitemap-and-prerender.md), [docs/seo.md](../docs/seo.md).
 > **Приоритет:** P2 (рост органического трафика, корректные
 > share-card'ы для каждого рецепта).
