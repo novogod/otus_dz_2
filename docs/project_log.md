@@ -1,5 +1,122 @@
 # Project Log
 
+## Web: PWA install + социальные share-кнопки в AppBar `/recipes`
+
+**Date:** 2026-05-05
+
+**Status:** ✅ Shipped (commit `7b01338`)
+
+В правый верхний ряд `/recipes`, слева от reload, добавлены пять
+круглых 40×40 кнопок (web-only, на mobile/desktop ряд схлопывается
+в `SizedBox.shrink()` через `kIsWeb`):
+
+1. **Install PWA** — `Icons.install_desktop` на белом фоне с
+   чёрной рамкой (как reload). Появляется только если браузер
+   реально предложил установку.
+2. **Facebook** — `sharer.php?u=…`, бренд-цвет `#1877F2`.
+3. **Instagram** — нет публичного share-by-URL endpoint, поэтому
+   best-effort: копирует ссылку в clipboard, показывает SnackBar
+   «Link copied. Open Instagram → New post / Story → paste» и
+   открывает `instagram.com`. Фон — фирменный градиент
+   `#F58529 → #DD2A7B → #8134AF`.
+4. **VK** — `vk.com/share.php?url=…&title=…&description=…`,
+   `#0077FF`.
+5. **WhatsApp** — `api.whatsapp.com/send?text=…`, `#25D366`.
+
+### Архитектура PWA install
+
+`beforeinstallprompt` в Flutter web из коробки не торчит наружу —
+Flutter bootstrap его не перехватывает. Решение в три слоя:
+
+- [`recipe_list/web/index.html`](../recipe_list/web/index.html) —
+  inline `<script>` до Flutter bootstrap. Слушает
+  `beforeinstallprompt`, делает `e.preventDefault()`, кладёт
+  событие в `window.deferredPwaPrompt`. Экспортит наружу
+  `window.isPwaInstallAvailable()` и
+  `window.triggerPwaInstall()` (вызывает `.prompt()`,
+  `await userChoice`, возвращает `outcome`). На `appinstalled`
+  обнуляет prompt.
+- [`recipe_list/lib/ui/web_share/pwa_install_web.dart`](../recipe_list/lib/ui/web_share/pwa_install_web.dart) —
+  через `dart:js_interop` объявляет `external` биндинги к
+  этим функциям. `initPwaInstallWatcher()` запускает
+  `Timer.periodic(2s)` который синхронизирует
+  `ValueNotifier<bool> pwaInstallAvailable` с JS-стейтом
+  (event может выстрелить до того, как Flutter примонтировал
+  виджет, поэтому одного коллбэка мало).
+- [`recipe_list/lib/ui/web_share/pwa_install.dart`](../recipe_list/lib/ui/web_share/pwa_install.dart) —
+  фасад с conditional import:
+
+  ```dart
+  export 'pwa_install_stub.dart'
+      if (dart.library.js_interop) 'pwa_install_web.dart';
+  ```
+
+  Stub отдаёт `pwaInstallAvailable = ValueNotifier(false)` и
+  `triggerPwaInstall() => 'unavailable'`, поэтому iOS/Android/
+  desktop сборки не тянут `dart:js_interop` и компилируются
+  без модификаций.
+
+`initPwaInstallWatcher()` вызывается один раз из `main()` после
+`WidgetsFlutterBinding.ensureInitialized()`.
+
+### UI
+
+[`recipe_list/lib/ui/web_share/web_action_buttons.dart`](../recipe_list/lib/ui/web_share/web_action_buttons.dart)
+содержит `WebActionButtons` (Row из 5 круглых `_CircleButton`,
+разделённых `SizedBox(width: AppSpacing.sm)`). Виджет вставлен в
+[`app_page_bar.dart`](../recipe_list/lib/ui/app_page_bar.dart)
+прямо перед `ReloadIconButton` в обеих ветках actions
+(включая ветку `disableLangAndReload` под
+`IgnorePointer + Opacity(0.38)`).
+
+`_shareUrl()` всегда отдаёт `https://recipies.mahallem.ist/`,
+если хост — `localhost`/`127.0.0.1`/пустой; иначе
+`Uri.base.origin + '/'`. Так в dev из `flutter run -d chrome`
+шарится прод-линк, а не `http://localhost:50968/`.
+
+`launchUrl(uri, mode: LaunchMode.externalApplication)` — все
+share-эндпоинты открываются в новой вкладке.
+
+### Caveats
+
+- На Safari/iOS install-кнопка не появится никогда — Apple
+  использует свой Share → Add to Home Screen из system UI и
+  `beforeinstallprompt` не реализует.
+- Instagram-кнопка работает «как умеет» — это ограничение
+  Instagram, не приложения.
+- VK-эндпоинт `share.php` существует, но иногда требует
+  авторизации в браузере — у анонимного пользователя откроется
+  страница логина.
+
+### Files touched
+
+- `recipe_list/web/index.html` — JS shim до bootstrap.
+- `recipe_list/lib/ui/web_share/pwa_install_stub.dart` — no-op.
+- `recipe_list/lib/ui/web_share/pwa_install_web.dart` — JS interop.
+- `recipe_list/lib/ui/web_share/pwa_install.dart` — фасад.
+- `recipe_list/lib/ui/web_share/web_action_buttons.dart` — UI.
+- `recipe_list/lib/ui/app_page_bar.dart` — вставка в actions.
+- `recipe_list/lib/main.dart` — `initPwaInstallWatcher()`.
+
+### Deploy
+
+```bash
+ssh -i ~/.ssh/mahallem_key_2 root@72.61.181.62 \
+  'cd /var/www/recipie/otus_dz_2 && git pull --ff-only && \
+   docker compose -f docker-compose.web.yml build flutter-web && \
+   docker compose -f docker-compose.web.yml up -d --force-recreate flutter-web'
+```
+
+Verify:
+
+```bash
+curl -fsS https://recipies.mahallem.ist/ \
+  | grep -E "isPwaInstallAvailable|deferredPwaPrompt"
+# → три совпадения, shim в index.html отдаётся
+```
+
+---
+
 ## Web deploy — duplicate CORS + бинд recipe_list_web на 8088
 
 **Date:** 2026-05-05
