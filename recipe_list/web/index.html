@@ -20,6 +20,38 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
+  <!-- ─── Installed-PWA safe-area handling ────────────────────────
+       In standalone display-mode (added-to-home-screen on iOS,
+       installed PWA on Android Chrome / Desktop Chrome) the system
+       status bar / title-bar OVERLAYS the top of the Flutter
+       canvas. Flutter web reports MediaQuery.padding.top == 0 so
+       neither Scaffold nor Material AppBar shifts the toolbar
+       below it — the upper half of every action button (lang /
+       reload / share) ends up under the system UI which silently
+       eats taps. Push the <flutter-view> + <flt-glass-pane> down
+       by env(safe-area-inset-top) only in standalone mode so the
+       browser-tab layout (and prerender bot snapshot) stay flat. -->
+  <style>
+    @media (display-mode: standalone),
+           (display-mode: window-controls-overlay),
+           (display-mode: minimal-ui) {
+      flutter-view, flt-glass-pane {
+        top: env(safe-area-inset-top, 0px) !important;
+        height: calc(100% - env(safe-area-inset-top, 0px)) !important;
+      }
+      body { background-color: #2ECC71; }
+    }
+    /* iOS Safari < 16 reports navigator.standalone but doesn't
+       match (display-mode: standalone). Mirror via a class set
+       from the JS shim below before Flutter mounts. */
+    html.pwa-standalone flutter-view,
+    html.pwa-standalone flt-glass-pane {
+      top: env(safe-area-inset-top, 0px) !important;
+      height: calc(100% - env(safe-area-inset-top, 0px)) !important;
+    }
+    html.pwa-standalone body { background-color: #2ECC71; }
+  </style>
+
   <!-- ─── SEO: core meta ──────────────────────────────────────────
        Distinct property from mahallem.ist (the parent portal). This
        host (recipies.mahallem.ist) is its own SEO surface; Google
@@ -178,6 +210,16 @@
       } catch (_) {}
       return false;
     };
+    // Tag <html> so the safe-area CSS rule above kicks in even on
+    // older iOS Safari that doesn't match (display-mode: standalone)
+    // but does set navigator.standalone === true. Runs as soon as
+    // the script tag executes — before Flutter mounts — so the
+    // initial layout already has room for the status bar.
+    try {
+      if (window.isPwaStandalone()) {
+        document.documentElement.classList.add('pwa-standalone');
+      }
+    } catch (_) {}
     // True when the browser exposes the Web Share API. Used to
     // decide between the native share sheet (share_plus) and a
     // dropdown of social-network URL intents (Linux Chrome,
