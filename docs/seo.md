@@ -107,18 +107,50 @@ inside the `<head>` block, then re-build and re-deploy.
 
 ### 3.1 Google Search Console
 
+You can register either as a **Domain property** (recommended —
+covers all current and future subdomains, e.g. `recipies.`,
+`admin.`, `www.`) or as a **URL-prefix property** scoped to
+`https://recipies.mahallem.ist/`. Either works; the only
+difference is the verification method and the form of the
+sitemap URL you submit.
+
+#### 3.1.a Domain property (DNS TXT verification) — recommended
+
 1. Open https://search.google.com/search-console
-2. **Add property → URL prefix → `https://recipies.mahallem.ist/`**
-3. Verification: pick **HTML tag**. Google will give you something like
+2. **Add property → Domain → `mahallem.ist`**
+3. Google issues a `google-site-verification=…` TXT record.
+   Add it at your DNS provider as a TXT record on the apex
+   `mahallem.ist`. Wait 1–10 min, click **Verify**.
+4. **Sitemaps** → submit the **fully-qualified** sitemap URL:
+   ```
+   https://recipies.mahallem.ist/sitemap.xml
+   ```
+   In the Search Console UI the input field shows only the path
+   suffix (`sitemap.xml`) for URL-prefix properties, but for a
+   Domain property you must paste the **full URL including the
+   `https://recipies.mahallem.ist/` prefix** because the property
+   covers multiple hostnames. Google then attributes crawl stats
+   to the `recipies` subdomain automatically.
+5. Use **URL Inspection** on `https://recipies.mahallem.ist/` and
+   click **Request indexing**. First crawl within 1–7 days.
+
+No HTML changes needed — DNS TXT verification means we don't
+have to ship a `google-site-verification` meta tag in
+[recipe_list/web/index.html](recipe_list/web/index.html).
+
+#### 3.1.b URL-prefix property (HTML-tag verification) — alternative
+
+1. **Add property → URL prefix → `https://recipies.mahallem.ist/`**
+2. Pick **HTML tag**. Google gives you
    `<meta name="google-site-verification" content="…token…">`.
-4. Paste that line into `<head>` of
+3. Paste that line into `<head>` of
    [recipe_list/web/index.html](recipe_list/web/index.html)
    immediately under `<meta name="googlebot" …>`.
-5. `flutter build web --release && git commit && git push` → deploy.
-6. Back in Search Console click **Verify**.
-7. Once verified, **Sitemaps → Add a new sitemap → `sitemap.xml`**.
-8. Use **URL Inspection** on `https://recipies.mahallem.ist/` and click
-   **Request indexing**. Expect first crawl within 1–7 days.
+4. `flutter build web --release && git commit && git push` → deploy.
+5. Back in Search Console click **Verify**.
+6. **Sitemaps → Add a new sitemap →** type **`sitemap.xml`** (the
+   form prefills the host, you only enter the path).
+7. **URL Inspection → Request indexing** as above.
 
 ### 3.2 Bing Webmaster Tools (covers Bing + DuckDuckGo + Ecosia)
 
