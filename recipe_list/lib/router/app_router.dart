@@ -56,17 +56,20 @@ final GoRouter appRouter = GoRouter(
   ]),
   redirect: _profileRedirect,
   routes: <RouteBase>[
-    // ── todo/20 chunk D: locale-prefix routing ──
+    // ── todo/20 chunk D + F: locale-prefix routing ──
     // Pre-rendered URLs из sitemap.xml вида `/<lang>/recipes/<id>`
     // (а также `/<lang>/recipes`) перенаправляются внутрь SPA-shell.
-    // Локаль захватывается query-параметром `?lang=`, чтобы при
-    // желании UI смог её подхватить (LocaleManager уже умеет).
+    // Локаль захватывается query-параметром `?lang=`, и заодно
+    // переключаем глобальный `appLang` ДО редиректа, чтобы детали
+    // (и chunk-F SEO-инжекция в head) сразу рендерились на нужном
+    // языке без дополнительного networkidle ожидания.
     // Старые share-link'и `/recipes/details/<id>` остаются рабочими.
     GoRoute(
       path: '/:lang(${Routes.localePathPattern})/recipes/:id',
       redirect: (context, state) {
         final id = state.pathParameters['id'] ?? '';
         final lang = state.pathParameters['lang'] ?? '';
+        _applyLocaleFromPath(lang);
         return '${Routes.recipes}/details/$id?lang=$lang';
       },
     ),
@@ -74,6 +77,7 @@ final GoRouter appRouter = GoRouter(
       path: '/:lang(${Routes.localePathPattern})/recipes',
       redirect: (context, state) {
         final lang = state.pathParameters['lang'] ?? '';
+        _applyLocaleFromPath(lang);
         return '${Routes.recipes}?lang=$lang';
       },
     ),
@@ -304,9 +308,16 @@ class _FavoritesBranchRoot extends StatelessWidget {
 /// Сборка экрана деталей рецепта для go_router-веток. Полный
 /// `Recipe` пробрасывается через `state.extra` (так делают
 /// тапы с ленты/избранного), что позволяет открыть детали
-/// без повторного fetch-а. При deep-link / refresh-е страницы
-/// extra будет null — в этом случае показываем `Scaffold` с
-/// «загрузка…», т.к. реальный fetch по id появится в чанке D.
+/// без повторного fetch-а.
+///
+/// При deep-link / refresh-е страницы extra=null — это путь, по
+/// которому приходит и пользовательский reload, и бот-pre-renderer
+/// (todo/20 chunk E). В этом случае подгружаем рецепт по id через
+/// `RecipeApi.lookup`; пока идёт fetch, показываем спиннер. После
+/// успеха монтируется штатный [RecipeDetailsPage], который сам
+/// эмитит per-recipe SEO-атомы (todo/20 chunk F) и `ssr-ready`,
+/// чтобы pre-renderer мог сделать снапшот с правильным `<title>`,
+/// hreflang и JSON-LD `Recipe`.
 Widget _buildDetailsPage(BuildContext context, GoRouterState state) {
   final recipe = state.extra;
   if (recipe is Recipe) {
@@ -317,12 +328,93 @@ Widget _buildDetailsPage(BuildContext context, GoRouterState state) {
       repository: services?.repository,
     );
   }
-  // Deep-link без extra — детали без фоновой подгрузки пока
-  // не реализованы (см. чанк D плана). Возвращаемся на ветку.
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (context.mounted && context.canPop()) context.pop();
-  });
-  return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  final idStr = state.pathParameters['id'];
+  final id = idStr == null ? null : int.tryParse(idStr);
+  if (id == null || id <= 0) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted && context.canPop()) context.pop();
+    });
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  }
+  return _DeepLinkDetailsLoader(id: id);
+}
+
+/// Подгружает [Recipe] по id для прямого захода на
+/// `/recipes/details/<id>` (или ребрендированный `/<lang>/recipes/<id>`
+/// из chunk D). Берёт api/repository из [appServicesNotifier]: если
+/// сервисы ещё не инициализированы (первый кадр после splash),
+/// слушаем notifier и повторяем попытку, как только они появятся.
+class _DeepLinkDetailsLoader extends StatefulWidget {
+  const _DeepLinkDetailsLoader({required this.id});
+
+  final int id;
+
+  @override
+  State<_DeepLinkDetailsLoader> createState() => _DeepLinkDetailsLoaderState();
+}
+
+class _DeepLinkDetailsLoaderState extends State<_DeepLinkDetailsLoader> {
+  Recipe? _recipe;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    appServicesNotifier.addListener(_onServices);
+    _fetch();
+  }
+
+  @override
+  void dispose() {
+    appServicesNotifier.removeListener(_onServices);
+    super.dispose();
+  }
+
+  void _onServices() {
+    if (_recipe == null && !_failed) _fetch();
+  }
+
+  Future<void> _fetch() async {
+    final services = appServicesNotifier.value;
+    final api = services?.api;
+    if (api == null) return; // wait for splash → services
+    try {
+      final fetched = await api.lookup(
+        widget.id,
+        lang: appLang.value,
+        timeout: const Duration(seconds: 12),
+      );
+      if (!mounted) return;
+      if (fetched == null) {
+        setState(() => _failed = true);
+        return;
+      }
+      setState(() => _recipe = fetched);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _failed = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = _recipe;
+    if (r != null) {
+      final services = appServicesNotifier.value;
+      return RecipeDetailsPage(
+        recipe: r,
+        api: services?.api,
+        repository: services?.repository,
+      );
+    }
+    if (_failed) {
+      // Recipe missing / API error — let the user back out instead of
+      // staring at a spinner. Bots get a 200 with the SPA shell, which
+      // is acceptable for a 404-style URL.
+      return const Scaffold(body: Center(child: Text('Not found')));
+    }
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  }
 }
 
 /// Сборка экрана `AddRecipePage` для add- и edit-роутов.
@@ -367,6 +459,20 @@ Widget _buildSourcePage(GoRouterState state) {
 /// случай возврата к sub-роутам и для совместимости с
 /// `refreshListenable`-подпиской.
 String? _profileRedirect(BuildContext context, GoRouterState state) => null;
+
+/// Переводит глобальный `appLang` в локаль, пришедшую в URL
+/// (`/:lang/recipes/...`). Вызывается из `redirect` chunk-D роутов
+/// до того, как страница сматчится в SPA-shell ветку. Без этого
+/// перехода chunk-F SEO-инжекция выдала бы атомы для устаревшей
+/// локали (или для дефолтной EN при первом deep-link'е).
+void _applyLocaleFromPath(String code) {
+  for (final lang in AppLang.values) {
+    if (lang.name == code && appLang.value != lang) {
+      cycleAppLangTo(lang);
+      return;
+    }
+  }
+}
 
 /// Slide-up `CustomTransitionPage` — общий конструктор для
 /// `/profile/login` и `/profile/admin`. Параметры тayouta
