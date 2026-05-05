@@ -1,0 +1,19 @@
+{
+  "name": "recipe-list-prerender",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Bot-only headless-Chromium pre-render service for recipies.mahallem.ist (todo/20 chunk E).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "puppeteer-core": "^23.5.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

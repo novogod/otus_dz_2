@@ -8,3 +8,34 @@ services:
       # Host nginx (sites-enabled/recipies.mahallem.ist) proxies to 8088.
       - "127.0.0.1:8088:80"
     restart: unless-stopped
+
+  # Bot-only pre-render service (todo/20 chunk E). The host nginx
+  # UA-split forwards Googlebot/Bingbot/etc. on `/<locale>/recipes/<id>`
+  # here; humans keep getting the SPA from `flutter-web`. Cache lives in
+  # a named volume so it survives container rebuilds (the cache key
+  # already includes recipe.updatedAt — see prerender/lib/render-utils.js).
+  prerender:
+    build:
+      context: ./prerender
+      dockerfile: Dockerfile
+    container_name: recipe_list_prerender
+    depends_on:
+      - flutter-web
+    environment:
+      - PORT=8089
+      - SPA_ORIGIN=http://recipe_list_web
+      # The recipes API lives in the mahallem-user-portal stack on the
+      # shared docker bridge. Hardcoded internal IP per memory/repo
+      # prod-access.md; override via env if the stack moves.
+      - RECIPES_API_BASE=http://172.25.0.41:4000
+      - CACHE_DIR=/var/cache/prerender
+    volumes:
+      - prerender_cache:/var/cache/prerender
+    ports:
+      # Host nginx UA-split routes to 8089.
+      - "127.0.0.1:8089:8089"
+    restart: unless-stopped
+
+volumes:
+  prerender_cache:
+    name: recipe_list_prerender_cache
