@@ -135,70 +135,79 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
             horizontal: AppSpacing.pagePadding,
             vertical: AppSpacing.xl,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              FilledButton.icon(
-                style: _primaryButtonStyle,
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => AdminUsersPage(
-                        adminLogin: widget.adminLogin,
-                        adminPassword: widget.adminPassword,
-                      ),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: adminLoggedInNotifier,
+            builder: (context, isAdmin, _) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (isAdmin) ...[
+                    FilledButton.icon(
+                      style: _primaryButtonStyle,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => AdminUsersPage(
+                              adminLogin: widget.adminLogin,
+                              adminPassword: widget.adminPassword,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.people_alt_outlined),
+                      label: Text(s.adminEditUsersList),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.people_alt_outlined),
-                label: Text(s.adminEditUsersList),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              FilledButton.icon(
-                style: _primaryButtonStyle,
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => AdminAddedRecipesPage(
-                        adminLogin: widget.adminLogin,
-                        adminPassword: widget.adminPassword,
-                      ),
+                    const SizedBox(height: AppSpacing.md),
+                    FilledButton.icon(
+                      style: _primaryButtonStyle,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => AdminAddedRecipesPage(
+                              adminLogin: widget.adminLogin,
+                              adminPassword: widget.adminPassword,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.library_books_outlined),
+                      label: const Text('Recipes added'),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.library_books_outlined),
-                label: const Text('Recipes added'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              OutlinedButton.icon(
-                onPressed: _busy ? null : _saveForBiometric,
-                icon: Icon(
-                  _biometricSaved ? Icons.verified_user : Icons.fingerprint,
-                ),
-                label: Text(
-                  _biometricSaved
-                      ? 'Face ID / Fingerprint is saved for admin login'
-                      : 'Save admin login for Face ID / Fingerprint',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              FilledButton.icon(
-                style: _primaryButtonStyle,
-                onPressed: () {
-                  // Return to the food cards list (root route with recipe feed).
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
-                icon: const Icon(Icons.restaurant_menu),
-                label: Text(s.adminEditCards),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              FilledButton.icon(
-                style: _dangerButtonStyle,
-                onPressed: _busy ? null : _logout,
-                icon: const Icon(Icons.logout),
-                label: Text(s.logoutButton),
-              ),
-            ],
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  OutlinedButton.icon(
+                    onPressed: _busy ? null : _saveForBiometric,
+                    icon: Icon(
+                      _biometricSaved
+                          ? Icons.verified_user
+                          : Icons.fingerprint,
+                    ),
+                    label: Text(
+                      _biometricSaved
+                          ? 'Face ID / Fingerprint is saved for admin login'
+                          : 'Save admin login for Face ID / Fingerprint',
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  FilledButton.icon(
+                    style: _primaryButtonStyle,
+                    onPressed: () {
+                      // Return to the food cards list (root route with recipe feed).
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
+                    icon: const Icon(Icons.restaurant_menu),
+                    label: Text(s.adminEditCards),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  FilledButton.icon(
+                    style: _dangerButtonStyle,
+                    onPressed: _busy ? null : _logout,
+                    icon: const Icon(Icons.logout),
+                    label: Text(s.logoutButton),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

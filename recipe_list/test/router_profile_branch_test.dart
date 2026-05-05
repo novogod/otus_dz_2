@@ -36,17 +36,19 @@ String? _profileRedirect(BuildContext context, GoRouterState state) {
   final path = state.uri.path;
   if (!path.startsWith(Routes.profile)) return null;
   final hasAdmin = adminLoggedInNotifier.value;
+  final hasUser = userLoggedInNotifier.value;
   final token = currentRecipeAdminTokenNotifier.value;
   final hasToken = token != null && token.isNotEmpty;
   final login = currentUserLoginNotifier.value?.trim() ?? '';
-  final canShowAdmin = (hasAdmin || hasToken) && login.isNotEmpty;
+  final canShowProfile =
+      (hasAdmin || hasUser || hasToken) && login.isNotEmpty;
   if (path == Routes.profile) {
-    return canShowAdmin ? Routes.profileAdmin : Routes.profileLogin;
+    return canShowProfile ? Routes.profileAdmin : Routes.profileLogin;
   }
-  if (path == Routes.profileLogin && canShowAdmin) {
+  if (path == Routes.profileLogin && canShowProfile) {
     return Routes.profileAdmin;
   }
-  if (path == Routes.profileAdmin && !canShowAdmin) {
+  if (path == Routes.profileAdmin && !canShowProfile) {
     return Routes.profileLogin;
   }
   return null;
@@ -249,5 +251,34 @@ void main() {
       Routes.profileLogin,
     );
     expect(find.text('login-stub'), findsOneWidget);
+  });
+
+  // Regression: после входа обычным пользователем (не админом)
+  // adminLoggedInNotifier остаётся false, но userLoggedInNotifier
+  // = true. Раньше canShowAdmin учитывал только admin-флаги, и
+  // пользователь оставался на /profile/login. Теперь любой
+  // залогиненный пользователь уходит на /profile/admin.
+  testWidgets('flipping userLoggedInNotifier on /profile/login redirects to admin', (
+    tester,
+  ) async {
+    final router = _buildTestRouter();
+    await tester.pumpWidget(_wrap(router));
+    await tester.pump();
+
+    final s = S.of(tester.element(find.byType(AppShell)));
+    await tester.tap(find.text(s.tabProfile));
+    await tester.pumpAndSettle();
+    expect(find.text('login-stub'), findsOneWidget);
+
+    // Имитируем «успешный логин обычного пользователя».
+    userLoggedInNotifier.value = true;
+    currentUserLoginNotifier.value = 'dave';
+    await tester.pumpAndSettle();
+
+    expect(
+      router.routerDelegate.currentConfiguration.uri.path,
+      Routes.profileAdmin,
+    );
+    expect(find.text('admin-stub'), findsOneWidget);
   });
 }

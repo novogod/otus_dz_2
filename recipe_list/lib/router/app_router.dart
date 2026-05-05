@@ -256,25 +256,32 @@ class _ProfileBranchRoot extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: adminLoggedInNotifier,
       builder: (context, _, __) {
-        return ValueListenableBuilder<String?>(
-          valueListenable: currentRecipeAdminTokenNotifier,
-          builder: (context, token, _) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: userLoggedInNotifier,
+          builder: (context, _, __) {
             return ValueListenableBuilder<String?>(
-              valueListenable: currentUserLoginNotifier,
-              builder: (context, login, _) {
-                final hasAdmin = adminLoggedInNotifier.value;
-                final hasToken = token != null && token.isNotEmpty;
-                final loginTrim = login?.trim() ?? '';
-                final canShowAdmin =
-                    (hasAdmin || hasToken) && loginTrim.isNotEmpty;
-                if (canShowAdmin) {
-                  return AdminAfterLoginPage(
-                    adminLogin: loginTrim,
-                    adminPassword: currentSessionAdminPassword ?? '',
-                  );
-                }
-                return LoginPage(
-                  initialLogin: loginTrim.isNotEmpty ? loginTrim : null,
+              valueListenable: currentRecipeAdminTokenNotifier,
+              builder: (context, token, _) {
+                return ValueListenableBuilder<String?>(
+                  valueListenable: currentUserLoginNotifier,
+                  builder: (context, login, _) {
+                    final hasAdmin = adminLoggedInNotifier.value;
+                    final hasUser = userLoggedInNotifier.value;
+                    final hasToken = token != null && token.isNotEmpty;
+                    final loginTrim = login?.trim() ?? '';
+                    final canShowProfile =
+                        (hasAdmin || hasUser || hasToken) &&
+                        loginTrim.isNotEmpty;
+                    if (canShowProfile) {
+                      return AdminAfterLoginPage(
+                        adminLogin: loginTrim,
+                        adminPassword: currentSessionAdminPassword ?? '',
+                      );
+                    }
+                    return LoginPage(
+                      initialLogin: loginTrim.isNotEmpty ? loginTrim : null,
+                    );
+                  },
                 );
               },
             );
@@ -387,17 +394,23 @@ String? _profileRedirect(BuildContext context, GoRouterState state) {
   final path = state.uri.path;
   if (!path.startsWith(Routes.profile)) return null;
   final hasAdmin = adminLoggedInNotifier.value;
+  final hasUser = userLoggedInNotifier.value;
   final token = currentRecipeAdminTokenNotifier.value;
   final hasToken = token != null && token.isNotEmpty;
   final login = currentUserLoginNotifier.value?.trim() ?? '';
-  final canShowAdmin = (hasAdmin || hasToken) && login.isNotEmpty;
+  // Любой залогиненный (admin или обычный user) уводится
+  // на `/profile/admin` — это пост-логин экран профиля.
+  // Admin-only кнопки на нём скрыты для не-админов
+  // (см. `AdminAfterLoginPage`).
+  final canShowProfile =
+      (hasAdmin || hasUser || hasToken) && login.isNotEmpty;
   if (path == Routes.profile) {
-    return canShowAdmin ? Routes.profileAdmin : Routes.profileLogin;
+    return canShowProfile ? Routes.profileAdmin : Routes.profileLogin;
   }
-  if (path == Routes.profileLogin && canShowAdmin) {
+  if (path == Routes.profileLogin && canShowProfile) {
     return Routes.profileAdmin;
   }
-  if (path == Routes.profileAdmin && !canShowAdmin) {
+  if (path == Routes.profileAdmin && !canShowProfile) {
     return Routes.profileLogin;
   }
   return null;
