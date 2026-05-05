@@ -66,8 +66,15 @@ class AppBottomNavBar extends StatelessWidget {
                       for (final item in _items)
                         Expanded(
                           child: _Tab(
-                            icon: item.icon,
+                            icon: item.tab == AppNavTab.profile && userLoggedIn
+                                ? Icons.person
+                                : item.icon,
                             label: _label(item.tab, s),
+                            // Profile-tab имеет 3 состояния:
+                            //   grey outlined  — не выбрана, не залогинен
+                            //   green outlined — выбрана, не залогинен
+                            //   green filled   — залогинен (выбрана или нет)
+                            // Остальные tab'ы — обычное active = (tab == current).
                             active:
                                 item.tab == current ||
                                 (item.tab == AppNavTab.profile && userLoggedIn),
