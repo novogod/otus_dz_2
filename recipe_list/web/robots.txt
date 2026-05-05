@@ -1,0 +1,35 @@
+# Otus Food — public recipe listing site.
+# All paths are public; no admin surface lives on this origin.
+# Explicitly allow the social-network link-preview crawlers so
+# Facebook / WhatsApp / Telegram / X show og:image + og:title
+# preview cards when users share recipes from the app's share
+# button (see recipe_list/lib/ui/web_share/web_action_buttons.dart).
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: facebookcatalog
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+User-agent: *
+Allow: /
+
+Sitemap: https://recipies.mahallem.ist/sitemap.xml
