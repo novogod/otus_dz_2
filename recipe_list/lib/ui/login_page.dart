@@ -46,7 +46,7 @@ Route<bool> buildLoginRoute({String? prefillLogin}) {
     transitionDuration: AppDurations.splashTransition,
     reverseTransitionDuration: AppDurations.splashTransition,
     pageBuilder: (context, animation, secondaryAnimation) =>
-        LoginPage(initialLogin: prefillLogin),
+        LoginPage(initialLogin: prefillLogin, popOnSuccess: true),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       final curved = CurvedAnimation(
         parent: animation,
@@ -64,7 +64,21 @@ Route<bool> buildLoginRoute({String? prefillLogin}) {
 class LoginPage extends StatefulWidget {
   final String? initialLogin;
 
-  const LoginPage({super.key, this.initialLogin});
+  /// Если true, после успешного логина страница вызывает
+  /// `Navigator.pop(true)`. Используется только когда страница
+  /// открыта через `openLoginPage` / `buildLoginRoute` (push на
+  /// существующий стек). В go_router-сценариях
+  /// (/profile/login overlay и `_ProfileBranchRoot`)
+  /// pop приводит к опустошению matchList и краху
+  /// (`currentConfiguration.isNotEmpty` assertion). Там
+  /// `refreshListenable` сам перенаправит на `/profile/admin`.
+  final bool popOnSuccess;
+
+  const LoginPage({
+    super.key,
+    this.initialLogin,
+    this.popOnSuccess = false,
+  });
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -158,7 +172,9 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     if (!context.mounted) return;
-    Navigator.of(context).pop(true);
+    if (widget.popOnSuccess && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(true);
+    }
   }
 
   Future<void> _saveCurrentSessionForBiometric() async {
@@ -271,7 +287,9 @@ class _LoginPageState extends State<LoginPage> {
         );
         return;
       }
-      Navigator.of(context).pop(true);
+      if (widget.popOnSuccess && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop(true);
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _authBusy = false);
