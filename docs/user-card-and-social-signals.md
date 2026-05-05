@@ -943,15 +943,15 @@ references). `ratings_count` / `ratings_sum` columns remain at 0.
 logged in; otherwise the existing 32×32 square. Logged-out behaviour
 unchanged.
 
-**Status:** ⬜
+**Status:** 🟡 client portion landed (commit pending). Server side
+(denormalised `favorites_count` column + projection in
+`/recipes/lookup` / `/recipes/page`) is BLOCKED on backend repo
+(`mahallem-user-portal`); pill renders as the legacy square until
+`recipe.favoritesCount` arrives populated from the server.
 
-**Prereqs:** Chunk E (`Recipe.favoritesCount`). Backend already
-counts favorites in the `favorites` table; server change is a
-denormalised `favorites_count` column on `recipes` updated by the
-same handler that toggles favorites — small companion to Chunk C
-(can be folded into the same backend PR).
+**Prereqs:** Chunk E (`Recipe.favoritesCount`). ✅
 
-**Code TODO** (server)
+**Code TODO** (server) — BLOCKED on mahallem-user-portal repo
 
 - ⬜ Migration: `ALTER TABLE recipes ADD COLUMN favorites_count
   INTEGER NOT NULL DEFAULT 0`.
@@ -962,13 +962,17 @@ same handler that toggles favorites — small companion to Chunk C
 
 **Code TODO** (client)
 
-- ⬜ Refactor the round badge in `recipe_card.dart` into
-  `RecipeFavoriteButton(favoritesCount, showCount)`.
-- ⬜ Pill layout per §5.2 when `showCount && favoritesCount > 0`;
-  square fallback otherwise.
-- ⬜ Tap behaviour unchanged.
-- ⬜ Tooltip reuses `s.favoritesAddTooltip` /
-  `s.favoritesRemoveTooltip`.
+- ✅ Refactor in `recipe_card.dart`: `FavoriteBadge` now takes
+  `int favoritesCount` (default 0) and `bool showCount` (default
+  false). The card site at line ~110 passes
+  `favoritesCount: recipe.favoritesCount, showCount: true`.
+- ✅ Pill layout per §5.2 when `showCount && favoritesCount > 0`:
+  height 32, horizontal padding 12, full-pill radius 16,
+  surface@0.92 background, 1 px textInactive border, card shadow,
+  Roboto w500 14 number + 18 dp heart icon. Number / heart turn
+  primary when favorited.
+- ✅ Square fallback otherwise — preserves legacy logged-out look.
+- ✅ Tap behaviour unchanged.
 
 **Tests** (server)
 

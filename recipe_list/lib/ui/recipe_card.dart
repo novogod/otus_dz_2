@@ -107,7 +107,17 @@ class RecipeCard extends StatelessWidget {
         Positioned(
           top: outerPadding.top + AppSpacing.sm,
           right: outerPadding.right + AppSpacing.sm,
-          child: PointerInterceptor(child: FavoriteBadge(recipeId: recipe.id)),
+          child: PointerInterceptor(
+            child: FavoriteBadge(
+              recipeId: recipe.id,
+              // chunk H of user-card-and-social-signals.md: when the
+              // server has projected favoritesCount, render a pill
+              // with the number; otherwise the badge collapses to
+              // its legacy 32×32 square.
+              favoritesCount: recipe.favoritesCount,
+              showCount: true,
+            ),
+          ),
         ),
         Positioned(
           top: outerPadding.top + AppSpacing.sm,
@@ -314,7 +324,26 @@ class _YoutubeBadge extends StatelessWidget {
 class FavoriteBadge extends StatelessWidget {
   final int recipeId;
 
-  const FavoriteBadge({super.key, required this.recipeId});
+  /// Total favorites this recipe has across all users (server-projected
+  /// via [Recipe.favoritesCount]). Used by chunk H of
+  /// user-card-and-social-signals.md to render a pill instead of the
+  /// legacy square. Defaults to 0; with [showCount] off the value is
+  /// ignored.
+  final int favoritesCount;
+
+  /// When true and `favoritesCount > 0`, render the pill layout
+  /// (number + heart). Otherwise fall back to the legacy 32×32
+  /// dark circle. Set to `false` for callers that just need the
+  /// affordance (e.g. logged-out badge in lists where counts
+  /// haven't shipped yet).
+  final bool showCount;
+
+  const FavoriteBadge({
+    super.key,
+    required this.recipeId,
+    this.favoritesCount = 0,
+    this.showCount = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -327,6 +356,8 @@ class FavoriteBadge extends StatelessWidget {
             if (store == null) {
               return _FavoriteBadgeView(
                 isFavorite: false,
+                favoritesCount: favoritesCount,
+                showCount: showCount,
                 onTap: () async {
                   if (!userLoggedInNotifier.value) {
                     await _showRegistrationRequired(context);
@@ -345,6 +376,8 @@ class FavoriteBadge extends StatelessWidget {
                 final isFav = ids.contains(recipeId);
                 return _FavoriteBadgeView(
                   isFavorite: isFav,
+                  favoritesCount: favoritesCount,
+                  showCount: showCount,
                   onTap: () async {
                     if (!userLoggedInNotifier.value) {
                       await _showRegistrationRequired(context);
@@ -379,9 +412,16 @@ class FavoriteBadge extends StatelessWidget {
 
 class _FavoriteBadgeView extends StatelessWidget {
   final bool isFavorite;
+  final int favoritesCount;
+  final bool showCount;
   final VoidCallback? onTap;
 
-  const _FavoriteBadgeView({required this.isFavorite, required this.onTap});
+  const _FavoriteBadgeView({
+    required this.isFavorite,
+    required this.onTap,
+    this.favoritesCount = 0,
+    this.showCount = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -390,22 +430,75 @@ class _FavoriteBadgeView extends StatelessWidget {
     // другого InkWell не всегда получает тап — событие уходит в
     // родительский Material карточки. GestureDetector с opaque всегда
     // поглощает тап независимо от платформы.
+    final renderPill = showCount && favoritesCount > 0;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: Color(0xA6000000), // Colors.black.withValues(alpha:0.65)
-          shape: BoxShape.circle,
+      child: renderPill
+          ? _buildPill(context)
+          : _buildSquare(),
+    );
+  }
+
+  /// Legacy 32×32 dark-translucent circle. Kept for the
+  /// "no count to show" / logged-out path so we don't regress
+  /// existing visual tests beyond the chunk-H scope.
+  Widget _buildSquare() {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: Color(0xA6000000), // Colors.black.withValues(alpha:0.65)
+        shape: BoxShape.circle,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Icon(
+          isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: isFavorite ? AppColors.primary : Colors.white,
+          size: 24,
+          semanticLabel: isFavorite ? 'favorite-on' : 'favorite-off',
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          child: Icon(
-            isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: isFavorite ? AppColors.primary : Colors.white,
-            size: 24,
-            semanticLabel: isFavorite ? 'favorite-on' : 'favorite-off',
-          ),
+      ),
+    );
+  }
+
+  /// Light pill `<count> ♡`. Spec: §5.2 of
+  /// docs/user-card-and-social-signals.md.
+  /// Height 32, horizontal padding 12, full-pill radius 16,
+  /// surface@0.92 background, 1 px textInactive border, card shadow.
+  Widget _buildPill(BuildContext context) {
+    return Semantics(
+      label: isFavorite ? 'favorite-on' : 'favorite-off',
+      button: true,
+      child: Container(
+        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.surface.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.textInactive),
+          boxShadow: AppShadows.card,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$favoritesCount',
+              style: TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                color: isFavorite ? AppColors.primary : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              size: 18,
+              color: isFavorite
+                  ? AppColors.primary
+                  : AppColors.textSecondary,
+            ),
+          ],
         ),
       ),
     );
