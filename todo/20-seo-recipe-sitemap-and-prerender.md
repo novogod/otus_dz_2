@@ -1,7 +1,9 @@
 # 20 — Per-recipe SEO: dynamic sitemap + multi-locale pre-render
 
-> **Статус:** � Phase 1 готова в коде (чанки A, B, D); чанки C, E, F
-> требуют операционного доступа к проду и пока не выполнены.
+> **Статус:** 🟢 Phase 1 (чанки A, B, D) задеплоена на прод 2026-05-05:
+> sitemap.xml = 121809 bytes / 616 URL, cron `/etc/cron.d/recipes-sitemap`
+> установлен, locale-prefix `/{lang}/recipes/{id}` редиректит в SPA.
+> Чанки C, E, F — следующие.
 > **См.:** [docs/seo-recipe-sitemap-and-prerender.md](../docs/seo-recipe-sitemap-and-prerender.md), [docs/seo.md](../docs/seo.md).
 > **Приоритет:** P2 (рост органического трафика, корректные
 > share-card'ы для каждого рецепта).
