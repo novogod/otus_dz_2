@@ -308,8 +308,13 @@ during the current outage.
 
 ## 4. Recommended rollout
 
-1. **Today**: Ship Fix D (instant UX win — no more `reloadServerBusy`
-   snackbar on non-EN). User-facing.
+1. **Today** ✅ DEPLOYED 2026-05-05 16:02 UTC: Fix D applied to
+   `mahallem-user-portal:/app/routes/recipes.js` (`_ensureLang`
+   gained `{ allowTranslate = true }` opt; `repo.page` passes
+   `allowTranslate: false`). All 10 locales now return
+   `/recipes/page?limit=200` in under 1.1 s. See
+   [`docs/recipe-list-88-recipes-non-en-locales.md`](recipe-list-88-recipes-non-en-locales.md)
+   §5 for the smoke-test transcript.
 2. **Today**: Ship Fix A (translate inside the cron). Backfills the
    ingested batch and prevents future occurrences of the same
    regression.

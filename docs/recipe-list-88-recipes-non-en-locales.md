@@ -336,10 +336,25 @@ busy snackbar directly, so the UX is predictable.
 
 ## 5. Recommended rollout
 
-1. **Today**: Fix A (server, single function change). Restart
-   `mahallem-user-portal`. Verify
-   `curl 'https://mahallem.ist/recipes/page?lang=ru&limit=200'`
-   returns 200 OK in < 2 s.
+1. **Today** ✅ DEPLOYED 2026-05-05 16:02 UTC: Fix A applied to
+   `/root/mahallem/mahallem_ist/local_user_portal/routes/recipes.js`,
+   `docker cp` into `mahallem-user-portal:/app/routes/recipes.js`,
+   container restarted. Smoke test:
+   ```
+   lang=en code=200 time=0.92s size=486373
+   lang=ru code=200 time=0.96s size=730945
+   lang=es code=200 time=0.92s size=521612
+   lang=fr code=200 time=0.94s size=538228
+   lang=de code=200 time=0.91s size=518875
+   lang=it code=200 time=0.94s size=523124
+   lang=tr code=200 time=0.94s size=512980
+   lang=ar code=200 time=0.99s size=643100
+   lang=fa code=200 time=1.03s size=699216
+   lang=ku code=200 time=1.02s size=777811
+   ```
+   All 10 locales return 200 OK in <1.1 s. The 88-recipes loading
+   regression is gone.
+
 2. **Today**: Re-test the affected app locales (`es`, `fr`, `de`,
    `it`, `tr`, `fa`). The loading-stage counter should jump
    straight to 200 with no “88-recipes-loading” intermediate
