@@ -1,5 +1,45 @@
 # Project Log
 
+## Go-router follow-up I — grey-screen на не-EN локалях при тапе Profile
+
+**Date:** 2026-05-04
+
+**Status:** ✅ Fixed
+
+После релиза round-H пользователь сообщил: на Novogod (iPhone,
+release) тап по нижней кнопке Profile открывает серый экран на
+русском (и на любом другом не-EN языке); на английском всё
+работает — слайдается `LoginPage`.
+
+**Root cause (гипотеза).** На голом `/profile` builder ветки
+рендерил `Scaffold(body: SizedBox.shrink())` — пустой холст под
+оверлейным `/profile/login` (с `parentNavigatorKey: rootNavigatorKey`).
+В EN-сценарии `_profileRedirect` успевает увести роутер в
+`/profile/login` до первого кадра, и поверх SizedBox-а ложится
+`LoginPage`. На не-EN локалях (после `cycleAppLang`) приоритеты
+кадров смещаются: `MaterialApp.router` пересобирается из-за смены
+`title`/`locale`, redirect срабатывает с задержкой, overlay-роут
+не успевает смонтироваться к первому кадру — пользователь видит
+серый экран ветки. Воспроизвести стабильно через MCP/widget-tree
+не удалось (DTD-сессия залочена под старый VS Code DAP-launcher).
+
+**Fix.** Branch-root `/profile` теперь сам рендерит auth-aware
+страницу: `_ProfileBranchRoot` подписан на
+`adminLoggedInNotifier` / `currentRecipeAdminTokenNotifier` /
+`currentUserLoginNotifier` и возвращает `AdminAfterLoginPage` для
+авторизованных или `LoginPage` для гостей. Sub-routes
+`/profile/login` и `/profile/admin` оставлены как slide-up
+overlay-варианты для совместимости с прямыми ссылками — но даже
+если они «не поедут», пользователь видит рабочий экран сразу.
+
+**Files.**
+* [`recipe_list/lib/router/app_router.dart`](../recipe_list/lib/router/app_router.dart)
+  — `Routes.profile` builder теперь `_ProfileBranchRoot()`; сам
+  класс добавлен ниже по файлу.
+
+**Tests.** `flutter analyze` — clean. `flutter test` — 105 pass /
+6 fail (baseline). `router_profile_branch_test.dart` — 4 pass.
+
 ## Go-router follow-up H — UX-регрессии после shell-рефакторинга
 
 **Date:** 2026-05-04

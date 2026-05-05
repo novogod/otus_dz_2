@@ -148,19 +148,19 @@ final GoRouter appRouter = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: Routes.profile,
-              // `_profileRedirect` (top-level) уже уводит c
-              // голого `/profile` на `login`/`admin`. Здесь же
-              // builder обязан рендерить нейтральный фон под
-              // оверлейным login/admin-маршрутом, который
-              // живёт на rootNavigator (см. `parentNavigatorKey`
-              // ниже). Никаких bounce-ов отсюда быть не должно:
-              // `context.go(...)` из post-frame-callback гонится
-              // с redirect-ом и перетягивает приложение прочь от
-              // только что отрисованного `/profile/login`
-              // (баг «click on profile icon when no session
-              // opens an empty screen»).
-              builder: (context, state) =>
-                  const Scaffold(body: SizedBox.shrink()),
+              // На голом `/profile` рендерим auth-aware fallback:
+              // если есть админ-токен — `AdminAfterLoginPage`,
+              // иначе — `LoginPage`. Это страховка от ситуации,
+              // когда `_profileRedirect` по какой-либо причине
+              // не доводит навигацию до `/profile/login` (видели
+              // grey-screen на не-EN локалях после смены языка
+              // — top-level redirect срабатывал, но overlay-роут
+              // c `parentNavigatorKey: rootNavigatorKey` не
+              // успевал смонтироваться). Подписка на
+              // auth-нотифаеры выполняется самой страницей —
+              // `refreshListenable` всё равно пересоберёт
+              // редирект, как только пользователь войдёт.
+              builder: (context, state) => const _ProfileBranchRoot(),
               routes: <RouteBase>[
                 GoRoute(
                   path: 'login',
@@ -233,6 +233,54 @@ class _ComingSoonPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Корневой виджет ветки `/profile`: рендерится, когда роутер
+/// останавливается на голом `/profile` (без sub-route). По
+/// auth-нотифаерам выбирает между `LoginPage` и
+/// `AdminAfterLoginPage`. Подписан через
+/// [ValueListenableBuilder], так что вход/выход
+/// автоматически переключают экран в пределах той же ветки —
+/// без дополнительных навигаций. Sub-роуты `/profile/login` и
+/// `/profile/admin` остаются как slide-up overlay-варианты, но
+/// эта же страница работает как fallback, если редирект не
+/// успел или был отменён (видели grey-screen на не-EN
+/// локалях после смены языка).
+class _ProfileBranchRoot extends StatelessWidget {
+  const _ProfileBranchRoot();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: adminLoggedInNotifier,
+      builder: (context, _, __) {
+        return ValueListenableBuilder<String?>(
+          valueListenable: currentRecipeAdminTokenNotifier,
+          builder: (context, token, _) {
+            return ValueListenableBuilder<String?>(
+              valueListenable: currentUserLoginNotifier,
+              builder: (context, login, _) {
+                final hasAdmin = adminLoggedInNotifier.value;
+                final hasToken = token != null && token.isNotEmpty;
+                final loginTrim = login?.trim() ?? '';
+                final canShowAdmin =
+                    (hasAdmin || hasToken) && loginTrim.isNotEmpty;
+                if (canShowAdmin) {
+                  return AdminAfterLoginPage(
+                    adminLogin: loginTrim,
+                    adminPassword: currentSessionAdminPassword ?? '',
+                  );
+                }
+                return LoginPage(
+                  initialLogin: loginTrim.isNotEmpty ? loginTrim : null,
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
