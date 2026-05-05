@@ -26,17 +26,25 @@ String _shareUrl() {
   return '${base.origin}/';
 }
 
-Future<void> _systemShare() async {
+Future<void> _systemShare({Rect? sharePositionOrigin}) async {
   // SharePlus picks the right transport per platform:
   //  - iOS / Android: native UIActivityViewController / ACTION_SEND
   //    (lists every installed app: Instagram, WhatsApp, Messages…)
   //  - Web (Safari/Chrome/Edge with navigator.share): system share sheet
+  //
+  // On iPad UIActivityViewController is presented as a popover and
+  // iPadOS *requires* an anchor `CGRect` — without
+  // `sharePositionOrigin` the system call silently no-ops (or in
+  // some iPadOS versions throws an exception caught by share_plus).
+  // We pass the share button's global rect so the popover hangs
+  // off it; harmless on iPhone/Android (ignored).
   await SharePlus.instance.share(
     ShareParams(
       title: _kShareTitle,
       text: '$_kShareText ${_shareUrl()}',
       uri: Uri.parse(_shareUrl()),
       subject: _kShareTitle,
+      sharePositionOrigin: sharePositionOrigin,
     ),
   );
 }
@@ -149,7 +157,16 @@ Future<void> _onShareTap(BuildContext context) async {
   // On native iOS/Android the system share sheet is reliable and
   // surfaces every installed app, so we keep it there.
   if (!kIsWeb) {
-    await _systemShare();
+    // Compute the global rect of the tapped share button — used as
+    // anchor for the iPad popover. On iPhone/Android the value is
+    // ignored.
+    final box = context.findRenderObject() as RenderBox?;
+    Rect? origin;
+    if (box != null && box.hasSize) {
+      final topLeft = box.localToGlobal(Offset.zero);
+      origin = topLeft & box.size;
+    }
+    await _systemShare(sharePositionOrigin: origin);
     return;
   }
   // On web we ALWAYS show our own dropdown of social-network URL
