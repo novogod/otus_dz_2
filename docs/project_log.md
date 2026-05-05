@@ -1,5 +1,105 @@
 # Project Log
 
+## iPad/iOS: app icon, AppBar focus expand, share popover, keyboard fix
+
+**Date:** 2026-05-05
+
+**Status:** ✅ Shipped on iPad NovogodOne (signed release `Runner.app`,
+bundle `com.otus.recipeList` 1.0.0+2)
+
+Целевое устройство — iPad NovogodOne (iPad15,8, iOS 26.4.2). Сессия
+переключилась с Android-сборки на signed iOS-релиз: установка через
+`flutter build ios --release` + `xcrun devicectl device install app`.
+
+1. **Кастомная иконка приложения** (steaming-bowl). Заменили дефолтный
+   Flutter-icon. Дизайн — белая миска с тарелкой и тремя волнистыми
+   струйками пара на фирменном `#2ECC71`, скруглённый квадрат 224 px.
+   Исходник — `recipe_list/assets/icon/app_icon.svg` (+ `_foreground.svg`
+   для adaptive Android), растеризован `rsvg-convert -w 1024`.
+   Подключили `flutter_launcher_icons: ^0.14.1` в
+   [recipe_list/pubspec.yaml](../recipe_list/pubspec.yaml) с
+   `android: true`, `ios: true`,
+   `adaptive_icon_background: "#2ECC71"`, `min_sdk_android: 21`.
+   Generator перегенерил весь iOS `AppIcon.appiconset/*.png` и
+   Android `mipmap-*/ic_launcher.png` + `mipmap-anydpi-v26/`.
+
+2. **AppBar: разворот поля поиска при фокусе**. По тапу внутрь поля
+   поиска кнопки в AppBar (Web actions / Reload / Lang) скрываются
+   анимированно, поле растягивается до правого края; тап вне —
+   восстанавливает кнопки.
+   - [recipe_list/lib/ui/app_page_bar.dart](../recipe_list/lib/ui/app_page_bar.dart) —
+     добавили параметр `bool hideActions` (default `false`); если
+     true, `actions` сокращается до одного `SizedBox(width: _trailingGap)`.
+     Существующая ветка `disableLangAndReload` (IgnorePointer/Opacity)
+     сохранена под `!hideActions`.
+   - [recipe_list/lib/ui/search_app_bar.dart](../recipe_list/lib/ui/search_app_bar.dart) —
+     `SearchAppBar` переведён `StatelessWidget → StatefulWidget`.
+     `_SearchAppBarState` слушает `widget.focusNode`
+     (`addListener` в `initState`/`didUpdateWidget`, `removeListener`
+     в `dispose`). При смене фокуса делает `setState` и пересобирает
+     дерево; title оборачивается в
+     `AnimatedAlign(centerLeft, 200ms easeOut)` →
+     `AnimatedFractionallySizedBox(widthFactor: focused ? 1.0 : 0.85)`,
+     а `hideActions: focused` пробрасывается в `AppPageBar`.
+
+3. **iPad share fix: popover anchor**. На iPad `UIActivityViewController`
+   презентуется как popover и `iPadOS` **требует** anchor-rect; без
+   `sharePositionOrigin` `share_plus` молча no-op'ил.
+   В [recipe_list/lib/ui/web_share/web_action_buttons.dart](../recipe_list/lib/ui/web_share/web_action_buttons.dart):
+   - `_systemShare({Rect? sharePositionOrigin})` → передаёт `Rect` в
+     `ShareParams(...)`.
+   - `_onShareTap` non-web: вычисляет глобальный rect кнопки share
+     через `context.findRenderObject() as RenderBox` →
+     `box.localToGlobal(Offset.zero) & box.size`. На iPhone/Android
+     параметр игнорируется.
+
+4. **iPad keyboard fix: убрали глобальный `GestureDetector(onTap: unfocus)`**
+   из `MaterialApp.router builder` в
+   [recipe_list/lib/main.dart](../recipe_list/lib/main.dart).
+   Этот враппер был добавлен ранее (`f8a891f`, "tap-outside-to-dismiss-keyboard"),
+   но на iPadOS 26 его `TapGestureRecognizer` выигрывал в gesture
+   arena у `TextField` — тап доходил до враппера, тот вызывал
+   `FocusManager.instance.primaryFocus?.unfocus()`, и клавиатура не
+   успевала появиться **ни в одном** TextField приложения (поиск,
+   логин, везде). Симптом: в Notes/других приложениях клавиатура
+   работает, в Recipe List — нет, без подключённого hardware-keyboard.
+   Решение — снять враппер; дефолтный `TextField.onTapOutside` на
+   мобильных и так прячет клавиатуру при тапе вне поля.
+
+### Затронутые файлы
+
+- [recipe_list/lib/main.dart](../recipe_list/lib/main.dart) —
+  снят глобальный `GestureDetector` враппер.
+- [recipe_list/lib/ui/app_page_bar.dart](../recipe_list/lib/ui/app_page_bar.dart) —
+  параметр `hideActions`.
+- [recipe_list/lib/ui/search_app_bar.dart](../recipe_list/lib/ui/search_app_bar.dart) —
+  Stateful + анимация разворота при фокусе.
+- [recipe_list/lib/ui/web_share/web_action_buttons.dart](../recipe_list/lib/ui/web_share/web_action_buttons.dart) —
+  `sharePositionOrigin` на iPad.
+- [recipe_list/pubspec.yaml](../recipe_list/pubspec.yaml) —
+  `flutter_launcher_icons` config.
+- `recipe_list/assets/icon/app_icon.svg`, `app_icon_foreground.svg`,
+  `app_icon.png` — исходники иконки.
+- `recipe_list/ios/Runner/Assets.xcassets/AppIcon.appiconset/*` +
+  `recipe_list/android/app/src/main/res/{mipmap-*,drawable-*,mipmap-anydpi-v26,values/colors.xml}` —
+  сгенерированные ресурсы.
+
+### Деплой
+
+iPad NovogodOne (`9926E27D-4E64-5C4B-873D-34B02852DD42`):
+```
+cd recipe_list
+flutter build ios --release
+xcrun devicectl device install app \
+  --device 9926E27D-4E64-5C4B-873D-34B02852DD42 \
+  build/ios/iphoneos/Runner.app
+```
+
+Android APK для PREreleases — отдельной сборкой, `app-release.apk`
+58.6 MB.
+
+---
+
 ## Web: share dropdown + iOS PWA install modal polish + backfill cron
 
 **Date:** 2026-05-05
