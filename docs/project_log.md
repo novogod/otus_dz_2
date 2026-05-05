@@ -1,5 +1,46 @@
 # Project Log
 
+## PWA installed-mode bugs — safe-area, reload spinner, SQLite corruption
+
+**Date:** 2026-05-05
+
+**Status:** ✅ Shipped (commits `87040f2`, `ca3dd80`, `68375ac`)
+
+Three follow-up bugs surfaced on the installed PWA after Chunk F (SEO)
+went out — none of them reproduced in a regular browser tab.
+
+1. **AppBar buttons not clickable** in `display-mode: standalone`.
+   Flutter web reports `MediaQuery.padding.top == 0`, so the system
+   status bar / window-chrome overlay silently ate taps on the upper
+   half of the action buttons. Fixed in [recipe_list/web/index.html](../recipe_list/web/index.html)
+   by pushing `<flutter-view>` and `<flt-glass-pane>` down by
+   `env(safe-area-inset-top)` under the standalone media queries
+   (with an `html.pwa-standalone` JS-set fallback for iOS < 16).
+2. **Reload spinner stuck** after a language switch or after returning
+   from details. The `reloadingFeed.value = false` reset was nested
+   inside an `if (seq == _translateSeq)` guard whose seq was bumped
+   by every concurrent `_translateSeq++`. Fixed in
+   [recipe_list/lib/ui/recipe_list_loader.dart](../recipe_list/lib/ui/recipe_list_loader.dart)
+   by resetting the UI flag unconditionally in `whenComplete`; the
+   seq guard remains on the data-side `.then`/`.catchError` branches.
+3. **`SQLITE_CORRUPT (code 11)` — "database disk image is malformed"**
+   on the recipes IndexedDB snapshot, triggered by quota eviction or
+   a half-written page from a worker-mode migration. The Retry
+   button kept re-arming the same broken DB. Added two recovery
+   layers in [recipe_list/lib/data/local/recipe_db.dart](../recipe_list/lib/data/local/recipe_db.dart)
+   and the loader: shared `isCorruptDbError(Object)` +
+   `deleteRecipeDatabaseWebOnly()`; `openRecipeDatabase()` deletes
+   and rebuilds on open-time corruption; `_runLoad` wraps
+   `_runLoadImpl` in a classify-and-retry shell that wipes the cache,
+   nulls `favoritesStoreNotifier` / `ownedRecipesStoreNotifier` (they
+   held the invalid `Database` instance), and re-runs the load once.
+   The retry rebuilds the repo via `_defaultRepoBuilder` and falls
+   through to a fresh network seed.
+
+Full write-up: [pwa-installed-bugs-2026-05.md](pwa-installed-bugs-2026-05.md).
+
+---
+
 ## iPad/iOS: app icon, AppBar focus expand, share popover, keyboard fix
 
 **Date:** 2026-05-05
