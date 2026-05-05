@@ -40,54 +40,106 @@ warning'а, но без harfbuzz-shaping'а — лигатуры могут «р
 Для текущего использования (24-px кружок рядом с language
 toggle) это незаметно; полноценная замена на `<path>` отложена.
 
-## SnackBar hangs forever inside `StatefulShellRoute.indexedStack`
+## Splash + login below bottom nav, snackbars don't show
 
 **Date:** 2026-05-04
 
 **Status:** ✅ Fixed
 
-**Symptom.** После перехода на `go_router` (todo/19) любой `SnackBar`
-(сохранение настроек, ошибка добавления, registration-required и
-т.п.) появлялся, но никогда не скрывался — висел поверх UI до
-явного нажатия на `SnackBarAction` или ручного dismiss. Логи
-чистые, таймер dismiss-а просто не запускался.
+**Symptom.**
+1. На splash и на экранах `LoginPage` / `SignupPage` /
+   `PasswordRecoveryPage` / `AdminAfterLoginPage` снизу всё
+   время торчал `AppBottomNavBar` — UX сломан, эти экраны
+   должны быть полноэкранные.
+2. Любой `showSnackBar(...)` ничего не показывал — ни в
+   recipes/favorites, ни в формах авторизации.
 
-**Root cause.** `StatefulShellRoute.indexedStack` держит **все**
-ветки одновременно смонтированными внутри `IndexedStack`. Каждый
-вкладочный `Scaffold` (recipes/fridge/favorites/profile) при
-`didChangeDependencies` регистрируется в **общем** корневом
-`ScaffoldMessenger`, который автоматически создаёт `MaterialApp`.
-Messenger выбирает «host scaffold» для snackbar-а из своего
-`LinkedHashSet` зарегистрированных Scaffold-ов — нередко им
-оказывается Scaffold *внеактивной* ветки. Snackbar монтируется в
-его `OverlayEntry`, но `RenderIndexedStack` не красит off-branch
-поддерево, его `AnimatedBuilder` не получает кадров → статус
-анимации никогда не становится `AnimationStatus.completed` →
-`Scaffold._handleStatusChanged` не успевает запустить
-`_snackBarTimer`, который и должен был вызвать
-`hideCurrentSnackBar(reason: timeout)` через 4 секунды. Snackbar
-остаётся видимым «навсегда».
+**Root cause #1 (нав-бар).** Все эти экраны жили **внутри**
+`StatefulShellRoute` — splash/recipe-list как корень ветки
+recipes; login/admin как sub-route'ы ветки profile. Поскольку
+shell-builder это `Scaffold(bottomNavigationBar: AppBottomNavBar)`,
+любой контент любой ветки рендерится в `body:` этого Scaffold-а,
+и навбар всегда виден.
 
-**Fix.** Перешли с `StatefulShellRoute.indexedStack` на полный
-`StatefulShellRoute(navigatorContainerBuilder: …)` и обернули
-**каждую** ветку в собственный `ScaffoldMessenger`. Теперь
-Scaffold-ы регистрируются только в messenger-е своей ветки;
-у активной ветки messenger содержит только видимый Scaffold,
-анимация snackbar-а нормально доходит до `completed`, dismiss-Timer
-запускается и snackbar исчезает по таймауту. Поведение
-[AppShell.Scaffold](recipe_list/lib/ui/app_shell.dart) и
-`navShell.goBranch` не изменилось.
+**Root cause #2 (snackbar).** В предыдущем коммите
+(`905bbdd "give each shell branch its own ScaffoldMessenger"`)
+мы обернули каждую ветку в собственный `ScaffoldMessenger`,
+пытаясь починить «висящий навсегда snackbar». Это сломало больше
+чем починило:
+
+* `Scaffold` приложения (`AppShell`-а) лежит **снаружи** per-branch
+  messenger-ов — он регистрируется в корневом messenger-е
+  `MaterialApp`-а. Page-Scaffold-ы веток регистрируются в своём
+  per-branch messenger-е. В итоге у branch-messenger-а нет
+  «root» Scaffold-а в смысле `_isRoot()` (нет
+  `findAncestorStateOfType<ScaffoldState>()` в его
+  `_scaffolds`-сете), и snackbar монтируется во **все**
+  page-Scaffold-ы ветки одновременно, включая offstage-ные
+  (которых в стеке `Navigator`-а ветки больше одного, когда
+  открыта sub-route). На offstage Scaffold-е снэк показывается
+  невидимо, а dismiss-Timer создаётся в `build()`-е messenger-а,
+  где `ModalRoute.of(messengerContext).isCurrent` для shell-уровня
+  **false**, когда сверху лежит sub-route своей же ветки. Timer
+  просто не создаётся → автодисмисс не работает; визуально
+  выглядит «snackbar не показался / не пропал».
+* По умолчанию (default `StatefulShellRoute.indexedStack`,
+  один общий messenger от `MaterialApp`) snackbar показывается
+  ровно на **AppShell-овском** Scaffold-е — он зарегистрирован
+  первым, всегда красится, всегда тикает, а page-Scaffold-ы
+  отфильтровываются `_isRoot(scaffold)` (их
+  `findAncestorStateOfType<ScaffoldState>()` находит AppShell в
+  `_scaffolds`). Таймер автодисмисса в `build()` корневого
+  messenger-а не имеет проблемы с `ModalRoute` (контекст
+  глобальный, `route == null`).
+
+Иначе говоря — изначальный «hang forever» был неверно
+диагностирован: `IndexedStack` оборачивает детей в `Visibility`
+с `maintainAnimation: true` (см.
+`flutter/lib/src/widgets/basic.dart` `IndexedStack.build`), так
+что offstage-ветки **не** теряют тикеры. Default behaviour был
+рабочим. «Чинящий» per-branch messenger как раз и сломал
+автодисмисс + потерю snackbar-а.
+
+**Fix.**
+
+1. **Откат per-branch ScaffoldMessenger.** Возвращаемся к
+   `StatefulShellRoute.indexedStack(...)`. Один корневой
+   messenger от `MaterialApp.router`, snackbar садится на
+   AppShell-Scaffold, автодисмисс работает.
+2. **Login / admin переехали на root-навигатор.** В
+   `app_router.dart` объявлен `rootNavigatorKey`, передан в
+   `GoRouter(navigatorKey: …)`. Sub-route'ы `/profile/login`
+   и `/profile/admin` получили `parentNavigatorKey:
+   rootNavigatorKey` — теперь они рендерятся **поверх**
+   shell-а, без `AppShell`-Scaffold-а вокруг → нет навбара.
+   Slide-up `_slideUpPage` сохранён. Связанные через
+   `Navigator.of(context).push` экраны (signup, recovery)
+   автоматически уезжают на root-навигатор, потому что
+   `Navigator.of(loginPageContext)` теперь резолвится в
+   root-Navigator.
+3. **Splash скрывает навбар на время slide-up.** Глобальный
+   `ValueNotifier<bool> bottomNavVisibleNotifier` (default
+   `true`); `SplashAndRecipesState.initState` ставит `false`,
+   а `AnimationStatus.completed` slide-controller-а ставит
+   `true`. `AppShell` оборачивает `bottomNavigationBar` в
+   `ValueListenableBuilder` и рисует `SizedBox.shrink()`, пока
+   `false`. На `restart()` splash-а флаг снова сбрасывается.
 
 **Файлы:**
-* [recipe_list/lib/router/app_router.dart](recipe_list/lib/router/app_router.dart)
-  — `StatefulShellRoute.indexedStack` → `StatefulShellRoute` с
-  кастомным `navigatorContainerBuilder` (IndexedStack из
-  обёрнутых в `ScaffoldMessenger` детей). Комментарий с
-  объяснением рядом.
+* [recipe_list/lib/router/app_router.dart](recipe_list/lib/router/app_router.dart) —
+  `rootNavigatorKey`, `StatefulShellRoute.indexedStack`,
+  `parentNavigatorKey:` для login/admin; `navigatorContainerBuilder`
+  с `ScaffoldMessenger`-обёрткой удалён.
+* [recipe_list/lib/main.dart](recipe_list/lib/main.dart) —
+  `bottomNavVisibleNotifier`.
+* [recipe_list/lib/ui/app_shell.dart](recipe_list/lib/ui/app_shell.dart) —
+  `ValueListenableBuilder` вокруг `bottomNavigationBar`.
+* [recipe_list/lib/ui/splash_and_recipes.dart](recipe_list/lib/ui/splash_and_recipes.dart) —
+  переключение `bottomNavVisibleNotifier` в initState/restart/
+  status-listener.
 
-**Тесты.** Существующая суита 95 pass / 6 несвязанных fail —
-без изменений. Поведение IndexedStack (state-saving между
-переключениями вкладок) сохранено.
+**Тесты.** Все суиты — 105 pass / 6 несвязанных fail (тот же
+baseline, что был до серии коммитов, начиная с `b697853`).
 
 ---
 

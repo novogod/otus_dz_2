@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../main.dart' show bottomNavVisibleNotifier;
 import 'app_theme.dart';
 import 'recipe_list_loader.dart';
 import 'splash_page.dart';
@@ -47,6 +48,15 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       begin: const Offset(0, 1), // въезд снизу (Figma MOVE_IN/BOTTOM)
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    // Навбар скрыт во время splash — иначе он перекрывал бы
+    // нижний край «въезжающего» списка. Открываем его, как
+    // только slide-up закончился.
+    bottomNavVisibleNotifier.value = false;
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        bottomNavVisibleNotifier.value = true;
+      }
+    });
 
     Future<void>.delayed(AppDurations.splash, () {
       if (mounted) _controller.forward();
@@ -61,6 +71,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
   void restart() {
     if (!mounted) return;
     _controller.reset();
+    bottomNavVisibleNotifier.value = false;
     setState(() {
       _loaderKey = UniqueKey();
     });

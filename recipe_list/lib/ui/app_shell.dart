@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../main.dart' show bottomNavVisibleNotifier;
 import 'app_bottom_nav_bar.dart';
 
 /// Корневой Scaffold приложения для shell-навигации
@@ -23,9 +24,15 @@ class AppShell extends StatelessWidget {
     final tab = AppNavTab.values[navShell.currentIndex];
     return Scaffold(
       body: navShell,
-      bottomNavigationBar: AppBottomNavBar(
-        current: tab,
-        onTap: (next) => _onTabTap(next),
+      bottomNavigationBar: ValueListenableBuilder<bool>(
+        valueListenable: bottomNavVisibleNotifier,
+        builder: (context, visible, _) {
+          if (!visible) return const SizedBox.shrink();
+          return AppBottomNavBar(
+            current: tab,
+            onTap: (next) => _onTabTap(next),
+          );
+        },
       ),
     );
   }

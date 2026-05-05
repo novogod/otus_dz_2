@@ -26,6 +26,21 @@ void main() {
 final GlobalKey<SplashAndRecipesState> splashAndRecipesKey =
     GlobalKey<SplashAndRecipesState>();
 
+/// Видна ли нижняя навигационная панель.
+///
+/// Дефолт `true` — навбар виден всегда, кроме явных override-ов.
+/// `SplashAndRecipesState` сбрасывает в `false` на старте
+/// splash-последовательности и снова в `true`, когда
+/// `SlideTransition` доехал до конца. Тесты, которые
+/// собирают приложение без splash, ничего об этом флаге
+/// знать не должны.
+///
+/// Login/admin/signup/recovery живут на root-навигаторе
+/// (`parentNavigatorKey: rootNavigatorKey` в `appRouter`) и
+/// сами по себе не видят навбар — этот флаг управляет только
+/// splash → recipes-сценарием.
+final ValueNotifier<bool> bottomNavVisibleNotifier = ValueNotifier<bool>(true);
+
 /// Перезапускает связку «splash → список рецептов» с самого начала:
 /// сбрасывает SlideTransition, пересоздаёт `RecipeListLoader` (что
 /// заново триггерит весь load-pipeline) и снова ждёт `AppDurations.splash`

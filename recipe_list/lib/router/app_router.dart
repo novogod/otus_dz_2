@@ -17,6 +17,16 @@ import '../ui/source_page.dart';
 import '../ui/splash_and_recipes.dart';
 import 'routes.dart';
 
+/// Корневой [GlobalKey] для root-навигатора `GoRouter`.
+///
+/// Передаётся в `parentNavigatorKey:` тех роутов, которые
+/// должны рендериться **поверх** shell-навбара (login/admin).
+/// Без этого они открывались бы внутри ветки профиля, и
+/// `AppBottomNavBar` оставался бы видимым под ними — пользователь
+/// видел экран авторизации с навбаром снизу. См. issue
+/// «Splash and login/signup are below the bottom navbar».
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 /// Глобальный [GoRouter] приложения.
 ///
 /// Стратегия (см. `docs/go-router-shell-refactor.md`):
@@ -32,6 +42,7 @@ import 'routes.dart';
 ///   `IndexedStack`-ом shell-а.
 final GoRouter appRouter = GoRouter(
   initialLocation: Routes.recipes,
+  navigatorKey: rootNavigatorKey,
   // Перерисовываем редиректы при смене auth-состояния: после
   // успешного логина `/profile/login` должен автоматически
   // переехать на `/profile/admin`, а после `logout` — обратно
@@ -45,28 +56,9 @@ final GoRouter appRouter = GoRouter(
   ]),
   redirect: _profileRedirect,
   routes: <RouteBase>[
-    StatefulShellRoute(
+    StatefulShellRoute.indexedStack(
       builder: (context, state, navShell) {
         return AppShell(navShell: navShell);
-      },
-      // Каждой ветке — свой `ScaffoldMessenger`. Иначе все
-      // Scaffold-ы вкладок (recipes/fridge/favorites/profile),
-      // которые `IndexedStack` держит смонтированными
-      // одновременно, регистрируются в едином корневом
-      // ScaffoldMessenger; SnackBar может «сесть» на скрытый
-      // Scaffold вне активной ветки, не получить
-      // `AnimationStatus.completed` и зависнуть навсегда (его
-      // dismiss-Timer стартует только на completed). Per-branch
-      // messenger гарантирует, что snackbar всегда отрисуется
-      // на видимом Scaffold-е активной ветки и сам исчезнет
-      // по таймауту.
-      navigatorContainerBuilder: (context, navShell, children) {
-        return IndexedStack(
-          index: navShell.currentIndex,
-          children: <Widget>[
-            for (final child in children) ScaffoldMessenger(child: child),
-          ],
-        );
       },
       branches: <StatefulShellBranch>[
         // [0] Recipes — реальный экран ленты + splash.
@@ -163,6 +155,7 @@ final GoRouter appRouter = GoRouter(
               routes: <RouteBase>[
                 GoRoute(
                   path: 'login',
+                  parentNavigatorKey: rootNavigatorKey,
                   pageBuilder: (context, state) => _slideUpPage<void>(
                     key: const ValueKey('profile-login'),
                     child: LoginPage(
@@ -176,6 +169,7 @@ final GoRouter appRouter = GoRouter(
                 ),
                 GoRoute(
                   path: 'admin',
+                  parentNavigatorKey: rootNavigatorKey,
                   pageBuilder: (context, state) {
                     final login = currentUserLoginNotifier.value?.trim() ?? '';
                     return _slideUpPage<void>(
