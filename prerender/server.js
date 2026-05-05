@@ -24,17 +24,16 @@
 //
 // Health probe: GET /healthz → 200 "ok".
 import express from 'express';
-import puppeteer from 'puppeteer-core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
+import puppeteer from 'puppeteer-core';
 import {
-  cacheFileName,
-  cacheKey,
-  parseRecipePath,
-  scrubFlutterShell,
-  buildSpaUrl,
-  SUPPORTED_LOCALES,
+    buildSpaUrl,
+    cacheFileName,
+    cacheKey,
+    parseRecipePath,
+    scrubFlutterShell,
+    SUPPORTED_LOCALES,
 } from './lib/render-utils.js';
 
 const PORT = Number(process.env.PORT || 8089);
@@ -154,10 +153,10 @@ async function readCache(file) {
 
 async function writeCache(file, html) {
   // Atomic write: tmp + rename → never serve a half-written file.
-  const tmp = path.join(
-    os.tmpdir(),
-    `prerender-${process.pid}-${Date.now()}.tmp`,
-  );
+  // Place the tmp file alongside the destination so rename(2) stays
+  // within the same filesystem (the cache lives on a Docker volume,
+  // /tmp does not — cross-device rename throws EXDEV).
+  const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
   await fs.writeFile(tmp, html, 'utf8');
   await fs.rename(tmp, file);
 }
