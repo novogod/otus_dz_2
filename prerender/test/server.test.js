@@ -9,11 +9,14 @@ import path from 'node:path';
 import test from 'node:test';
 import {
     SUPPORTED_LOCALES,
+    buildRecipeSeoHead,
     buildSpaUrl,
     cacheFileName,
     cacheKey,
+    injectRecipeSeo,
     isSupportedLocale,
     parseRecipePath,
+    recipeFromLookup,
     scrubFlutterShell,
 } from '../lib/render-utils.js';
 import { buildApp } from '../server.js';
@@ -261,4 +264,134 @@ test('renderHtml failure → 502, no cache file written', async () => {
     assert.equal(files.length, 0);
   });
   await fs.rm(tmp, { recursive: true, force: true });
+});
+
+// ─── todo/20 chunk F: server-side per-recipe SEO injection ───────
+
+test('recipeFromLookup parses themealdb-shaped lookup payload', () => {
+  const json = {
+    meals: [{
+      idMeal: '52772',
+      strMeal: 'Teriyaki Chicken Casserole',
+      strMealThumb: 'https://example.com/img.jpg',
+      strCategory: 'Chicken',
+      strArea: 'Japanese',
+      strInstructions: 'Step one.\nStep two.\n',
+      strIngredient1: 'soy sauce',
+      strMeasure1: '3/4 cup',
+      strIngredient2: 'sugar',
+      strMeasure2: '',
+      strIngredient3: '',
+      strMeasure3: '1/2 tsp',
+    }],
+  };
+  const r = recipeFromLookup(json, { locale: 'en' });
+  assert.equal(r.id, 52772);
+  assert.equal(r.locale, 'en');
+  assert.equal(r.title, 'Teriyaki Chicken Casserole');
+  assert.equal(r.image, 'https://example.com/img.jpg');
+  assert.equal(r.category, 'Chicken');
+  assert.equal(r.area, 'Japanese');
+  assert.deepEqual(r.ingredients, ['3/4 cup soy sauce', 'sugar']);
+  assert.deepEqual(r.instructions, ['Step one.', 'Step two.']);
+});
+
+test('recipeFromLookup returns null on empty / invalid payloads', () => {
+  assert.equal(recipeFromLookup(null), null);
+  assert.equal(recipeFromLookup({ meals: [] }), null);
+  assert.equal(recipeFromLookup({ meals: [{ idMeal: '0' }] }), null);
+  assert.equal(recipeFromLookup({ meals: [{ idMeal: '7', strMeal: '' }] }), null);
+});
+
+test('recipeFromLookup falls back to en for unsupported locale', () => {
+  const r = recipeFromLookup(
+    { meals: [{ idMeal: '1', strMeal: 'X' }] },
+    { locale: 'zz' },
+  );
+  assert.equal(r.locale, 'en');
+});
+
+test('buildRecipeSeoHead emits title, hreflang ring and JSON-LD', () => {
+  const head = buildRecipeSeoHead({
+    id: 52772,
+    locale: 'ru',
+    title: 'Курица',
+    image: 'https://example.com/i.jpg',
+    category: 'Chicken',
+    area: 'Japanese',
+    ingredients: ['100г соевого соуса'],
+    instructions: ['Смешать.', 'Запечь.'],
+  });
+  // <title>
+  assert.match(head, /<title data-recipe-seo="1">Курица — Otus Food<\/title>/);
+  // canonical
+  assert.match(head, /<link[^>]+rel="canonical"[^>]+href="https:\/\/recipies\.mahallem\.ist\/ru\/recipes\/52772"/);
+  // 10 hreflangs + x-default
+  const hreflangs = head.match(/<link[^>]+hreflang="[a-z-]+"/g) || [];
+  assert.equal(hreflangs.length, 11);
+  assert.ok(head.includes('hreflang="x-default"'));
+  // JSON-LD Recipe
+  assert.match(head, /<script[^>]+application\/ld\+json[^>]*>/);
+  assert.match(head, /"@type":"Recipe"/);
+  assert.match(head, /"inLanguage":"ru"/);
+  assert.match(head, /"recipeIngredient":\["100г соевого соуса"\]/);
+  // ssr-ready marker
+  assert.match(head, /<meta[^>]+name="ssr-ready"/);
+});
+
+test('buildRecipeSeoHead html-escapes user-supplied strings', () => {
+  const head = buildRecipeSeoHead({
+    id: 1,
+    locale: 'en',
+    title: 'A & B "<script>"',
+    instructions: ['drop </script><script>alert(1)</script>'],
+  });
+  assert.ok(!head.includes('A & B "<script>"'));
+  assert.ok(head.includes('A &amp; B &quot;&lt;script&gt;&quot;'));
+  assert.ok(!/<script>alert\(1\)<\/script>/.test(head));
+});
+
+test('buildRecipeSeoHead returns "" for invalid input', () => {
+  assert.equal(buildRecipeSeoHead(null), '');
+  assert.equal(buildRecipeSeoHead({ id: 0, locale: 'en', title: 'X' }), '');
+});
+
+test('injectRecipeSeo replaces the static <title> and inserts before </head>', () => {
+  const spaHtml =
+    '<!doctype html><html><head>' +
+    '<meta charset="UTF-8">' +
+    '<title>Otus Food</title>' +
+    '<link rel="canonical" href="https://recipies.mahallem.ist/">' +
+    '</head><body>BODY</body></html>';
+  const out = injectRecipeSeo(spaHtml, {
+    id: 52772,
+    locale: 'en',
+    title: 'Pasta',
+    instructions: ['Boil.'],
+  });
+  // Static <title>Otus Food</title> stripped:
+  assert.ok(!/<title>Otus Food<\/title>/.test(out));
+  // New title injected:
+  assert.ok(/<title data-recipe-seo="1">Pasta — Otus Food<\/title>/.test(out));
+  // Fragment lives inside <head>:
+  assert.ok(out.indexOf('hreflang="x-default"') < out.indexOf('</head>'));
+  // Body untouched:
+  assert.ok(out.endsWith('<body>BODY</body></html>'));
+});
+
+test('injectRecipeSeo is idempotent against a previously-injected snapshot', () => {
+  const base =
+    '<!doctype html><html><head><meta charset="UTF-8"></head><body></body></html>';
+  const recipe = { id: 1, locale: 'en', title: 'X' };
+  const once = injectRecipeSeo(base, recipe);
+  const twice = injectRecipeSeo(once, recipe);
+  // Should still have exactly one canonical / one ssr-ready / 11 hreflangs:
+  assert.equal((twice.match(/rel="canonical"/g) || []).length, 1);
+  assert.equal((twice.match(/name="ssr-ready"/g) || []).length, 1);
+  assert.equal((twice.match(/hreflang="[a-z-]+"/g) || []).length, 11);
+});
+
+test('injectRecipeSeo returns the input unchanged when recipe is null', () => {
+  const html = '<html><head><title>X</title></head><body></body></html>';
+  assert.equal(injectRecipeSeo(html, null), html);
 });

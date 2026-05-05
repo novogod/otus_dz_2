@@ -116,3 +116,184 @@ export function buildSpaUrl({ origin, locale, id }) {
   u.searchParams.set('ssr', '1');
   return u.toString();
 }
+
+// ─── todo/20 chunk F: server-side per-recipe SEO injection ─────────
+//
+// Originally chunk F drove head injection from the SPA (Dart calling
+// `window.setRecipeSeo` from RecipeDetailsPage). That worked for human
+// visitors but turned out to be unreliable inside headless Chromium
+// running in our prerender container — Flutter web could fail to fetch
+// the recipe (CORS, DNS, slow paint past the 12s `ssr-ready` timeout)
+// and bots ended up snapshotting the SPA shell with the static
+// `<title>Otus Food</title>`.
+//
+// To make the bot surface deterministic, we now build the canonical
+// head atoms server-side from the recipe payload we fetch from the
+// user-portal API and rewrite the captured HTML's `<head>` before
+// shipping the snapshot to the bot. The SPA-side helper still runs
+// for human visitors who land on `/<lang>/recipes/<id>` directly,
+// which keeps the share-link unfurl correct.
+
+const PUBLIC_HOST = 'https://recipies.mahallem.ist';
+
+// HTML-escape for attribute / text contexts. We only emit a small,
+// well-known set of tags so a single escaper is enough.
+function htmlEscape(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Pulls the localized recipe out of the user-portal `/lookup/:id`
+// payload. The API returns themealdb-shaped `{meals: [{...}]}`; we
+// derive title, image, ingredients, instructions, category, area.
+//
+// Pure / synchronous so unit tests don't need a server.
+export function recipeFromLookup(json, { locale } = {}) {
+  if (!json || typeof json !== 'object') return null;
+  const meals = Array.isArray(json.meals) ? json.meals : null;
+  if (!meals || meals.length === 0) return null;
+  const m = meals[0];
+  if (!m || typeof m !== 'object') return null;
+  const idStr = m.idMeal != null ? String(m.idMeal) : null;
+  const id = idStr ? Number(idStr) : null;
+  if (!Number.isFinite(id) || id <= 0) return null;
+  const title = (m.strMeal || '').toString().trim();
+  if (!title) return null;
+  const image = (m.strMealThumb || '').toString().trim() || null;
+  const category = (m.strCategory || '').toString().trim() || null;
+  const area = (m.strArea || '').toString().trim() || null;
+  const ingredients = [];
+  for (let i = 1; i <= 20; i += 1) {
+    const name = (m[`strIngredient${i}`] || '').toString().trim();
+    const measure = (m[`strMeasure${i}`] || '').toString().trim();
+    if (!name) continue;
+    ingredients.push(measure ? `${measure} ${name}`.trim() : name);
+  }
+  const instructionsRaw = (m.strInstructions || '').toString();
+  const instructions = instructionsRaw
+    .split(/\r?\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return {
+    id,
+    locale: isSupportedLocale(locale) ? locale : 'en',
+    title,
+    image,
+    category,
+    area,
+    ingredients,
+    instructions,
+  };
+}
+
+// Builds the canonical per-recipe head fragment: <title>, description,
+// canonical, hreflang ring (10 + x-default), OG, Twitter, JSON-LD
+// `Recipe`. Each atom carries `data-recipe-seo="1"` so the SPA-side
+// `clearRecipeSeo()` (web/index.html) recognises and removes them on
+// locale switch / unmount, and so this function is idempotent against
+// previously-injected snapshots.
+export function buildRecipeSeoHead(recipe) {
+  if (!recipe || typeof recipe !== 'object') return '';
+  const id = recipe.id;
+  if (!Number.isInteger(id) || id <= 0) return '';
+  const locale = isSupportedLocale(recipe.locale) ? recipe.locale : 'en';
+  const title = (recipe.title || '').toString().trim() || 'Otus Food';
+  const desc = (
+    Array.isArray(recipe.instructions) && recipe.instructions.length > 0
+      ? recipe.instructions[0]
+      : ''
+  )
+    .toString()
+    .slice(0, 320)
+    .trim();
+  const image = (recipe.image || `${PUBLIC_HOST}/og-image.jpg`).toString();
+  const canonical = `${PUBLIC_HOST}/${locale}/recipes/${id}`;
+  const lines = [];
+  const e = htmlEscape;
+  lines.push(`<title data-recipe-seo="1">${e(title)} — Otus Food</title>`);
+  if (desc) {
+    lines.push(`<meta data-recipe-seo="1" name="description" content="${e(desc)}">`);
+  }
+  lines.push(`<link data-recipe-seo="1" rel="canonical" href="${canonical}">`);
+  for (const lng of SUPPORTED_LOCALES) {
+    lines.push(
+      `<link data-recipe-seo="1" rel="alternate" hreflang="${lng}" href="${PUBLIC_HOST}/${lng}/recipes/${id}">`,
+    );
+  }
+  lines.push(
+    `<link data-recipe-seo="1" rel="alternate" hreflang="x-default" href="${PUBLIC_HOST}/en/recipes/${id}">`,
+  );
+  lines.push(`<meta data-recipe-seo="1" property="og:type" content="article">`);
+  lines.push(`<meta data-recipe-seo="1" property="og:title" content="${e(title)}">`);
+  if (desc) {
+    lines.push(`<meta data-recipe-seo="1" property="og:description" content="${e(desc)}">`);
+  }
+  lines.push(`<meta data-recipe-seo="1" property="og:url" content="${canonical}">`);
+  lines.push(`<meta data-recipe-seo="1" property="og:image" content="${e(image)}">`);
+  lines.push(`<meta data-recipe-seo="1" property="og:locale" content="${locale}">`);
+  lines.push(`<meta data-recipe-seo="1" name="twitter:card" content="summary_large_image">`);
+  lines.push(`<meta data-recipe-seo="1" name="twitter:title" content="${e(title)}">`);
+  if (desc) {
+    lines.push(`<meta data-recipe-seo="1" name="twitter:description" content="${e(desc)}">`);
+  }
+  lines.push(`<meta data-recipe-seo="1" name="twitter:image" content="${e(image)}">`);
+  const jsonld = {
+    '@context': 'https://schema.org',
+    '@type': 'Recipe',
+    name: title,
+    inLanguage: locale,
+    url: canonical,
+    image: [image],
+    author: { '@type': 'Organization', name: 'Otus Food' },
+  };
+  if (desc) jsonld.description = desc;
+  if (Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
+    jsonld.recipeIngredient = recipe.ingredients;
+  }
+  if (Array.isArray(recipe.instructions) && recipe.instructions.length > 0) {
+    jsonld.recipeInstructions = recipe.instructions.map((s) => ({
+      '@type': 'HowToStep',
+      text: s,
+    }));
+  }
+  if (recipe.category) jsonld.recipeCategory = recipe.category;
+  if (recipe.area) jsonld.recipeCuisine = recipe.area;
+  // JSON.stringify already escapes </script via \u003c when the json
+  // is valid — we rely on the JSON contract. No < in keys/values
+  // beyond what stringify handles.
+  const jsonldText = JSON.stringify(jsonld).replace(/<\/script/gi, '<\\/script');
+  lines.push(
+    `<script data-recipe-seo="1" type="application/ld+json">${jsonldText}</script>`,
+  );
+  // Snapshot signal — kept for back-compat with anything that probes
+  // for it. Bots have already received a complete head by the time
+  // they parse this far, so the marker is informational only.
+  lines.push(`<meta data-recipe-seo="1" name="ssr-ready" content="1">`);
+  return lines.join('\n');
+}
+
+// Surgically replaces the SPA's static `<title>` and any pre-existing
+// `data-recipe-seo="1"` atoms with our newly-built head fragment.
+// Inserts the fragment immediately before `</head>` so it wins over
+// the static landmarks (browsers and crawlers honour the LAST tag).
+export function injectRecipeSeo(html, recipe) {
+  if (typeof html !== 'string' || html.length === 0) return html;
+  const fragment = buildRecipeSeoHead(recipe);
+  if (!fragment) return html;
+  // Drop any partial atoms the SPA-side helper may have already placed
+  // (idempotency on cache regen).
+  let out = html.replace(
+    /<(?:meta|link|script|title)\b[^>]*\bdata-recipe-seo="1"[^>]*>(?:[\s\S]*?<\/(?:script|title)>)?/gi,
+    '',
+  );
+  // Drop the static <title> too — we replace it with our own.
+  out = out.replace(/<title\b[^>]*>[\s\S]*?<\/title>/i, '');
+  const headClose = out.search(/<\/head>/i);
+  if (headClose < 0) return out;
+  return `${out.slice(0, headClose)}${fragment}\n${out.slice(headClose)}`;
+}

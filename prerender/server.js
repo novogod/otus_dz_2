@@ -31,7 +31,9 @@ import {
     buildSpaUrl,
     cacheFileName,
     cacheKey,
+    injectRecipeSeo,
     parseRecipePath,
+    recipeFromLookup,
     scrubFlutterShell,
     SUPPORTED_LOCALES,
 } from './lib/render-utils.js';
@@ -105,6 +107,22 @@ async function getBrowser() {
       throw err;
     });
   return _browserPromise;
+}
+
+async function fetchRecipeForSeo({ locale, id }) {
+  // Pulls the localized recipe payload from the user-portal API for
+  // server-side head injection (todo/20 chunk F). Failure is non-fatal
+  // — we still ship the SPA snapshot, just with the static head
+  // landmarks instead of per-recipe atoms. Returns null on any error.
+  try {
+    const url = `${RECIPES_API}/recipes/lookup/${id}?lang=${encodeURIComponent(locale)}`;
+    const res = await fetch(url, { headers: { accept: 'application/json' } });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return recipeFromLookup(json, { locale });
+  } catch (_e) {
+    return null;
+  }
 }
 
 async function renderHtml({ locale, id }) {
@@ -198,7 +216,13 @@ export function buildApp({ overrides } = {}) {
       let cacheHit = true;
       if (html === null) {
         cacheHit = false;
-        html = await _renderHtml({ locale, id });
+        // Fetch the recipe payload in parallel with the headless
+        // render — we'll splice the head atoms in once both finish.
+        const [rendered, recipe] = await Promise.all([
+          _renderHtml({ locale, id }),
+          fetchRecipeForSeo({ locale, id }),
+        ]);
+        html = recipe ? injectRecipeSeo(rendered, recipe) : rendered;
         await writeCache(file, html);
       }
       res.set('Cache-Control', 'public, max-age=300');
