@@ -74,11 +74,7 @@ class LoginPage extends StatefulWidget {
   /// `refreshListenable` сам перенаправит на `/profile/admin`.
   final bool popOnSuccess;
 
-  const LoginPage({
-    super.key,
-    this.initialLogin,
-    this.popOnSuccess = false,
-  });
+  const LoginPage({super.key, this.initialLogin, this.popOnSuccess = false});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -144,20 +140,41 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
     if (_authBusy) return;
     setState(() => _authBusy = true);
-    final ok = await loginAsAdmin(
-      login: _loginController.text,
-      password: _passwordController.text,
-    );
+    bool ok = false;
+    Object? loginError;
+    try {
+      ok = await loginAsAdmin(
+        login: _loginController.text,
+        password: _passwordController.text,
+      );
+    } catch (e, st) {
+      loginError = e;
+      // ignore: avoid_print
+      print('[login_page] loginAsAdmin threw: $e\n$st');
+    } finally {
+      if (mounted) setState(() => _authBusy = false);
+    }
     if (!mounted) return;
-    setState(() => _authBusy = false);
     if (!ok) {
       final s = S.of(context);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(s.loginInvalidCredentials)));
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              loginError != null
+                  ? '${s.loginInvalidCredentials} ($loginError)'
+                  : s.loginInvalidCredentials,
+            ),
+          ),
+        );
       return;
     }
-    await _refreshBiometricSavedStatus();
+    try {
+      await _refreshBiometricSavedStatus();
+    } catch (_) {
+      // Best-effort; biometric status is non-critical for navigation.
+    }
     if (!mounted) return;
     final s = S.of(context);
     ScaffoldMessenger.of(context)
@@ -174,7 +191,17 @@ class _LoginPageState extends State<LoginPage> {
     if (!context.mounted) return;
     if (widget.popOnSuccess && Navigator.of(context).canPop()) {
       Navigator.of(context).pop(true);
+      return;
     }
+    // Non-admin users: после успешного логина уводим на ленту
+    // рецептов. На ветке /profile иначе остался бы тот же
+    // LoginPage (в logout-режиме) — пользователю выглядит как
+    // «логин не сработал». Admin уйдёт через openAdminAfterLoginPage,
+    // но _submit для admin её не открывает — её открывает только
+    // _loginWithBiometrics; для admin-логина по паролю шлём на
+    // ленту тоже (попасть в админ-панель он сможет через
+    // Profile-таб, который покажет AdminAfterLoginPage).
+    context.go(Routes.recipes);
   }
 
   Future<void> _saveCurrentSessionForBiometric() async {

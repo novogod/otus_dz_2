@@ -1,5 +1,76 @@
 # Project Log
 
+## Web auth follow-up — recovery «session expired» + залипший Login
+
+**Date:** 2026-05-05
+
+**Status:** ✅ Fixed
+
+После релиза round-H пользователь сообщил две веб-проблемы:
+
+1. **Recovery всегда отдаёт `sessionExpired`.** Бэкенд хранил
+   email из шага `/forgot-password` в `req.session.resetPasswordEmail`.
+   Браузер в cross-origin (`localhost:50968` → `mahallem.ist`)
+   режет Set-Cookie сессии, поэтому к шагу `/reset-password`
+   `req.session` пустой → 401. На iOS/Android Dio честно носит
+   cookie, поэтому там работало.
+2. **Login «зависает».** После клика «Log in» Chrome показывал
+   prompt «Save password»; пользователь его закрывал — кнопка
+   оставалась в busy-состоянии, форма не реагировала. В nginx
+   логах сам POST `/users/login` приходил с 200 OK — то есть
+   сервер логинил успешно, но клиент не выходил из `_authBusy`
+   и не уводил роутер на `/recipes`.
+
+**Root cause.**
+
+* Recovery: cross-origin cookie policy браузера + клиентский
+  fallback в `requestPasswordRecovery`, который при отсутствии
+  Set-Cookie подставляет `sessionCookie = email`. На сервере он
+  не помогал — endpoint email не читал.
+* Login: post-auth шаги (`_refreshBiometricSavedStatus`,
+  `S.of(context)`, `ScaffoldMessenger`) в web-сборке могли
+  бросить исключение (например, sqflite-ffi-web write в
+  IndexedDB после Save-password prompt), а `_authBusy = false`
+  стоял ПОСЛЕ `await loginAsAdmin(...)` без try/finally — при
+  любом throw он не сбрасывался.
+
+**Fix.**
+
+* **Сервер** (`local_user_portal/routes/auth.js`, контейнер
+  `mahallem-user-portal`, в репо проекта не зеркалится): POST
+  `/reset-password` теперь читает email из тела запроса, если
+  `req.session.resetPasswordEmail` пуст. 4-значный код остаётся
+  единственным фактором аутентификации (он уходит только на
+  введённый email через `email-verification-api`), поэтому
+  ослабления безопасности нет. Бэкап оригинала на хосте:
+  `/tmp/auth.js.bak.<ts>`.
+* **Клиент**
+  ([`recipe_list/lib/ui/login_page.dart`](../recipe_list/lib/ui/login_page.dart))
+  — `_submit()` обёрнут в `try/finally`: `_authBusy` гарантированно
+  сбрасывается, ошибка `loginAsAdmin` показывается в snackbar
+  вместе с текстом, `_refreshBiometricSavedStatus()` вынесен в
+  отдельный try/catch, чтобы провал биометрии не блокировал
+  навигацию на `/recipes`.
+
+**Verification.**
+
+* `POST /reset-password` из Flutter web — nginx access log
+  `200 239`, server log `Password updated for user info@lagente.do`.
+* Login — после hot-reload форма реагирует, snackbar теперь
+  показывает реальную причину при ошибке.
+
+**Files.**
+
+* [`recipe_list/lib/ui/login_page.dart`](../recipe_list/lib/ui/login_page.dart)
+  — `_submit()` try/finally + раскрытие ошибки в snackbar.
+* Серверный патч `routes/auth.js` (вне репо) — задокументирован
+  выше.
+
+**Tests.** Регрессия только web-flow; unit-тесты не затронуты,
+`flutter analyze` clean.
+
+---
+
 ## Go-router follow-up I — grey-screen на не-EN локалях при тапе Profile
 
 **Date:** 2026-05-04
