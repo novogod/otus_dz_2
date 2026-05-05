@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../i18n.dart';
 import '../app_theme.dart';
 import 'pwa_install.dart';
 
@@ -74,15 +76,32 @@ class _PwaInstallButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hide entirely off-web (iOS/Android apps are already installed)
+    // and when the page is already running as an installed PWA.
+    if (!kIsWeb) return const SizedBox.shrink();
+    if (isPwaStandaloneWeb()) return const SizedBox.shrink();
+
+    final s = S.of(context);
+    final isIos = isIosBrowserWeb();
     return ValueListenableBuilder<bool>(
       valueListenable: pwaInstallAvailable,
       builder: (context, available, _) {
-        if (!available) return const SizedBox.shrink();
+        // Show the button when the browser captured the prompt
+        // (Android Chrome / Edge / Desktop Chrome) OR when running
+        // on iOS Safari/Chrome where the prompt API is unavailable
+        // and we fall back to manual instructions.
+        if (!available && !isIos) return const SizedBox.shrink();
         return _CircleButton(
-          tooltip: 'Install as app',
+          tooltip: s.pwaInstallTooltip,
           background: AppColors.surfaceMuted,
           border: const BorderSide(width: 1, color: Colors.black),
-          onTap: () => triggerPwaInstall(),
+          onTap: () {
+            if (available) {
+              triggerPwaInstall();
+            } else {
+              _showIosInstallInstructions(context);
+            }
+          },
           child: const Icon(
             Icons.install_desktop,
             size: 22,
@@ -90,6 +109,85 @@ class _PwaInstallButton extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Modal shown on iOS Safari/Chrome where `beforeinstallprompt` is
+/// unavailable. Walks the user through the manual Add-to-Home-Screen
+/// flow for both browsers. Body is fully translated via slang.
+Future<void> _showIosInstallInstructions(BuildContext context) {
+  final s = S.of(context);
+  return showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(s.pwaInstallTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _InstructionsBlock(
+              heading: s.pwaInstallSafariTitle,
+              steps: [
+                s.pwaInstallSafariStep1,
+                s.pwaInstallSafariStep2,
+                s.pwaInstallSafariStep3,
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _InstructionsBlock(
+              heading: s.pwaInstallChromeTitle,
+              steps: [
+                s.pwaInstallChromeStep1,
+                s.pwaInstallChromeStep2,
+                s.pwaInstallChromeStep3,
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: Text(s.pwaInstallGotIt),
+        ),
+      ],
+    ),
+  );
+}
+
+class _InstructionsBlock extends StatelessWidget {
+  final String heading;
+  final List<String> steps;
+
+  const _InstructionsBlock({required this.heading, required this.steps});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          heading,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        for (final step in steps)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs, left: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('•  '),
+                Expanded(child: Text(step, style: theme.textTheme.bodyMedium)),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

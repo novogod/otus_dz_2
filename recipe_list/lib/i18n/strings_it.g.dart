@@ -38,6 +38,17 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 
 	// Translations
 	@override String get appTitle => 'Otus Food';
+	@override String get pwaInstallTooltip => 'Installa come app';
+	@override String get pwaInstallTitle => 'Installa Otus Food sul tuo iPhone o iPad';
+	@override String get pwaInstallSafariTitle => 'Safari';
+	@override String get pwaInstallSafariStep1 => 'Tocca il pulsante Condividi in fondo allo schermo';
+	@override String get pwaInstallSafariStep2 => 'Scorri e tocca «Aggiungi a Home»';
+	@override String get pwaInstallSafariStep3 => 'Tocca «Aggiungi» in alto a destra';
+	@override String get pwaInstallChromeTitle => 'Chrome';
+	@override String get pwaInstallChromeStep1 => 'Tocca l\'icona Condividi nella barra degli indirizzi';
+	@override String get pwaInstallChromeStep2 => 'Tocca «Aggiungi a Home»';
+	@override String get pwaInstallChromeStep3 => 'Tocca «Aggiungi» per confermare';
+	@override String get pwaInstallGotIt => 'Ho capito';
 	@override String get back => 'Indietro';
 	@override String get dismiss => 'Ignora';
 	@override String get tabRecipes => 'Ricette';
@@ -164,6 +175,17 @@ extension on TranslationsIt {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'appTitle' => 'Otus Food',
+			'pwaInstallTooltip' => 'Installa come app',
+			'pwaInstallTitle' => 'Installa Otus Food sul tuo iPhone o iPad',
+			'pwaInstallSafariTitle' => 'Safari',
+			'pwaInstallSafariStep1' => 'Tocca il pulsante Condividi in fondo allo schermo',
+			'pwaInstallSafariStep2' => 'Scorri e tocca «Aggiungi a Home»',
+			'pwaInstallSafariStep3' => 'Tocca «Aggiungi» in alto a destra',
+			'pwaInstallChromeTitle' => 'Chrome',
+			'pwaInstallChromeStep1' => 'Tocca l\'icona Condividi nella barra degli indirizzi',
+			'pwaInstallChromeStep2' => 'Tocca «Aggiungi a Home»',
+			'pwaInstallChromeStep3' => 'Tocca «Aggiungi» per confermare',
+			'pwaInstallGotIt' => 'Ho capito',
 			'back' => 'Indietro',
 			'dismiss' => 'Ignora',
 			'tabRecipes' => 'Ricette',

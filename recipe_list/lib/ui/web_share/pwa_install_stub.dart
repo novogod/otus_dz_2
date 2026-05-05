@@ -16,3 +16,13 @@ Future<String> triggerPwaInstall() async => 'unavailable';
 /// Start the periodic poller that updates [pwaInstallAvailable].
 /// No-op on non-web.
 void initPwaInstallWatcher() {}
+
+/// True when the host is iOS Safari/Chrome (browser tab, not the
+/// installed PWA). Used to fall back to the manual "Add to Home
+/// Screen" instructions modal because iOS doesn't fire the
+/// `beforeinstallprompt` event. Always `false` off-web.
+bool isIosBrowserWeb() => false;
+
+/// True when the page is already running as an installed PWA — in
+/// that case the install button must not surface.
+bool isPwaStandaloneWeb() => false;

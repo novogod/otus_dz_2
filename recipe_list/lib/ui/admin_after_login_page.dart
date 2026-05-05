@@ -184,9 +184,7 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
                   OutlinedButton.icon(
                     onPressed: _busy ? null : _saveForBiometric,
                     icon: Icon(
-                      _biometricSaved
-                          ? Icons.verified_user
-                          : Icons.fingerprint,
+                      _biometricSaved ? Icons.verified_user : Icons.fingerprint,
                     ),
                     label: Text(
                       _biometricSaved

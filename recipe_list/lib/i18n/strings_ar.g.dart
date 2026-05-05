@@ -38,6 +38,17 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 
 	// Translations
 	@override String get appTitle => 'Otus Food';
+	@override String get pwaInstallTooltip => 'تثبيت كتطبيق';
+	@override String get pwaInstallTitle => 'ثبّت Otus Food على iPhone أو iPad';
+	@override String get pwaInstallSafariTitle => 'Safari';
+	@override String get pwaInstallSafariStep1 => 'اضغط على زر المشاركة في أسفل الشاشة';
+	@override String get pwaInstallSafariStep2 => 'مرّر واضغط «إضافة إلى الشاشة الرئيسية»';
+	@override String get pwaInstallSafariStep3 => 'اضغط «إضافة» في الزاوية العلوية اليمنى';
+	@override String get pwaInstallChromeTitle => 'Chrome';
+	@override String get pwaInstallChromeStep1 => 'اضغط على رمز المشاركة في شريط العنوان';
+	@override String get pwaInstallChromeStep2 => 'اضغط «إضافة إلى الشاشة الرئيسية»';
+	@override String get pwaInstallChromeStep3 => 'اضغط «إضافة» للتأكيد';
+	@override String get pwaInstallGotIt => 'فهمت';
 	@override String get back => 'رجوع';
 	@override String get dismiss => 'إغلاق';
 	@override String get tabRecipes => 'وصفات';
@@ -168,6 +179,17 @@ extension on TranslationsAr {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'appTitle' => 'Otus Food',
+			'pwaInstallTooltip' => 'تثبيت كتطبيق',
+			'pwaInstallTitle' => 'ثبّت Otus Food على iPhone أو iPad',
+			'pwaInstallSafariTitle' => 'Safari',
+			'pwaInstallSafariStep1' => 'اضغط على زر المشاركة في أسفل الشاشة',
+			'pwaInstallSafariStep2' => 'مرّر واضغط «إضافة إلى الشاشة الرئيسية»',
+			'pwaInstallSafariStep3' => 'اضغط «إضافة» في الزاوية العلوية اليمنى',
+			'pwaInstallChromeTitle' => 'Chrome',
+			'pwaInstallChromeStep1' => 'اضغط على رمز المشاركة في شريط العنوان',
+			'pwaInstallChromeStep2' => 'اضغط «إضافة إلى الشاشة الرئيسية»',
+			'pwaInstallChromeStep3' => 'اضغط «إضافة» للتأكيد',
+			'pwaInstallGotIt' => 'فهمت',
 			'back' => 'رجوع',
 			'dismiss' => 'إغلاق',
 			'tabRecipes' => 'وصفات',

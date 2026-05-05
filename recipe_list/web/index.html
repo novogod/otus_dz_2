@@ -78,6 +78,34 @@
         return 'error';
       }
     };
+    // iOS Safari/Chrome do NOT fire `beforeinstallprompt`, but PWA
+    // install IS supported via the system Share → "Add to Home
+    // Screen" flow. Detect iOS so Flutter can surface a button that
+    // shows manual instructions instead of calling the unavailable
+    // prompt API.
+    window.isIosBrowser = function () {
+      try {
+        var ua = navigator.userAgent || '';
+        var iOS = /iPad|iPhone|iPod/.test(ua) ||
+          // iPadOS 13+ identifies as Mac with touch.
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        return !!iOS;
+      } catch (_) { return false; }
+    };
+    // True when the page is already running as an installed PWA —
+    // hide the install button in that case.
+    window.isPwaStandalone = function () {
+      try {
+        if (window.navigator && window.navigator.standalone === true) {
+          return true;
+        }
+        if (window.matchMedia &&
+            window.matchMedia('(display-mode: standalone)').matches) {
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    };
   </script>
 </head>
 <body>

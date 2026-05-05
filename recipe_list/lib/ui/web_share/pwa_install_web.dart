@@ -11,6 +11,12 @@ external bool _jsIsPwaInstallAvailable();
 @JS('triggerPwaInstall')
 external JSPromise<JSString> _jsTriggerPwaInstall();
 
+@JS('isIosBrowser')
+external bool _jsIsIosBrowser();
+
+@JS('isPwaStandalone')
+external bool _jsIsPwaStandalone();
+
 final ValueNotifier<bool> pwaInstallAvailable = ValueNotifier<bool>(false);
 
 Timer? _watcher;
@@ -39,5 +45,21 @@ Future<String> triggerPwaInstall() async {
     return result.toDart;
   } catch (_) {
     return 'error';
+  }
+}
+
+bool isIosBrowserWeb() {
+  try {
+    return _jsIsIosBrowser();
+  } catch (_) {
+    return false;
+  }
+}
+
+bool isPwaStandaloneWeb() {
+  try {
+    return _jsIsPwaStandalone();
+  } catch (_) {
+    return false;
   }
 }

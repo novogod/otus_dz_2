@@ -38,6 +38,17 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 
 	// Translations
 	@override String get appTitle => 'Otus Food';
+	@override String get pwaInstallTooltip => 'Instalar como aplicación';
+	@override String get pwaInstallTitle => 'Instala Otus Food en tu iPhone o iPad';
+	@override String get pwaInstallSafariTitle => 'Safari';
+	@override String get pwaInstallSafariStep1 => 'Pulsa el botón Compartir en la parte inferior de la pantalla';
+	@override String get pwaInstallSafariStep2 => 'Desplázate y pulsa «Añadir a pantalla de inicio»';
+	@override String get pwaInstallSafariStep3 => 'Pulsa «Añadir» en la esquina superior derecha';
+	@override String get pwaInstallChromeTitle => 'Chrome';
+	@override String get pwaInstallChromeStep1 => 'Pulsa el icono Compartir en la barra de direcciones';
+	@override String get pwaInstallChromeStep2 => 'Pulsa «Añadir a pantalla de inicio»';
+	@override String get pwaInstallChromeStep3 => 'Pulsa «Añadir» para confirmar';
+	@override String get pwaInstallGotIt => 'Entendido';
 	@override String get back => 'Atrás';
 	@override String get dismiss => 'Descartar';
 	@override String get tabRecipes => 'Recetas';
@@ -164,6 +175,17 @@ extension on TranslationsEs {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'appTitle' => 'Otus Food',
+			'pwaInstallTooltip' => 'Instalar como aplicación',
+			'pwaInstallTitle' => 'Instala Otus Food en tu iPhone o iPad',
+			'pwaInstallSafariTitle' => 'Safari',
+			'pwaInstallSafariStep1' => 'Pulsa el botón Compartir en la parte inferior de la pantalla',
+			'pwaInstallSafariStep2' => 'Desplázate y pulsa «Añadir a pantalla de inicio»',
+			'pwaInstallSafariStep3' => 'Pulsa «Añadir» en la esquina superior derecha',
+			'pwaInstallChromeTitle' => 'Chrome',
+			'pwaInstallChromeStep1' => 'Pulsa el icono Compartir en la barra de direcciones',
+			'pwaInstallChromeStep2' => 'Pulsa «Añadir a pantalla de inicio»',
+			'pwaInstallChromeStep3' => 'Pulsa «Añadir» para confirmar',
+			'pwaInstallGotIt' => 'Entendido',
 			'back' => 'Atrás',
 			'dismiss' => 'Descartar',
 			'tabRecipes' => 'Recetas',

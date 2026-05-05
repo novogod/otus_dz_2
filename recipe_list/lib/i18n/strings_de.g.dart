@@ -38,6 +38,17 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 
 	// Translations
 	@override String get appTitle => 'Otus Food';
+	@override String get pwaInstallTooltip => 'Als App installieren';
+	@override String get pwaInstallTitle => 'Otus Food auf iPhone oder iPad installieren';
+	@override String get pwaInstallSafariTitle => 'Safari';
+	@override String get pwaInstallSafariStep1 => 'Tippen Sie unten auf die Teilen-Schaltfläche';
+	@override String get pwaInstallSafariStep2 => 'Scrollen Sie und wählen Sie «Zum Home-Bildschirm»';
+	@override String get pwaInstallSafariStep3 => 'Tippen Sie oben rechts auf «Hinzufügen»';
+	@override String get pwaInstallChromeTitle => 'Chrome';
+	@override String get pwaInstallChromeStep1 => 'Tippen Sie auf das Teilen-Symbol in der Adressleiste';
+	@override String get pwaInstallChromeStep2 => 'Wählen Sie «Zum Home-Bildschirm»';
+	@override String get pwaInstallChromeStep3 => 'Tippen Sie zur Bestätigung auf «Hinzufügen»';
+	@override String get pwaInstallGotIt => 'Verstanden';
 	@override String get back => 'Zurück';
 	@override String get dismiss => 'Schließen';
 	@override String get tabRecipes => 'Rezepte';
@@ -164,6 +175,17 @@ extension on TranslationsDe {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'appTitle' => 'Otus Food',
+			'pwaInstallTooltip' => 'Als App installieren',
+			'pwaInstallTitle' => 'Otus Food auf iPhone oder iPad installieren',
+			'pwaInstallSafariTitle' => 'Safari',
+			'pwaInstallSafariStep1' => 'Tippen Sie unten auf die Teilen-Schaltfläche',
+			'pwaInstallSafariStep2' => 'Scrollen Sie und wählen Sie «Zum Home-Bildschirm»',
+			'pwaInstallSafariStep3' => 'Tippen Sie oben rechts auf «Hinzufügen»',
+			'pwaInstallChromeTitle' => 'Chrome',
+			'pwaInstallChromeStep1' => 'Tippen Sie auf das Teilen-Symbol in der Adressleiste',
+			'pwaInstallChromeStep2' => 'Wählen Sie «Zum Home-Bildschirm»',
+			'pwaInstallChromeStep3' => 'Tippen Sie zur Bestätigung auf «Hinzufügen»',
+			'pwaInstallGotIt' => 'Verstanden',
 			'back' => 'Zurück',
 			'dismiss' => 'Schließen',
 			'tabRecipes' => 'Rezepte',

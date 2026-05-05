@@ -38,6 +38,17 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 
 	// Translations
 	@override String get appTitle => 'Otus Food';
+	@override String get pwaInstallTooltip => 'وەک بەرنامە دایبمەزرێنە';
+	@override String get pwaInstallTitle => 'Otus Food لەسەر iPhone یان iPad دایبمەزرێنە';
+	@override String get pwaInstallSafariTitle => 'Safari';
+	@override String get pwaInstallSafariStep1 => 'دوگمەی هاوبەشکردن لە خوارەوەی شاشە دابگرە';
+	@override String get pwaInstallSafariStep2 => 'بشلێنە و «زیادکردن بۆ شاشەی سەرەکی» دابگرە';
+	@override String get pwaInstallSafariStep3 => 'لە گۆشەی سەرەوەی ڕاست «زیادکردن» دابگرە';
+	@override String get pwaInstallChromeTitle => 'Chrome';
+	@override String get pwaInstallChromeStep1 => 'وێنۆچکەی هاوبەشکردن لە شریتی ناونیشاندا دابگرە';
+	@override String get pwaInstallChromeStep2 => '«زیادکردن بۆ شاشەی سەرەکی» دابگرە';
+	@override String get pwaInstallChromeStep3 => 'بۆ پشتڕاستکردنەوە «زیادکردن» دابگرە';
+	@override String get pwaInstallGotIt => 'تێگەیشتم';
 	@override String get back => 'گەڕانەوە';
 	@override String get dismiss => 'ڕەتکردنەوە';
 	@override String get tabRecipes => 'ڕێچەتەکان';
@@ -164,6 +175,17 @@ extension on TranslationsKu {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'appTitle' => 'Otus Food',
+			'pwaInstallTooltip' => 'وەک بەرنامە دایبمەزرێنە',
+			'pwaInstallTitle' => 'Otus Food لەسەر iPhone یان iPad دایبمەزرێنە',
+			'pwaInstallSafariTitle' => 'Safari',
+			'pwaInstallSafariStep1' => 'دوگمەی هاوبەشکردن لە خوارەوەی شاشە دابگرە',
+			'pwaInstallSafariStep2' => 'بشلێنە و «زیادکردن بۆ شاشەی سەرەکی» دابگرە',
+			'pwaInstallSafariStep3' => 'لە گۆشەی سەرەوەی ڕاست «زیادکردن» دابگرە',
+			'pwaInstallChromeTitle' => 'Chrome',
+			'pwaInstallChromeStep1' => 'وێنۆچکەی هاوبەشکردن لە شریتی ناونیشاندا دابگرە',
+			'pwaInstallChromeStep2' => '«زیادکردن بۆ شاشەی سەرەکی» دابگرە',
+			'pwaInstallChromeStep3' => 'بۆ پشتڕاستکردنەوە «زیادکردن» دابگرە',
+			'pwaInstallGotIt' => 'تێگەیشتم',
 			'back' => 'گەڕانەوە',
 			'dismiss' => 'ڕەتکردنەوە',
 			'tabRecipes' => 'ڕێچەتەکان',

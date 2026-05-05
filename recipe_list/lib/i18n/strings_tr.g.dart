@@ -38,6 +38,17 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 
 	// Translations
 	@override String get appTitle => 'Otus Food';
+	@override String get pwaInstallTooltip => 'Uygulama olarak yükle';
+	@override String get pwaInstallTitle => 'Otus Food\'u iPhone veya iPad\'inize yükleyin';
+	@override String get pwaInstallSafariTitle => 'Safari';
+	@override String get pwaInstallSafariStep1 => 'Ekranın altındaki Paylaş düğmesine dokunun';
+	@override String get pwaInstallSafariStep2 => 'Aşağı kaydırın ve «Ana Ekrana Ekle»\'ye dokunun';
+	@override String get pwaInstallSafariStep3 => 'Sağ üst köşedeki «Ekle»\'ye dokunun';
+	@override String get pwaInstallChromeTitle => 'Chrome';
+	@override String get pwaInstallChromeStep1 => 'Adres çubuğundaki Paylaş simgesine dokunun';
+	@override String get pwaInstallChromeStep2 => '«Ana Ekrana Ekle»\'ye dokunun';
+	@override String get pwaInstallChromeStep3 => 'Onaylamak için «Ekle»\'ye dokunun';
+	@override String get pwaInstallGotIt => 'Anladım';
 	@override String get back => 'Geri';
 	@override String get dismiss => 'Kapat';
 	@override String get tabRecipes => 'Tarifler';
@@ -164,6 +175,17 @@ extension on TranslationsTr {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'appTitle' => 'Otus Food',
+			'pwaInstallTooltip' => 'Uygulama olarak yükle',
+			'pwaInstallTitle' => 'Otus Food\'u iPhone veya iPad\'inize yükleyin',
+			'pwaInstallSafariTitle' => 'Safari',
+			'pwaInstallSafariStep1' => 'Ekranın altındaki Paylaş düğmesine dokunun',
+			'pwaInstallSafariStep2' => 'Aşağı kaydırın ve «Ana Ekrana Ekle»\'ye dokunun',
+			'pwaInstallSafariStep3' => 'Sağ üst köşedeki «Ekle»\'ye dokunun',
+			'pwaInstallChromeTitle' => 'Chrome',
+			'pwaInstallChromeStep1' => 'Adres çubuğundaki Paylaş simgesine dokunun',
+			'pwaInstallChromeStep2' => '«Ana Ekrana Ekle»\'ye dokunun',
+			'pwaInstallChromeStep3' => 'Onaylamak için «Ekle»\'ye dokunun',
+			'pwaInstallGotIt' => 'Anladım',
 			'back' => 'Geri',
 			'dismiss' => 'Kapat',
 			'tabRecipes' => 'Tarifler',

@@ -38,6 +38,17 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 
 	// Translations
 	@override String get appTitle => 'Otus Food';
+	@override String get pwaInstallTooltip => 'Installer comme application';
+	@override String get pwaInstallTitle => 'Installer Otus Food sur votre iPhone ou iPad';
+	@override String get pwaInstallSafariTitle => 'Safari';
+	@override String get pwaInstallSafariStep1 => 'Appuyez sur le bouton Partager en bas de l\'écran';
+	@override String get pwaInstallSafariStep2 => 'Faites défiler et appuyez sur «Sur l\'écran d\'accueil»';
+	@override String get pwaInstallSafariStep3 => 'Appuyez sur «Ajouter» en haut à droite';
+	@override String get pwaInstallChromeTitle => 'Chrome';
+	@override String get pwaInstallChromeStep1 => 'Appuyez sur l\'icône Partager dans la barre d\'adresse';
+	@override String get pwaInstallChromeStep2 => 'Appuyez sur «Sur l\'écran d\'accueil»';
+	@override String get pwaInstallChromeStep3 => 'Appuyez sur «Ajouter» pour confirmer';
+	@override String get pwaInstallGotIt => 'Compris';
 	@override String get back => 'Retour';
 	@override String get dismiss => 'Ignorer';
 	@override String get tabRecipes => 'Recettes';
@@ -164,6 +175,17 @@ extension on TranslationsFr {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'appTitle' => 'Otus Food',
+			'pwaInstallTooltip' => 'Installer comme application',
+			'pwaInstallTitle' => 'Installer Otus Food sur votre iPhone ou iPad',
+			'pwaInstallSafariTitle' => 'Safari',
+			'pwaInstallSafariStep1' => 'Appuyez sur le bouton Partager en bas de l\'écran',
+			'pwaInstallSafariStep2' => 'Faites défiler et appuyez sur «Sur l\'écran d\'accueil»',
+			'pwaInstallSafariStep3' => 'Appuyez sur «Ajouter» en haut à droite',
+			'pwaInstallChromeTitle' => 'Chrome',
+			'pwaInstallChromeStep1' => 'Appuyez sur l\'icône Partager dans la barre d\'adresse',
+			'pwaInstallChromeStep2' => 'Appuyez sur «Sur l\'écran d\'accueil»',
+			'pwaInstallChromeStep3' => 'Appuyez sur «Ajouter» pour confirmer',
+			'pwaInstallGotIt' => 'Compris',
 			'back' => 'Retour',
 			'dismiss' => 'Ignorer',
 			'tabRecipes' => 'Recettes',

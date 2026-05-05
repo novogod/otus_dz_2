@@ -10,6 +10,11 @@ import 'ui/web_share/pwa_install.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Pick up the device / browser locale before initI18n wires the
+  // ValueNotifier into slang. If the user has a stored session,
+  // admin_session.dart will overwrite this with their preferred
+  // language during the splash sequence.
+  appLang.value = detectDeviceAppLang();
   initI18n();
   // Web-only: start polling the JS shim that captured
   // `beforeinstallprompt` so the Install-PWA button knows when to

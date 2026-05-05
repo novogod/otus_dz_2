@@ -50,6 +50,39 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Dismiss'
 	String get dismiss => 'Dismiss';
 
+	/// en: 'Install as app'
+	String get pwaInstallTooltip => 'Install as app';
+
+	/// en: 'Install Otus Food on your iPhone or iPad'
+	String get pwaInstallTitle => 'Install Otus Food on your iPhone or iPad';
+
+	/// en: 'Safari'
+	String get pwaInstallSafariTitle => 'Safari';
+
+	/// en: 'Tap the Share button at the bottom of the screen'
+	String get pwaInstallSafariStep1 => 'Tap the Share button at the bottom of the screen';
+
+	/// en: 'Scroll down and tap «Add to Home Screen»'
+	String get pwaInstallSafariStep2 => 'Scroll down and tap «Add to Home Screen»';
+
+	/// en: 'Tap «Add» in the top right corner'
+	String get pwaInstallSafariStep3 => 'Tap «Add» in the top right corner';
+
+	/// en: 'Chrome'
+	String get pwaInstallChromeTitle => 'Chrome';
+
+	/// en: 'Tap the Share icon in the address bar'
+	String get pwaInstallChromeStep1 => 'Tap the Share icon in the address bar';
+
+	/// en: 'Tap «Add to Home Screen»'
+	String get pwaInstallChromeStep2 => 'Tap «Add to Home Screen»';
+
+	/// en: 'Tap «Add» to confirm'
+	String get pwaInstallChromeStep3 => 'Tap «Add» to confirm';
+
+	/// en: 'Got it'
+	String get pwaInstallGotIt => 'Got it';
+
 	/// en: 'Recipes'
 	String get tabRecipes => 'Recipes';
 
@@ -376,6 +409,17 @@ extension on Translations {
 			'appTitle' => 'Otus Food',
 			'back' => 'Back',
 			'dismiss' => 'Dismiss',
+			'pwaInstallTooltip' => 'Install as app',
+			'pwaInstallTitle' => 'Install Otus Food on your iPhone or iPad',
+			'pwaInstallSafariTitle' => 'Safari',
+			'pwaInstallSafariStep1' => 'Tap the Share button at the bottom of the screen',
+			'pwaInstallSafariStep2' => 'Scroll down and tap «Add to Home Screen»',
+			'pwaInstallSafariStep3' => 'Tap «Add» in the top right corner',
+			'pwaInstallChromeTitle' => 'Chrome',
+			'pwaInstallChromeStep1' => 'Tap the Share icon in the address bar',
+			'pwaInstallChromeStep2' => 'Tap «Add to Home Screen»',
+			'pwaInstallChromeStep3' => 'Tap «Add» to confirm',
+			'pwaInstallGotIt' => 'Got it',
 			'tabRecipes' => 'Recipes',
 			'tabFridge' => 'Fridge',
 			'tabFavorites' => 'Favorites',

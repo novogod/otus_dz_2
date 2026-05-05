@@ -38,6 +38,17 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 
 	// Translations
 	@override String get appTitle => 'Otus Food';
+	@override String get pwaInstallTooltip => 'نصب به‌عنوان برنامه';
+	@override String get pwaInstallTitle => 'Otus Food را روی آیفون یا آیپد خود نصب کنید';
+	@override String get pwaInstallSafariTitle => 'Safari';
+	@override String get pwaInstallSafariStep1 => 'دکمه اشتراک‌گذاری در پایین صفحه را بزنید';
+	@override String get pwaInstallSafariStep2 => 'پایین بروید و «افزودن به صفحه خانه» را بزنید';
+	@override String get pwaInstallSafariStep3 => 'در گوشه بالا سمت راست «افزودن» را بزنید';
+	@override String get pwaInstallChromeTitle => 'Chrome';
+	@override String get pwaInstallChromeStep1 => 'نماد اشتراک‌گذاری در نوار آدرس را بزنید';
+	@override String get pwaInstallChromeStep2 => '«افزودن به صفحه خانه» را بزنید';
+	@override String get pwaInstallChromeStep3 => 'برای تأیید «افزودن» را بزنید';
+	@override String get pwaInstallGotIt => 'متوجه شدم';
 	@override String get back => 'بازگشت';
 	@override String get dismiss => 'بستن';
 	@override String get tabRecipes => 'دستور پخت‌ها';
@@ -164,6 +175,17 @@ extension on TranslationsFa {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'appTitle' => 'Otus Food',
+			'pwaInstallTooltip' => 'نصب به‌عنوان برنامه',
+			'pwaInstallTitle' => 'Otus Food را روی آیفون یا آیپد خود نصب کنید',
+			'pwaInstallSafariTitle' => 'Safari',
+			'pwaInstallSafariStep1' => 'دکمه اشتراک‌گذاری در پایین صفحه را بزنید',
+			'pwaInstallSafariStep2' => 'پایین بروید و «افزودن به صفحه خانه» را بزنید',
+			'pwaInstallSafariStep3' => 'در گوشه بالا سمت راست «افزودن» را بزنید',
+			'pwaInstallChromeTitle' => 'Chrome',
+			'pwaInstallChromeStep1' => 'نماد اشتراک‌گذاری در نوار آدرس را بزنید',
+			'pwaInstallChromeStep2' => '«افزودن به صفحه خانه» را بزنید',
+			'pwaInstallChromeStep3' => 'برای تأیید «افزودن» را بزنید',
+			'pwaInstallGotIt' => 'متوجه شدم',
 			'back' => 'بازگشت',
 			'dismiss' => 'بستن',
 			'tabRecipes' => 'دستور پخت‌ها',

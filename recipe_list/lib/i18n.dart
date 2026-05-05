@@ -40,6 +40,22 @@ enum AppLang {
 /// Глобальное хранилище текущего языка.
 final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.en);
 
+/// Возвращает [AppLang], соответствующий локали устройства/браузера.
+/// На Flutter Web это берётся из `navigator.language`, на iOS/Android —
+/// из системной локали. Если локаль не входит в [AppLang.values],
+/// возвращает [AppLang.en].
+AppLang detectDeviceAppLang() {
+  try {
+    final deviceLocale = AppLocaleUtils.findDeviceLocale();
+    for (final lang in AppLang.values) {
+      if (lang.locale == deviceLocale) return lang;
+    }
+  } catch (_) {
+    // Some test environments throw when probing platform locale.
+  }
+  return AppLang.en;
+}
+
 /// Глобальный «тикер» принудительной перезагрузки ленты. Кнопка
 /// «обновить» в [AppPageBar] инкрементирует значение; слушатель в
 /// [RecipeListLoader] отбрасывает локальный sqflite-кэш и заново
@@ -204,6 +220,19 @@ class S {
   String get appTitle => _t.appTitle;
   String get back => _t.back;
   String get dismiss => _t.dismiss;
+
+  // PWA install (iOS instructions modal — see web_action_buttons.dart).
+  String get pwaInstallTooltip => _t.pwaInstallTooltip;
+  String get pwaInstallTitle => _t.pwaInstallTitle;
+  String get pwaInstallSafariTitle => _t.pwaInstallSafariTitle;
+  String get pwaInstallSafariStep1 => _t.pwaInstallSafariStep1;
+  String get pwaInstallSafariStep2 => _t.pwaInstallSafariStep2;
+  String get pwaInstallSafariStep3 => _t.pwaInstallSafariStep3;
+  String get pwaInstallChromeTitle => _t.pwaInstallChromeTitle;
+  String get pwaInstallChromeStep1 => _t.pwaInstallChromeStep1;
+  String get pwaInstallChromeStep2 => _t.pwaInstallChromeStep2;
+  String get pwaInstallChromeStep3 => _t.pwaInstallChromeStep3;
+  String get pwaInstallGotIt => _t.pwaInstallGotIt;
 
   // Bottom navbar.
   String get tabRecipes => _t.tabRecipes;
