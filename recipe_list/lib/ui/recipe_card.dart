@@ -189,13 +189,9 @@ class RecipeCard extends StatelessWidget {
                   // edit/delete buttons appear. Drop the local
                   // fallback entirely; only admins or the verified
                   // author may manage a recipe, on every device.
-                  final canManage =
-                      isAdmin || isCurrentUserAuthor(recipe);
+                  final canManage = isAdmin || isCurrentUserAuthor(recipe);
                   if (!canManage) return const SizedBox.shrink();
-                  return _CardActions(
-                    onEdit: onEdit,
-                    onDelete: onDelete,
-                  );
+                  return _CardActions(onEdit: onEdit, onDelete: onDelete);
                 },
               );
             },
@@ -463,7 +459,15 @@ class _PhotoRatingPillView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final highlighted = my ?? 0;
+    // Stars reflect the **weighted average** across all voters
+    // (`sum / count`), with a half-filled star for the .5
+    // increments. Previously the pill highlighted `my` (the
+    // current user's vote), which made the card display the
+    // viewer's own star count instead of the recipe's overall
+    // rating — e.g. a recipe with two votes (5 and 3) showed 3
+    // stars to the user who rated 3, rather than the actual
+    // average of 4.
+    final avg = count > 0 ? sum / count : 0.0;
     return Material(
       color: Colors.black.withValues(alpha: 0.65),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -482,8 +486,10 @@ class _PhotoRatingPillView extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 1),
                     child: Icon(
-                      i <= highlighted
+                      avg >= i
                           ? Icons.star_rounded
+                          : avg >= i - 0.5
+                          ? Icons.star_half_rounded
                           : Icons.star_outline_rounded,
                       size: 22,
                       color: AppColors.primary,

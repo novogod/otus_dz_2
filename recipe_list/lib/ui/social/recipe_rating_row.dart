@@ -60,16 +60,35 @@ class RecipeRatingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = S.of(context);
     final avg = count > 0 ? sum / count : 0.0;
-    final highlighted = my ?? 0;
+    // Stars now visualise the **weighted average** across voters
+    // with a half-filled glyph for the 0.5 increments. When the
+    // current user has voted, we still want them to see their
+    // selection so they can unvote (tap-toggle clears it). We
+    // overlay their pick by treating `my` as a stricter floor on
+    // the fill: stars 1..my render fully filled regardless of
+    // average, while stars > my fall back to the avg-based fill.
+    // This keeps the public signal honest (a 4.0 average reads
+    // as "4 stars" everywhere) and still lets the rater see their
+    // own contribution.
+    final mine = (my ?? 0).toDouble();
+    final effective = mine > avg ? mine : avg;
     final starSize = compact ? 16.0 : 24.0;
 
     final stars = List<Widget>.generate(5, (i) {
       final value = i + 1;
-      final isOn = value <= highlighted;
+      final isFull = effective >= value;
+      final isHalf = !isFull && effective >= value - 0.5;
+      final iconData = isFull
+          ? Icons.star_rounded
+          : isHalf
+          ? Icons.star_half_rounded
+          : Icons.star_outline_rounded;
       final icon = Icon(
-        isOn ? Icons.star_rounded : Icons.star_outline_rounded,
+        iconData,
         size: starSize,
-        color: isOn ? AppColors.primary : AppColors.textSecondary,
+        color: (isFull || isHalf)
+            ? AppColors.primary
+            : AppColors.textSecondary,
       );
       if (onRate == null || compact) {
         return Padding(
