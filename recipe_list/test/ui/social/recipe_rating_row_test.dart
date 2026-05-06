@@ -95,5 +95,66 @@ void main() {
       await tester.pump();
       expect(lastTap, 3);
     });
+
+    testWidgets(
+      'no horizontal overflow on narrow widths (RU tooltip)',
+      (tester) async {
+        LocaleSettings.setLocale(AppLocale.ru);
+        // Force a narrow layout that mirrors the iPhone-mini width
+        // available to the rating row inside the recipe details
+        // page padding (~330 logical px). Before the Expanded
+        // wrapper, the trailing tooltip overflowed by ~30 px and
+        // raised the yellow-and-black RIGHT OVERFLOWED warning.
+        await tester.pumpWidget(
+          TranslationProvider(
+            child: MaterialApp(
+              home: Scaffold(
+                body: Center(
+                  child: SizedBox(
+                    width: 330,
+                    child: RecipeRatingRow(
+                      count: 0,
+                      sum: 0,
+                      my: null,
+                      onRate: (_) {},
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'no horizontal overflow with avg + many votes on narrow widths',
+      (tester) async {
+        LocaleSettings.setLocale(AppLocale.ru);
+        await tester.pumpWidget(
+          TranslationProvider(
+            child: MaterialApp(
+              home: Scaffold(
+                body: Center(
+                  child: SizedBox(
+                    width: 320,
+                    child: RecipeRatingRow(
+                      count: 12345,
+                      sum: 60000,
+                      my: 5,
+                      onRate: (_) {},
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }

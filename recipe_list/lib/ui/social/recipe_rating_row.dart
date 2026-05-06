@@ -145,25 +145,31 @@ class RecipeRatingRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            Text(
-              s.recipeVotesCount(n: count),
-              style: const TextStyle(
-                fontFamily: AppTextStyles.fontFamily,
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
-                height: 20 / 14,
-                color: AppColors.textSecondary,
+            Expanded(
+              child: Text(
+                s.recipeVotesCount(n: count),
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 14,
+                  height: 20 / 14,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           ] else
-            Text(
-              s.recipeRateTooltip,
-              style: const TextStyle(
-                fontFamily: AppTextStyles.fontFamily,
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
-                height: 20 / 14,
-                color: AppColors.textSecondary,
+            Expanded(
+              child: Text(
+                s.recipeRateTooltip,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 14,
+                  height: 20 / 14,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
         ],

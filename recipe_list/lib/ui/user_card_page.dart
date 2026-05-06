@@ -247,33 +247,74 @@ class _UserCardPageState extends State<UserCardPage> {
     );
   }
 
-  Widget _buildStats(S s, ThemeData theme) {
+  Widget _buildStats(S s, ThemeData /* unused */ _) {
     final memberSince = _profile?.memberSince;
     final memberSinceLabel = memberSince != null
         ? '${memberSince.year}-${memberSince.month.toString().padLeft(2, '0')}-${memberSince.day.toString().padLeft(2, '0')}'
         : '—';
+    // Profile scaffold uses `surfaceMuted` (#ECECEC) — render stats
+    // in `textPrimary` so the lines stay readable per
+    // docs/design_system.md (no grey-on-grey).
+    const statsStyle = TextStyle(
+      fontFamily: AppTextStyles.fontFamily,
+      fontWeight: FontWeight.w400,
+      fontSize: 14,
+      height: 23 / 14,
+      color: AppColors.textPrimary,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
           s.profileRecipesAdded(n: _profile?.recipesAdded ?? 0),
-          style: theme.textTheme.bodyMedium,
+          style: statsStyle,
         ),
         const SizedBox(height: 4),
         Text(
           s.profileMemberSince(date: memberSinceLabel),
-          style: theme.textTheme.bodyMedium,
+          style: statsStyle,
         ),
       ],
     );
   }
 
   Widget _buildPrimaryRow(S s) {
+    // Per docs/design_system.md §9g (and the user-card spec
+    // §2.4) the primary CTA on the User Card is filled with
+    // `primaryDark` (#165932) on white text, radius 25, h 48 —
+    // not the pale-on-pale Material-3 ElevatedButton default
+    // which collapses to surface-fill + primary-text on the
+    // muted scaffold and fails contrast.
+    final primaryStyle = ElevatedButton.styleFrom(
+      backgroundColor: AppColors.primaryDark,
+      foregroundColor: AppColors.surface,
+      disabledBackgroundColor: AppColors.primaryDark.withValues(alpha: 0.6),
+      disabledForegroundColor: AppColors.surface,
+      minimumSize: const Size.fromHeight(48),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+      textStyle: const TextStyle(
+        fontFamily: AppTextStyles.fontFamily,
+        fontWeight: FontWeight.w500,
+        fontSize: 16,
+      ),
+    );
+    final outlineStyle = OutlinedButton.styleFrom(
+      foregroundColor: AppColors.primaryDark,
+      side: const BorderSide(color: AppColors.primaryDark, width: 1),
+      minimumSize: const Size.fromHeight(48),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+      textStyle: const TextStyle(
+        fontFamily: AppTextStyles.fontFamily,
+        fontWeight: FontWeight.w500,
+        fontSize: 16,
+      ),
+    );
     if (widget.isPostSignup) {
       return Row(
         children: <Widget>[
           Expanded(
             child: OutlinedButton(
+              style: outlineStyle,
               onPressed: _busy ? null : () => context.go(Routes.recipes),
               child: Text(s.profileSkip),
             ),
@@ -281,6 +322,7 @@ class _UserCardPageState extends State<UserCardPage> {
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: ElevatedButton(
+              style: primaryStyle,
               onPressed: _busy ? null : _handleSave,
               child: Text(s.profileAdd),
             ),
@@ -291,6 +333,7 @@ class _UserCardPageState extends State<UserCardPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
+        style: primaryStyle,
         onPressed: _busy
             ? null
             : () {
