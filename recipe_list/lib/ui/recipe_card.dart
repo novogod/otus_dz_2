@@ -317,9 +317,7 @@ class _Photo extends StatelessWidget {
             Positioned(
               left: AppSpacing.sm,
               top: AppSpacing.sm,
-              child: PointerInterceptor(
-                child: PhotoShareBadge(recipe: recipe),
-              ),
+              child: PointerInterceptor(child: PhotoShareBadge(recipe: recipe)),
             ),
             // Star-rating pill on every photo (per
             // docs/prompts.md "stars on ALL recipe cards are
@@ -330,9 +328,7 @@ class _Photo extends StatelessWidget {
             Positioned(
               left: AppSpacing.sm,
               bottom: AppSpacing.sm,
-              child: PointerInterceptor(
-                child: PhotoRatingPill(recipe: recipe),
-              ),
+              child: PointerInterceptor(child: PhotoRatingPill(recipe: recipe)),
             ),
           ],
         ),
