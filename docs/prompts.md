@@ -4,23 +4,23 @@
 
 run them exsostively, using cliclick tests for UI tests on iphone simulator with user info@lagente.do and password 111111.: 
 
-- stars on ALL recipie cards are present and clickable by user, 
+a/ stars on ALL recipie cards are present and clickable by user, 
 
-- adding the "favorites" and see if the favorite button displays in the pill shape the quantity of favorites added left to the heart icon, 
+b/ adding the "favorites" and see if the favorite button displays in the pill shape the quantity of favorites added left to the heart icon, 
 
-- clicking the stars and seeing the rating changes and number of voters, 
+c/ clicking the stars and seeing the rating changes and number of voters, 
 
-- check if all elements described on docs/user-card-and-social-signals.md are on card,
+d/ check if all elements described on docs/user-card-and-social-signals.md are on card,
 
-= adding the recipies, checking if all new elements from docs/user-card-and-social-signals.md are present on the recipie, 
+e/ adding the recipies, checking if all new elements from docs/user-card-and-social-signals.md are present on the recipie, 
 
-- adding avatar to user, see if the avatar is displayed and stored correctly, 
+f/ adding avatar to user, see if the avatar is displayed and stored correctly, 
 
-- see if avatar is displayed on the created recipies cards 
+g/ see if avatar is displayed on the created recipies cards 
 
-- check ALL features to be on card and in user profile, fix till all the features listed in docs/user-card-and-social-signals.md are tested. 
+k/ check ALL features to be on card and in user profile, fix till all the features listed in docs/user-card-and-social-signals.md are tested. 
 
-- no grey fonts on grey background, all text is contrast and human readable, all elements are compliant with docs/design_system.md.
+l/ no grey fonts on grey background, all text is contrast and human readable, all elements are compliant with docs/design_system.md.
 
 3/ run the cliclick tests, fix the issues, repeat till all tests are passed and all issues are fixed.
 

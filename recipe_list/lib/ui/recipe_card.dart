@@ -4,14 +4,15 @@ import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../auth/admin_session.dart';
+import '../data/api/recipe_api.dart';
 import '../data/repository/favorites_store.dart';
 import '../data/repository/owned_recipes_store.dart';
+import '../data/repository/rating_store.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
 import '../utils/imgproxy.dart';
 import 'app_theme.dart';
 import 'registration_required_snackbar.dart';
-import 'social/recipe_rating_row.dart';
 
 /// Карточка рецепта TheMealDB.
 ///
@@ -120,31 +121,6 @@ class RecipeCard extends StatelessWidget {
             ),
           ),
         ),
-        // Compact rating overlay (chunk G §4.2: card shows
-        // average + count, no interactive stars). Hidden when
-        // there are no votes yet so cards stay clean.
-        if (recipe.ratingsCount > 0)
-          Positioned(
-            top: outerPadding.top + AppSpacing.sm + 38,
-            right: outerPadding.right + AppSpacing.sm,
-            child: IgnorePointer(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: AppShadows.card,
-                ),
-                child: RecipeRatingRow(
-                  count: recipe.ratingsCount,
-                  sum: recipe.ratingsSum,
-                  my: recipe.myRating,
-                  onRate: null,
-                  compact: true,
-                ),
-              ),
-            ),
-          ),
         Positioned(
           top: outerPadding.top + AppSpacing.sm,
           left: outerPadding.left + AppSpacing.sm,
@@ -288,6 +264,19 @@ class _Photo extends StatelessWidget {
                   child: _YoutubeBadge(url: recipe.youtubeUrl!),
                 ),
               ),
+            // Star-rating pill on every photo (per
+            // docs/prompts.md "stars on ALL recipe cards are
+            // present and clickable"). Sits inline with the
+            // YouTube badge at the bottom of the photo: when
+            // YouTube is present we leave space for it on the
+            // right; the pill anchors to the left.
+            Positioned(
+              left: AppSpacing.sm,
+              bottom: AppSpacing.sm,
+              child: PointerInterceptor(
+                child: _PhotoRatingPill(recipe: recipe),
+              ),
+            ),
           ],
         ),
       ),
@@ -333,6 +322,142 @@ class _YoutubeBadge extends StatelessWidget {
         child: const Padding(
           padding: EdgeInsets.all(AppSpacing.sm),
           child: Icon(Icons.play_arrow, color: Colors.white, size: 24),
+        ),
+      ),
+    );
+  }
+}
+
+/// 5-star rating pill anchored to the bottom-left corner of every
+/// recipe photo, inline with [_YoutubeBadge]. Visual weight matches
+/// the YouTube badge (semi-transparent black, white/primary glyphs)
+/// so the two badges read as a pair.
+///
+/// Per docs/prompts.md "stars on ALL recipe cards are present and
+/// clickable": always rendered, always interactive. Tapping a star
+/// while logged out surfaces the registration-required snackbar;
+/// while logged in, sends the vote through [RatingStore]. The vote
+/// count is shown to the right of the stars.
+class _PhotoRatingPill extends StatelessWidget {
+  const _PhotoRatingPill({required this.recipe});
+
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<RatingStore?>(
+      valueListenable: ratingStoreNotifier,
+      builder: (context, store, _) {
+        final initial = RecipeRatingSnapshot(
+          count: recipe.ratingsCount,
+          sum: recipe.ratingsSum,
+          my: recipe.myRating,
+        );
+        if (store == null) {
+          return _PhotoRatingPillView(
+            count: initial.count,
+            sum: initial.sum,
+            my: initial.my,
+            onTap: null,
+          );
+        }
+        return ValueListenableBuilder<RecipeRatingSnapshot>(
+          valueListenable: store.watch(recipe.id, initial: initial),
+          builder: (context, snap, _) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: userLoggedInNotifier,
+              builder: (context, loggedIn, _) {
+                return _PhotoRatingPillView(
+                  count: snap.count,
+                  sum: snap.sum,
+                  my: snap.my,
+                  onTap: (stars) async {
+                    if (!loggedIn) {
+                      showRegistrationRequiredSnackBar(context);
+                      return;
+                    }
+                    try {
+                      if (snap.my == stars) {
+                        await store.clearMyRating(recipe.id);
+                      } else {
+                        await store.setMyRating(recipe.id, stars);
+                      }
+                    } catch (_) {
+                      // RatingStore reverts optimistic state itself; we
+                      // don't surface a snackbar here to keep the card
+                      // taps quiet — details page is the noisy surface.
+                    }
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _PhotoRatingPillView extends StatelessWidget {
+  const _PhotoRatingPillView({
+    required this.count,
+    required this.sum,
+    required this.my,
+    required this.onTap,
+  });
+
+  final int count;
+  final int sum;
+  final int? my;
+  final ValueChanged<int>? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final highlighted = my ?? 0;
+    return Material(
+      color: Colors.black.withValues(alpha: 0.65),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (int i = 1; i <= 5; i++)
+              InkResponse(
+                onTap: onTap == null ? null : () => onTap!(i),
+                radius: 14,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 1,
+                    vertical: 2,
+                  ),
+                  child: Icon(
+                    i <= highlighted
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    size: 18,
+                    color: i <= highlighted
+                        ? AppColors.primary
+                        : Colors.white,
+                  ),
+                ),
+              ),
+            const SizedBox(width: 4),
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Text(
+                'voted: $count',
+                style: const TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  height: 16 / 12,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
