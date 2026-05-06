@@ -323,6 +323,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                             child: PointerInterceptor(
                               child: FavoriteBadge(
                                 recipeId: recipe.id,
+                                creatorUserId: recipe.creatorUserId,
                                 favoritesCount: recipe.favoritesCount,
                               ),
                             ),

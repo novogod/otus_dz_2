@@ -584,3 +584,18 @@ class UserProfileSnapshot {
 /// client back-fills them here for self-authored recipes).
 final ValueNotifier<UserProfileSnapshot?> myProfileNotifier =
     ValueNotifier<UserProfileSnapshot?>(null);
+
+/// Server-authoritative ownership check. Returns `true` when the
+/// currently logged-in user (per [myProfileNotifier]) is the
+/// author of [recipe] according to the server-projected
+/// `creatorUserId`. Works across devices and after re-login —
+/// unlike the per-device `owned_recipes` sqflite table this
+/// gate keeps owner-edit/-delete buttons visible on every
+/// device the same account signs in on.
+bool isCurrentUserAuthor(Recipe recipe) {
+  final creatorId = recipe.creatorUserId;
+  if (creatorId == null || creatorId.isEmpty) return false;
+  final me = myProfileNotifier.value?.id;
+  if (me == null || me.isEmpty) return false;
+  return creatorId == me;
+}

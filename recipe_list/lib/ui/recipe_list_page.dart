@@ -542,6 +542,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
   Future<void> _openEditRecipe(BuildContext context, Recipe recipe) async {
     final canManage =
         adminLoggedInNotifier.value ||
+        isCurrentUserAuthor(recipe) ||
         (ownedRecipesStoreNotifier.value?.isOwned(recipe.id) ?? false);
     if (!canManage) return;
     final base = Routes.currentBranchBase(GoRouterState.of(context).uri.path);
@@ -557,6 +558,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
   ) async {
     final canManage =
         adminLoggedInNotifier.value ||
+        isCurrentUserAuthor(recipe) ||
         (ownedRecipesStoreNotifier.value?.isOwned(recipe.id) ?? false);
     if (!canManage) return;
     final s = S.of(context);

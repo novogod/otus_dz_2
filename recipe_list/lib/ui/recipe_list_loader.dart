@@ -113,6 +113,11 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     appLang.addListener(_onLangChanged);
     activeDetailsCount.addListener(_onActiveDetailsChanged);
     reloadFeedTicker.addListener(_onReloadRequested);
+    userLoggedInNotifier.addListener(_onUserSessionChanged);
+    // Initial profile fetch when a saved session is restored
+    // before this widget is mounted (e.g. cold-start with
+    // biometric auto-login).
+    _onUserSessionChanged();
   }
 
   @override
@@ -120,8 +125,33 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     appLang.removeListener(_onLangChanged);
     activeDetailsCount.removeListener(_onActiveDetailsChanged);
     reloadFeedTicker.removeListener(_onReloadRequested);
+    userLoggedInNotifier.removeListener(_onUserSessionChanged);
     _stage.dispose();
     super.dispose();
+  }
+
+  /// React to login/logout transitions. On login (or cold-start
+  /// with a restored session) fetch `/recipes/users/me` so the
+  /// rest of the UI can answer "is the current user the author
+  /// of this recipe?" via [myProfileNotifier]. On logout, clear
+  /// the cached profile so stale ownership cannot leak across
+  /// users on a shared device. Cross-device consistency: the
+  /// authoritative author signal is the server's
+  /// `creatorUserId == myProfileNotifier.value?.id` comparison;
+  /// the local `owned_recipes` table is a per-device convenience
+  /// that we no longer rely on for owner gating (see
+  /// recipes-cross-device-ownership.md / AGENTS.md).
+  void _onUserSessionChanged() {
+    final loggedIn = userLoggedInNotifier.value;
+    if (!loggedIn) {
+      myProfileNotifier.value = null;
+      return;
+    }
+    if (myProfileNotifier.value != null) return;
+    // ignore: discarded_futures — best-effort hydration; UI
+    // tolerates `myProfileNotifier.value == null` (chip hidden,
+    // owner-actions hidden until the fetch lands).
+    widget.api.fetchMyProfile().catchError((Object _) => null);
   }
 
   void _onActiveDetailsChanged() {

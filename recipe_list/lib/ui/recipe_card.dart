@@ -101,6 +101,44 @@ class RecipeCard extends StatelessWidget {
                                 avatarPath: recipe.creatorAvatarPath,
                                 recipesAdded: recipe.creatorRecipesAdded,
                               ),
+                            ] else if (isCurrentUserAuthor(recipe) ||
+                                recipe.id >=
+                                        OwnedRecipesStore.userMealIdFloor &&
+                                    (ownedRecipesStoreNotifier.value?.isOwned(
+                                          recipe.id,
+                                        ) ??
+                                        false)) ...[
+                              // Cross-device fallback: the locally-cached
+                              // recipe row may have been written before
+                              // creator columns shipped (v14 schema), or
+                              // attachSocialSignals dropped the projection
+                              // because of a transient SQL error. When we
+                              // KNOW the current user authored this recipe
+                              // (via creatorUserId match against
+                              // [myProfileNotifier], or as a last resort
+                              // via the per-device owned_recipes registry)
+                              // hydrate the chip from /recipes/users/me so
+                              // the author signal is never silently
+                              // missing.
+                              ValueListenableBuilder<UserProfileSnapshot?>(
+                                valueListenable: myProfileNotifier,
+                                builder: (context, me, _) {
+                                  if (me == null ||
+                                      (me.displayName ?? '').isEmpty) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: AppSpacing.sm,
+                                    ),
+                                    child: _AuthorChip(
+                                      name: me.displayName!,
+                                      avatarPath: me.avatarPath,
+                                      recipesAdded: me.recipesAdded,
+                                    ),
+                                  );
+                                },
+                              ),
                             ],
                           ],
                         ],
@@ -120,6 +158,7 @@ class RecipeCard extends StatelessWidget {
           child: PointerInterceptor(
             child: FavoriteBadge(
               recipeId: recipe.id,
+              creatorUserId: recipe.creatorUserId,
               // chunk H of user-card-and-social-signals.md: when the
               // server has projected favoritesCount, render a pill
               // with the number; otherwise the badge collapses to
@@ -153,9 +192,31 @@ class RecipeCard extends StatelessWidget {
                   return ValueListenableBuilder<bool>(
                     valueListenable: adminLoggedInNotifier,
                     builder: (context, isAdmin, _) {
-                      final canManage = isAdmin || ownedIds.contains(recipe.id);
-                      if (!canManage) return const SizedBox.shrink();
-                      return _CardActions(onEdit: onEdit, onDelete: onDelete);
+                      return ValueListenableBuilder<UserProfileSnapshot?>(
+                        valueListenable: myProfileNotifier,
+                        builder: (context, _, __) {
+                          // Server-authoritative: the creatorUserId
+                          // projected by attachSocialSignals is matched
+                          // against the current /recipes/users/me id
+                          // via [isCurrentUserAuthor]. Owner-edit/-delete
+                          // therefore work on every device the same
+                          // account signs in on, not just the one where
+                          // the recipe was originally created. The local
+                          // [OwnedRecipesStore] is kept as a fallback so
+                          // a recipe just created in this session is
+                          // editable even before the server's projection
+                          // round-trips.
+                          final canManage =
+                              isAdmin ||
+                              isCurrentUserAuthor(recipe) ||
+                              ownedIds.contains(recipe.id);
+                          if (!canManage) return const SizedBox.shrink();
+                          return _CardActions(
+                            onEdit: onEdit,
+                            onDelete: onDelete,
+                          );
+                        },
+                      );
                     },
                   );
                 },
@@ -493,9 +554,16 @@ class FavoriteBadge extends StatelessWidget {
   /// is always a pill with a visible count. Defaults to `true`.
   final bool showCount;
 
+  /// Server-projected creator id from `attachSocialSignals`. When
+  /// it equals [myProfileNotifier.value?.id] the heart short-circuits
+  /// on un-favourite — authors cannot unfavourite their own recipes
+  /// (cross-device, server-authoritative).
+  final String? creatorUserId;
+
   const FavoriteBadge({
     super.key,
     required this.recipeId,
+    this.creatorUserId,
     this.favoritesCount = 0,
     this.showCount = true,
   });
@@ -547,8 +615,18 @@ class FavoriteBadge extends StatelessWidget {
                     // language. Tapping the heart on an owned
                     // recipe must not unfavourite it (per spec).
                     // We allow add (idempotent) but block remove.
+                    // Server-authoritative: same author rule applies
+                    // on every device the user signs in on, even when
+                    // the local owned_recipes registry is empty.
                     final owned = ownedRecipesStoreNotifier.value;
-                    if (isFav && owned != null && owned.isOwned(recipeId)) {
+                    final myId = myProfileNotifier.value?.id;
+                    final creatorId = creatorUserId;
+                    final isAuthor =
+                        (creatorId != null &&
+                            myId != null &&
+                            creatorId == myId) ||
+                        (owned != null && owned.isOwned(recipeId));
+                    if (isFav && isAuthor) {
                       HapticFeedback.lightImpact();
                       return;
                     }
