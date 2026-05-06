@@ -20,7 +20,7 @@
 
 - no grey fonts on grey background, all text is contrast and human readable, all elements are compliant with docs/design_system.md.
 
-3/ run the tests, fix the issues, repeat till all tests are passed and all issues are fixed.
+3/ run the cliclick tests, fix the issues, repeat till all tests are passed and all issues are fixed.
 
 4/ After tests are completed by your opinion read docs/user-card-and-social-signals.md and check what features' tests are missed. 
 
