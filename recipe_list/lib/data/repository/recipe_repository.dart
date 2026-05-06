@@ -102,12 +102,12 @@ class RecipeRepository {
     // совпадений: и то, что уже было оффлайн, и свежак с сервера.
     final cacheFuture = _localSubstring(p, lang);
     var apiFailed = false;
-    final apiFuture = _api
-        .searchByName(query: prefix, lang: lang)
-        .catchError((Object _) {
-          apiFailed = true;
-          return const <Recipe>[];
-        });
+    final apiFuture = _api.searchByName(query: prefix, lang: lang).catchError((
+      Object _,
+    ) {
+      apiFailed = true;
+      return const <Recipe>[];
+    });
 
     final cacheHits = await cacheFuture;
     final apiHits = await apiFuture;
