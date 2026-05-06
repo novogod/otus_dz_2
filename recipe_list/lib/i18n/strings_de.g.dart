@@ -118,6 +118,13 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchNoMatches => 'Keine Treffer';
 	@override String get favoritesEmpty => 'Noch keine Favoriten';
 	@override String get recipeAddedByPrefix => 'von';
+	@override String get recipeRateTooltip => 'Tippe einen Stern, um zu bewerten';
+	@override String recipeRatingAvg({required Object avg}) => '${avg} / 5';
+	@override String recipeVotesCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n,
+		one: '${n} Stimme',
+		other: '${n} Stimmen',
+	);
+	@override String get recipeRatedToast => 'Danke für deine Bewertung!';
 	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n,
 		one: '${n} Rezept',
 		other: '${n} Rezepte',
@@ -264,6 +271,10 @@ extension on TranslationsDe {
 			'searchNoMatches' => 'Keine Treffer',
 			'favoritesEmpty' => 'Noch keine Favoriten',
 			'recipeAddedByPrefix' => 'von',
+			'recipeRateTooltip' => 'Tippe einen Stern, um zu bewerten',
+			'recipeRatingAvg' => ({required Object avg}) => '${avg} / 5',
+			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n, one: '${n} Stimme', other: '${n} Stimmen', ), 
+			'recipeRatedToast' => 'Danke für deine Bewertung!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n, one: '${n} Rezept', other: '${n} Rezepte', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('de'))(n, one: '${n} Zutat', other: '${n} Zutaten', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Sprache wechseln zu ${label}',

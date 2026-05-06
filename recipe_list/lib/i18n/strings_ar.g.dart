@@ -118,6 +118,17 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchNoMatches => 'لا توجد نتائج مطابقة';
 	@override String get favoritesEmpty => 'لا توجد مفضلات بعد';
 	@override String get recipeAddedByPrefix => 'بواسطة';
+	@override String get recipeRateTooltip => 'اضغط نجمة للتقييم';
+	@override String recipeRatingAvg({required Object avg}) => '${avg} / 5';
+	@override String recipeVotesCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n,
+		zero: '${n} أصوات',
+		one: '${n} صوت',
+		two: '${n} صوتان',
+		few: '${n} أصوات',
+		many: '${n} صوتًا',
+		other: '${n} صوت',
+	);
+	@override String get recipeRatedToast => 'شكرًا على تقييمك!';
 	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n,
 		one: '${n} وصفة',
 		other: '${n} وصفات',
@@ -268,6 +279,10 @@ extension on TranslationsAr {
 			'searchNoMatches' => 'لا توجد نتائج مطابقة',
 			'favoritesEmpty' => 'لا توجد مفضلات بعد',
 			'recipeAddedByPrefix' => 'بواسطة',
+			'recipeRateTooltip' => 'اضغط نجمة للتقييم',
+			'recipeRatingAvg' => ({required Object avg}) => '${avg} / 5',
+			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, zero: '${n} أصوات', one: '${n} صوت', two: '${n} صوتان', few: '${n} أصوات', many: '${n} صوتًا', other: '${n} صوت', ), 
+			'recipeRatedToast' => 'شكرًا على تقييمك!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, one: '${n} وصفة', other: '${n} وصفات', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, zero: '${n} مكون', one: '${n} مكون', two: '${n} مكونان', few: '${n} مكونات', many: '${n} مكوناً', other: '${n} مكون', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'تغيير اللغة إلى ${label}',

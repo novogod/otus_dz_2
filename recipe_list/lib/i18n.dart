@@ -282,6 +282,13 @@ class S {
   String get recipeAddedByPrefix => _t.recipeAddedByPrefix;
   String recipeAuthorRecipes(int n) => _t.recipeAuthorRecipes(n: n);
 
+  // Recipe rating row (chunk G of user-card-and-social-signals).
+  String get recipeRateTooltip => _t.recipeRateTooltip;
+  String recipeRatingAvg({required String avg}) =>
+      _t.recipeRatingAvg(avg: avg);
+  String recipeVotesCount({required int n}) => _t.recipeVotesCount(n: n);
+  String get recipeRatedToast => _t.recipeRatedToast;
+
   // Accessibility labels.
   String switchLanguageTo(String label) =>
       _t.a11y.switchLanguageTo(label: label);

@@ -80,6 +80,13 @@
   "searchNoMatches": "Eşleşme yok",
   "favoritesEmpty": "Henüz favori yok",
   "recipeAddedByPrefix": "ekleyen",
+  "recipeRateTooltip": "Oy vermek için bir yıldıza dokunun",
+  "recipeRatingAvg": "${avg} / 5",
+  "recipeVotesCount": {
+    "one": "${n} oy",
+    "other": "${n} oy"
+  },
+  "recipeRatedToast": "Oyladığın için teşekkürler!",
   "recipeAuthorRecipes": {
     "one": "${n} tarif",
     "other": "${n} tarif"

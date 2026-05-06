@@ -80,6 +80,15 @@
   "searchNoMatches": "Совпадений не найдено",
   "favoritesEmpty": "Пока ничего не добавлено",
   "recipeAddedByPrefix": "автор",
+  "recipeRateTooltip": "Нажмите на звезду, чтобы оценить",
+  "recipeRatingAvg": "${avg} / 5",
+  "recipeVotesCount": {
+    "one": "${n} голос",
+    "few": "${n} голоса",
+    "many": "${n} голосов",
+    "other": "${n} голоса"
+  },
+  "recipeRatedToast": "Спасибо за оценку!",
   "recipeAuthorRecipes": {
     "one": "${n} рецепт",
     "few": "${n} рецепта",

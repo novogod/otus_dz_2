@@ -12,6 +12,7 @@ import '../data/api/recipe_api_config.dart';
 import '../data/app_services.dart';
 import '../data/local/recipe_db.dart';
 import '../data/repository/favorites_store.dart';
+import '../data/repository/rating_store.dart';
 import '../data/repository/owned_recipes_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
@@ -602,6 +603,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       // null out the global notifiers so the next _runLoadImpl
       // call rebuilds them via _defaultRepoBuilder.
       favoritesStoreNotifier.value = null;
+      ratingStoreNotifier.value = null;
       ownedRecipesStoreNotifier.value = null;
       return _runLoadImpl(forceReseed: forceReseed);
     }
@@ -828,6 +830,12 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       // todo/15). Карточка/страница деталей слушают
       // [favoritesStoreNotifier] и перерисовываются при toggle.
       favoritesStoreNotifier.value ??= FavoritesStore(db: db);
+      // Глобальный стор рейтингов (chunk G). В отличие от
+      // избранного, рейтинги не кэшируются на устройстве: их
+      // аггрегаты часто меняются у других пользователей, и держать
+      // их в sqflite — только плодить рассинхрон. См.
+      // [docs/user-card-and-social-signals.md].
+      ratingStoreNotifier.value ??= RatingStore(api: api);
       await bootstrapAdminSession(db: db);
       // Прогреваем избранное для текущего языка, иначе сразу после
       // старта `FavoriteBadge` слушает пустой нотифаер и рисует

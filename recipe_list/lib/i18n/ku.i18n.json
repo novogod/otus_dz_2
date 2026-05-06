@@ -80,6 +80,13 @@
   "searchNoMatches": "هیچ گونجاوێک نییە",
   "favoritesEmpty": "هێشتا هیچ بەدڵبووەکێک نییە",
   "recipeAddedByPrefix": "لە لایەن",
+  "recipeRateTooltip": "بۆ هەڵسەنگاندن دەست لە ئەستێرە بدە",
+  "recipeRatingAvg": "${avg} / 5",
+  "recipeVotesCount": {
+    "one": "${n} دەنگ",
+    "other": "${n} دەنگ"
+  },
+  "recipeRatedToast": "سوپاس بۆ هەڵسەنگاندنت!",
   "recipeAuthorRecipes": {
     "one": "${n} ڕێسا",
     "other": "${n} ڕێسا"

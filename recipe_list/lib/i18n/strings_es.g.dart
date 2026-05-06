@@ -118,6 +118,13 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchNoMatches => 'No hay coincidencias';
 	@override String get favoritesEmpty => 'Aún no hay favoritos';
 	@override String get recipeAddedByPrefix => 'por';
+	@override String get recipeRateTooltip => 'Toca una estrella para calificar';
+	@override String recipeRatingAvg({required Object avg}) => '${avg} / 5';
+	@override String recipeVotesCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n,
+		one: '${n} voto',
+		other: '${n} votos',
+	);
+	@override String get recipeRatedToast => '¡Gracias por tu calificación!';
 	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n,
 		one: '${n} receta',
 		other: '${n} recetas',
@@ -264,6 +271,10 @@ extension on TranslationsEs {
 			'searchNoMatches' => 'No hay coincidencias',
 			'favoritesEmpty' => 'Aún no hay favoritos',
 			'recipeAddedByPrefix' => 'por',
+			'recipeRateTooltip' => 'Toca una estrella para calificar',
+			'recipeRatingAvg' => ({required Object avg}) => '${avg} / 5',
+			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '${n} voto', other: '${n} votos', ), 
+			'recipeRatedToast' => '¡Gracias por tu calificación!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '${n} receta', other: '${n} recetas', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '${n} ingrediente', other: '${n} ingredientes', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Cambiar idioma a ${label}',

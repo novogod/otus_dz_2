@@ -80,6 +80,13 @@
   "searchNoMatches": "Nessun risultato",
   "favoritesEmpty": "Ancora nessun preferito",
   "recipeAddedByPrefix": "da",
+  "recipeRateTooltip": "Tocca una stella per valutare",
+  "recipeRatingAvg": "${avg} / 5",
+  "recipeVotesCount": {
+    "one": "${n} voto",
+    "other": "${n} voti"
+  },
+  "recipeRatedToast": "Grazie per la valutazione!",
   "recipeAuthorRecipes": {
     "one": "${n} ricetta",
     "other": "${n} ricette"

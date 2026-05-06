@@ -29,9 +29,7 @@ void main() {
     testWidgets('showCount = false → legacy 32×32 square, no number', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _harness(const FavoriteBadge(recipeId: 1)),
-      );
+      await tester.pumpWidget(_harness(const FavoriteBadge(recipeId: 1)));
 
       // No number text.
       expect(find.text('0'), findsNothing);
@@ -48,24 +46,19 @@ void main() {
       expect(squareCount, greaterThanOrEqualTo(1));
     });
 
-    testWidgets(
-      'showCount = true, favoritesCount = 0 → square fallback',
-      (tester) async {
-        await tester.pumpWidget(
-          _harness(
-            const FavoriteBadge(
-              recipeId: 2,
-              favoritesCount: 0,
-              showCount: true,
-            ),
-          ),
-        );
+    testWidgets('showCount = true, favoritesCount = 0 → square fallback', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _harness(
+          const FavoriteBadge(recipeId: 2, favoritesCount: 0, showCount: true),
+        ),
+      );
 
-        // No number rendered (falls through to square).
-        expect(find.text('0'), findsNothing);
-        expect(find.byIcon(Icons.favorite_border), findsOneWidget);
-      },
-    );
+      // No number rendered (falls through to square).
+      expect(find.text('0'), findsNothing);
+      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+    });
 
     testWidgets(
       'showCount = true, favoritesCount = 7 → pill with "7" + outline heart',

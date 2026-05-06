@@ -11,6 +11,7 @@ import '../models/recipe.dart';
 import '../utils/imgproxy.dart';
 import 'app_theme.dart';
 import 'registration_required_snackbar.dart';
+import 'social/recipe_rating_row.dart';
 
 /// Карточка рецепта TheMealDB.
 ///
@@ -119,6 +120,34 @@ class RecipeCard extends StatelessWidget {
             ),
           ),
         ),
+        // Compact rating overlay (chunk G §4.2: card shows
+        // average + count, no interactive stars). Hidden when
+        // there are no votes yet so cards stay clean.
+        if (recipe.ratingsCount > 0)
+          Positioned(
+            top: outerPadding.top + AppSpacing.sm + 38,
+            right: outerPadding.right + AppSpacing.sm,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: AppShadows.card,
+                ),
+                child: RecipeRatingRow(
+                  count: recipe.ratingsCount,
+                  sum: recipe.ratingsSum,
+                  my: recipe.myRating,
+                  onRate: null,
+                  compact: true,
+                ),
+              ),
+            ),
+          ),
         Positioned(
           top: outerPadding.top + AppSpacing.sm,
           left: outerPadding.left + AppSpacing.sm,
@@ -434,9 +463,7 @@ class _FavoriteBadgeView extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: renderPill
-          ? _buildPill(context)
-          : _buildSquare(),
+      child: renderPill ? _buildPill(context) : _buildSquare(),
     );
   }
 
@@ -494,9 +521,7 @@ class _FavoriteBadgeView extends StatelessWidget {
             Icon(
               isFavorite ? Icons.favorite : Icons.favorite_border,
               size: 18,
-              color: isFavorite
-                  ? AppColors.primary
-                  : AppColors.textSecondary,
+              color: isFavorite ? AppColors.primary : AppColors.textSecondary,
             ),
           ],
         ),

@@ -80,6 +80,17 @@
   "searchNoMatches": "لا توجد نتائج مطابقة",
   "favoritesEmpty": "لا توجد مفضلات بعد",
   "recipeAddedByPrefix": "بواسطة",
+  "recipeRateTooltip": "اضغط نجمة للتقييم",
+  "recipeRatingAvg": "${avg} / 5",
+  "recipeVotesCount": {
+    "zero": "${n} أصوات",
+    "one": "${n} صوت",
+    "two": "${n} صوتان",
+    "few": "${n} أصوات",
+    "many": "${n} صوتًا",
+    "other": "${n} صوت"
+  },
+  "recipeRatedToast": "شكرًا على تقييمك!",
   "recipeAuthorRecipes": {
     "one": "${n} وصفة",
     "other": "${n} وصفات"

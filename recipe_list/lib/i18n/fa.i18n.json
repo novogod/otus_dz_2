@@ -80,6 +80,13 @@
   "searchNoMatches": "موردی یافت نشد",
   "favoritesEmpty": "هنوز موردی به علاقه‌مندی‌ها افزوده نشده",
   "recipeAddedByPrefix": "توسط",
+  "recipeRateTooltip": "برای امتیاز، روی ستاره بزنید",
+  "recipeRatingAvg": "${avg} / 5",
+  "recipeVotesCount": {
+    "one": "${n} رأی",
+    "other": "${n} رأی"
+  },
+  "recipeRatedToast": "از امتیاز شما متشکریم!",
   "recipeAuthorRecipes": {
     "one": "${n} دستور پخت",
     "other": "${n} دستور پخت"

@@ -84,6 +84,13 @@
     "one": "${n} recipe",
     "other": "${n} recipes"
   },
+  "recipeRateTooltip": "Tap a star to rate",
+  "recipeRatingAvg": "${avg} / 5",
+  "recipeVotesCount": {
+    "one": "${n} vote",
+    "other": "${n} votes"
+  },
+  "recipeRatedToast": "Thanks for rating!",
   "ingredientCount": {
     "one": "${n} ingredient",
     "other": "${n} ingredients"

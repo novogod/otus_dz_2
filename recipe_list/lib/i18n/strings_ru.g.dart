@@ -118,6 +118,15 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchNoMatches => 'Совпадений не найдено';
 	@override String get favoritesEmpty => 'Пока ничего не добавлено';
 	@override String get recipeAddedByPrefix => 'автор';
+	@override String get recipeRateTooltip => 'Нажмите на звезду, чтобы оценить';
+	@override String recipeRatingAvg({required Object avg}) => '${avg} / 5';
+	@override String recipeVotesCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n,
+		one: '${n} голос',
+		few: '${n} голоса',
+		many: '${n} голосов',
+		other: '${n} голоса',
+	);
+	@override String get recipeRatedToast => 'Спасибо за оценку!';
 	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n,
 		one: '${n} рецепт',
 		few: '${n} рецепта',
@@ -268,6 +277,10 @@ extension on TranslationsRu {
 			'searchNoMatches' => 'Совпадений не найдено',
 			'favoritesEmpty' => 'Пока ничего не добавлено',
 			'recipeAddedByPrefix' => 'автор',
+			'recipeRateTooltip' => 'Нажмите на звезду, чтобы оценить',
+			'recipeRatingAvg' => ({required Object avg}) => '${avg} / 5',
+			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n, one: '${n} голос', few: '${n} голоса', many: '${n} голосов', other: '${n} голоса', ), 
+			'recipeRatedToast' => 'Спасибо за оценку!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n, one: '${n} рецепт', few: '${n} рецепта', many: '${n} рецептов', other: '${n} рецепта', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n, one: '${n} ингредиент', few: '${n} ингредиента', many: '${n} ингредиентов', other: '${n} ингредиента', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Переключить язык на ${label}',

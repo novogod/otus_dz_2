@@ -24,11 +24,7 @@ void main() {
     testWidgets('renders name + recipes count', (tester) async {
       await tester.pumpWidget(
         _harness(
-          const AddedByRow(
-            name: 'Alice',
-            avatarPath: null,
-            recipesAdded: 12,
-          ),
+          const AddedByRow(name: 'Alice', avatarPath: null, recipesAdded: 12),
         ),
       );
 
@@ -55,11 +51,7 @@ void main() {
     testWidgets('hides count line when recipesAdded is null', (tester) async {
       await tester.pumpWidget(
         _harness(
-          const AddedByRow(
-            name: 'Bob',
-            avatarPath: null,
-            recipesAdded: null,
-          ),
+          const AddedByRow(name: 'Bob', avatarPath: null, recipesAdded: null),
         ),
       );
 
@@ -72,11 +64,7 @@ void main() {
     testWidgets('hides count line when recipesAdded is 0', (tester) async {
       await tester.pumpWidget(
         _harness(
-          const AddedByRow(
-            name: 'Carol',
-            avatarPath: null,
-            recipesAdded: 0,
-          ),
+          const AddedByRow(name: 'Carol', avatarPath: null, recipesAdded: 0),
         ),
       );
 
@@ -87,11 +75,7 @@ void main() {
     testWidgets('renders person icon when avatarPath is null', (tester) async {
       await tester.pumpWidget(
         _harness(
-          const AddedByRow(
-            name: 'Dave',
-            avatarPath: null,
-            recipesAdded: 1,
-          ),
+          const AddedByRow(name: 'Dave', avatarPath: null, recipesAdded: 1),
         ),
       );
 
@@ -101,11 +85,7 @@ void main() {
     testWidgets('singular form for recipesAdded == 1', (tester) async {
       await tester.pumpWidget(
         _harness(
-          const AddedByRow(
-            name: 'Eve',
-            avatarPath: null,
-            recipesAdded: 1,
-          ),
+          const AddedByRow(name: 'Eve', avatarPath: null, recipesAdded: 1),
         ),
       );
 

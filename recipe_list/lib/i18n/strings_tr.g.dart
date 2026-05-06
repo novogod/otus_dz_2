@@ -118,6 +118,13 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchNoMatches => 'Eşleşme yok';
 	@override String get favoritesEmpty => 'Henüz favori yok';
 	@override String get recipeAddedByPrefix => 'ekleyen';
+	@override String get recipeRateTooltip => 'Oy vermek için bir yıldıza dokunun';
+	@override String recipeRatingAvg({required Object avg}) => '${avg} / 5';
+	@override String recipeVotesCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n,
+		one: '${n} oy',
+		other: '${n} oy',
+	);
+	@override String get recipeRatedToast => 'Oyladığın için teşekkürler!';
 	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n,
 		one: '${n} tarif',
 		other: '${n} tarif',
@@ -264,6 +271,10 @@ extension on TranslationsTr {
 			'searchNoMatches' => 'Eşleşme yok',
 			'favoritesEmpty' => 'Henüz favori yok',
 			'recipeAddedByPrefix' => 'ekleyen',
+			'recipeRateTooltip' => 'Oy vermek için bir yıldıza dokunun',
+			'recipeRatingAvg' => ({required Object avg}) => '${avg} / 5',
+			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n, one: '${n} oy', other: '${n} oy', ), 
+			'recipeRatedToast' => 'Oyladığın için teşekkürler!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n, one: '${n} tarif', other: '${n} tarif', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n, one: '${n} malzeme', other: '${n} malzeme', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Dili ${label} olarak değiştir',

@@ -8,6 +8,7 @@ import '../data/api/recipe_api.dart';
 import '../data/recipe_events.dart';
 import '../data/repository/favorites_store.dart';
 import '../data/repository/owned_recipes_store.dart';
+import '../data/repository/rating_store.dart';
 import '../data/repository/recipe_repository.dart';
 import '../i18n.dart';
 import '../models/recipe.dart';
@@ -18,6 +19,7 @@ import 'app_page_bar.dart';
 import 'app_theme.dart';
 import 'recipe_card.dart' show FavoriteBadge;
 import 'social/added_by_row.dart';
+import 'social/recipe_rating_row.dart';
 
 /// Глобальный счётчик активных страниц деталей рецепта.
 ///
@@ -347,6 +349,15 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                           recipesAdded: recipe.creatorRecipesAdded,
                         ),
                       ],
+                      // Recipe rating row (chunk G of
+                      // user-card-and-social-signals). Visible for
+                      // every recipe — anonymous users see the
+                      // current aggregate and a hint; tapping a
+                      // star surfaces the registration snackbar.
+                      // Authenticated users vote, the optimistic
+                      // update flows from [RatingStore.watch].
+                      const SizedBox(height: AppSpacing.lg),
+                      _RecipeRatingSection(recipe: recipe),
                       if (recipe.instructions != null) ...[
                         const SizedBox(height: AppSpacing.xl),
                         Text(
@@ -771,6 +782,86 @@ class _CircleIconButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Stateful wrapper around [RecipeRatingRow] that subscribes to
+/// [ratingStoreNotifier] / [RatingStore.watch] for live updates,
+/// handles tap (auth gate + optimistic vote + revert), and shows
+/// the success toast. Lives in the details page private namespace
+/// because it's tightly coupled to it (uses `mounted`,
+/// `ScaffoldMessenger.of(context)`, etc.).
+class _RecipeRatingSection extends StatelessWidget {
+  const _RecipeRatingSection({required this.recipe});
+
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<RatingStore?>(
+      valueListenable: ratingStoreNotifier,
+      builder: (context, store, _) {
+        if (store == null) {
+          // Repo not ready — fall back to whatever aggregate the
+          // server already projected, read-only. The user can
+          // still see the rating; just can't vote until the next
+          // refresh wires the store up.
+          return RecipeRatingRow(
+            count: recipe.ratingsCount,
+            sum: recipe.ratingsSum,
+            my: recipe.myRating,
+            onRate: null,
+          );
+        }
+        final initial = RecipeRatingSnapshot(
+          count: recipe.ratingsCount,
+          sum: recipe.ratingsSum,
+          my: recipe.myRating,
+        );
+        final listenable = store.watch(recipe.id, initial: initial);
+        return ValueListenableBuilder<RecipeRatingSnapshot>(
+          valueListenable: listenable,
+          builder: (context, snap, _) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: userLoggedInNotifier,
+              builder: (context, loggedIn, _) {
+                return RecipeRatingRow(
+                  count: snap.count,
+                  sum: snap.sum,
+                  my: snap.my,
+                  onRate: (stars) async {
+                    if (!loggedIn) {
+                      await handleRatingTapWhenAnonymous(context);
+                      return;
+                    }
+                    try {
+                      // Re-tap same star removes the rating per
+                      // docs/user-card-and-social-signals.md §4.3.
+                      if (snap.my == stars) {
+                        await store.clearMyRating(recipe.id);
+                      } else {
+                        await store.setMyRating(recipe.id, stars);
+                        if (!context.mounted) return;
+                        final s = S.of(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(s.recipeRatedToast),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } on Object {
+                      // Optimistic revert already happened inside
+                      // the store; nothing to do here visually.
+                    }
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

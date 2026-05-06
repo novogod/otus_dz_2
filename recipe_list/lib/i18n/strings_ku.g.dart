@@ -118,6 +118,13 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchNoMatches => 'هیچ گونجاوێک نییە';
 	@override String get favoritesEmpty => 'هێشتا هیچ بەدڵبووەکێک نییە';
 	@override String get recipeAddedByPrefix => 'لە لایەن';
+	@override String get recipeRateTooltip => 'بۆ هەڵسەنگاندن دەست لە ئەستێرە بدە';
+	@override String recipeRatingAvg({required Object avg}) => '${avg} / 5';
+	@override String recipeVotesCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n,
+		one: '${n} دەنگ',
+		other: '${n} دەنگ',
+	);
+	@override String get recipeRatedToast => 'سوپاس بۆ هەڵسەنگاندنت!';
 	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n,
 		one: '${n} ڕێسا',
 		other: '${n} ڕێسا',
@@ -264,6 +271,10 @@ extension on TranslationsKu {
 			'searchNoMatches' => 'هیچ گونجاوێک نییە',
 			'favoritesEmpty' => 'هێشتا هیچ بەدڵبووەکێک نییە',
 			'recipeAddedByPrefix' => 'لە لایەن',
+			'recipeRateTooltip' => 'بۆ هەڵسەنگاندن دەست لە ئەستێرە بدە',
+			'recipeRatingAvg' => ({required Object avg}) => '${avg} / 5',
+			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n, one: '${n} دەنگ', other: '${n} دەنگ', ), 
+			'recipeRatedToast' => 'سوپاس بۆ هەڵسەنگاندنت!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n, one: '${n} ڕێسا', other: '${n} ڕێسا', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n, one: '${n} پێکهاتە', other: '${n} پێکهاتە', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'گۆڕینی زمان بۆ ${label}',

@@ -258,6 +258,70 @@ class RecipeApi {
     await _client.dio.delete<void>('/$id', options: _authOptions());
   }
 
+  /// mahallem-only: GET /recipes/:id/rating. Anonymous-friendly —
+  /// returns aggregate `{count, sum, avg}` plus `my` (1..5) when
+  /// the caller has a valid user token. Returns null on transport
+  /// failure so the rating row can fall back to its initial state
+  /// without crashing the details page.
+  ///
+  /// See chunk G of docs/user-card-and-social-signals.md.
+  Future<RecipeRatingSnapshot?> fetchRating(int recipeId) async {
+    if (_client.backend != RecipeBackend.mahallem) return null;
+    try {
+      final res = await _client.dio.get<Map<String, dynamic>>(
+        '/$recipeId/rating',
+        options: _authOptions(),
+      );
+      final data = res.data;
+      if (data == null) return null;
+      return RecipeRatingSnapshot(
+        count: (data['count'] as num?)?.toInt() ?? 0,
+        sum: (data['sum'] as num?)?.toInt() ?? 0,
+        my: (data['my'] as num?)?.toInt(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// mahallem-only: POST /recipes/:id/rating with `{stars}`. Caller
+  /// must be authenticated; throws on missing token or invalid
+  /// stars (server returns 422). Returns the fresh aggregate.
+  Future<RecipeRatingSnapshot> setRating(int recipeId, int stars) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      throw StateError('setRating requires the mahallem backend');
+    }
+    final res = await _client.dio.post<Map<String, dynamic>>(
+      '/$recipeId/rating',
+      data: {'stars': stars},
+      options: _authOptions(),
+    );
+    final data = res.data ?? const {};
+    return RecipeRatingSnapshot(
+      count: (data['count'] as num?)?.toInt() ?? 0,
+      sum: (data['sum'] as num?)?.toInt() ?? 0,
+      my: (data['my'] as num?)?.toInt() ?? stars,
+    );
+  }
+
+  /// mahallem-only: DELETE /recipes/:id/rating. Removes the
+  /// caller's vote. Returns the fresh aggregate (without `my`).
+  Future<RecipeRatingSnapshot> clearRating(int recipeId) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      throw StateError('clearRating requires the mahallem backend');
+    }
+    final res = await _client.dio.delete<Map<String, dynamic>>(
+      '/$recipeId/rating',
+      options: _authOptions(),
+    );
+    final data = res.data ?? const {};
+    return RecipeRatingSnapshot(
+      count: (data['count'] as num?)?.toInt() ?? 0,
+      sum: (data['sum'] as num?)?.toInt() ?? 0,
+      my: null,
+    );
+  }
+
   /// mahallem-only: атомарно увеличивает счётчик визитов и
   /// возвращает новое значение. Используется на splash-экране
   /// (`SplashPage`), который мигает белым числом под лого. Если
@@ -336,4 +400,26 @@ class RecipePage {
     required this.nextOffset,
     required this.total,
   });
+}
+
+/// Snapshot of `/recipes/:id/rating`. Carries the aggregate
+/// (`count`, `sum`) plus the caller's own vote (`my`) when the
+/// request was authenticated. `avg` is computed for convenience —
+/// the server doesn't return it as a separate field beyond
+/// rounding, so callers are free to compute it themselves.
+///
+/// See chunk G of docs/user-card-and-social-signals.md.
+class RecipeRatingSnapshot {
+  const RecipeRatingSnapshot({
+    required this.count,
+    required this.sum,
+    required this.my,
+  });
+
+  final int count;
+  final int sum;
+  final int? my;
+
+  /// Average rating in 0..5, or 0 when no votes are recorded.
+  double get avg => count > 0 ? sum / count : 0.0;
 }

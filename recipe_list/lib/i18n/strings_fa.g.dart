@@ -118,6 +118,13 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get searchNoMatches => 'موردی یافت نشد';
 	@override String get favoritesEmpty => 'هنوز موردی به علاقه‌مندی‌ها افزوده نشده';
 	@override String get recipeAddedByPrefix => 'توسط';
+	@override String get recipeRateTooltip => 'برای امتیاز، روی ستاره بزنید';
+	@override String recipeRatingAvg({required Object avg}) => '${avg} / 5';
+	@override String recipeVotesCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n,
+		one: '${n} رأی',
+		other: '${n} رأی',
+	);
+	@override String get recipeRatedToast => 'از امتیاز شما متشکریم!';
 	@override String recipeAuthorRecipes({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n,
 		one: '${n} دستور پخت',
 		other: '${n} دستور پخت',
@@ -264,6 +271,10 @@ extension on TranslationsFa {
 			'searchNoMatches' => 'موردی یافت نشد',
 			'favoritesEmpty' => 'هنوز موردی به علاقه‌مندی‌ها افزوده نشده',
 			'recipeAddedByPrefix' => 'توسط',
+			'recipeRateTooltip' => 'برای امتیاز، روی ستاره بزنید',
+			'recipeRatingAvg' => ({required Object avg}) => '${avg} / 5',
+			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n, one: '${n} رأی', other: '${n} رأی', ), 
+			'recipeRatedToast' => 'از امتیاز شما متشکریم!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n, one: '${n} دستور پخت', other: '${n} دستور پخت', ), 
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n, one: '${n} ماده اولیه', other: '${n} ماده اولیه', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'تغییر زبان به ${label}',

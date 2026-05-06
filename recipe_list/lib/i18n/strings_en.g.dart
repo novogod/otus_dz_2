@@ -290,6 +290,21 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 		other: '${n} recipes',
 	);
 
+	/// en: 'Tap a star to rate'
+	String get recipeRateTooltip => 'Tap a star to rate';
+
+	/// en: '${avg} / 5'
+	String recipeRatingAvg({required Object avg}) => '${avg} / 5';
+
+	/// en: '(one) {${n} vote} (other) {${n} votes}'
+	String recipeVotesCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n,
+		one: '${n} vote',
+		other: '${n} votes',
+	);
+
+	/// en: 'Thanks for rating!'
+	String get recipeRatedToast => 'Thanks for rating!';
+
 	/// en: '(one) {${n} ingredient} (other) {${n} ingredients}'
 	String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n,
 		one: '${n} ingredient',
@@ -509,6 +524,10 @@ extension on Translations {
 			'favoritesEmpty' => 'No favorites yet',
 			'recipeAddedByPrefix' => 'by',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '${n} recipe', other: '${n} recipes', ), 
+			'recipeRateTooltip' => 'Tap a star to rate',
+			'recipeRatingAvg' => ({required Object avg}) => '${avg} / 5',
+			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '${n} vote', other: '${n} votes', ), 
+			'recipeRatedToast' => 'Thanks for rating!',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '${n} ingredient', other: '${n} ingredients', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Switch language to ${label}',
 			'a11y.flagOf' => ({required Object label}) => '${label} flag',

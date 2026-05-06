@@ -80,6 +80,13 @@
   "searchNoMatches": "Aucun résultat",
   "favoritesEmpty": "Aucun favori pour le moment",
   "recipeAddedByPrefix": "par",
+  "recipeRateTooltip": "Appuyez sur une étoile pour noter",
+  "recipeRatingAvg": "${avg} / 5",
+  "recipeVotesCount": {
+    "one": "${n} vote",
+    "other": "${n} votes"
+  },
+  "recipeRatedToast": "Merci pour votre note !",
   "recipeAuthorRecipes": {
     "one": "${n} recette",
     "other": "${n} recettes"
