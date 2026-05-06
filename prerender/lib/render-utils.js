@@ -220,6 +220,15 @@ export function buildRecipeSeoHead(recipe) {
     .slice(0, 320)
     .trim();
   const image = (recipe.image || `${PUBLIC_HOST}/og-image.jpg`).toString();
+  // Absolutize image URL — OG scrapers (Telegram, Facebook, X) require
+  // a fully-qualified `og:image` and silently drop the unfurl card if
+  // the value starts with `/`. Recipe payloads from the user-portal
+  // can ship a relative storage path (e.g.
+  // `/storage/v1/object/public/recipe-photos/...`) so we prefix our
+  // public host when no scheme is present.
+  const imageAbs = /^https?:\/\//i.test(image)
+    ? image
+    : `${PUBLIC_HOST}${image.startsWith('/') ? '' : '/'}${image}`;
   const canonical = `${PUBLIC_HOST}/${locale}/recipes/${id}`;
   const lines = [];
   const e = htmlEscape;
@@ -242,21 +251,21 @@ export function buildRecipeSeoHead(recipe) {
     lines.push(`<meta data-recipe-seo="1" property="og:description" content="${e(desc)}">`);
   }
   lines.push(`<meta data-recipe-seo="1" property="og:url" content="${canonical}">`);
-  lines.push(`<meta data-recipe-seo="1" property="og:image" content="${e(image)}">`);
+  lines.push(`<meta data-recipe-seo="1" property="og:image" content="${e(imageAbs)}">`);
   lines.push(`<meta data-recipe-seo="1" property="og:locale" content="${locale}">`);
   lines.push(`<meta data-recipe-seo="1" name="twitter:card" content="summary_large_image">`);
   lines.push(`<meta data-recipe-seo="1" name="twitter:title" content="${e(title)}">`);
   if (desc) {
     lines.push(`<meta data-recipe-seo="1" name="twitter:description" content="${e(desc)}">`);
   }
-  lines.push(`<meta data-recipe-seo="1" name="twitter:image" content="${e(image)}">`);
+  lines.push(`<meta data-recipe-seo="1" name="twitter:image" content="${e(imageAbs)}">`);
   const jsonld = {
     '@context': 'https://schema.org',
     '@type': 'Recipe',
     name: title,
     inLanguage: locale,
     url: canonical,
-    image: [image],
+    image: [imageAbs],
     author: { '@type': 'Organization', name: 'Otus Food' },
   };
   if (desc) jsonld.description = desc;

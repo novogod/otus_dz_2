@@ -381,6 +381,35 @@ test('buildRecipeSeoHead returns "" for invalid input', () => {
   assert.equal(buildRecipeSeoHead({ id: 0, locale: 'en', title: 'X' }), '');
 });
 
+test('buildRecipeSeoHead absolutizes relative og:image paths', () => {
+  // Recipe payloads from the user-portal can ship a relative storage
+  // path (e.g. /storage/v1/object/public/recipe-photos/...). Telegram
+  // and Facebook silently drop the unfurl card if og:image isn't a
+  // fully-qualified URL — prefix our public host when no scheme.
+  const head = buildRecipeSeoHead({
+    id: 1,
+    locale: 'en',
+    title: 'X',
+    image: '/storage/v1/object/public/recipe-photos/1/photo.jpg',
+  });
+  assert.match(
+    head,
+    /property="og:image" content="https:\/\/recipies\.mahallem\.ist\/storage\/v1\/object\/public\/recipe-photos\/1\/photo\.jpg"/,
+  );
+  assert.match(
+    head,
+    /name="twitter:image" content="https:\/\/recipies\.mahallem\.ist\/storage\/v1\/object\/public\/recipe-photos\/1\/photo\.jpg"/,
+  );
+  // Already-absolute URLs are passed through untouched.
+  const head2 = buildRecipeSeoHead({
+    id: 2,
+    locale: 'en',
+    title: 'Y',
+    image: 'https://cdn.example.com/y.jpg',
+  });
+  assert.match(head2, /property="og:image" content="https:\/\/cdn\.example\.com\/y\.jpg"/);
+});
+
 test('injectRecipeSeo replaces the static <title> and inserts before </head>', () => {
   const spaHtml =
     '<!doctype html><html><head>' +
