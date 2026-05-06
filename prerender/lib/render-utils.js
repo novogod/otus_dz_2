@@ -308,6 +308,21 @@ export function injectRecipeSeo(html, recipe) {
     /<link\b(?=[^>]*\brel="canonical")(?![^>]*\bdata-recipe-seo="1")[^>]*>\s*/i,
     '',
   );
+  // Drop the static landing-page social atoms (og:*, twitter:*, name=
+  // "description"). Without this, Telegram / Facebook / X unfurl the
+  // index.html landing card ("Otus Food — recipes from around the
+  // world" + the generic og-image.jpg) instead of the per-recipe atoms
+  // we inject below: the OG spec doesn't pick a winner when a head
+  // contains multiple `og:title` tags, and most scrapers honour the
+  // FIRST occurrence — which would be the static landmark.
+  out = out.replace(
+    /<meta\b(?=[^>]*\bproperty="(?:og:[a-z_:]+)")(?![^>]*\bdata-recipe-seo="1")[^>]*>\s*/gi,
+    '',
+  );
+  out = out.replace(
+    /<meta\b(?=[^>]*\bname="(?:twitter:[a-z_:]+|description)")(?![^>]*\bdata-recipe-seo="1")[^>]*>\s*/gi,
+    '',
+  );
   const headClose = out.search(/<\/head>/i);
   if (headClose < 0) return out;
   return `${out.slice(0, headClose)}${fragment}\n${out.slice(headClose)}`;

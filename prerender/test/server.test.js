@@ -420,3 +420,50 @@ test('injectRecipeSeo returns the input unchanged when recipe is null', () => {
   const html = '<html><head><title>X</title></head><body></body></html>';
   assert.equal(injectRecipeSeo(html, null), html);
 });
+
+test('injectRecipeSeo strips static og:* / twitter:* / description landmarks', () => {
+  // Regression: the SPA's index.html ships a complete set of landing-
+  // page social atoms (og:title="Otus Food — recipes from around the
+  // world", og:image=og-image.jpg, twitter:card, etc.). Most OG
+  // scrapers (Telegram, Facebook, X) honour the FIRST og:title they
+  // encounter, so leaving the static atoms in place would unfurl the
+  // landing card for every recipe URL even though our per-recipe atoms
+  // were also injected before </head>.
+  const spaHtml =
+    '<!doctype html><html><head>' +
+    '<meta charset="UTF-8">' +
+    '<title>Otus Food — recipes from around the world</title>' +
+    '<meta name="description" content="Static landing description.">' +
+    '<meta property="og:title" content="Otus Food">' +
+    '<meta property="og:description" content="Browse, search and cook.">' +
+    '<meta property="og:image" content="https://recipies.mahallem.ist/og-image.jpg">' +
+    '<meta property="og:image:width" content="1024">' +
+    '<meta property="og:url" content="https://recipies.mahallem.ist/">' +
+    '<meta name="twitter:card" content="summary_large_image">' +
+    '<meta name="twitter:title" content="Otus Food">' +
+    '<meta name="twitter:image" content="https://recipies.mahallem.ist/og-image.jpg">' +
+    '</head><body></body></html>';
+  const out = injectRecipeSeo(spaHtml, {
+    id: 1000012,
+    locale: 'en',
+    title: 'Unloading bag',
+    image: 'https://cdn.example/unloading-bag.jpg',
+    instructions: ['Buy Guinness & Cheese.'],
+  });
+  // Static social atoms gone (no occurrence without the recipe-seo marker).
+  assert.equal(
+    /<meta\b(?![^>]*\bdata-recipe-seo)[^>]*\bproperty="og:[a-z_:]+"/i.test(out),
+    false,
+  );
+  assert.equal(
+    /<meta\b(?![^>]*\bdata-recipe-seo)[^>]*\bname="twitter:[a-z_:]+"/i.test(out),
+    false,
+  );
+  assert.equal(
+    /<meta\b(?![^>]*\bdata-recipe-seo)[^>]*\bname="description"/i.test(out),
+    false,
+  );
+  // Per-recipe atoms present and carrying the recipe values.
+  assert.match(out, /<meta data-recipe-seo="1" property="og:title" content="Unloading bag">/);
+  assert.match(out, /content="https:\/\/cdn\.example\/unloading-bag\.jpg"/);
+});
