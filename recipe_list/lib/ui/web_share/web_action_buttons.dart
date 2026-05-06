@@ -71,11 +71,20 @@ Future<void> _systemShare({
   // off it; harmless on iPhone/Android (ignored).
   final url = _shareUrl(content);
   final title = _shareTitle(content);
-  final text = _shareText(content);
+  // Body is the URL alone — *not* `"$descriptiveText $url"`. WhatsApp,
+  // iMessage and several Android RCS clients only render a link
+  // preview card when the message body is exactly a single URL
+  // (or a URL on its own line at the top); wrapping it in any prose
+  // suppresses the unfurl. Channels that take url + caption as
+  // separate fields (Telegram, X, FB, Reddit, LinkedIn, VK,
+  // Pinterest, Email) still get the descriptive copy in
+  // `_socialTargets` below — they don't have this constraint
+  // because the URL travels in its own query parameter and the
+  // server unfurls it independently of the caption.
   await SharePlus.instance.share(
     ShareParams(
       title: title,
-      text: '$text $url',
+      text: url,
       uri: Uri.parse(url),
       subject: title,
       sharePositionOrigin: sharePositionOrigin,
@@ -106,7 +115,13 @@ List<_ShareTarget> _socialTargets(
       label: 'WhatsApp',
       bg: const Color(0xFF25D366),
       icon: const Icon(Icons.chat_bubble, size: 18, color: Colors.white),
-      uri: Uri.parse('https://wa.me/?text=$textWithUrl'),
+      // Pass the URL alone — see comment in `_systemShare` above.
+      // `wa.me/?text=…` prefills the WhatsApp composer with whatever
+      // we send; if it contains anything besides the bare URL the
+      // recipient client refuses to render the og:image preview
+      // card. Recipe `og:title` / `og:description` come from the
+      // prerender snapshot and show up in the unfurl on their own.
+      uri: Uri.parse('https://wa.me/?text=$urlEnc'),
     ),
     _ShareTarget(
       label: 'Telegram',
