@@ -190,10 +190,7 @@ class _ShareTarget {
   });
 }
 
-Future<void> _onShareTap(
-  BuildContext context, {
-  _ShareContent? content,
-}) async {
+Future<void> _onShareTap(BuildContext context, {_ShareContent? content}) async {
   // On native iOS/Android the system share sheet is reliable and
   // surfaces every installed app, so we keep it there.
   if (!kIsWeb) {
@@ -536,9 +533,7 @@ Future<void> shareRecipe(BuildContext context, Recipe recipe) {
   final url = _recipeShareUrl(recipe.id, langCode);
   final name = recipe.name;
   final title = name.isNotEmpty ? '$name — $_kShareTitle' : _kShareTitle;
-  final text = name.isNotEmpty
-      ? 'Check out "$name" on Otus Food'
-      : _kShareText;
+  final text = name.isNotEmpty ? 'Check out "$name" on Otus Food' : _kShareText;
   return _onShareTap(
     context,
     content: _ShareContent(url: url, title: title, text: text),
