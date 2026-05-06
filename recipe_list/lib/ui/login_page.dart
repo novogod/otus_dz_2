@@ -627,8 +627,9 @@ class _LoginPageState extends State<LoginPage> {
                                   if (!loggedIn)
                                     TextButton(
                                       onPressed: () async {
-                                        final ok =
-                                            await openSignUpPage(context);
+                                        final ok = await openSignUpPage(
+                                          context,
+                                        );
                                         if (!ok) return;
                                         if (!context.mounted) return;
                                         // chunk D post-signup: jump to

@@ -267,10 +267,10 @@ class _ProfileBranchRoot extends StatelessWidget {
                     // signup-success redirect carries
                     // {initialEditMode, isPostSignup}.
                     final extra = GoRouterState.of(context).extra;
-                    final isPostSignup = extra is Map &&
-                        extra['isPostSignup'] == true;
-                    final initialEditMode = (extra is Map &&
-                            extra['initialEditMode'] == true) ||
+                    final isPostSignup =
+                        extra is Map && extra['isPostSignup'] == true;
+                    final initialEditMode =
+                        (extra is Map && extra['initialEditMode'] == true) ||
                         isPostSignup;
                     if (userLoggedInNotifier.value && loginTrim.isNotEmpty) {
                       return UserCardPage(

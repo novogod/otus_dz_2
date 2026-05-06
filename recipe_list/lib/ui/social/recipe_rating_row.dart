@@ -99,11 +99,7 @@ class RecipeRatingRow extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.star_rounded,
-            size: 14,
-            color: AppColors.primary,
-          ),
+          const Icon(Icons.star_rounded, size: 14, color: AppColors.primary),
           const SizedBox(width: 2),
           Text(
             avg.toStringAsFixed(1),

@@ -284,16 +284,14 @@ class S {
 
   // Recipe rating row (chunk G of user-card-and-social-signals).
   String get recipeRateTooltip => _t.recipeRateTooltip;
-  String recipeRatingAvg({required String avg}) =>
-      _t.recipeRatingAvg(avg: avg);
+  String recipeRatingAvg({required String avg}) => _t.recipeRatingAvg(avg: avg);
   String recipeVotesCount({required int n}) => _t.recipeVotesCount(n: n);
   String get recipeRatedToast => _t.recipeRatedToast;
 
   // User card page (chunk D of user-card-and-social-signals).
   String get profileDisplayName => _t.profileDisplayName;
   String get profileLanguage => _t.profileLanguage;
-  String profileRecipesAdded({required int n}) =>
-      _t.profileRecipesAdded(n: n);
+  String profileRecipesAdded({required int n}) => _t.profileRecipesAdded(n: n);
   String profileMemberSince({required String date}) =>
       _t.profileMemberSince(date: date);
   String get profileEdit => _t.profileEdit;

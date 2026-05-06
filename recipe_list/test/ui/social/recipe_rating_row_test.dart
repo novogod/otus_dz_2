@@ -12,9 +12,7 @@ void main() {
     testWidgets('shows 5 stars and avg + votes when count > 0', (tester) async {
       LocaleSettings.setLocale(AppLocale.en);
       await tester.pumpWidget(
-        wrap(
-          const RecipeRatingRow(count: 4, sum: 17, my: null, onRate: null),
-        ),
+        wrap(const RecipeRatingRow(count: 4, sum: 17, my: null, onRate: null)),
       );
       // 5 outline stars (no `my`).
       expect(find.byIcon(Icons.star_outline_rounded), findsNWidgets(5));
@@ -26,9 +24,7 @@ void main() {
     testWidgets('shows fill-in pattern matching `my`', (tester) async {
       LocaleSettings.setLocale(AppLocale.en);
       await tester.pumpWidget(
-        wrap(
-          const RecipeRatingRow(count: 1, sum: 3, my: 3, onRate: null),
-        ),
+        wrap(const RecipeRatingRow(count: 1, sum: 3, my: 3, onRate: null)),
       );
       expect(find.byIcon(Icons.star_rounded), findsNWidgets(3));
       expect(find.byIcon(Icons.star_outline_rounded), findsNWidgets(2));
@@ -37,14 +33,7 @@ void main() {
     testWidgets('shows tooltip-only line when count == 0', (tester) async {
       LocaleSettings.setLocale(AppLocale.en);
       await tester.pumpWidget(
-        wrap(
-          RecipeRatingRow(
-            count: 0,
-            sum: 0,
-            my: null,
-            onRate: (_) {},
-          ),
-        ),
+        wrap(RecipeRatingRow(count: 0, sum: 0, my: null, onRate: (_) {})),
       );
       expect(find.text('Tap a star to rate'), findsOneWidget);
     });

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
+import '../data/api/recipe_api.dart';
+import '../data/app_services.dart';
 import '../i18n.dart';
 import '../router/routes.dart';
 import 'app_theme.dart';
@@ -50,6 +52,7 @@ class _UserCardPageState extends State<UserCardPage> {
   late bool _editing;
   AppLang _selectedLang = appLang.value;
   bool _busy = false;
+  UserProfileSnapshot? _profile;
 
   @override
   void initState() {
@@ -58,6 +61,26 @@ class _UserCardPageState extends State<UserCardPage> {
       text: currentUserLoginNotifier.value ?? '',
     );
     _editing = widget.initialEditMode || widget.isPostSignup;
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    final api = appServicesNotifier.value?.api;
+    if (api == null) return;
+    final snap = await api.fetchMyProfile();
+    if (!mounted || snap == null) return;
+    setState(() {
+      _profile = snap;
+      // Display name from server takes precedence over the login
+      // pre-fill, but only when the user hasn't started editing.
+      if (!_editing && (snap.displayName ?? '').isNotEmpty) {
+        _nameController.text = snap.displayName!;
+      }
+      final fromServer = AppLang.values
+          .where((l) => l.name == (snap.language ?? ''))
+          .firstOrNull;
+      if (fromServer != null) _selectedLang = fromServer;
+    });
   }
 
   @override
@@ -70,11 +93,36 @@ class _UserCardPageState extends State<UserCardPage> {
     if (_busy) return;
     setState(() => _busy = true);
     // Persist language change globally — this is wired to slang
-    // and updates all visible UI (`AppLangScope` listens). Display
-    // name editing is not yet persisted server-side; the local
-    // `user_profile` table lands when /recipes/users/me ships.
+    // and updates all visible UI (`AppLangScope` listens).
     if (_selectedLang != appLang.value) {
       cycleAppLangTo(_selectedLang);
+    }
+    // Push display name + language to the server. Failures are
+    // surfaced as a snackbar but don't block the local change —
+    // the next bootstrap will reconcile.
+    final api = appServicesNotifier.value?.api;
+    String? errorMessage;
+    if (api != null) {
+      try {
+        final updated = await api.updateMyProfile(
+          displayName: _nameController.text.trim(),
+          language: _selectedLang.name,
+        );
+        if (mounted) {
+          setState(() => _profile = UserProfileSnapshot(
+                id: updated.id,
+                email: updated.email,
+                displayName: updated.displayName,
+                language: updated.language,
+                avatarPath: updated.avatarPath,
+                avatarUrl: updated.avatarUrl,
+                recipesAdded: _profile?.recipesAdded ?? 0,
+                memberSince: updated.memberSince ?? _profile?.memberSince,
+              ));
+        }
+      } catch (e) {
+        errorMessage = e.toString();
+      }
     }
     if (!mounted) return;
     setState(() {
@@ -83,7 +131,13 @@ class _UserCardPageState extends State<UserCardPage> {
     });
     final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
     messenger.showSnackBar(
-      SnackBar(content: Text(S.of(context).profileSavedToast)),
+      SnackBar(
+        content: Text(
+          errorMessage == null
+              ? S.of(context).profileSavedToast
+              : 'Save failed: $errorMessage',
+        ),
+      ),
     );
     if (widget.isPostSignup) {
       context.go(Routes.recipes);
@@ -191,16 +245,20 @@ class _UserCardPageState extends State<UserCardPage> {
   }
 
   Widget _buildStats(S s, ThemeData theme) {
+    final memberSince = _profile?.memberSince;
+    final memberSinceLabel = memberSince != null
+        ? '${memberSince.year}-${memberSince.month.toString().padLeft(2, '0')}-${memberSince.day.toString().padLeft(2, '0')}'
+        : '—';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          s.profileRecipesAdded(n: 0),
+          s.profileRecipesAdded(n: _profile?.recipesAdded ?? 0),
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 4),
         Text(
-          s.profileMemberSince(date: '—'),
+          s.profileMemberSince(date: memberSinceLabel),
           style: theme.textTheme.bodyMedium,
         ),
       ],
@@ -248,9 +306,7 @@ class _UserCardPageState extends State<UserCardPage> {
     return SizedBox(
       width: double.infinity,
       child: TextButton(
-        style: TextButton.styleFrom(
-          foregroundColor: const Color(0xFFF54848),
-        ),
+        style: TextButton.styleFrom(foregroundColor: const Color(0xFFF54848)),
         onPressed: _busy ? null : _handleLogout,
         child: Text(s.profileLogout),
       ),

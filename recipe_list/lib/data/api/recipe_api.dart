@@ -322,6 +322,50 @@ class RecipeApi {
     );
   }
 
+  /// mahallem-only: GET /recipes/users/me. Returns the current
+  /// user's profile (display name, language, member-since,
+  /// recipes_added counter). Auth-required; 401 → returns null
+  /// rather than throwing so the User Card screen can fall back
+  /// to local cache.
+  Future<UserProfileSnapshot?> fetchMyProfile() async {
+    if (_client.backend != RecipeBackend.mahallem) return null;
+    try {
+      final res = await _client.dio.get<Map<String, dynamic>>(
+        '/users/me',
+        options: _authOptions(),
+      );
+      final data = res.data;
+      if (data == null) return null;
+      return UserProfileSnapshot.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// mahallem-only: PUT /recipes/users/me. Updates display name
+  /// and/or preferred language. Either field may be omitted;
+  /// the server keeps untouched fields as-is. Returns the fresh
+  /// projection on success; throws on validation / network
+  /// errors so the caller surfaces them as snackbars.
+  Future<UserProfileSnapshot> updateMyProfile({
+    String? displayName,
+    String? language,
+  }) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      throw StateError('updateMyProfile requires the mahallem backend');
+    }
+    final body = <String, Object?>{};
+    if (displayName != null) body['displayName'] = displayName;
+    if (language != null) body['language'] = language;
+    final res = await _client.dio.put<Map<String, dynamic>>(
+      '/users/me',
+      data: body,
+      options: _authOptions(),
+    );
+    final data = res.data ?? const <String, dynamic>{};
+    return UserProfileSnapshot.fromJson(data);
+  }
+
   /// mahallem-only: атомарно увеличивает счётчик визитов и
   /// возвращает новое значение. Используется на splash-экране
   /// (`SplashPage`), который мигает белым числом под лого. Если
@@ -422,4 +466,53 @@ class RecipeRatingSnapshot {
 
   /// Average rating in 0..5, or 0 when no votes are recorded.
   double get avg => count > 0 ? sum / count : 0.0;
+}
+
+/// Snapshot of `/recipes/users/me` (chunk C). Carries the fields
+/// the User Card page needs to render — display name, language,
+/// avatar path/URL (always null until the `food-avatars` bucket
+/// ships), member-since, and the user's live recipes-added count.
+class UserProfileSnapshot {
+  const UserProfileSnapshot({
+    required this.id,
+    required this.email,
+    required this.displayName,
+    required this.language,
+    required this.avatarPath,
+    required this.avatarUrl,
+    required this.recipesAdded,
+    required this.memberSince,
+  });
+
+  final String id;
+  final String email;
+  final String? displayName;
+  final String? language;
+  final String? avatarPath;
+  final String? avatarUrl;
+  final int recipesAdded;
+  final DateTime? memberSince;
+
+  factory UserProfileSnapshot.fromJson(Map<String, dynamic> json) {
+    DateTime? parseDate(Object? raw) {
+      if (raw is String && raw.isNotEmpty) {
+        return DateTime.tryParse(raw);
+      }
+      return null;
+    }
+    return UserProfileSnapshot(
+      id: (json['id'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+      displayName: (json['displayName'] as String?)?.trim().isEmpty == true
+          ? null
+          : json['displayName'] as String?,
+      language: (json['language'] as String?)?.trim().isEmpty == true
+          ? null
+          : json['language'] as String?,
+      avatarPath: json['avatarPath'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
+      recipesAdded: (json['recipesAdded'] as num?)?.toInt() ?? 0,
+      memberSince: parseDate(json['memberSince']),
+    );
+  }
 }

@@ -74,11 +74,12 @@ class RatingStore {
     final fresh = await _api.fetchRating(recipeId);
     if (fresh == null) return _byId[recipeId]?.value;
     _byId
-        .putIfAbsent(
-          recipeId,
-          () => ValueNotifier<RecipeRatingSnapshot>(fresh),
-        )
-        .value = fresh;
+            .putIfAbsent(
+              recipeId,
+              () => ValueNotifier<RecipeRatingSnapshot>(fresh),
+            )
+            .value =
+        fresh;
     return fresh;
   }
 
