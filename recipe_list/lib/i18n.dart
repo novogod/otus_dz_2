@@ -289,6 +289,24 @@ class S {
   String recipeVotesCount({required int n}) => _t.recipeVotesCount(n: n);
   String get recipeRatedToast => _t.recipeRatedToast;
 
+  // User card page (chunk D of user-card-and-social-signals).
+  String get profileDisplayName => _t.profileDisplayName;
+  String get profileLanguage => _t.profileLanguage;
+  String profileRecipesAdded({required int n}) =>
+      _t.profileRecipesAdded(n: n);
+  String profileMemberSince({required String date}) =>
+      _t.profileMemberSince(date: date);
+  String get profileEdit => _t.profileEdit;
+  String get profileSave => _t.profileSave;
+  String get profilePhotoFromCamera => _t.profilePhotoFromCamera;
+  String get profilePhotoFromGallery => _t.profilePhotoFromGallery;
+  String get profilePhotoRemove => _t.profilePhotoRemove;
+  String get profileFinishSetup => _t.profileFinishSetup;
+  String get profileAdd => _t.profileAdd;
+  String get profileSkip => _t.profileSkip;
+  String get profileSavedToast => _t.profileSavedToast;
+  String get profileLogout => _t.profileLogout;
+
   // Accessibility labels.
   String switchLanguageTo(String label) =>
       _t.a11y.switchLanguageTo(label: label);

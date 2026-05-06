@@ -91,6 +91,20 @@
     "one": "${n} ڕێسا",
     "other": "${n} ڕێسا"
   },
+  "profileDisplayName": "ناوی پیشاندان",
+  "profileLanguage": "زمان",
+  "profileRecipesAdded": "ڕێسپێیە زیادکراوەکان: ${n}",
+  "profileMemberSince": "ئەندام لە: ${date}",
+  "profileEdit": "دەستکاری",
+  "profileSave": "پاشەکەوت",
+  "profilePhotoFromCamera": "وێنە بگرە",
+  "profilePhotoFromGallery": "لە گالەری هەڵبژێرە",
+  "profilePhotoRemove": "وێنە بسڕەوە",
+  "profileFinishSetup": "تەواوکردنی ڕێکخستن",
+  "profileAdd": "زیادبکە",
+  "profileSkip": "تێپەڕێنە",
+  "profileSavedToast": "پرۆفایل پاشەکەوت کرا",
+  "profileLogout": "چوونە دەرەوە",
   "ingredientCount": {
     "one": "${n} پێکهاتە",
     "other": "${n} پێکهاتە"

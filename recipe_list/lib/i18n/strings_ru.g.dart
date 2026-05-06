@@ -133,6 +133,20 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 		many: '${n} рецептов',
 		other: '${n} рецепта',
 	);
+	@override String get profileDisplayName => 'Отображаемое имя';
+	@override String get profileLanguage => 'Язык';
+	@override String profileRecipesAdded({required Object n}) => 'Добавлено рецептов: ${n}';
+	@override String profileMemberSince({required Object date}) => 'С нами с: ${date}';
+	@override String get profileEdit => 'Редактировать';
+	@override String get profileSave => 'Сохранить';
+	@override String get profilePhotoFromCamera => 'Сделать фото';
+	@override String get profilePhotoFromGallery => 'Выбрать из галереи';
+	@override String get profilePhotoRemove => 'Удалить фото';
+	@override String get profileFinishSetup => 'Завершите настройку';
+	@override String get profileAdd => 'Добавить';
+	@override String get profileSkip => 'Пропустить';
+	@override String get profileSavedToast => 'Профиль сохранён';
+	@override String get profileLogout => 'Выйти';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n,
 		one: '${n} ингредиент',
 		few: '${n} ингредиента',
@@ -282,6 +296,20 @@ extension on TranslationsRu {
 			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n, one: '${n} голос', few: '${n} голоса', many: '${n} голосов', other: '${n} голоса', ), 
 			'recipeRatedToast' => 'Спасибо за оценку!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n, one: '${n} рецепт', few: '${n} рецепта', many: '${n} рецептов', other: '${n} рецепта', ), 
+			'profileDisplayName' => 'Отображаемое имя',
+			'profileLanguage' => 'Язык',
+			'profileRecipesAdded' => ({required Object n}) => 'Добавлено рецептов: ${n}',
+			'profileMemberSince' => ({required Object date}) => 'С нами с: ${date}',
+			'profileEdit' => 'Редактировать',
+			'profileSave' => 'Сохранить',
+			'profilePhotoFromCamera' => 'Сделать фото',
+			'profilePhotoFromGallery' => 'Выбрать из галереи',
+			'profilePhotoRemove' => 'Удалить фото',
+			'profileFinishSetup' => 'Завершите настройку',
+			'profileAdd' => 'Добавить',
+			'profileSkip' => 'Пропустить',
+			'profileSavedToast' => 'Профиль сохранён',
+			'profileLogout' => 'Выйти',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ru'))(n, one: '${n} ингредиент', few: '${n} ингредиента', many: '${n} ингредиентов', other: '${n} ингредиента', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Переключить язык на ${label}',
 			'a11y.flagOf' => ({required Object label}) => 'Флаг ${label}',

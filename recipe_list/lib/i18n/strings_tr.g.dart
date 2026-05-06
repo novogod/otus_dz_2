@@ -129,6 +129,20 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 		one: '${n} tarif',
 		other: '${n} tarif',
 	);
+	@override String get profileDisplayName => 'Görünen ad';
+	@override String get profileLanguage => 'Dil';
+	@override String profileRecipesAdded({required Object n}) => 'Eklenen tarifler: ${n}';
+	@override String profileMemberSince({required Object date}) => 'Üyelik: ${date}';
+	@override String get profileEdit => 'Düzenle';
+	@override String get profileSave => 'Kaydet';
+	@override String get profilePhotoFromCamera => 'Fotoğraf çek';
+	@override String get profilePhotoFromGallery => 'Galeriden seç';
+	@override String get profilePhotoRemove => 'Fotoğrafı kaldır';
+	@override String get profileFinishSetup => 'Kurulumu tamamla';
+	@override String get profileAdd => 'Ekle';
+	@override String get profileSkip => 'Atla';
+	@override String get profileSavedToast => 'Profil kaydedildi';
+	@override String get profileLogout => 'Çıkış yap';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n,
 		one: '${n} malzeme',
 		other: '${n} malzeme',
@@ -276,6 +290,20 @@ extension on TranslationsTr {
 			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n, one: '${n} oy', other: '${n} oy', ), 
 			'recipeRatedToast' => 'Oyladığın için teşekkürler!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n, one: '${n} tarif', other: '${n} tarif', ), 
+			'profileDisplayName' => 'Görünen ad',
+			'profileLanguage' => 'Dil',
+			'profileRecipesAdded' => ({required Object n}) => 'Eklenen tarifler: ${n}',
+			'profileMemberSince' => ({required Object date}) => 'Üyelik: ${date}',
+			'profileEdit' => 'Düzenle',
+			'profileSave' => 'Kaydet',
+			'profilePhotoFromCamera' => 'Fotoğraf çek',
+			'profilePhotoFromGallery' => 'Galeriden seç',
+			'profilePhotoRemove' => 'Fotoğrafı kaldır',
+			'profileFinishSetup' => 'Kurulumu tamamla',
+			'profileAdd' => 'Ekle',
+			'profileSkip' => 'Atla',
+			'profileSavedToast' => 'Profil kaydedildi',
+			'profileLogout' => 'Çıkış yap',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('tr'))(n, one: '${n} malzeme', other: '${n} malzeme', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Dili ${label} olarak değiştir',
 			'a11y.reloadFeed' => 'Listeyi yenile',

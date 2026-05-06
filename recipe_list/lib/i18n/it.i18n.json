@@ -91,6 +91,20 @@
     "one": "${n} ricetta",
     "other": "${n} ricette"
   },
+  "profileDisplayName": "Nome visualizzato",
+  "profileLanguage": "Lingua",
+  "profileRecipesAdded": "Ricette aggiunte: ${n}",
+  "profileMemberSince": "Membro dal: ${date}",
+  "profileEdit": "Modifica",
+  "profileSave": "Salva",
+  "profilePhotoFromCamera": "Scatta foto",
+  "profilePhotoFromGallery": "Scegli dalla galleria",
+  "profilePhotoRemove": "Rimuovi foto",
+  "profileFinishSetup": "Completa la configurazione",
+  "profileAdd": "Aggiungi",
+  "profileSkip": "Salta",
+  "profileSavedToast": "Profilo salvato",
+  "profileLogout": "Esci",
   "ingredientCount": {
     "one": "${n} ingrediente",
     "other": "${n} ingredienti"

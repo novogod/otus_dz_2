@@ -15,6 +15,7 @@ import '../ui/login_page.dart';
 import '../ui/recipe_details_page.dart';
 import '../ui/source_page.dart';
 import '../ui/splash_and_recipes.dart';
+import '../ui/user_card_page.dart';
 import 'routes.dart';
 
 /// Корневой [GlobalKey] для root-навигатора `GoRouter`.
@@ -259,6 +260,22 @@ class _ProfileBranchRoot extends StatelessWidget {
                       return AdminAfterLoginPage(
                         adminLogin: loginTrim,
                         adminPassword: currentSessionAdminPassword ?? '',
+                      );
+                    }
+                    // chunk D: regular logged-in users land on the
+                    // User Card page. Optional `extra` from the
+                    // signup-success redirect carries
+                    // {initialEditMode, isPostSignup}.
+                    final extra = GoRouterState.of(context).extra;
+                    final isPostSignup = extra is Map &&
+                        extra['isPostSignup'] == true;
+                    final initialEditMode = (extra is Map &&
+                            extra['initialEditMode'] == true) ||
+                        isPostSignup;
+                    if (userLoggedInNotifier.value && loginTrim.isNotEmpty) {
+                      return UserCardPage(
+                        initialEditMode: initialEditMode,
+                        isPostSignup: isPostSignup,
                       );
                     }
                     // hasUser/hasToken без login — кейс редкий

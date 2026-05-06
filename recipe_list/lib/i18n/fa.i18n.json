@@ -91,6 +91,20 @@
     "one": "${n} دستور پخت",
     "other": "${n} دستور پخت"
   },
+  "profileDisplayName": "نام نمایشی",
+  "profileLanguage": "زبان",
+  "profileRecipesAdded": "دستورهای اضافه‌شده: ${n}",
+  "profileMemberSince": "عضو از: ${date}",
+  "profileEdit": "ویرایش",
+  "profileSave": "ذخیره",
+  "profilePhotoFromCamera": "گرفتن عکس",
+  "profilePhotoFromGallery": "انتخاب از گالری",
+  "profilePhotoRemove": "حذف عکس",
+  "profileFinishSetup": "تکمیل تنظیمات",
+  "profileAdd": "افزودن",
+  "profileSkip": "رد کردن",
+  "profileSavedToast": "پروفایل ذخیره شد",
+  "profileLogout": "خروج",
   "ingredientCount": {
     "one": "${n} ماده اولیه",
     "other": "${n} ماده اولیه"

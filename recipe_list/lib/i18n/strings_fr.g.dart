@@ -129,6 +129,20 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 		one: '${n} recette',
 		other: '${n} recettes',
 	);
+	@override String get profileDisplayName => 'Nom affiché';
+	@override String get profileLanguage => 'Langue';
+	@override String profileRecipesAdded({required Object n}) => 'Recettes ajoutées : ${n}';
+	@override String profileMemberSince({required Object date}) => 'Membre depuis : ${date}';
+	@override String get profileEdit => 'Modifier';
+	@override String get profileSave => 'Enregistrer';
+	@override String get profilePhotoFromCamera => 'Prendre une photo';
+	@override String get profilePhotoFromGallery => 'Choisir dans la galerie';
+	@override String get profilePhotoRemove => 'Supprimer la photo';
+	@override String get profileFinishSetup => 'Finaliser la configuration';
+	@override String get profileAdd => 'Ajouter';
+	@override String get profileSkip => 'Passer';
+	@override String get profileSavedToast => 'Profil enregistré';
+	@override String get profileLogout => 'Déconnexion';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fr'))(n,
 		one: '${n} ingrédient',
 		other: '${n} ingrédients',
@@ -276,6 +290,20 @@ extension on TranslationsFr {
 			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fr'))(n, one: '${n} vote', other: '${n} votes', ), 
 			'recipeRatedToast' => 'Merci pour votre note !',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fr'))(n, one: '${n} recette', other: '${n} recettes', ), 
+			'profileDisplayName' => 'Nom affiché',
+			'profileLanguage' => 'Langue',
+			'profileRecipesAdded' => ({required Object n}) => 'Recettes ajoutées : ${n}',
+			'profileMemberSince' => ({required Object date}) => 'Membre depuis : ${date}',
+			'profileEdit' => 'Modifier',
+			'profileSave' => 'Enregistrer',
+			'profilePhotoFromCamera' => 'Prendre une photo',
+			'profilePhotoFromGallery' => 'Choisir dans la galerie',
+			'profilePhotoRemove' => 'Supprimer la photo',
+			'profileFinishSetup' => 'Finaliser la configuration',
+			'profileAdd' => 'Ajouter',
+			'profileSkip' => 'Passer',
+			'profileSavedToast' => 'Profil enregistré',
+			'profileLogout' => 'Déconnexion',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fr'))(n, one: '${n} ingrédient', other: '${n} ingrédients', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'Changer la langue pour ${label}',
 			'a11y.reloadFeed' => 'Actualiser la liste',

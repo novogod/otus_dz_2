@@ -627,7 +627,21 @@ class _LoginPageState extends State<LoginPage> {
                                   if (!loggedIn)
                                     TextButton(
                                       onPressed: () async {
-                                        await openSignUpPage(context);
+                                        final ok =
+                                            await openSignUpPage(context);
+                                        if (!ok) return;
+                                        if (!context.mounted) return;
+                                        // chunk D post-signup: jump to
+                                        // User Card in edit mode so the
+                                        // user can finalise display
+                                        // name + language.
+                                        context.go(
+                                          Routes.profile,
+                                          extra: const <String, Object?>{
+                                            'isPostSignup': true,
+                                            'initialEditMode': true,
+                                          },
+                                        );
                                       },
                                       child: Text(
                                         s.signUp,

@@ -129,6 +129,20 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 		one: '${n} دستور پخت',
 		other: '${n} دستور پخت',
 	);
+	@override String get profileDisplayName => 'نام نمایشی';
+	@override String get profileLanguage => 'زبان';
+	@override String profileRecipesAdded({required Object n}) => 'دستورهای اضافه‌شده: ${n}';
+	@override String profileMemberSince({required Object date}) => 'عضو از: ${date}';
+	@override String get profileEdit => 'ویرایش';
+	@override String get profileSave => 'ذخیره';
+	@override String get profilePhotoFromCamera => 'گرفتن عکس';
+	@override String get profilePhotoFromGallery => 'انتخاب از گالری';
+	@override String get profilePhotoRemove => 'حذف عکس';
+	@override String get profileFinishSetup => 'تکمیل تنظیمات';
+	@override String get profileAdd => 'افزودن';
+	@override String get profileSkip => 'رد کردن';
+	@override String get profileSavedToast => 'پروفایل ذخیره شد';
+	@override String get profileLogout => 'خروج';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n,
 		one: '${n} ماده اولیه',
 		other: '${n} ماده اولیه',
@@ -276,6 +290,20 @@ extension on TranslationsFa {
 			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n, one: '${n} رأی', other: '${n} رأی', ), 
 			'recipeRatedToast' => 'از امتیاز شما متشکریم!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n, one: '${n} دستور پخت', other: '${n} دستور پخت', ), 
+			'profileDisplayName' => 'نام نمایشی',
+			'profileLanguage' => 'زبان',
+			'profileRecipesAdded' => ({required Object n}) => 'دستورهای اضافه‌شده: ${n}',
+			'profileMemberSince' => ({required Object date}) => 'عضو از: ${date}',
+			'profileEdit' => 'ویرایش',
+			'profileSave' => 'ذخیره',
+			'profilePhotoFromCamera' => 'گرفتن عکس',
+			'profilePhotoFromGallery' => 'انتخاب از گالری',
+			'profilePhotoRemove' => 'حذف عکس',
+			'profileFinishSetup' => 'تکمیل تنظیمات',
+			'profileAdd' => 'افزودن',
+			'profileSkip' => 'رد کردن',
+			'profileSavedToast' => 'پروفایل ذخیره شد',
+			'profileLogout' => 'خروج',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('fa'))(n, one: '${n} ماده اولیه', other: '${n} ماده اولیه', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'تغییر زبان به ${label}',
 			'a11y.reloadFeed' => 'بارگذاری مجدد فهرست',

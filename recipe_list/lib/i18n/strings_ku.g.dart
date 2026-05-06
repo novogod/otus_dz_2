@@ -129,6 +129,20 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 		one: '${n} ڕێسا',
 		other: '${n} ڕێسا',
 	);
+	@override String get profileDisplayName => 'ناوی پیشاندان';
+	@override String get profileLanguage => 'زمان';
+	@override String profileRecipesAdded({required Object n}) => 'ڕێسپێیە زیادکراوەکان: ${n}';
+	@override String profileMemberSince({required Object date}) => 'ئەندام لە: ${date}';
+	@override String get profileEdit => 'دەستکاری';
+	@override String get profileSave => 'پاشەکەوت';
+	@override String get profilePhotoFromCamera => 'وێنە بگرە';
+	@override String get profilePhotoFromGallery => 'لە گالەری هەڵبژێرە';
+	@override String get profilePhotoRemove => 'وێنە بسڕەوە';
+	@override String get profileFinishSetup => 'تەواوکردنی ڕێکخستن';
+	@override String get profileAdd => 'زیادبکە';
+	@override String get profileSkip => 'تێپەڕێنە';
+	@override String get profileSavedToast => 'پرۆفایل پاشەکەوت کرا';
+	@override String get profileLogout => 'چوونە دەرەوە';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n,
 		one: '${n} پێکهاتە',
 		other: '${n} پێکهاتە',
@@ -276,6 +290,20 @@ extension on TranslationsKu {
 			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n, one: '${n} دەنگ', other: '${n} دەنگ', ), 
 			'recipeRatedToast' => 'سوپاس بۆ هەڵسەنگاندنت!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n, one: '${n} ڕێسا', other: '${n} ڕێسا', ), 
+			'profileDisplayName' => 'ناوی پیشاندان',
+			'profileLanguage' => 'زمان',
+			'profileRecipesAdded' => ({required Object n}) => 'ڕێسپێیە زیادکراوەکان: ${n}',
+			'profileMemberSince' => ({required Object date}) => 'ئەندام لە: ${date}',
+			'profileEdit' => 'دەستکاری',
+			'profileSave' => 'پاشەکەوت',
+			'profilePhotoFromCamera' => 'وێنە بگرە',
+			'profilePhotoFromGallery' => 'لە گالەری هەڵبژێرە',
+			'profilePhotoRemove' => 'وێنە بسڕەوە',
+			'profileFinishSetup' => 'تەواوکردنی ڕێکخستن',
+			'profileAdd' => 'زیادبکە',
+			'profileSkip' => 'تێپەڕێنە',
+			'profileSavedToast' => 'پرۆفایل پاشەکەوت کرا',
+			'profileLogout' => 'چوونە دەرەوە',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ku'))(n, one: '${n} پێکهاتە', other: '${n} پێکهاتە', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'گۆڕینی زمان بۆ ${label}',
 			'a11y.reloadFeed' => 'نوێکردنەوەی لیست',

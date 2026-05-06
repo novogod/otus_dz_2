@@ -290,6 +290,48 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 		other: '${n} recipes',
 	);
 
+	/// en: 'Display name'
+	String get profileDisplayName => 'Display name';
+
+	/// en: 'Language'
+	String get profileLanguage => 'Language';
+
+	/// en: 'Recipes added: ${n}'
+	String profileRecipesAdded({required Object n}) => 'Recipes added: ${n}';
+
+	/// en: 'Member since: ${date}'
+	String profileMemberSince({required Object date}) => 'Member since: ${date}';
+
+	/// en: 'Edit'
+	String get profileEdit => 'Edit';
+
+	/// en: 'Save'
+	String get profileSave => 'Save';
+
+	/// en: 'Take photo'
+	String get profilePhotoFromCamera => 'Take photo';
+
+	/// en: 'Choose from library'
+	String get profilePhotoFromGallery => 'Choose from library';
+
+	/// en: 'Remove photo'
+	String get profilePhotoRemove => 'Remove photo';
+
+	/// en: 'Finish setup'
+	String get profileFinishSetup => 'Finish setup';
+
+	/// en: 'Add'
+	String get profileAdd => 'Add';
+
+	/// en: 'Skip'
+	String get profileSkip => 'Skip';
+
+	/// en: 'Profile saved'
+	String get profileSavedToast => 'Profile saved';
+
+	/// en: 'Logout'
+	String get profileLogout => 'Logout';
+
 	/// en: 'Tap a star to rate'
 	String get recipeRateTooltip => 'Tap a star to rate';
 
@@ -524,6 +566,20 @@ extension on Translations {
 			'favoritesEmpty' => 'No favorites yet',
 			'recipeAddedByPrefix' => 'by',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '${n} recipe', other: '${n} recipes', ), 
+			'profileDisplayName' => 'Display name',
+			'profileLanguage' => 'Language',
+			'profileRecipesAdded' => ({required Object n}) => 'Recipes added: ${n}',
+			'profileMemberSince' => ({required Object date}) => 'Member since: ${date}',
+			'profileEdit' => 'Edit',
+			'profileSave' => 'Save',
+			'profilePhotoFromCamera' => 'Take photo',
+			'profilePhotoFromGallery' => 'Choose from library',
+			'profilePhotoRemove' => 'Remove photo',
+			'profileFinishSetup' => 'Finish setup',
+			'profileAdd' => 'Add',
+			'profileSkip' => 'Skip',
+			'profileSavedToast' => 'Profile saved',
+			'profileLogout' => 'Logout',
 			'recipeRateTooltip' => 'Tap a star to rate',
 			'recipeRatingAvg' => ({required Object avg}) => '${avg} / 5',
 			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '${n} vote', other: '${n} votes', ), 

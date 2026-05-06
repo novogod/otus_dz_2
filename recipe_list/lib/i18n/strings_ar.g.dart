@@ -133,6 +133,20 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 		one: '${n} وصفة',
 		other: '${n} وصفات',
 	);
+	@override String get profileDisplayName => 'الاسم المعروض';
+	@override String get profileLanguage => 'اللغة';
+	@override String profileRecipesAdded({required Object n}) => 'وصفات مضافة: ${n}';
+	@override String profileMemberSince({required Object date}) => 'عضو منذ: ${date}';
+	@override String get profileEdit => 'تعديل';
+	@override String get profileSave => 'حفظ';
+	@override String get profilePhotoFromCamera => 'التقط صورة';
+	@override String get profilePhotoFromGallery => 'اختر من المعرض';
+	@override String get profilePhotoRemove => 'إزالة الصورة';
+	@override String get profileFinishSetup => 'إكمال الإعداد';
+	@override String get profileAdd => 'إضافة';
+	@override String get profileSkip => 'تخطي';
+	@override String get profileSavedToast => 'تم حفظ الملف الشخصي';
+	@override String get profileLogout => 'تسجيل الخروج';
 	@override String ingredientCount({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n,
 		zero: '${n} مكون',
 		one: '${n} مكون',
@@ -284,6 +298,20 @@ extension on TranslationsAr {
 			'recipeVotesCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, zero: '${n} أصوات', one: '${n} صوت', two: '${n} صوتان', few: '${n} أصوات', many: '${n} صوتًا', other: '${n} صوت', ), 
 			'recipeRatedToast' => 'شكرًا على تقييمك!',
 			'recipeAuthorRecipes' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, one: '${n} وصفة', other: '${n} وصفات', ), 
+			'profileDisplayName' => 'الاسم المعروض',
+			'profileLanguage' => 'اللغة',
+			'profileRecipesAdded' => ({required Object n}) => 'وصفات مضافة: ${n}',
+			'profileMemberSince' => ({required Object date}) => 'عضو منذ: ${date}',
+			'profileEdit' => 'تعديل',
+			'profileSave' => 'حفظ',
+			'profilePhotoFromCamera' => 'التقط صورة',
+			'profilePhotoFromGallery' => 'اختر من المعرض',
+			'profilePhotoRemove' => 'إزالة الصورة',
+			'profileFinishSetup' => 'إكمال الإعداد',
+			'profileAdd' => 'إضافة',
+			'profileSkip' => 'تخطي',
+			'profileSavedToast' => 'تم حفظ الملف الشخصي',
+			'profileLogout' => 'تسجيل الخروج',
 			'ingredientCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('ar'))(n, zero: '${n} مكون', one: '${n} مكون', two: '${n} مكونان', few: '${n} مكونات', many: '${n} مكوناً', other: '${n} مكون', ), 
 			'a11y.switchLanguageTo' => ({required Object label}) => 'تغيير اللغة إلى ${label}',
 			'a11y.reloadFeed' => 'إعادة تحميل القائمة',
