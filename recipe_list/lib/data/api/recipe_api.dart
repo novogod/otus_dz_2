@@ -287,6 +287,12 @@ class RecipeApi {
   /// mahallem-only: POST /recipes/:id/rating with `{stars}`. Caller
   /// must be authenticated; throws on missing token or invalid
   /// stars (server returns 422). Returns the fresh aggregate.
+  ///
+  /// The write endpoint currently echoes only
+  /// `{success, recipeId, stars}` — it does not include the new
+  /// aggregate. We therefore follow the POST with a GET to read
+  /// back the updated `{count, sum, my}` so callers (the store)
+  /// don't overwrite optimistic state with zeros.
   Future<RecipeRatingSnapshot> setRating(int recipeId, int stars) async {
     if (_client.backend != RecipeBackend.mahallem) {
       throw StateError('setRating requires the mahallem backend');
@@ -297,15 +303,24 @@ class RecipeApi {
       options: _authOptions(),
     );
     final data = res.data ?? const {};
-    return RecipeRatingSnapshot(
-      count: (data['count'] as num?)?.toInt() ?? 0,
-      sum: (data['sum'] as num?)?.toInt() ?? 0,
-      my: (data['my'] as num?)?.toInt() ?? stars,
-    );
+    final hasAggregate = data.containsKey('count') && data.containsKey('sum');
+    if (hasAggregate) {
+      return RecipeRatingSnapshot(
+        count: (data['count'] as num?)?.toInt() ?? 0,
+        sum: (data['sum'] as num?)?.toInt() ?? 0,
+        my: (data['my'] as num?)?.toInt() ?? stars,
+      );
+    }
+    final fresh = await fetchRating(recipeId);
+    return fresh ??
+        RecipeRatingSnapshot(count: 1, sum: stars, my: stars);
   }
 
   /// mahallem-only: DELETE /recipes/:id/rating. Removes the
   /// caller's vote. Returns the fresh aggregate (without `my`).
+  ///
+  /// Same caveat as [setRating]: if the server doesn't echo the
+  /// aggregate we re-GET it.
   Future<RecipeRatingSnapshot> clearRating(int recipeId) async {
     if (_client.backend != RecipeBackend.mahallem) {
       throw StateError('clearRating requires the mahallem backend');
@@ -315,11 +330,16 @@ class RecipeApi {
       options: _authOptions(),
     );
     final data = res.data ?? const {};
-    return RecipeRatingSnapshot(
-      count: (data['count'] as num?)?.toInt() ?? 0,
-      sum: (data['sum'] as num?)?.toInt() ?? 0,
-      my: null,
-    );
+    final hasAggregate = data.containsKey('count') && data.containsKey('sum');
+    if (hasAggregate) {
+      return RecipeRatingSnapshot(
+        count: (data['count'] as num?)?.toInt() ?? 0,
+        sum: (data['sum'] as num?)?.toInt() ?? 0,
+        my: null,
+      );
+    }
+    final fresh = await fetchRating(recipeId);
+    return fresh ?? const RecipeRatingSnapshot(count: 0, sum: 0, my: null);
   }
 
   /// mahallem-only: GET /recipes/users/me. Returns the current

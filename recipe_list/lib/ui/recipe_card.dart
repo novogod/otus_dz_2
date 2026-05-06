@@ -376,16 +376,20 @@ class _PhotoRatingPill extends StatelessWidget {
                       showRegistrationRequiredSnackBar(context);
                       return;
                     }
+                    final messenger = ScaffoldMessenger.maybeOf(context);
                     try {
                       if (snap.my == stars) {
                         await store.clearMyRating(recipe.id);
                       } else {
                         await store.setMyRating(recipe.id, stars);
                       }
-                    } catch (_) {
-                      // RatingStore reverts optimistic state itself; we
-                      // don't surface a snackbar here to keep the card
-                      // taps quiet — details page is the noisy surface.
+                    } catch (e) {
+                      messenger?.showSnackBar(
+                        SnackBar(
+                          content: Text('Rating failed: $e'),
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
                     }
                   },
                 );
