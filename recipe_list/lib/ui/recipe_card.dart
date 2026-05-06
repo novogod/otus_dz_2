@@ -94,6 +94,14 @@ class RecipeCard extends StatelessWidget {
                                 count: recipe.ingredients.length,
                               ),
                             ],
+                            if (recipe.creatorDisplayName != null) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              _AuthorChip(
+                                name: recipe.creatorDisplayName!,
+                                avatarPath: recipe.creatorAvatarPath,
+                                recipesAdded: recipe.creatorRecipesAdded,
+                              ),
+                            ],
                           ],
                         ],
                       ),
@@ -790,6 +798,98 @@ class _IngredientCount extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.xs),
         Text(s.ingredientCount(count), style: AppTextStyles.recipeMeta),
+      ],
+    );
+  }
+}
+
+/// Compact author row shown on the recipe card under the ingredient
+/// count. Mirrors the larger [AddedByRow] used on the details page
+/// (lib/ui/social/added_by_row.dart) but with a 40 dp avatar that
+/// has its own elevation so it reads as a separate object on top of
+/// the card surface. Hidden when the server hasn't projected
+/// creator metadata.
+class _AuthorChip extends StatelessWidget {
+  const _AuthorChip({
+    required this.name,
+    required this.avatarPath,
+    required this.recipesAdded,
+  });
+
+  final String name;
+  final String? avatarPath;
+  final int? recipesAdded;
+
+  static const double _avatarSize = 40;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final added = recipesAdded;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Elevated avatar — Material elevation 2 (~card-secondary
+        // shadow) so the avatar visually lifts above the card
+        // surface while staying within the design system's
+        // shadow vocabulary.
+        Material(
+          shape: const CircleBorder(),
+          elevation: 2,
+          clipBehavior: Clip.antiAlias,
+          color: AppColors.surfaceMuted,
+          child: SizedBox(
+            width: _avatarSize,
+            height: _avatarSize,
+            child: avatarPath == null
+                ? const Icon(
+                    Icons.person,
+                    size: 22,
+                    color: AppColors.textSecondary,
+                  )
+                : Image.network(
+                    imgproxyUrl(avatarPath!, 80, 80),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.person,
+                      size: 22,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: name,
+                  style: const TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    height: 20 / 14,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                if (added != null && added > 0)
+                  TextSpan(
+                    text: '  •  ${s.recipeAuthorRecipes(added)}',
+                    style: const TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 13,
+                      height: 18 / 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }
