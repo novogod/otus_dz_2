@@ -122,7 +122,10 @@ class RecipeApi {
     }
     final res = await _client.dio.post<Map<String, dynamic>>(
       '',
-      data: {'meal': _mealToJson(draft)},
+      data: {
+        'meal': _mealToJson(draft),
+        'sourceLang': appLang.value.name,
+      },
       options: _authOptions(),
     );
     final data = res.data;
@@ -151,6 +154,7 @@ class RecipeApi {
     }
     final form = FormData.fromMap({
       'meal': jsonEncode(_mealToJson(draft)),
+      'sourceLang': appLang.value.name,
       'photo': MultipartFile.fromBytes(photoBytes, filename: photoFilename),
     });
     final res = await _client.dio.post<Map<String, dynamic>>(
@@ -208,7 +212,10 @@ class RecipeApi {
     }
     final res = await _client.dio.put<Map<String, dynamic>>(
       '/${draft.id}',
-      data: {'meal': _mealToJson(draft)},
+      data: {
+        'meal': _mealToJson(draft),
+        'sourceLang': appLang.value.name,
+      },
       options: _authOptions(),
     );
     final stored = res.data?['meal'];
@@ -232,6 +239,7 @@ class RecipeApi {
     if (photoBytes == null) return updateRecipe(draft);
     final form = FormData.fromMap({
       'meal': jsonEncode(_mealToJson(draft)),
+      'sourceLang': appLang.value.name,
       'photo': MultipartFile.fromBytes(
         photoBytes,
         filename: photoFilename ?? 'photo.jpg',

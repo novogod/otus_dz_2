@@ -11,6 +11,7 @@
 // `recipe_photo_upload.md` и `docs/recipe-photo-upload.md` §2.4.1.
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
@@ -69,6 +70,44 @@ Future<File> downscaleForUpload(XFile src) async {
   if (r2 == null || await out.length() > _kMaxBytes) {
     // Не удаляем файл здесь — пусть вызывающий код решает (он
     // может попробовать перевыбрать другой источник).
+    throw StateError('photo_too_large');
+  }
+  return out;
+}
+
+/// Web/native универсальный downscaler для байтов (avatar / web upload).
+///
+/// PWA на iPhone отдаёт фото камеры как multi-MB JPEG (часто 4–10 МБ),
+/// что превышает серверный multer-cap (5 МБ). image_picker на web
+/// игнорирует maxWidth/maxHeight, поэтому сжимаем тут через
+/// `FlutterImageCompress.compressWithList` (canvas-based на web,
+/// нативный на iOS/Android).
+///
+/// Бросает [StateError]('photo_too_large') если после двух проходов
+/// размер всё ещё > 5 МБ.
+Future<Uint8List> downscaleBytesForUpload(Uint8List src) async {
+  if (src.length <= _kMaxBytes ~/ 5) {
+    // ≤ 1 МБ — заведомо влезет, не тратим CPU/время.
+    return src;
+  }
+  Uint8List out = await FlutterImageCompress.compressWithList(
+    src,
+    minWidth: 1600,
+    minHeight: 1600,
+    quality: 80,
+    format: CompressFormat.jpeg,
+    keepExif: false,
+  );
+  if (out.length <= _kMaxBytes) return out;
+  out = await FlutterImageCompress.compressWithList(
+    out,
+    minWidth: 1280,
+    minHeight: 1280,
+    quality: 60,
+    format: CompressFormat.jpeg,
+    keepExif: false,
+  );
+  if (out.length > _kMaxBytes) {
     throw StateError('photo_too_large');
   }
   return out;

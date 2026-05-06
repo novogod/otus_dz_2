@@ -255,13 +255,20 @@ class _AddRecipePageState extends State<AddRecipePage> {
       setState(() => _compressing = true);
 
       if (kIsWeb) {
-        // On web dart:io.File doesn't exist — read bytes directly.
-        final bytes = await raw.readAsBytes();
+        // PWA / web: image_picker не сжимает; iPhone-камера выдаёт
+        // 4–10 МБ JPEG, превышая серверный 5 МБ multer-cap. Гоним
+        // через canvas-downscaler (flutter_image_compress_web).
+        final rawBytes = await raw.readAsBytes();
+        final bytes = await downscaleBytesForUpload(rawBytes);
         if (!mounted) return;
         _disposePickedPhoto();
+        final rawName = raw.name.isNotEmpty ? raw.name : 'photo.jpg';
+        final base = rawName.contains('.')
+            ? rawName.substring(0, rawName.lastIndexOf('.'))
+            : rawName;
         setState(() {
           _webPickedBytes = bytes;
-          _webPickedFilename = raw.name.isNotEmpty ? raw.name : 'photo.jpg';
+          _webPickedFilename = '$base.jpg';
           _compressing = false;
           _photoTouched = true;
         });
@@ -418,14 +425,12 @@ class _AddRecipePageState extends State<AddRecipePage> {
               )
             : await api.createRecipe(draft);
       }
-      // POST/PUT возвращают рецепт после трансляции в `i18n.en`
-      // (см. routes/recipes.js: cascade detect→translate→store), то
-      // есть текстовые поля приходят на английском вне зависимости
-      // от языка ввода. Чтобы локальный кэш и список рецептов на
-      // том же экране сразу показали оригинал на языке UI
-      // (например, рецепт, введённый на русском, остался на
-      // русском), заново загружаем сохранённый рецепт с
-      // `?lang=<UI>` — сервер развернёт нужную локаль из i18n.
+      // POST/PUT возвращают рецепт в исходной локали отправки
+      // (см. routes/recipes.js: createUserMeal/updateUserMeal
+      // сохраняют draft в `i18n[sourceLang]` и помечают
+      // `i18n.__source = sourceLang`). Делаем повторный lookup на
+      // языке UI, чтобы получить уже-готовый перевод (либо тот же
+      // оригинал — если язык UI совпадает с языком ввода).
       // Если lookup упал (offline/timeout) — деградируем до
       // ответа POST/PUT.
       Recipe localized = saved;

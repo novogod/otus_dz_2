@@ -98,9 +98,17 @@ Future<PickedPhoto?> pickAndCompressPhoto({
     final raw = await p.pickImage(source: source);
     if (raw == null) return null; // user cancelled
     if (kIsWeb) {
-      final bytes = await raw.readAsBytes();
-      final name = raw.name.isNotEmpty ? raw.name : 'photo.jpg';
-      return PickedPhoto(bytes: bytes, filename: name);
+      final rawBytes = await raw.readAsBytes();
+      // PWA / web: image_picker не сжимает, а iPhone-камера выдаёт
+      // 4–10 МБ JPEG-и, что превышает серверный 5 МБ multer-cap.
+      // Гоним через canvas-downscaler (flutter_image_compress_web).
+      final bytes = await downscaleBytesForUpload(rawBytes);
+      final rawName = raw.name.isNotEmpty ? raw.name : 'photo.jpg';
+      // Renormalise extension to .jpg — после downscaler формат всегда JPEG.
+      final base = rawName.contains('.')
+          ? rawName.substring(0, rawName.lastIndexOf('.'))
+          : rawName;
+      return PickedPhoto(bytes: bytes, filename: '$base.jpg');
     }
     final compressed = await downscaleForUpload(raw);
     final bytes = await compressed.readAsBytes();
