@@ -1,5 +1,82 @@
 # Project Log
 
+## Owner edit/delete leak + missing author chip on search-result cards
+
+**Date:** 2026-05-06
+
+**Commits:**
+- mahallem `68ae49e8` — fix(recipes): project social signals on `/recipes/search`
+- otus_dz `9ea367d` — fix(recipes): server-authoritative ownership for edit/delete buttons
+
+### Symptoms
+
+Reported by an anonymous (not-logged-in) viewer:
+
+1. The "Unloading bag" recipe card on the recipe list rendered without
+   the author chip, even though the details page (after tapping the
+   card) showed the author. Across web and devices.
+2. The same anonymous viewer (and any signed-in non-author) saw
+   `edit` and `delete` badges on the card and on the details-page
+   hero photo for recipes they did not author.
+
+### Root causes
+
+- **Issue 1.** `GET /recipes/search` was the only list endpoint that
+  did **not** call `attachSocialSignals(...)`. `/page`, `/lookup/:id`,
+  `/random` and `/filter` all project `creatorUserId`,
+  `creatorDisplayName`, `creatorAvatarPath`, `creatorRecipesAdded`,
+  `favoritesCount`. Search responses lacked those fields, so the
+  client's author-chip widget short-circuited on the empty
+  `creatorDisplayName` and rendered nothing.
+- **Issue 2.** Two layered bugs.
+  1. `OwnedRecipesStore.ensureLoaded()` backfilled the
+     per-device `owned_recipes` sqflite registry with **every**
+     cached row whose id was ≥ `userMealIdFloor` (1_000_000). As soon
+     as any user — including anonymous visitors — opened a card, the
+     row entered the local cache and the next `ensureLoaded`
+     promoted it to "owned by this device". Every gate that OR-ed in
+     `ownedRecipesStoreNotifier.value?.isOwned(recipe.id)` lit up the
+     buttons.
+  2. `_OwnerActions` in `recipe_details_page.dart` had a permissive
+     `userLoggedIn && !isAdmin && id >= userMealIdFloor` fallback,
+     so any signed-in non-admin saw owner buttons on every user-floor
+     recipe.
+
+### Fix
+
+- Server (`local_user_portal/routes/recipes.js`): `GET /recipes/search`
+  now resolves `optUid` from `x-recipes-user-token` and calls
+  `attachSocialSignals(executeQuery, meals, optUid)` before
+  responding, mirroring `/filter`.
+- Client: every ownership gate collapses to
+  `isAdmin || isCurrentUserAuthor(recipe)` —
+  `recipe_card._CardActions`,
+  `recipe_card`'s author-chip fallback,
+  `recipe_list_page._openEditRecipe`,
+  `recipe_list_page._confirmAndDeleteFromCard`,
+  `recipe_details_page._OwnerActions`. The
+  `ownedRecipesStoreNotifier?.isOwned()` and
+  `userLoggedIn && id >= floor` fallbacks are removed.
+- `OwnedRecipesStore.ensureLoaded` no longer infers ownership from
+  the `recipes` cache and purges any rows at/above
+  `userMealIdFloor` on first load to clear historical poisoning
+  from earlier app versions. The store remains as an
+  offline-create-replay aid populated only through `add()` from the
+  create flow.
+
+### Verification
+
+- `curl 'https://mahallem.ist/recipes/search?q=unload&lang=en'` now
+  returns `creatorDisplayName: "Andrey"`,
+  `creatorUserId: bf703e42-...` for id `1000012`.
+- Anonymous web viewer (hard-refreshed PWA): author chip is visible
+  on the recipe-list card and no edit/delete badge appears on cards
+  the user did not author or on the details hero photo.
+- Author account: edit/delete remain visible on every device.
+
+See [docs/owner-edit-delete-leak-2026-05.md](owner-edit-delete-leak-2026-05.md)
+for the full investigation.
+
 ## Social signals lost on cold start; AddedByRow missing on user-authored recipes
 
 **Date:** 2026-05-06
