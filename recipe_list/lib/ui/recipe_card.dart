@@ -13,6 +13,7 @@ import '../models/recipe.dart';
 import '../utils/imgproxy.dart';
 import 'app_theme.dart';
 import 'registration_required_snackbar.dart';
+import 'web_share/web_action_buttons.dart';
 
 /// Карточка рецепта TheMealDB.
 ///
@@ -306,6 +307,20 @@ class _Photo extends StatelessWidget {
                   child: _YoutubeBadge(url: recipe.youtubeUrl!),
                 ),
               ),
+            // Share badge anchored to the top-left of the photo,
+            // mirroring [_YoutubeBadge]'s circular shape and size
+            // but tinted with the brand primary so the affordance
+            // reads as "share this recipe" (rather than the global
+            // app-share button in the AppBar). Tapping opens the
+            // same dropdown / system share sheet, but pre-fills the
+            // payload with the deep-link to *this* recipe.
+            Positioned(
+              left: AppSpacing.sm,
+              top: AppSpacing.sm,
+              child: PointerInterceptor(
+                child: _PhotoShareBadge(recipe: recipe),
+              ),
+            ),
             // Star-rating pill on every photo (per
             // docs/prompts.md "stars on ALL recipe cards are
             // present and clickable"). Sits inline with the
@@ -364,6 +379,39 @@ class _YoutubeBadge extends StatelessWidget {
         child: const Padding(
           padding: EdgeInsets.all(AppSpacing.sm),
           child: Icon(Icons.play_arrow, color: Colors.white, size: 24),
+        ),
+      ),
+    );
+  }
+}
+
+/// Share badge anchored to the top-left of the recipe photo.
+/// Mirrors [_YoutubeBadge]'s circular 40dp / semi-transparent black
+/// chrome, but the glyph is tinted with the brand primary green so
+/// it reads as the "share this recipe" affordance rather than the
+/// global AppBar share button. Tapping invokes [shareRecipe], which
+/// opens the system share sheet (iOS/Android) or the social-network
+/// dropdown (web) pre-filled with the deep-link to this recipe.
+class _PhotoShareBadge extends StatelessWidget {
+  const _PhotoShareBadge({required this.recipe});
+
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    return Material(
+      color: Colors.black.withValues(alpha: 0.65),
+      shape: const CircleBorder(),
+      child: Tooltip(
+        message: s.shareTooltip,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => shareRecipe(context, recipe),
+          child: const Padding(
+            padding: EdgeInsets.all(AppSpacing.sm),
+            child: Icon(Icons.share, color: AppColors.primary, size: 22),
+          ),
         ),
       ),
     );

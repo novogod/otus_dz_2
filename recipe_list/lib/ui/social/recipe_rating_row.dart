@@ -86,9 +86,7 @@ class RecipeRatingRow extends StatelessWidget {
       final icon = Icon(
         iconData,
         size: starSize,
-        color: (isFull || isHalf)
-            ? AppColors.primary
-            : AppColors.textSecondary,
+        color: (isFull || isHalf) ? AppColors.primary : AppColors.textSecondary,
       );
       if (onRate == null || compact) {
         return Padding(

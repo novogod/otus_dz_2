@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../i18n.dart';
+import '../../models/recipe.dart';
 import '../app_theme.dart';
 import 'pwa_install.dart';
 
@@ -12,12 +13,26 @@ import 'pwa_install.dart';
 /// page, even when the app is opened on `localhost` for dev — sending
 /// a localhost link to a friend is useless.
 const String _kShareBaseUrl = 'https://recipies.mahallem.ist/';
+const String _kShareOrigin = 'https://recipies.mahallem.ist';
 
 const String _kShareTitle = 'Otus Food';
 const String _kShareText =
     'Check out Otus Food — recipes from around the world!';
 
-String _shareUrl() {
+/// Bag of overrides that lets a single share entry-point deliver
+/// either the app-level landing page (used by the AppBar share
+/// button) or a per-recipe deep-link (used by the share badge on
+/// each recipe card). All three fields are optional; absent fields
+/// fall back to the app-level defaults.
+class _ShareContent {
+  const _ShareContent({this.url, this.title, this.text});
+  final String? url;
+  final String? title;
+  final String? text;
+}
+
+String _shareUrl([_ShareContent? c]) {
+  if (c?.url != null && c!.url!.isNotEmpty) return c.url!;
   final base = Uri.base;
   final host = base.host;
   if (host.isEmpty || host == 'localhost' || host == '127.0.0.1') {
@@ -26,7 +41,23 @@ String _shareUrl() {
   return '${base.origin}/';
 }
 
-Future<void> _systemShare({Rect? sharePositionOrigin}) async {
+String _shareTitle([_ShareContent? c]) =>
+    (c?.title?.isNotEmpty ?? false) ? c!.title! : _kShareTitle;
+
+String _shareText([_ShareContent? c]) =>
+    (c?.text?.isNotEmpty ?? false) ? c!.text! : _kShareText;
+
+/// Build a per-recipe share URL on the public production origin.
+/// Always uses `https://recipies.mahallem.ist` (never localhost),
+/// and includes the current app language so the receiver lands on
+/// the same translation the sender saw.
+String _recipeShareUrl(int id, String langCode) =>
+    '$_kShareOrigin/$langCode/recipes/$id';
+
+Future<void> _systemShare({
+  Rect? sharePositionOrigin,
+  _ShareContent? content,
+}) async {
   // SharePlus picks the right transport per platform:
   //  - iOS / Android: native UIActivityViewController / ACTION_SEND
   //    (lists every installed app: Instagram, WhatsApp, Messages…)
@@ -38,12 +69,15 @@ Future<void> _systemShare({Rect? sharePositionOrigin}) async {
   // some iPadOS versions throws an exception caught by share_plus).
   // We pass the share button's global rect so the popover hangs
   // off it; harmless on iPhone/Android (ignored).
+  final url = _shareUrl(content);
+  final title = _shareTitle(content);
+  final text = _shareText(content);
   await SharePlus.instance.share(
     ShareParams(
-      title: _kShareTitle,
-      text: '$_kShareText ${_shareUrl()}',
-      uri: Uri.parse(_shareUrl()),
-      subject: _kShareTitle,
+      title: title,
+      text: '$text $url',
+      uri: Uri.parse(url),
+      subject: title,
       sharePositionOrigin: sharePositionOrigin,
     ),
   );
@@ -57,13 +91,16 @@ Future<void> _open(Uri u) async {
 /// All entries open in a new tab and pull the page's og:image / title
 /// from `web/index.html` to render the preview card on the recipient
 /// side (just like WhatsApp link previews).
-List<_ShareTarget> _socialTargets(BuildContext context) {
+List<_ShareTarget> _socialTargets(
+  BuildContext context, {
+  _ShareContent? content,
+}) {
   final s = S.of(context);
-  final url = _shareUrl();
+  final url = _shareUrl(content);
   final urlEnc = Uri.encodeComponent(url);
-  final title = Uri.encodeComponent(_kShareTitle);
-  final text = Uri.encodeComponent(_kShareText);
-  final textWithUrl = Uri.encodeComponent('$_kShareText $url');
+  final title = Uri.encodeComponent(_shareTitle(content));
+  final text = Uri.encodeComponent(_shareText(content));
+  final textWithUrl = Uri.encodeComponent('${_shareText(content)} $url');
   return [
     _ShareTarget(
       label: 'WhatsApp',
@@ -153,7 +190,10 @@ class _ShareTarget {
   });
 }
 
-Future<void> _onShareTap(BuildContext context) async {
+Future<void> _onShareTap(
+  BuildContext context, {
+  _ShareContent? content,
+}) async {
   // On native iOS/Android the system share sheet is reliable and
   // surfaces every installed app, so we keep it there.
   if (!kIsWeb) {
@@ -166,7 +206,7 @@ Future<void> _onShareTap(BuildContext context) async {
       final topLeft = box.localToGlobal(Offset.zero);
       origin = topLeft & box.size;
     }
-    await _systemShare(sharePositionOrigin: origin);
+    await _systemShare(sharePositionOrigin: origin, content: content);
     return;
   }
   // On web we ALWAYS show our own dropdown of social-network URL
@@ -183,10 +223,13 @@ Future<void> _onShareTap(BuildContext context) async {
   // and the network's web composer on desktop. Preview cards on the
   // recipient side render from the og:image / og:title /
   // og:description meta tags in web/index.html.
-  await _showShareMenu(context);
+  await _showShareMenu(context, content: content);
 }
 
-Future<void> _showShareMenu(BuildContext context) async {
+Future<void> _showShareMenu(
+  BuildContext context, {
+  _ShareContent? content,
+}) async {
   final box = context.findRenderObject() as RenderBox?;
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
   if (box == null || overlay == null) return;
@@ -198,7 +241,7 @@ Future<void> _showShareMenu(BuildContext context) async {
     0,
   );
   final s = S.of(context);
-  final targets = _socialTargets(context);
+  final targets = _socialTargets(context, content: content);
   final messenger = ScaffoldMessenger.maybeOf(context);
   await showMenu<int>(
     context: context,
@@ -229,7 +272,7 @@ Future<void> _showShareMenu(BuildContext context) async {
     if (idx == null) return;
     final t = targets[idx];
     if (t.copyToClipboard) {
-      await Clipboard.setData(ClipboardData(text: _shareUrl()));
+      await Clipboard.setData(ClipboardData(text: _shareUrl(content)));
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
@@ -479,4 +522,25 @@ class _CircleButton extends StatelessWidget {
       child: Tooltip(message: tooltip, child: core),
     );
   }
+}
+
+/// Public entry-point: share a specific [recipe]. Used by the
+/// share badge anchored to the top-left of every recipe card.
+/// Mirrors the behaviour of the AppBar share button (system share
+/// sheet on iOS/Android, social-network dropdown on web), but the
+/// payload is a deep-link to the recipe's details page on the
+/// public production origin (`https://recipies.mahallem.ist`) in
+/// the current app language.
+Future<void> shareRecipe(BuildContext context, Recipe recipe) {
+  final langCode = appLang.value.name;
+  final url = _recipeShareUrl(recipe.id, langCode);
+  final name = recipe.name;
+  final title = name.isNotEmpty ? '$name — $_kShareTitle' : _kShareTitle;
+  final text = name.isNotEmpty
+      ? 'Check out "$name" on Otus Food'
+      : _kShareText;
+  return _onShareTap(
+    context,
+    content: _ShareContent(url: url, title: title, text: text),
+  );
 }
