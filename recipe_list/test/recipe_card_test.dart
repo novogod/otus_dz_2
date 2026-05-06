@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:recipe_list/i18n.dart';
+import 'package:recipe_list/i18n/strings.g.dart';
 import 'package:recipe_list/models/recipe.dart';
 import 'package:recipe_list/ui/recipe_card.dart';
 
@@ -25,8 +27,12 @@ void main() {
     photo: 'https://example.com/lite.jpg',
   );
 
-  Widget wrap(Widget child) => MaterialApp(
-    home: Scaffold(body: SingleChildScrollView(child: child)),
+  Widget wrap(Widget child) => TranslationProvider(
+    child: MaterialApp(
+      supportedLocales: const [Locale('en')],
+      locale: const Locale('en'),
+      home: Scaffold(body: SingleChildScrollView(child: child)),
+    ),
   );
 
   group('RecipeCard', () {
@@ -34,18 +40,19 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(wrap(const RecipeCard(recipe: fullRecipe)));
+      final s = S.of(tester.element(find.byType(RecipeCard)));
       expect(find.text('Teriyaki Chicken Casserole'), findsOneWidget);
       expect(find.text('Chicken'), findsOneWidget);
       expect(find.text('Japanese'), findsOneWidget);
       expect(find.text('#Meat'), findsOneWidget);
       expect(find.text('#Casserole'), findsOneWidget);
-      expect(find.text('3 ингредиента'), findsOneWidget);
+      expect(find.text(s.ingredientCount(3)), findsOneWidget);
     });
 
     testWidgets('lite recipe shows only photo + name', (tester) async {
       await tester.pumpWidget(wrap(const RecipeCard(recipe: liteRecipe)));
       expect(find.text('Baked salmon'), findsOneWidget);
-      expect(find.textContaining('ингредиент'), findsNothing);
+      expect(find.textContaining('ingredient'), findsNothing);
       expect(find.text('Chicken'), findsNothing);
     });
 

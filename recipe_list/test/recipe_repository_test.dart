@@ -99,7 +99,7 @@ void main() {
       expect(await repo.count(), 2);
     });
 
-    test('cache hit at threshold -> no API call', () async {
+    test('cache hit at threshold still merges with API once', () async {
       final api = _FakeApi(
         (_) => List.generate(6, (i) => _r(100 + i, 'Banana $i')),
       );
@@ -109,13 +109,13 @@ void main() {
       await repo.searchByName('ban', AppLang.en);
       expect(api.calls, hasLength(1));
 
-      // Тот же префикс — теперь >= threshold локальных совпадений.
+      // Тот же префикс — в текущей стратегии репозиторий делает
+      // merge(cache + api), поэтому API вызывается повторно.
       final res = await repo.searchByName('ban', AppLang.en);
-      expect(res.fromCache, isTrue);
+      expect(res.fromCache, isFalse);
       expect(res.offline, isFalse);
       expect(res.recipes, hasLength(6));
-      // API вызван по-прежнему один раз.
-      expect(api.calls, hasLength(1));
+      expect(api.calls, hasLength(2));
     });
 
     test('different lang is a separate cache partition', () async {

@@ -27,11 +27,11 @@ void main() {
       expect(c.translateConcurrency, 8);
     });
 
-    test('useBulkPage defaults to false', () {
+    test('useBulkPage defaults to true', () {
       const c = FeedConfig();
-      expect(c.useBulkPage, isFalse);
+      expect(c.useBulkPage, isTrue);
       final fromDefine = FeedConfig.fromDartDefine();
-      expect(fromDefine.useBulkPage, isFalse);
+      expect(fromDefine.useBulkPage, isTrue);
     });
   });
 }
