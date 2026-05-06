@@ -109,16 +109,18 @@ class _UserCardPageState extends State<UserCardPage> {
           language: _selectedLang.name,
         );
         if (mounted) {
-          setState(() => _profile = UserProfileSnapshot(
-                id: updated.id,
-                email: updated.email,
-                displayName: updated.displayName,
-                language: updated.language,
-                avatarPath: updated.avatarPath,
-                avatarUrl: updated.avatarUrl,
-                recipesAdded: _profile?.recipesAdded ?? 0,
-                memberSince: updated.memberSince ?? _profile?.memberSince,
-              ));
+          setState(
+            () => _profile = UserProfileSnapshot(
+              id: updated.id,
+              email: updated.email,
+              displayName: updated.displayName,
+              language: updated.language,
+              avatarPath: updated.avatarPath,
+              avatarUrl: updated.avatarUrl,
+              recipesAdded: _profile?.recipesAdded ?? 0,
+              memberSince: updated.memberSince ?? _profile?.memberSince,
+            ),
+          );
         }
       } catch (e) {
         errorMessage = e.toString();
@@ -204,6 +206,7 @@ class _UserCardPageState extends State<UserCardPage> {
     return TextField(
       controller: _nameController,
       enabled: _editing,
+      style: const TextStyle(color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: s.profileDisplayName,
         border: const OutlineInputBorder(),
@@ -331,11 +334,13 @@ class _AvatarSlot extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.primary, width: 3),
           ),
-          child: const Icon(
-            Icons.person,
-            size: 64,
-            color: AppColors.textSecondary,
-          ),
+          child: onTap != null
+              ? const SizedBox.shrink()
+              : const Icon(
+                  Icons.person,
+                  size: 64,
+                  color: AppColors.textSecondary,
+                ),
         ),
         if (onTap != null)
           Positioned(

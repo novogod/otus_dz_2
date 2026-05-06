@@ -44,10 +44,9 @@ void main() {
   testWidgets('post-signup → user card edit mode → Skip → recipes', (
     tester,
   ) async {
-    final router = _router(const UserCardPage(
-      isPostSignup: true,
-      initialEditMode: true,
-    ));
+    final router = _router(
+      const UserCardPage(isPostSignup: true, initialEditMode: true),
+    );
     await tester.pumpWidget(
       TranslationProvider(
         child: MaterialApp.router(

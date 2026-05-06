@@ -60,11 +60,9 @@ void main() {
   testWidgets('AddedByRow renders name + recipes count when name != null', (
     tester,
   ) async {
-    await tester.pumpWidget(_wrap(const AddedByRow(
-      name: 'Alice',
-      avatarPath: null,
-      recipesAdded: 3,
-    )));
+    await tester.pumpWidget(
+      _wrap(const AddedByRow(name: 'Alice', avatarPath: null, recipesAdded: 3)),
+    );
     await tester.pump();
     expect(find.textContaining('Alice'), findsOneWidget);
   });
@@ -72,11 +70,9 @@ void main() {
   testWidgets('AddedByRow returns SizedBox.shrink when name is null', (
     tester,
   ) async {
-    await tester.pumpWidget(_wrap(const AddedByRow(
-      name: null,
-      avatarPath: null,
-      recipesAdded: 0,
-    )));
+    await tester.pumpWidget(
+      _wrap(const AddedByRow(name: null, avatarPath: null, recipesAdded: 0)),
+    );
     await tester.pump();
     // No Padding wrapper, no avatar — only the empty placeholder.
     expect(find.byType(Padding), findsNothing);

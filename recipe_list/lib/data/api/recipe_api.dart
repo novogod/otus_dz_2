@@ -500,6 +500,7 @@ class UserProfileSnapshot {
       }
       return null;
     }
+
     return UserProfileSnapshot(
       id: (json['id'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
