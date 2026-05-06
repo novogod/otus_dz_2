@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
+import '../data/app_services.dart';
 import '../data/recipe_events.dart';
 import '../data/repository/favorites_store.dart';
 import '../data/repository/owned_recipes_store.dart';
@@ -802,7 +803,18 @@ class _RecipeRatingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<RatingStore?>(
+    // Lazy-init the global rating store if the recipe-list loader
+    // hasn't published it yet (e.g., deep-link straight into a
+    // details page bypasses recipe_list_loader's
+    // `_defaultRepoBuilder`). Without this fallback, `onRate`
+    // stays null and star taps are silently ignored.
+    return ValueListenableBuilder<AppServices?>(
+      valueListenable: appServicesNotifier,
+      builder: (context, services, __) {
+        if (ratingStoreNotifier.value == null && services?.api != null) {
+          ratingStoreNotifier.value = RatingStore(api: services!.api);
+        }
+        return ValueListenableBuilder<RatingStore?>(
       valueListenable: ratingStoreNotifier,
       builder: (context, store, _) {
         if (store == null) {
@@ -864,6 +876,8 @@ class _RecipeRatingSection extends StatelessWidget {
             );
           },
         );
+      },
+    );
       },
     );
   }

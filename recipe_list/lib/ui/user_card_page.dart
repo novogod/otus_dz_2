@@ -167,10 +167,12 @@ class _UserCardPageState extends State<UserCardPage> {
     final s = S.of(context);
     final action = await showPhotoPickerSheet(
       context,
-      title: s.profileDisplayName,
-      cameraLabel: 'Camera',
-      galleryLabel: 'Gallery',
-      removeLabel: (_profile?.avatarUrl ?? '').isNotEmpty ? 'Remove' : null,
+      title: s.addRecipePhotoSourceTitle,
+      cameraLabel: s.profilePhotoFromCamera,
+      galleryLabel: s.profilePhotoFromGallery,
+      removeLabel: (_profile?.avatarUrl ?? '').isNotEmpty
+          ? s.profilePhotoRemove
+          : null,
     );
     if (!mounted || action == null) return;
     final messenger = ScaffoldMessenger.of(context);
@@ -458,7 +460,8 @@ class _AvatarSlot extends StatelessWidget {
         final base = RecipeApiConfig.mahallemBaseUrl;
         final origin = Uri.tryParse(base);
         if (origin != null) {
-          fullUrl = '${origin.scheme}://${origin.host}'
+          fullUrl =
+              '${origin.scheme}://${origin.host}'
               '${origin.hasPort ? ":${origin.port}" : ""}'
               '${url.startsWith('/') ? url : '/$url'}';
         } else {
@@ -469,7 +472,10 @@ class _AvatarSlot extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: <Widget>[
-        Container(
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
           width: 120,
           height: 120,
           clipBehavior: Clip.antiAlias,
@@ -495,6 +501,7 @@ class _AvatarSlot extends StatelessWidget {
                         size: 64,
                         color: AppColors.textSecondary,
                       )),
+        ),
         ),
         if (onTap != null)
           Positioned(

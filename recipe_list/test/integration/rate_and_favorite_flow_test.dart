@@ -36,10 +36,12 @@ void main() {
     );
     await tester.pump();
 
-    // The widget renders 5 InkResponses (one per star). Tap the 4th.
-    final inkwells = find.byType(InkResponse);
-    expect(inkwells, findsNWidgets(5));
-    await tester.tap(inkwells.at(3));
+    // The widget renders 5 GestureDetectors (one per star). Tap the 4th.
+    final stars = find.byWidgetPredicate(
+      (w) => w is GestureDetector && w.onTap != null,
+    );
+    expect(stars, findsNWidgets(5));
+    await tester.tap(stars.at(3));
     await tester.pump();
     expect(captured, 4);
   });
@@ -64,6 +66,11 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.byType(InkResponse), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is GestureDetector && w.onTap != null,
+      ),
+      findsNothing,
+    );
   });
 }

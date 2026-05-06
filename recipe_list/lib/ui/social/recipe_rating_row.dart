@@ -77,15 +77,20 @@ class RecipeRatingRow extends StatelessWidget {
           child: icon,
         );
       }
+      // Generous 48dp hit target follows Material guidelines and
+      // makes the row reliably tappable for both human users and
+      // a11y / automated drivers (the prior 24dp icon + 4dp pad
+      // dropped some taps).
       return Semantics(
         button: true,
         label: '${s.recipeRateTooltip} ($value)',
-        child: InkResponse(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => onRate!(value),
-          radius: starSize,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-            child: icon,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(child: icon),
           ),
         ),
       );
