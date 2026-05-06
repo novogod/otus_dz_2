@@ -1,8 +1,23 @@
 # User Card, Avatars, "Added by", Star Ratings, Favorite-Count Pill
 
-**Status:** 🟡 Design proposal, not yet implemented.
+**Status:** 🟡 Mostly implemented. See "Live status (rolling)" below.
 **Scope:** Food app (`recipe_list/`) + mahallem-user-portal backend.
 **Last updated:** 2026-05-05
+
+## Live status (rolling)
+
+| Chunk | Status | Notes |
+|-------|--------|-------|
+| A — Photo picker helper | ✅ shipped | `lib/ui/photo_picker_sheet.dart` |
+| B — DB v12 (user_profile + recipe_creator_cache) | ✅ shipped | `lib/data/local/recipe_db.dart` |
+| C — Backend avatar bucket + `/recipes/users/me` | ⬜ pending infra (`food-avatars` S3 bucket) |
+| D — User Card page + routing + signup post-redirect | 🟡 skeleton (commit `c16a635`) — UserCardPage + router + signup redirect + 13 i18n keys + 3 tests. Avatar upload + display-name persistence + recipes-added counter wait on Chunk C. |
+| E — Recipe model creator/ratings/favCount fields | ✅ shipped |
+| F — "Added by" footer | ✅ shipped |
+| G — Star rating widget + endpoints + store | ✅ live — backend `f82a1ef7` deployed to `72.61.181.62:4000`, client `3e982c3`, 12 tests pass |
+| H — Favorite-count pill | ✅ shipped |
+| I — i18n keys × 10 locales | ✅ landed alongside D/F/G — direct JSON, slang regenerated, completeness test green |
+| J — Integration tests + manual smoke | ⬜ requires running simulators / installed PWA on iOS+Android — out of scope for autonomous coding sessions |
 
 This doc proposes four interlocking changes:
 
@@ -716,7 +731,11 @@ The food app doesn't call these yet, so no client breakage.
 users; admin path keeps existing screen with a new "User card"
 button; signup screen pushes the post-signup variant.
 
-**Status:** ⬜
+**Status:** 🟡 skeleton landed (commit `c16a635` — page + router
+wire + signup post-redirect + 13 i18n keys × 10 locales + 3 widget
+tests pass). Avatar upload, display-name server-side persistence
+and the live recipes-added counter remain pending Chunk C backend
+work (`/recipes/users/me`, `food-avatars` bucket).
 
 **Prereqs:** Chunk A (picker), Chunk B (DB), Chunk C (`/recipes/users/me`
 + `/avatar`).
@@ -880,7 +899,15 @@ populated but unused.
 **Goal:** users can rate 1–5 stars on the details page; logged-out
 users see the registration snackbar; aggregates render on the card.
 
-**Status:** ⬜
+**Status:** ✅ live. Backend (commit `f82a1ef7`, deployed to
+`72.61.181.62:4000`): `recipe_app_recipe_ratings` table +
+`attachSocialSignals` projects ratingsCount/Sum/myRating into 4 GET
+handlers + 3 endpoints (`GET/POST/DELETE /recipes/:id/rating`,
+smoke-tested). Client (commit `3e982c3`): `RatingStore` with
+optimistic UI + revert-on-failure, `RecipeRatingRow` (full + compact
+variants), wired into `RecipeDetailsPage` and `RecipeCard`, 12
+widget/store tests pass. Re-tap-same-star clears the user's vote
+per §4.3.
 
 **Prereqs:** Chunk E (model fields). Backend ratings tables /
 endpoints land **as part of this chunk** in mahallem-user-portal.
@@ -1005,7 +1032,17 @@ stays at 0 and is harmless.
 **Goal:** all new strings translated to en/ru/de/es/fr/it/tr/ar/fa/ku
 (production parity).
 
-**Status:** ⬜
+**Status:** ✅ landed alongside chunks F/G/D — all keys promoted
+directly to `lib/i18n/*.i18n.json` (no manual `_byLang` step), slang
+codegen committed, `i18n_completeness_test` (12/12) green:
+- chunk F: `recipeAddedByPrefix`, `recipeAuthorRecipes` plural
+- chunk G: `recipeRateTooltip`, `recipeRatingAvg`,
+  `recipeVotesCount` plural, `recipeRatedToast`
+- chunk D: `profileDisplayName`, `profileLanguage`,
+  `profileRecipesAdded` plural, `profileMemberSince`,
+  `profileEdit/Save`, `profilePhotoFromCamera/Gallery/Remove`,
+  `profileFinishSetup`, `profileAdd/Skip`, `profileSavedToast`,
+  `profileLogout`
 
 **Prereqs:** Chunks D, F, G, H (so we know the final key list).
 Manual `_byLang` entries can land earlier with EN-only fallback;
