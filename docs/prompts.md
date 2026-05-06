@@ -1,6 +1,8 @@
 1/ read all content of docs/user-card-and-social-signals.md
 
-2/ write the file to the todo folder "cliclick_tests.md" with chunks where you test all the features described in file, exsostively, using codebase tests and cliclick for UI tests on iphone simulator with user info@lagente.do and password 111111.: 
+2/ write the file to the todo  cliclick_tests.md with chunks where you test all the features described in file, with cliclick tests on iphone simulator, 
+
+run them exsostively, using cliclick tests for UI tests on iphone simulator with user info@lagente.do and password 111111.: 
 
 - stars on ALL recipie cards are present and clickable by user, 
 
