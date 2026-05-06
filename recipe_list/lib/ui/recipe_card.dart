@@ -559,7 +559,7 @@ class FavoriteBadge extends StatelessWidget {
   }
 }
 
-class _FavoriteBadgeView extends StatelessWidget {
+class _FavoriteBadgeView extends StatefulWidget {
   final bool isFavorite;
   final int favoritesCount;
   final bool showCount;
@@ -573,6 +573,45 @@ class _FavoriteBadgeView extends StatelessWidget {
   });
 
   @override
+  State<_FavoriteBadgeView> createState() => _FavoriteBadgeViewState();
+}
+
+class _FavoriteBadgeViewState extends State<_FavoriteBadgeView> {
+  /// Server-projected favorites count + favorited flag at the moment
+  /// the widget was last refreshed from the recipe payload. We use
+  /// these to derive the displayed count optimistically when the
+  /// caller toggles the heart, since the favorites endpoint does not
+  /// echo the new aggregate.
+  late int _baselineCount;
+  late bool _baselineFav;
+
+  @override
+  void initState() {
+    super.initState();
+    _baselineCount = widget.favoritesCount;
+    _baselineFav = widget.isFavorite;
+  }
+
+  @override
+  void didUpdateWidget(covariant _FavoriteBadgeView old) {
+    super.didUpdateWidget(old);
+    // The server-projected count only changes when the recipe
+    // payload is reloaded. Reset the baseline whenever it does so
+    // we don't double-apply the optimistic delta after a refresh.
+    if (widget.favoritesCount != old.favoritesCount) {
+      _baselineCount = widget.favoritesCount;
+      _baselineFav = widget.isFavorite;
+    }
+  }
+
+  int get _displayedCount {
+    final delta =
+        (widget.isFavorite ? 1 : 0) - (_baselineFav ? 1 : 0);
+    final v = _baselineCount + delta;
+    return v < 0 ? 0 : v;
+  }
+
+  @override
   Widget build(BuildContext context) {
     // GestureDetector + HitTestBehavior.opaque вместо Material/InkWell:
     // на Flutter web (CanvasKit) вложенный InkWell внутри Stack поверх
@@ -580,9 +619,9 @@ class _FavoriteBadgeView extends StatelessWidget {
     // родительский Material карточки. GestureDetector с opaque всегда
     // поглощает тап независимо от платформы.
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       behavior: HitTestBehavior.opaque,
-      child: showCount ? _buildPill(context) : _buildSquare(),
+      child: widget.showCount ? _buildPill(context) : _buildSquare(),
     );
   }
 
@@ -598,10 +637,10 @@ class _FavoriteBadgeView extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
         child: Icon(
-          isFavorite ? Icons.favorite : Icons.favorite_border,
-          color: isFavorite ? AppColors.primary : Colors.white,
+          widget.isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: widget.isFavorite ? AppColors.primary : Colors.white,
           size: 24,
-          semanticLabel: isFavorite ? 'favorite-on' : 'favorite-off',
+          semanticLabel: widget.isFavorite ? 'favorite-on' : 'favorite-off',
         ),
       ),
     );
@@ -612,8 +651,9 @@ class _FavoriteBadgeView extends StatelessWidget {
   /// black background, white text, white/primary glyph. Height 40
   /// to keep the photo-corner badges aligned.
   Widget _buildPill(BuildContext context) {
+    final isFav = widget.isFavorite;
     return Semantics(
-      label: isFavorite ? 'favorite-on' : 'favorite-off',
+      label: isFav ? 'favorite-on' : 'favorite-off',
       button: true,
       child: Container(
         height: 40,
@@ -626,7 +666,7 @@ class _FavoriteBadgeView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '$favoritesCount',
+              '$_displayedCount',
               style: const TextStyle(
                 fontFamily: AppTextStyles.fontFamily,
                 fontWeight: FontWeight.w600,
@@ -636,9 +676,9 @@ class _FavoriteBadgeView extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Icon(
-              isFavorite ? Icons.favorite : Icons.favorite_border,
+              isFav ? Icons.favorite : Icons.favorite_border,
               size: 22,
-              color: isFavorite ? AppColors.primary : Colors.white,
+              color: isFav ? AppColors.primary : Colors.white,
             ),
           ],
         ),
