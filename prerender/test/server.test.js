@@ -132,6 +132,31 @@ test('scrubFlutterShell preserves SEO landmarks (title, og, canonical, JSON-LD)'
   assert.equal(out.includes('flutter_bootstrap'), false);
 });
 
+test('scrubFlutterShell does not eat <head> when comments mention <flutter-view>', () => {
+  // Regression: recipe_list/web/index.html documents the standalone
+  // safe-area shim with a comment that contains the literal text
+  // `<flutter-view>` and `<flt-glass-pane>`. Before the comment-strip
+  // pass, the non-greedy `<flutter-view> … </flutter-view>` regex
+  // anchored on that comment and ate the entire <head> (og atoms,
+  // canonical, JSON-LD) up to the real Flutter shell — Telegram
+  // unfurled a blank card for every recipe URL.
+  const input = `<!doctype html><html><head>
+<!-- Push the <flutter-view> + <flt-glass-pane> down by inset-top. -->
+<title>Pasta — Otus Food</title>
+<meta property="og:title" content="Pasta">
+<meta property="og:image" content="https://x/og.jpg">
+</head><body>
+<flutter-view><flt-glass-pane></flt-glass-pane></flutter-view>
+<p>body</p>
+</body></html>`;
+  const out = scrubFlutterShell(input);
+  assert.match(out, /<title>Pasta — Otus Food<\/title>/);
+  assert.match(out, /og:title/);
+  assert.match(out, /og:image/);
+  assert.equal(out.includes('flutter-view'), false);
+  assert.equal(out.includes('flt-glass-pane'), false);
+});
+
 test('buildSpaUrl produces the canonical /<locale>/recipes/<id>?ssr=1 URL', () => {
   const url = buildSpaUrl({
     origin: 'http://recipe_list_web',

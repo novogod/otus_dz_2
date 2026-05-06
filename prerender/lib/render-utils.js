@@ -78,6 +78,14 @@ export function cacheFileName(key) {
 export function scrubFlutterShell(html) {
   if (typeof html !== 'string') return '';
   let out = html;
+  // Strip HTML comments first. Without this, any literal text inside a
+  // `<!-- … -->` comment that mentions `<flutter-view>` (we have one in
+  // recipe_list/web/index.html documenting the standalone safe-area
+  // shim) would anchor the non-greedy `<flutter-view> … </flutter-view>`
+  // regex below — eating the entire `<head>` (og/twitter atoms,
+  // JSON-LD, hreflang ring) up to the real Flutter shell. Comments
+  // carry no SEO value in the bot snapshot, so dropping them is safe.
+  out = out.replace(/<!--[\s\S]*?-->/g, '');
   // <script ... src="…flutter*.js…" …></script>  (any quoting).
   out = out.replace(
     /<script\b[^>]*\bsrc\s*=\s*["'][^"']*(?:flutter_bootstrap|flutter\.js|main\.dart\.js|flutter_service_worker\.js)[^"']*["'][^>]*>\s*<\/script>/gi,
