@@ -634,7 +634,16 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             lang,
             limit: widget.config.seedTarget,
           );
-          return _LoadResult(recipes: cached, repository: repo);
+          // Show cached rows immediately, but DO NOT short-circuit:
+          // social signals (favoritesCount / ratingsCount /
+          // ratingsSum / myRating) are intentionally not persisted
+          // in sqflite (see chunk E of
+          // docs/user-card-and-social-signals.md), so cached rows
+          // always come back with zeros. We need to refresh from
+          // /recipes/page so the cards show the live aggregates.
+          // Fall through to the bulk-page path; on its failure we
+          // keep the cached feed.
+          _publishPartialFeed(cached, repo);
         }
       }
       // Холодный язык (или жывый reseed по кнопке «обновить») —
@@ -668,6 +677,17 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
           debugPrint(
             '[recipe-list] /recipes/page failed for lang=$lang: $e\n$st',
           );
+        }
+      }
+      // If we already published cached rows above, prefer keeping
+      // that feed over a category-fan-out reshuffle on failure. The
+      // social-signal aggregates simply stay at their cached zeros
+      // until the next reload — better than scrambling the user's
+      // list.
+      if (_lastResult != null && repo != null && !forceReseed) {
+        final cachedCount = await repo.countFor(lang);
+        if (cachedCount >= 50) {
+          return _lastResult!;
         }
       }
       final recipes = await _seedFromCategories(

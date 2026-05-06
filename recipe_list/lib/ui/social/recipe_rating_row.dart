@@ -87,11 +87,7 @@ class RecipeRatingRow extends StatelessWidget {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => onRate!(value),
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Center(child: icon),
-          ),
+          child: SizedBox(width: 48, height: 48, child: Center(child: icon)),
         ),
       );
     });

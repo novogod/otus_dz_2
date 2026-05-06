@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../auth/admin_session.dart';
 import '../../i18n.dart';
@@ -355,7 +356,9 @@ class RecipeApi {
       );
       final data = res.data;
       if (data == null) return null;
-      return UserProfileSnapshot.fromJson(data);
+      final snap = UserProfileSnapshot.fromJson(data);
+      myProfileNotifier.value = snap;
+      return snap;
     } catch (_) {
       return null;
     }
@@ -571,3 +574,12 @@ class UserProfileSnapshot {
     );
   }
 }
+
+/// Process-wide cache of the current user's profile. Populated by
+/// [RecipeApi.fetchMyProfile] and consumed by surfaces that need
+/// to hydrate creator metadata for recipes the current user added
+/// (the server projects `creatorUserId` + `creatorRecipesAdded`
+/// but does not yet JOIN `displayName` / `avatarPath`, so the
+/// client back-fills them here for self-authored recipes).
+final ValueNotifier<UserProfileSnapshot?> myProfileNotifier =
+    ValueNotifier<UserProfileSnapshot?>(null);

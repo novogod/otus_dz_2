@@ -67,9 +67,7 @@ void main() {
     );
     await tester.pump();
     expect(
-      find.byWidgetPredicate(
-        (w) => w is GestureDetector && w.onTap != null,
-      ),
+      find.byWidgetPredicate((w) => w is GestureDetector && w.onTap != null),
       findsNothing,
     );
   });

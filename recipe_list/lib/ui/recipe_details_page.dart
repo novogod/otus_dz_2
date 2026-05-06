@@ -84,6 +84,29 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     appLang.addListener(_onLangChanged);
     recipeUpdatedNotifier.addListener(_onRecipeUpdated);
     activeDetailsCount.value = activeDetailsCount.value + 1;
+    // Hydrate creator metadata for self-authored recipes: server
+    // projects `creatorUserId` but not `creatorDisplayName` /
+    // `creatorAvatarPath`, so we back-fill from `/users/me` when
+    // it lands. Cheap no-op when already cached or unauthenticated.
+    if (myProfileNotifier.value == null &&
+        userLoggedInNotifier.value == true) {
+      final api = appServicesNotifier.value?.api;
+      if (api != null) {
+        // ignore: discarded_futures
+        api.fetchMyProfile();
+      }
+    }
+    // Refresh social signals (ratingsCount/Sum/myRating,
+    // favoritesCount, creator metadata) from /lookup. The recipe
+    // we got from the recipe-list loader was sourced from the
+    // local SQLite cache, which intentionally does NOT persist
+    // these fields (chunk E of user-card-and-social-signals.md),
+    // so on a cold start they always come back as zeros and
+    // `myRating == null`. Without this refresh, the user's
+    // previous votes / favorite-count appear lost across app
+    // launches.
+    // ignore: discarded_futures
+    _refreshFromServer();
     // todo/20 chunk F — emit per-recipe SEO atoms (title, OG, hreflang,
     // JSON-LD Recipe) into document.head + the `ssr-ready` marker the
     // bot pre-renderer waits for. No-op on non-web targets.
@@ -143,6 +166,40 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
       _renderedLang = appLang.value;
     });
     _emitSeo();
+  }
+
+  /// Refreshes the displayed recipe from the server (current
+  /// language) so social signals (favoritesCount, ratingsCount,
+  /// ratingsSum, myRating, creator metadata) overwrite the
+  /// stale-by-design cached zeros. Best-effort: silent on
+  /// network failure so the user still sees the cached copy.
+  Future<void> _refreshFromServer() async {
+    final api = widget.api;
+    if (api == null) return;
+    final seq = ++_translateSeq;
+    Recipe? fresh;
+    try {
+      fresh = await api.lookup(
+        _recipe.id,
+        lang: appLang.value,
+        timeout: const Duration(seconds: 30),
+      );
+    } on Object {
+      fresh = null;
+    }
+    if (!mounted || fresh == null || seq != _translateSeq) return;
+    setState(() {
+      _recipe = fresh!;
+    });
+    // Also push the fresh aggregate into the global rating store
+    // so the ValueListenable in [_RecipeRatingSection] picks it
+    // up immediately (otherwise the store keeps the stale seed
+    // it captured on first build).
+    final store = ratingStoreNotifier.value;
+    if (store != null) {
+      // ignore: discarded_futures
+      store.refresh(_recipe.id);
+    }
   }
 
   Future<void> _onLangChanged() async {
@@ -338,19 +395,41 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                       ],
                       // chunk F of user-card-and-social-signals.md:
                       // "Added by" footer is shown only for
-                      // user-uploaded recipes (id ≥ 1_000_000) AND
-                      // when the server has projected creator
-                      // metadata. The widget itself returns
-                      // SizedBox.shrink when name is null, but we
-                      // also gate by id so TheMealDB recipes never
-                      // attempt to render a non-existent author.
-                      if (recipe.id >= 1000000 &&
-                          recipe.creatorDisplayName != null) ...[
+                      // user-uploaded recipes (id ≥ 1_000_000).
+                      // The server projects `creatorUserId` and
+                      // `creatorRecipesAdded` reliably, but does
+                      // not yet JOIN the user row to surface
+                      // `displayName` / `avatarPath`. We therefore
+                      // hydrate from the cached `/users/me`
+                      // snapshot ([myProfileNotifier]) whenever
+                      // `creatorUserId` matches the current user;
+                      // for other authors we fall back to the
+                      // server-provided fields (and the widget
+                      // hides itself when the resulting name is
+                      // still null).
+                      if (recipe.id >= 1000000) ...[
                         const SizedBox(height: AppSpacing.xl),
-                        AddedByRow(
-                          name: recipe.creatorDisplayName,
-                          avatarPath: recipe.creatorAvatarPath,
-                          recipesAdded: recipe.creatorRecipesAdded,
+                        ValueListenableBuilder<UserProfileSnapshot?>(
+                          valueListenable: myProfileNotifier,
+                          builder: (context, me, _) {
+                            String? name = recipe.creatorDisplayName;
+                            String? avatar = recipe.creatorAvatarPath;
+                            int? added = recipe.creatorRecipesAdded;
+                            if (me != null &&
+                                recipe.creatorUserId != null &&
+                                recipe.creatorUserId == me.id) {
+                              name ??= (me.displayName?.isNotEmpty ?? false)
+                                  ? me.displayName
+                                  : me.email;
+                              avatar ??= me.avatarPath;
+                              added ??= me.recipesAdded;
+                            }
+                            return AddedByRow(
+                              name: name,
+                              avatarPath: avatar,
+                              recipesAdded: added,
+                            );
+                          },
                         ),
                       ],
                       // Recipe rating row (chunk G of
@@ -815,69 +894,69 @@ class _RecipeRatingSection extends StatelessWidget {
           ratingStoreNotifier.value = RatingStore(api: services!.api);
         }
         return ValueListenableBuilder<RatingStore?>(
-      valueListenable: ratingStoreNotifier,
-      builder: (context, store, _) {
-        if (store == null) {
-          // Repo not ready — fall back to whatever aggregate the
-          // server already projected, read-only. The user can
-          // still see the rating; just can't vote until the next
-          // refresh wires the store up.
-          return RecipeRatingRow(
-            count: recipe.ratingsCount,
-            sum: recipe.ratingsSum,
-            my: recipe.myRating,
-            onRate: null,
-          );
-        }
-        final initial = RecipeRatingSnapshot(
-          count: recipe.ratingsCount,
-          sum: recipe.ratingsSum,
-          my: recipe.myRating,
-        );
-        final listenable = store.watch(recipe.id, initial: initial);
-        return ValueListenableBuilder<RecipeRatingSnapshot>(
-          valueListenable: listenable,
-          builder: (context, snap, _) {
-            return ValueListenableBuilder<bool>(
-              valueListenable: userLoggedInNotifier,
-              builder: (context, loggedIn, _) {
-                return RecipeRatingRow(
-                  count: snap.count,
-                  sum: snap.sum,
-                  my: snap.my,
-                  onRate: (stars) async {
-                    if (!loggedIn) {
-                      await handleRatingTapWhenAnonymous(context);
-                      return;
-                    }
-                    try {
-                      // Re-tap same star removes the rating per
-                      // docs/user-card-and-social-signals.md §4.3.
-                      if (snap.my == stars) {
-                        await store.clearMyRating(recipe.id);
-                      } else {
-                        await store.setMyRating(recipe.id, stars);
-                        if (!context.mounted) return;
-                        final s = S.of(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(s.recipeRatedToast),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    } on Object {
-                      // Optimistic revert already happened inside
-                      // the store; nothing to do here visually.
-                    }
+          valueListenable: ratingStoreNotifier,
+          builder: (context, store, _) {
+            if (store == null) {
+              // Repo not ready — fall back to whatever aggregate the
+              // server already projected, read-only. The user can
+              // still see the rating; just can't vote until the next
+              // refresh wires the store up.
+              return RecipeRatingRow(
+                count: recipe.ratingsCount,
+                sum: recipe.ratingsSum,
+                my: recipe.myRating,
+                onRate: null,
+              );
+            }
+            final initial = RecipeRatingSnapshot(
+              count: recipe.ratingsCount,
+              sum: recipe.ratingsSum,
+              my: recipe.myRating,
+            );
+            final listenable = store.watch(recipe.id, initial: initial);
+            return ValueListenableBuilder<RecipeRatingSnapshot>(
+              valueListenable: listenable,
+              builder: (context, snap, _) {
+                return ValueListenableBuilder<bool>(
+                  valueListenable: userLoggedInNotifier,
+                  builder: (context, loggedIn, _) {
+                    return RecipeRatingRow(
+                      count: snap.count,
+                      sum: snap.sum,
+                      my: snap.my,
+                      onRate: (stars) async {
+                        if (!loggedIn) {
+                          await handleRatingTapWhenAnonymous(context);
+                          return;
+                        }
+                        try {
+                          // Re-tap same star removes the rating per
+                          // docs/user-card-and-social-signals.md §4.3.
+                          if (snap.my == stars) {
+                            await store.clearMyRating(recipe.id);
+                          } else {
+                            await store.setMyRating(recipe.id, stars);
+                            if (!context.mounted) return;
+                            final s = S.of(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(s.recipeRatedToast),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        } on Object {
+                          // Optimistic revert already happened inside
+                          // the store; nothing to do here visually.
+                        }
+                      },
+                    );
                   },
                 );
               },
             );
           },
         );
-      },
-    );
       },
     );
   }
