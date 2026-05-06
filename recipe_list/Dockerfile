@@ -9,7 +9,11 @@ RUN flutter pub get
 
 # Copy the rest of the source and build.
 COPY . .
-RUN flutter build web --release --no-tree-shake-icons
+# --pwa-strategy=offline-first ships a real service worker with a
+# fetch handler so Chrome / Edge show the "Install app" button and
+# the PWA works offline. Without this flag Flutter 3.27+ emits a
+# noop service worker that just unregisters itself.
+RUN flutter build web --release --no-tree-shake-icons --pwa-strategy=offline-first
 
 # ── Stage 2: serve with nginx ──────────────────────────────────────────────────
 FROM nginx:1.27-alpine
