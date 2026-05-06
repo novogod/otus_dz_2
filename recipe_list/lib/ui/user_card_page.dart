@@ -8,9 +8,9 @@ import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/app_services.dart';
-import '../utils/imgproxy.dart';
 import '../i18n.dart';
 import '../router/routes.dart';
+import '../utils/imgproxy.dart';
 import 'app_theme.dart';
 import 'photo_picker_sheet.dart';
 
@@ -483,32 +483,32 @@ class _AvatarSlot extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
-          width: 120,
-          height: 120,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.primary, width: 3),
+            width: 120,
+            height: 120,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceMuted,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primary, width: 3),
+            ),
+            child: hasAvatar && fullUrl != null
+                ? Image.network(
+                    fullUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.person,
+                      size: 64,
+                      color: AppColors.textSecondary,
+                    ),
+                  )
+                : (onTap != null
+                      ? const SizedBox.shrink()
+                      : const Icon(
+                          Icons.person,
+                          size: 64,
+                          color: AppColors.textSecondary,
+                        )),
           ),
-          child: hasAvatar && fullUrl != null
-              ? Image.network(
-                  fullUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.person,
-                    size: 64,
-                    color: AppColors.textSecondary,
-                  ),
-                )
-              : (onTap != null
-                    ? const SizedBox.shrink()
-                    : const Icon(
-                        Icons.person,
-                        size: 64,
-                        color: AppColors.textSecondary,
-                      )),
-        ),
         ),
         if (onTap != null)
           Positioned(

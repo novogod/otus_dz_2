@@ -51,6 +51,46 @@ class _FavoritesPageState extends State<FavoritesPage> {
   String _query = '';
   bool _showScrollToTop = false;
 
+  /// Per-(lang, id) memo of orphan-hydration attempts. Each
+  /// rebuild of the list re-fires through the FutureBuilder —
+  /// without this guard a permanently-failing lookup (e.g. a
+  /// recipe deleted server-side) would keep re-issuing
+  /// /lookup on every setState. Successful hydrations write
+  /// the row into the local `recipes` table, so the
+  /// subsequent INNER-JOIN list() call picks them up and the
+  /// id never appears in orphanIds() again.
+  final Map<AppLang, Set<int>> _attemptedHydration = {};
+
+  /// Hydrate any favourite ids that have no matching row in the
+  /// local `recipes` cache for [lang], then return the joined
+  /// list. Without this step user-created recipes that were
+  /// favourited in a language other than the one they were
+  /// authored in (or whose local cache row was evicted) are
+  /// silently dropped by [FavoritesStore.list]'s INNER JOIN.
+  Future<List<Recipe>> _loadFavorites(
+    FavoritesStore store,
+    AppLang lang,
+  ) async {
+    final repo = widget.repository;
+    if (repo != null) {
+      final orphans = await store.orphanIds(lang);
+      final attempted = _attemptedHydration.putIfAbsent(lang, () => <int>{});
+      final pending = orphans.where((id) => !attempted.contains(id)).toList();
+      if (pending.isNotEmpty) {
+        attempted.addAll(pending);
+        await Future.wait(
+          pending.map(
+            (id) => repo
+                .lookup(id, lang)
+                .then<Recipe?>((r) => r)
+                .catchError((Object _) => null),
+          ),
+        );
+      }
+    }
+    return store.list(lang);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -130,7 +170,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                         valueListenable: store.idsForLang(lang),
                         builder: (context, _, _) {
                           return FutureBuilder<List<Recipe>>(
-                            future: store.list(lang),
+                            future: _loadFavorites(store, lang),
                             builder: (context, snap) {
                               if (!snap.hasData) {
                                 return const SizedBox.shrink();
