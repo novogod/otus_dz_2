@@ -72,6 +72,28 @@ class _FavoritesPageState extends State<FavoritesPage> {
     AppLang lang,
   ) async {
     final repo = widget.repository;
+
+    // Owner-pin: ensure every recipe authored on this device is
+    // present in the favourites table for the active language.
+    // Without this step a recipe created in lang A is missing
+    // from /favorites in lang B, even though the spec says
+    // "the user's own recipes always live in favourites".
+    final owned = ownedRecipesStoreNotifier.value;
+    if (owned != null && userLoggedInNotifier.value) {
+      final ownedIds = Set<int>.of(owned.ids.value);
+      final favIds = store.snapshotForLang(lang);
+      final missing = ownedIds.difference(favIds);
+      if (missing.isNotEmpty) {
+        for (final id in missing) {
+          // store.add() is idempotent and updates both local
+          // sqflite + remote /recipes/favorites in lang.
+          try {
+            await store.add(id, lang);
+          } catch (_) {}
+        }
+      }
+    }
+
     if (repo != null) {
       final orphans = await store.orphanIds(lang);
       final attempted = _attemptedHydration.putIfAbsent(lang, () => <int>{});

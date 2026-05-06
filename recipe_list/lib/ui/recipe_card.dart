@@ -542,6 +542,16 @@ class FavoriteBadge extends StatelessWidget {
                       await _showRegistrationRequired(context);
                       return;
                     }
+                    // Owner-pin: a recipe authored on this device
+                    // is permanently in favourites across every
+                    // language. Tapping the heart on an owned
+                    // recipe must not unfavourite it (per spec).
+                    // We allow add (idempotent) but block remove.
+                    final owned = ownedRecipesStoreNotifier.value;
+                    if (isFav && owned != null && owned.isOwned(recipeId)) {
+                      HapticFeedback.lightImpact();
+                      return;
+                    }
                     HapticFeedback.lightImpact();
                     await store.toggle(recipeId, lang);
                   },
