@@ -122,10 +122,7 @@ class RecipeApi {
     }
     final res = await _client.dio.post<Map<String, dynamic>>(
       '',
-      data: {
-        'meal': _mealToJson(draft),
-        'sourceLang': appLang.value.name,
-      },
+      data: {'meal': _mealToJson(draft), 'sourceLang': appLang.value.name},
       options: _authOptions(),
     );
     final data = res.data;
@@ -212,10 +209,7 @@ class RecipeApi {
     }
     final res = await _client.dio.put<Map<String, dynamic>>(
       '/${draft.id}',
-      data: {
-        'meal': _mealToJson(draft),
-        'sourceLang': appLang.value.name,
-      },
+      data: {'meal': _mealToJson(draft), 'sourceLang': appLang.value.name},
       options: _authOptions(),
     );
     final stored = res.data?['meal'];

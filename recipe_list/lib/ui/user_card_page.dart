@@ -8,6 +8,7 @@ import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/app_services.dart';
+import '../utils/imgproxy.dart';
 import '../i18n.dart';
 import '../router/routes.dart';
 import 'app_theme.dart';
@@ -449,25 +450,31 @@ class _AvatarSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = avatarUrl;
     final hasAvatar = url != null && url.isNotEmpty;
-    // Server returns a path like `/storage/v1/object/public/avatars/...`;
-    // resolve it against the recipes API origin so the network image
-    // loads from the same host that serves the API.
+    // Server returns a path like `/storage/v1/object/public/avatars/...`.
+    // Resolve it against the recipes API origin AND route it through
+    // imgproxy so the slot loads ~15-30 KB WebP instead of the
+    // 300-700 KB JPEG written to the bucket. Recipe-card author chip
+    // does the same via [imgproxyUrl] (see recipe_card.dart:851).
     String? fullUrl;
     if (hasAvatar) {
+      String absolute;
       if (url.startsWith('http')) {
-        fullUrl = url;
+        absolute = url;
       } else {
         final base = RecipeApiConfig.mahallemBaseUrl;
         final origin = Uri.tryParse(base);
         if (origin != null) {
-          fullUrl =
+          absolute =
               '${origin.scheme}://${origin.host}'
               '${origin.hasPort ? ":${origin.port}" : ""}'
               '${url.startsWith('/') ? url : '/$url'}';
         } else {
-          fullUrl = url;
+          absolute = url;
         }
       }
+      // 240 dp slot @ ~3x DPR ≈ 720 px — keep imgproxy resize at 480
+      // (it serves WebP, browser/iOS scales final 120-dp slot).
+      fullUrl = imgproxyUrl(absolute, 480, 480);
     }
     return Stack(
       clipBehavior: Clip.none,
