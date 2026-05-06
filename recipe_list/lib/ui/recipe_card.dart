@@ -609,40 +609,38 @@ class _FavoriteBadgeView extends StatelessWidget {
     );
   }
 
-  /// Light pill `<count> ♡`. Spec: §5.2 of
-  /// docs/user-card-and-social-signals.md.
-  /// Height 32, horizontal padding 12, full-pill radius 16,
-  /// surface@0.92 background, 1 px textInactive border, card shadow.
+  /// Dark pill `<count> ♡`. Matches the visual weight of the legacy
+  /// 40×40 square heart and of [_YoutubeBadge]: semi-transparent
+  /// black background, white text, white/primary glyph. Height 40
+  /// to keep the photo-corner badges aligned.
   Widget _buildPill(BuildContext context) {
     return Semantics(
       label: isFavorite ? 'favorite-on' : 'favorite-off',
       button: true,
       child: Container(
-        height: 32,
+        height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.textInactive),
-          boxShadow: AppShadows.card,
+          color: Colors.black.withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               '$favoritesCount',
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: AppTextStyles.fontFamily,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: isFavorite ? AppColors.primary : AppColors.textPrimary,
+                color: Colors.white,
               ),
             ),
             const SizedBox(width: 6),
             Icon(
               isFavorite ? Icons.favorite : Icons.favorite_border,
-              size: 18,
-              color: isFavorite ? AppColors.primary : AppColors.textSecondary,
+              size: 22,
+              color: isFavorite ? AppColors.primary : Colors.white,
             ),
           ],
         ),
