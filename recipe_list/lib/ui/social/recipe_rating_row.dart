@@ -128,48 +128,52 @@ class RecipeRatingRow extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      // Wrap (not Row+Expanded+ellipsis) so the trailing avg / vote
+      // count / tooltip flows to a second line on narrow widths
+      // instead of being truncated to "…". The labels carry the
+      // signal — clipping them defeats the purpose of the row.
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: AppSpacing.md,
+        runSpacing: AppSpacing.xs,
         children: [
-          ...stars,
-          const SizedBox(width: AppSpacing.md),
-          if (count > 0) ...[
+          Row(mainAxisSize: MainAxisSize.min, children: stars),
+          if (count > 0)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  s.recipeRatingAvg(avg: avg.toStringAsFixed(1)),
+                  style: const TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    height: 22 / 16,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  s.recipeVotesCount(n: count),
+                  style: const TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                    height: 20 / 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            )
+          else
             Text(
-              s.recipeRatingAvg(avg: avg.toStringAsFixed(1)),
+              s.recipeRateTooltip,
               style: const TextStyle(
                 fontFamily: AppTextStyles.fontFamily,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-                height: 22 / 16,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Text(
-                s.recipeVotesCount(n: count),
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: AppTextStyles.fontFamily,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 14,
-                  height: 20 / 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-          ] else
-            Expanded(
-              child: Text(
-                s.recipeRateTooltip,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: AppTextStyles.fontFamily,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 14,
-                  height: 20 / 14,
-                  color: AppColors.textSecondary,
-                ),
+                fontWeight: FontWeight.w400,
+                fontSize: 14,
+                height: 20 / 14,
+                color: AppColors.textSecondary,
               ),
             ),
         ],

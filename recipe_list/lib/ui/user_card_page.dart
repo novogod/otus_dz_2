@@ -270,10 +270,7 @@ class _UserCardPageState extends State<UserCardPage> {
           style: statsStyle,
         ),
         const SizedBox(height: 4),
-        Text(
-          s.profileMemberSince(date: memberSinceLabel),
-          style: statsStyle,
-        ),
+        Text(s.profileMemberSince(date: memberSinceLabel), style: statsStyle),
       ],
     );
   }
