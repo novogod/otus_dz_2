@@ -94,7 +94,7 @@ Future<void> deleteRecipeDatabaseWebOnly() async {
 /// docs/user-card-and-social-signals.md §1, §3 and chunk B). Both
 /// are additive — `recipes` / `favorites` / `owned_recipes` /
 /// `auth_credentials` are preserved on upgrade.
-const int kRecipeDbSchemaVersion = 13;
+const int kRecipeDbSchemaVersion = 14;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -121,6 +121,10 @@ CREATE TABLE recipes (
   ratings_count INTEGER NOT NULL DEFAULT 0,
   ratings_sum INTEGER NOT NULL DEFAULT 0,
   my_rating INTEGER,
+  creator_user_id TEXT,
+  creator_display_name TEXT,
+  creator_avatar_path TEXT,
+  creator_recipes_added INTEGER,
   PRIMARY KEY (id, lang)
 );
 ''';
@@ -436,6 +440,32 @@ Future<void> _onRecipeDbUpgrade(
   if (oldVersion < 13) {
     await applyRecipeSocialColumns(db);
   }
+  // v13 → v14: persist server-projected creator chip metadata
+  // (creatorUserId / creatorDisplayName / creatorAvatarPath /
+  // creatorRecipesAdded) on the cached `recipes` row so reload
+  // from cache (and the Favourites list, which reads from
+  // sqflite) shows the author chip — same structure as the live
+  // recipe list.
+  if (oldVersion < 14) {
+    await applyRecipeCreatorColumns(db);
+  }
+}
+
+/// v13 → v14: idempotent additive migration that adds the four
+/// creator-chip columns to the `recipes` cache.
+Future<void> applyRecipeCreatorColumns(Database db) async {
+  for (final stmt in const [
+    'ALTER TABLE recipes ADD COLUMN creator_user_id TEXT',
+    'ALTER TABLE recipes ADD COLUMN creator_display_name TEXT',
+    'ALTER TABLE recipes ADD COLUMN creator_avatar_path TEXT',
+    'ALTER TABLE recipes ADD COLUMN creator_recipes_added INTEGER',
+  ]) {
+    try {
+      await db.execute(stmt);
+    } catch (_) {
+      // Column already exists — idempotent no-op.
+    }
+  }
 }
 
 /// v12 → v13: idempotent additive migration that adds the four
@@ -503,6 +533,10 @@ Recipe readRecipe(Map<String, Object?> row) {
     ratingsCount: (row['ratings_count'] as int?) ?? 0,
     ratingsSum: (row['ratings_sum'] as int?) ?? 0,
     myRating: row['my_rating'] as int?,
+    creatorUserId: row['creator_user_id'] as String?,
+    creatorDisplayName: row['creator_display_name'] as String?,
+    creatorAvatarPath: row['creator_avatar_path'] as String?,
+    creatorRecipesAdded: row['creator_recipes_added'] as int?,
   );
 }
 
@@ -545,6 +579,10 @@ Map<String, Object?> writeRecipe(
     'ratings_count': r.ratingsCount,
     'ratings_sum': r.ratingsSum,
     'my_rating': r.myRating,
+    'creator_user_id': r.creatorUserId,
+    'creator_display_name': r.creatorDisplayName,
+    'creator_avatar_path': r.creatorAvatarPath,
+    'creator_recipes_added': r.creatorRecipesAdded,
   };
 }
 
