@@ -422,44 +422,42 @@ class _PhotoRatingPillView extends StatelessWidget {
       color: Colors.black.withValues(alpha: 0.65),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (int i = 1; i <= 5; i++)
-              InkResponse(
-                onTap: onTap == null ? null : () => onTap!(i),
-                radius: 14,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 1,
-                    vertical: 2,
-                  ),
-                  child: Icon(
-                    i <= highlighted
-                        ? Icons.star_rounded
-                        : Icons.star_outline_rounded,
-                    size: 18,
-                    color: i <= highlighted ? AppColors.primary : Colors.white,
+      child: SizedBox(
+        height: 40,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (int i = 1; i <= 5; i++)
+                InkResponse(
+                  onTap: onTap == null ? null : () => onTap!(i),
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 1),
+                    child: Icon(
+                      i <= highlighted
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      size: 22,
+                      color: i <= highlighted
+                          ? AppColors.primary
+                          : Colors.white,
+                    ),
                   ),
                 ),
-              ),
-            const SizedBox(width: 4),
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Text(
-                'voted: $count',
+              const SizedBox(width: 6),
+              Text(
+                '$count',
                 style: const TextStyle(
                   fontFamily: AppTextStyles.fontFamily,
                   fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                  height: 16 / 12,
+                  fontSize: 14,
                   color: Colors.white,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
