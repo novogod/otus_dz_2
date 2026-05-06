@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'i18n.dart';
 import 'i18n/strings.g.dart';
@@ -10,6 +11,16 @@ import 'ui/web_share/pwa_install.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Web-only: switch from the default hash-URL strategy (`/#/foo`) to
+  // path-URL strategy (`/foo`). Without this, share-links that point
+  // at canonical paths like `https://recipies.mahallem.ist/en/recipes/
+  // <id>` open the SPA shell, GoRouter sees no hash, and the recipes
+  // tab — `initialLocation: Routes.recipes` — wins. Calling
+  // `usePathUrlStrategy()` makes go_router read the real `pathname`,
+  // so the `/:lang/recipes/:id` redirect fires and the receiver lands
+  // on the recipe details page.
+  // No-op on iOS/Android/desktop (the helper compiles to a stub).
+  usePathUrlStrategy();
   // Pick up the device / browser locale before initI18n wires the
   // ValueNotifier into slang. If the user has a stored session,
   // admin_session.dart will overwrite this with their preferred
