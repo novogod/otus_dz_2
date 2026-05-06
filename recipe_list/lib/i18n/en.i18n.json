@@ -125,6 +125,7 @@
   "addRecipePhoto": "Photo URL",
   "addRecipeCategory": "Category",
   "addRecipeArea": "Cuisine (country of origin)",
+  "addRecipeYoutube": "YouTube link",
   "addRecipeInstructions": "Instructions",
   "addRecipeIngredientsLabel": "Ingredients",
   "addRecipeIngredientName": "Name",

@@ -154,6 +154,7 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhoto => 'URL della foto';
 	@override String get addRecipeCategory => 'Categoria';
 	@override String get addRecipeArea => 'Cucina (paese d’origine)';
+	@override String get addRecipeYoutube => 'Link YouTube';
 	@override String get addRecipeInstructions => 'Istruzioni';
 	@override String get addRecipeIngredientsLabel => 'Ingredienti';
 	@override String get addRecipeIngredientName => 'Nome';
@@ -319,6 +320,7 @@ extension on TranslationsIt {
 			'addRecipePhoto' => 'URL della foto',
 			'addRecipeCategory' => 'Categoria',
 			'addRecipeArea' => 'Cucina (paese d’origine)',
+			'addRecipeYoutube' => 'Link YouTube',
 			'addRecipeInstructions' => 'Istruzioni',
 			'addRecipeIngredientsLabel' => 'Ingredienti',
 			'addRecipeIngredientName' => 'Nome',

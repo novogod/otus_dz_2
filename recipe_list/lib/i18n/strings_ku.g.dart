@@ -154,6 +154,7 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhoto => 'URLa wêneyê';
 	@override String get addRecipeCategory => 'Kategorî';
 	@override String get addRecipeArea => 'Pêjgeh (welatê ji kî tê)';
+	@override String get addRecipeYoutube => 'Lenka YouTube';
 	@override String get addRecipeInstructions => 'Talîmat';
 	@override String get addRecipeIngredientsLabel => 'Madde';
 	@override String get addRecipeIngredientName => 'Nav';
@@ -319,6 +320,7 @@ extension on TranslationsKu {
 			'addRecipePhoto' => 'URLa wêneyê',
 			'addRecipeCategory' => 'Kategorî',
 			'addRecipeArea' => 'Pêjgeh (welatê ji kî tê)',
+			'addRecipeYoutube' => 'Lenka YouTube',
 			'addRecipeInstructions' => 'Talîmat',
 			'addRecipeIngredientsLabel' => 'Madde',
 			'addRecipeIngredientName' => 'Nav',

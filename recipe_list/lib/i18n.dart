@@ -322,6 +322,7 @@ class S {
   String get addRecipePhoto => _t.addRecipePhoto;
   String get addRecipeCategory => _t.addRecipeCategory;
   String get addRecipeArea => _t.addRecipeArea;
+  String get addRecipeYoutube => _t.addRecipeYoutube;
   String get addRecipeInstructions => _t.addRecipeInstructions;
   String get addRecipeIngredientsLabel => _t.addRecipeIngredientsLabel;
   String get addRecipeIngredientName => _t.addRecipeIngredientName;

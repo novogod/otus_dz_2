@@ -154,6 +154,7 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhoto => 'Fotoğraf URL’si';
 	@override String get addRecipeCategory => 'Kategori';
 	@override String get addRecipeArea => 'Mutfak (köken ülke)';
+	@override String get addRecipeYoutube => 'YouTube bağlantısı';
 	@override String get addRecipeInstructions => 'Talimatlar';
 	@override String get addRecipeIngredientsLabel => 'Malzemeler';
 	@override String get addRecipeIngredientName => 'Ad';
@@ -319,6 +320,7 @@ extension on TranslationsTr {
 			'addRecipePhoto' => 'Fotoğraf URL’si',
 			'addRecipeCategory' => 'Kategori',
 			'addRecipeArea' => 'Mutfak (köken ülke)',
+			'addRecipeYoutube' => 'YouTube bağlantısı',
 			'addRecipeInstructions' => 'Talimatlar',
 			'addRecipeIngredientsLabel' => 'Malzemeler',
 			'addRecipeIngredientName' => 'Ad',

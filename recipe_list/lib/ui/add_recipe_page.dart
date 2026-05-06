@@ -62,6 +62,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
   final _photo = TextEditingController();
   final _category = TextEditingController();
   final _area = TextEditingController();
+  final _youtube = TextEditingController();
   final _instructions = TextEditingController();
   final List<_IngredientRow> _ingredientRows = [_IngredientRow()];
 
@@ -92,6 +93,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
     _photo.text = src.photo;
     _category.text = src.category ?? '';
     _area.text = src.area ?? '';
+    _youtube.text = src.youtubeUrl ?? '';
     _instructions.text = src.instructions ?? '';
     // Список / детали часто отдают рецепт в "lite"-варианте
     // (без `instructions` — тяжёлая HTML-инструкция лежит в
@@ -149,6 +151,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
     _photo.dispose();
     _category.dispose();
     _area.dispose();
+    _youtube.dispose();
     _instructions.dispose();
     for (final r in _ingredientRows) {
       r.dispose();
@@ -390,6 +393,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
           : (hasUrl ? _photo.text.trim() : (existing?.photo ?? '')),
       category: _category.text.trim().isEmpty ? null : _category.text.trim(),
       area: _area.text.trim().isEmpty ? null : _area.text.trim(),
+      youtubeUrl: _youtube.text.trim().isEmpty ? null : _youtube.text.trim(),
       instructions: _instructions.text.trim().isEmpty
           ? null
           : _instructions.text.trim(),
@@ -663,6 +667,20 @@ class _AddRecipePageState extends State<AddRecipePage> {
                   TextFormField(
                     controller: _area,
                     decoration: InputDecoration(labelText: s.addRecipeArea),
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  // YouTube URL — рисует красный play-бейдж на фото
+                  // карточки (см. _YoutubeBadge в recipe_card.dart) и
+                  // открывает видео при тапе. Поле необязательное.
+                  TextFormField(
+                    controller: _youtube,
+                    decoration: InputDecoration(
+                      labelText: s.addRecipeYoutube,
+                      hintText: 'https://www.youtube.com/watch?v=…',
+                    ),
+                    keyboardType: TextInputType.url,
+                    autocorrect: false,
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: AppSpacing.md),

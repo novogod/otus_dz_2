@@ -373,6 +373,9 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Cuisine (country of origin)'
 	String get addRecipeArea => 'Cuisine (country of origin)';
 
+	/// en: 'YouTube link'
+	String get addRecipeYoutube => 'YouTube link';
+
 	/// en: 'Instructions'
 	String get addRecipeInstructions => 'Instructions';
 
@@ -599,6 +602,7 @@ extension on Translations {
 			'addRecipePhoto' => 'Photo URL',
 			'addRecipeCategory' => 'Category',
 			'addRecipeArea' => 'Cuisine (country of origin)',
+			'addRecipeYoutube' => 'YouTube link',
 			'addRecipeInstructions' => 'Instructions',
 			'addRecipeIngredientsLabel' => 'Ingredients',
 			'addRecipeIngredientName' => 'Name',

@@ -125,6 +125,7 @@
   "addRecipePhoto": "Fotoğraf URL’si",
   "addRecipeCategory": "Kategori",
   "addRecipeArea": "Mutfak (köken ülke)",
+  "addRecipeYoutube": "YouTube bağlantısı",
   "addRecipeInstructions": "Talimatlar",
   "addRecipeIngredientsLabel": "Malzemeler",
   "addRecipeIngredientName": "Ad",
