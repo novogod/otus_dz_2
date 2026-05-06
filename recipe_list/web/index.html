@@ -355,6 +355,23 @@
       };
     })();
   </script>
+
+  <!-- ─── PWA service worker registration ─────────────────────────
+       Flutter 3.27+ ships a noop flutter_service_worker.js that
+       only unregisters itself — that disables the browser's
+       "Install app" affordance because Chrome / Edge / Samsung
+       require a SW with a functional fetch handler. We register
+       our own minimal SW (web/pwa_sw.js) so the install button
+       and beforeinstallprompt fire. See docs/recipe-web-production-deployment.md. -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('pwa_sw.js').catch((e) => {
+          console.warn('PWA service worker registration failed:', e);
+        });
+      });
+    }
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
