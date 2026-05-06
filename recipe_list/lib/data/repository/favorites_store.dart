@@ -79,6 +79,13 @@ class FavoritesStore {
   final Map<AppLang, String?> _remoteSyncKeyByLang = {};
   String? _sessionCacheKey;
 
+  /// Per-recipe live favorite-count notifier. Lets the heart pill
+  /// reflect real-time deltas after [add] / [remove] without
+  /// waiting for a `/page` refresh, and stays consistent with the
+  /// value persisted into the `recipes.favorites_count` column so
+  /// reload-from-cache shows the same number.
+  final Map<int, ValueNotifier<int>> _countByRecipe = {};
+
   FavoritesStore({required Database db, DateTime Function()? now})
     : _db = db,
       _now = now ?? DateTime.now;
@@ -163,20 +170,59 @@ class FavoritesStore {
     return ids.contains(recipeId);
   }
 
+  /// Live favorites count for [recipeId]. The first call seeds the
+  /// notifier with [seed] (the server-projected count from the last
+  /// `/page` or `/lookup` payload). Subsequent calls reuse the same
+  /// notifier — they do NOT reset to a stale seed — so optimistic
+  /// deltas applied via [add] / [remove] are preserved across
+  /// rebuilds. The stored value is also persisted into
+  /// `recipes.favorites_count` so reload from cache survives a
+  /// process restart.
+  ValueListenable<int> countFor(int recipeId, {required int seed}) {
+    final existing = _countByRecipe[recipeId];
+    if (existing != null) return existing;
+    final notifier = ValueNotifier<int>(seed < 0 ? 0 : seed);
+    _countByRecipe[recipeId] = notifier;
+    return notifier;
+  }
+
+  /// Bumps both the in-memory notifier (if any) and the cached
+  /// `recipes.favorites_count` row across all languages by [delta].
+  /// Idempotent: clamps at zero.
+  Future<void> _bumpRecipeFavCount(int recipeId, int delta) async {
+    if (delta == 0) return;
+    try {
+      await _db.rawUpdate(
+        'UPDATE recipes SET favorites_count = MAX(0, favorites_count + ?) '
+        'WHERE id = ?',
+        [delta, recipeId],
+      );
+    } on Object catch (e) {
+      debugPrint('[favorites] bump cache failed: $e');
+    }
+    final notifier = _countByRecipe[recipeId];
+    if (notifier != null) {
+      final next = notifier.value + delta;
+      notifier.value = next < 0 ? 0 : next;
+    }
+  }
+
   /// Добавляет рецепт в избранное в данном языке. Идемпотентно:
   /// повторный вызов обновляет `saved_at`, но не плодит строки
   /// (PK = `(recipe_id, lang)`).
   Future<void> add(int recipeId, AppLang lang) async {
     _syncSessionContext();
+    await ensureLoaded(lang);
+    final notifier = _ensureNotifier(lang);
+    final wasMember = notifier.value.contains(recipeId);
     await _db.insert('favorites', {
       'recipe_id': recipeId,
       'lang': lang.name,
       'saved_at': _now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
-    await ensureLoaded(lang);
-    final notifier = _ensureNotifier(lang);
-    if (!notifier.value.contains(recipeId)) {
+    if (!wasMember) {
       notifier.value = {...notifier.value, recipeId};
+      await _bumpRecipeFavCount(recipeId, 1);
     }
     try {
       await setRemoteFavorite(recipeId: recipeId, lang: lang, favorite: true);
@@ -188,16 +234,18 @@ class FavoritesStore {
   /// Удаляет рецепт из избранного в данном языке.
   Future<void> remove(int recipeId, AppLang lang) async {
     _syncSessionContext();
+    await ensureLoaded(lang);
+    final notifier = _ensureNotifier(lang);
+    final wasMember = notifier.value.contains(recipeId);
     await _db.delete(
       'favorites',
       where: 'recipe_id = ? AND lang = ?',
       whereArgs: [recipeId, lang.name],
     );
-    await ensureLoaded(lang);
-    final notifier = _ensureNotifier(lang);
-    if (notifier.value.contains(recipeId)) {
+    if (wasMember) {
       final next = {...notifier.value}..remove(recipeId);
       notifier.value = next;
+      await _bumpRecipeFavCount(recipeId, -1);
     }
     try {
       await setRemoteFavorite(recipeId: recipeId, lang: lang, favorite: false);

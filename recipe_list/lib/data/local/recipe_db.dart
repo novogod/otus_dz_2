@@ -94,7 +94,7 @@ Future<void> deleteRecipeDatabaseWebOnly() async {
 /// docs/user-card-and-social-signals.md §1, §3 and chunk B). Both
 /// are additive — `recipes` / `favorites` / `owned_recipes` /
 /// `auth_credentials` are preserved on upgrade.
-const int kRecipeDbSchemaVersion = 12;
+const int kRecipeDbSchemaVersion = 13;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -117,6 +117,10 @@ CREATE TABLE recipes (
   ingredients_json TEXT,
   last_used_at INTEGER NOT NULL,
   byte_size INTEGER NOT NULL DEFAULT 0,
+  favorites_count INTEGER NOT NULL DEFAULT 0,
+  ratings_count INTEGER NOT NULL DEFAULT 0,
+  ratings_sum INTEGER NOT NULL DEFAULT 0,
+  my_rating INTEGER,
   PRIMARY KEY (id, lang)
 );
 ''';
@@ -425,6 +429,31 @@ Future<void> _onRecipeDbUpgrade(
   if (oldVersion < 12) {
     await applyUserProfileAndCreatorCacheSchema(db);
   }
+  // v12 → v13: persist server-projected social-signal aggregates
+  // (favoritesCount / ratingsCount / ratingsSum / myRating) on the
+  // cached `recipes` row so reload from cache shows the right
+  // counters instead of zeros. Idempotent ALTERs.
+  if (oldVersion < 13) {
+    await applyRecipeSocialColumns(db);
+  }
+}
+
+/// v12 → v13: idempotent additive migration that adds the four
+/// social-signal columns to the `recipes` cache. See
+/// docs/user-card-and-social-signals.md §4.4 / §5.3.
+Future<void> applyRecipeSocialColumns(Database db) async {
+  for (final stmt in const [
+    'ALTER TABLE recipes ADD COLUMN favorites_count INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE recipes ADD COLUMN ratings_count INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE recipes ADD COLUMN ratings_sum INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE recipes ADD COLUMN my_rating INTEGER',
+  ]) {
+    try {
+      await db.execute(stmt);
+    } catch (_) {
+      // Column already exists — idempotent no-op.
+    }
+  }
 }
 
 /// Сериализация ингредиентов в JSON-строку — sqflite не умеет
@@ -470,6 +499,10 @@ Recipe readRecipe(Map<String, Object?> row) {
     youtubeUrl: row['youtube_url'] as String?,
     sourceUrl: row['source_url'] as String?,
     ingredients: decodeIngredients(row['ingredients_json'] as String?),
+    favoritesCount: (row['favorites_count'] as int?) ?? 0,
+    ratingsCount: (row['ratings_count'] as int?) ?? 0,
+    ratingsSum: (row['ratings_sum'] as int?) ?? 0,
+    myRating: row['my_rating'] as int?,
   );
 }
 
@@ -508,6 +541,10 @@ Map<String, Object?> writeRecipe(
     'ingredients_json': ingredientsJson,
     'last_used_at': lastUsedAt,
     'byte_size': byteSize,
+    'favorites_count': r.favoritesCount,
+    'ratings_count': r.ratingsCount,
+    'ratings_sum': r.ratingsSum,
+    'my_rating': r.myRating,
   };
 }
 

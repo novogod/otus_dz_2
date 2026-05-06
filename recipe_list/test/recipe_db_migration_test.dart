@@ -291,7 +291,7 @@ void main() {
     });
 
     test('schema version constant is 12', () {
-      expect(kRecipeDbSchemaVersion, 12);
+      expect(kRecipeDbSchemaVersion, 13);
     });
   });
 }

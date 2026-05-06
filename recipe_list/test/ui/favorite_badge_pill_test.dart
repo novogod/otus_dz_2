@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:recipe_list/i18n/strings.g.dart';
+import 'package:recipe_list/ui/app_theme.dart';
 import 'package:recipe_list/ui/recipe_card.dart';
 
 Widget _harness(Widget child) => TranslationProvider(
@@ -94,9 +95,11 @@ void main() {
         // Outline heart (not yet favorited; store=null in this harness).
         expect(find.byIcon(Icons.favorite_border), findsOneWidget);
         expect(find.byIcon(Icons.favorite), findsNothing);
-        // Pill is dark-translucent: number is white.
+        // Pill is dark-translucent: number is rendered in the
+        // primary green for legibility against the dark background
+        // and to match the rating-pill star color.
         final text = tester.widget<Text>(find.text('7'));
-        expect(text.style!.color, Colors.white);
+        expect(text.style!.color, AppColors.primary);
       },
     );
 

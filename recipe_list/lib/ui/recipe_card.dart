@@ -440,9 +440,7 @@ class _PhotoRatingPillView extends StatelessWidget {
                           ? Icons.star_rounded
                           : Icons.star_outline_rounded,
                       size: 22,
-                      color: i <= highlighted
-                          ? AppColors.primary
-                          : Colors.white,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -453,7 +451,7 @@ class _PhotoRatingPillView extends StatelessWidget {
                   fontFamily: AppTextStyles.fontFamily,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
-                  color: Colors.white,
+                  color: AppColors.primary,
                 ),
               ),
             ],
@@ -507,6 +505,8 @@ class FavoriteBadge extends StatelessWidget {
                 isFavorite: false,
                 favoritesCount: favoritesCount,
                 showCount: showCount,
+                recipeId: recipeId,
+                store: null,
                 onTap: () async {
                   if (!userLoggedInNotifier.value) {
                     await _showRegistrationRequired(context);
@@ -527,6 +527,8 @@ class FavoriteBadge extends StatelessWidget {
                   isFavorite: isFav,
                   favoritesCount: favoritesCount,
                   showCount: showCount,
+                  recipeId: recipeId,
+                  store: store,
                   onTap: () async {
                     if (!userLoggedInNotifier.value) {
                       await _showRegistrationRequired(context);
@@ -559,57 +561,22 @@ class FavoriteBadge extends StatelessWidget {
   }
 }
 
-class _FavoriteBadgeView extends StatefulWidget {
+class _FavoriteBadgeView extends StatelessWidget {
   final bool isFavorite;
   final int favoritesCount;
   final bool showCount;
   final VoidCallback? onTap;
+  final int recipeId;
+  final FavoritesStore? store;
 
   const _FavoriteBadgeView({
     required this.isFavorite,
     required this.onTap,
+    required this.recipeId,
     this.favoritesCount = 0,
     this.showCount = false,
+    this.store,
   });
-
-  @override
-  State<_FavoriteBadgeView> createState() => _FavoriteBadgeViewState();
-}
-
-class _FavoriteBadgeViewState extends State<_FavoriteBadgeView> {
-  /// Server-projected favorites count + favorited flag at the moment
-  /// the widget was last refreshed from the recipe payload. We use
-  /// these to derive the displayed count optimistically when the
-  /// caller toggles the heart, since the favorites endpoint does not
-  /// echo the new aggregate.
-  late int _baselineCount;
-  late bool _baselineFav;
-
-  @override
-  void initState() {
-    super.initState();
-    _baselineCount = widget.favoritesCount;
-    _baselineFav = widget.isFavorite;
-  }
-
-  @override
-  void didUpdateWidget(covariant _FavoriteBadgeView old) {
-    super.didUpdateWidget(old);
-    // The server-projected count only changes when the recipe
-    // payload is reloaded. Reset the baseline whenever it does so
-    // we don't double-apply the optimistic delta after a refresh.
-    if (widget.favoritesCount != old.favoritesCount) {
-      _baselineCount = widget.favoritesCount;
-      _baselineFav = widget.isFavorite;
-    }
-  }
-
-  int get _displayedCount {
-    final delta =
-        (widget.isFavorite ? 1 : 0) - (_baselineFav ? 1 : 0);
-    final v = _baselineCount + delta;
-    return v < 0 ? 0 : v;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -619,9 +586,9 @@ class _FavoriteBadgeViewState extends State<_FavoriteBadgeView> {
     // родительский Material карточки. GestureDetector с opaque всегда
     // поглощает тап независимо от платформы.
     return GestureDetector(
-      onTap: widget.onTap,
+      onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: widget.showCount ? _buildPill(context) : _buildSquare(),
+      child: showCount ? _buildPill(context) : _buildSquare(),
     );
   }
 
@@ -637,21 +604,45 @@ class _FavoriteBadgeViewState extends State<_FavoriteBadgeView> {
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
         child: Icon(
-          widget.isFavorite ? Icons.favorite : Icons.favorite_border,
-          color: widget.isFavorite ? AppColors.primary : Colors.white,
+          isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: isFavorite ? AppColors.primary : Colors.white,
           size: 24,
-          semanticLabel: widget.isFavorite ? 'favorite-on' : 'favorite-off',
+          semanticLabel: isFavorite ? 'favorite-on' : 'favorite-off',
         ),
       ),
     );
   }
 
-  /// Dark pill `<count> ♡`. Matches the visual weight of the legacy
-  /// 40×40 square heart and of [_YoutubeBadge]: semi-transparent
-  /// black background, white text, white/primary glyph. Height 40
-  /// to keep the photo-corner badges aligned.
+  /// Dark pill `<count> ♡`. The count is bound to a per-recipe
+  /// notifier owned by [FavoritesStore] so it stays in sync across
+  /// every visible card the moment the user taps the heart, and is
+  /// also persisted into `recipes.favorites_count` so reload from
+  /// cache survives a process restart.
   Widget _buildPill(BuildContext context) {
-    final isFav = widget.isFavorite;
+    final isFav = isFavorite;
+    final s = store;
+    final Widget countText = s == null
+        ? Text(
+            '$favoritesCount',
+            style: const TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: AppColors.primary,
+            ),
+          )
+        : ValueListenableBuilder<int>(
+            valueListenable: s.countFor(recipeId, seed: favoritesCount),
+            builder: (_, n, __) => Text(
+              '$n',
+              style: const TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: AppColors.primary,
+              ),
+            ),
+          );
     return Semantics(
       label: isFav ? 'favorite-on' : 'favorite-off',
       button: true,
@@ -665,20 +656,12 @@ class _FavoriteBadgeViewState extends State<_FavoriteBadgeView> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '$_displayedCount',
-              style: const TextStyle(
-                fontFamily: AppTextStyles.fontFamily,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
+            countText,
             const SizedBox(width: 6),
             Icon(
               isFav ? Icons.favorite : Icons.favorite_border,
               size: 22,
-              color: isFav ? AppColors.primary : Colors.white,
+              color: AppColors.primary,
             ),
           ],
         ),

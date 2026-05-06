@@ -385,6 +385,41 @@ class RecipeApi {
     return UserProfileSnapshot.fromJson(data);
   }
 
+  /// mahallem-only: POST /recipes/users/avatar (multipart). Uploads
+  /// JPEG/PNG/WebP bytes (≤5MB) and returns the new public avatar
+  /// URL/path. Throws on validation / network errors.
+  Future<String> uploadAvatar({
+    required Uint8List bytes,
+    required String filename,
+  }) async {
+    if (_client.backend != RecipeBackend.mahallem) {
+      throw StateError('uploadAvatar requires the mahallem backend');
+    }
+    final form = FormData.fromMap({
+      'photo': MultipartFile.fromBytes(bytes, filename: filename),
+    });
+    final res = await _client.dio.post<Map<String, dynamic>>(
+      '/users/avatar',
+      data: form,
+      options: _authOptions(contentType: 'multipart/form-data'),
+    );
+    final url = (res.data?['avatarUrl'] ?? res.data?['avatarPath']);
+    if (url is! String || url.isEmpty) {
+      throw StateError('uploadAvatar: malformed response');
+    }
+    return url;
+  }
+
+  /// mahallem-only: DELETE /recipes/users/avatar. Clears the user's
+  /// avatar on the server. Idempotent.
+  Future<void> deleteAvatar() async {
+    if (_client.backend != RecipeBackend.mahallem) return;
+    await _client.dio.delete<Map<String, dynamic>>(
+      '/users/avatar',
+      options: _authOptions(),
+    );
+  }
+
   /// mahallem-only: атомарно увеличивает счётчик визитов и
   /// возвращает новое значение. Используется на splash-экране
   /// (`SplashPage`), который мигает белым числом под лого. Если

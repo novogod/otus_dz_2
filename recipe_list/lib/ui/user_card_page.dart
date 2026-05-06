@@ -2,13 +2,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
+import '../data/api/recipe_api_config.dart';
 import '../data/app_services.dart';
 import '../i18n.dart';
 import '../router/routes.dart';
 import 'app_theme.dart';
+import 'photo_picker_sheet.dart';
 
 /// User Card page (chunk D of docs/user-card-and-social-signals.md).
 ///
@@ -155,13 +158,90 @@ class _UserCardPageState extends State<UserCardPage> {
   }
 
   void _showAvatarPickerStub() {
-    final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
-    messenger.showSnackBar(
-      const SnackBar(
-        content: Text('Avatar upload coming soon'),
-        duration: Duration(seconds: 2),
-      ),
+    _pickAndUploadAvatar();
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final api = appServicesNotifier.value?.api;
+    if (api == null) return;
+    final s = S.of(context);
+    final action = await showPhotoPickerSheet(
+      context,
+      title: s.profileDisplayName,
+      cameraLabel: 'Camera',
+      galleryLabel: 'Gallery',
+      removeLabel: (_profile?.avatarUrl ?? '').isNotEmpty ? 'Remove' : null,
     );
+    if (!mounted || action == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (action == PhotoPickerAction.remove) {
+      try {
+        await api.deleteAvatar();
+        if (!mounted) return;
+        setState(() {
+          final p = _profile;
+          if (p != null) {
+            _profile = UserProfileSnapshot(
+              id: p.id,
+              email: p.email,
+              displayName: p.displayName,
+              language: p.language,
+              avatarPath: null,
+              avatarUrl: null,
+              recipesAdded: p.recipesAdded,
+              memberSince: p.memberSince,
+            );
+          }
+        });
+      } catch (e) {
+        messenger.showSnackBar(SnackBar(content: Text('Remove failed: $e')));
+      }
+      return;
+    }
+    final source = action == PhotoPickerAction.camera
+        ? ImageSource.camera
+        : ImageSource.gallery;
+    final picked = await pickAndCompressPhoto(
+      source: source,
+      onError: (err) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Photo pick failed: ${err.name}')),
+        );
+      },
+    );
+    if (!mounted || picked == null) return;
+    setState(() => _busy = true);
+    try {
+      final url = await api.uploadAvatar(
+        bytes: picked.bytes,
+        filename: picked.filename,
+      );
+      if (!mounted) return;
+      setState(() {
+        final p = _profile;
+        if (p != null) {
+          _profile = UserProfileSnapshot(
+            id: p.id,
+            email: p.email,
+            displayName: p.displayName,
+            language: p.language,
+            avatarPath: url,
+            avatarUrl: url,
+            recipesAdded: p.recipesAdded,
+            memberSince: p.memberSince,
+          );
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -182,6 +262,7 @@ class _UserCardPageState extends State<UserCardPage> {
             children: <Widget>[
               Center(
                 child: _AvatarSlot(
+                  avatarUrl: _profile?.avatarUrl,
                   onTap: _editing ? _showAvatarPickerStub : null,
                 ),
               ),
@@ -358,29 +439,62 @@ class _UserCardPageState extends State<UserCardPage> {
 }
 
 class _AvatarSlot extends StatelessWidget {
-  const _AvatarSlot({this.onTap});
+  const _AvatarSlot({this.onTap, this.avatarUrl});
   final VoidCallback? onTap;
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) {
+    final url = avatarUrl;
+    final hasAvatar = url != null && url.isNotEmpty;
+    // Server returns a path like `/storage/v1/object/public/avatars/...`;
+    // resolve it against the recipes API origin so the network image
+    // loads from the same host that serves the API.
+    String? fullUrl;
+    if (hasAvatar) {
+      if (url.startsWith('http')) {
+        fullUrl = url;
+      } else {
+        final base = RecipeApiConfig.mahallemBaseUrl;
+        final origin = Uri.tryParse(base);
+        if (origin != null) {
+          fullUrl = '${origin.scheme}://${origin.host}'
+              '${origin.hasPort ? ":${origin.port}" : ""}'
+              '${url.startsWith('/') ? url : '/$url'}';
+        } else {
+          fullUrl = url;
+        }
+      }
+    }
     return Stack(
       clipBehavior: Clip.none,
       children: <Widget>[
         Container(
           width: 120,
           height: 120,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: AppColors.surfaceMuted,
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.primary, width: 3),
           ),
-          child: onTap != null
-              ? const SizedBox.shrink()
-              : const Icon(
-                  Icons.person,
-                  size: 64,
-                  color: AppColors.textSecondary,
-                ),
+          child: hasAvatar && fullUrl != null
+              ? Image.network(
+                  fullUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.person,
+                    size: 64,
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              : (onTap != null
+                    ? const SizedBox.shrink()
+                    : const Icon(
+                        Icons.person,
+                        size: 64,
+                        color: AppColors.textSecondary,
+                      )),
         ),
         if (onTap != null)
           Positioned(

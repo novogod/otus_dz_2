@@ -6,6 +6,7 @@ import 'package:recipe_list/data/local/recipe_db.dart';
 import 'package:recipe_list/data/repository/favorites_store.dart';
 import 'package:recipe_list/i18n.dart';
 import 'package:recipe_list/models/recipe.dart';
+import 'package:recipe_list/ui/app_theme.dart';
 import 'package:recipe_list/ui/recipe_card.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -72,9 +73,10 @@ void main() {
         ),
       );
       expect(icon.icon, Icons.favorite_border);
-      // FavoriteBadge is a dark-translucent pill: non-favorited heart
-      // is white (matches the legacy 32x32 square color).
-      expect(icon.color, Colors.white);
+      // FavoriteBadge is a dark-translucent pill: heart glyph is
+      // primary green for both filled+outlined states (matches the
+      // photo rating-pill star color, see chunk H spec follow-up).
+      expect(icon.color, AppColors.primary);
     });
 
     testWidgets('tap toggles to filled green heart and persists', (
