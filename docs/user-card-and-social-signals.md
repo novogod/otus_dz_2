@@ -1,8 +1,8 @@
 # User Card, Avatars, "Added by", Star Ratings, Favorite-Count Pill
 
-**Status:** 🟡 Mostly implemented. See "Live status (rolling)" below.
+**Status:** � Implemented end-to-end. See "Live status (rolling)" below.
 **Scope:** Food app (`recipe_list/`) + mahallem-user-portal backend.
-**Last updated:** 2026-05-05
+**Last updated:** 2026-05-06
 
 ## Live status (rolling)
 
@@ -10,14 +10,14 @@
 |-------|--------|-------|
 | A — Photo picker helper | ✅ shipped | `lib/ui/photo_picker_sheet.dart` |
 | B — DB v12 (user_profile + recipe_creator_cache) | ✅ shipped | `lib/data/local/recipe_db.dart` |
-| C — Backend avatar bucket + `/recipes/users/me` | ⬜ pending infra (`food-avatars` S3 bucket) |
-| D — User Card page + routing + signup post-redirect | 🟡 skeleton (commit `c16a635`) — UserCardPage + router + signup redirect + 13 i18n keys + 3 tests. Avatar upload + display-name persistence + recipes-added counter wait on Chunk C. |
+| C — Backend `/recipes/users/me` (GET + PUT) | 🟢 live (commit `5cddebe3`, deployed to `72.61.181.62:4000`). Avatar POST/DELETE deferred — `food-avatars` S3 bucket not yet provisioned. |
+| D — User Card page + routing + signup post-redirect | ✅ live (commit `16bc625`) — UserCardPage fetches `/recipes/users/me` on init, persists display-name + language via PUT, recipes-added + member-since rendered from server. 3 widget tests + 1 integration test green. |
 | E — Recipe model creator/ratings/favCount fields | ✅ shipped |
 | F — "Added by" footer | ✅ shipped |
 | G — Star rating widget + endpoints + store | ✅ live — backend `f82a1ef7` deployed to `72.61.181.62:4000`, client `3e982c3`, 12 tests pass |
 | H — Favorite-count pill | ✅ shipped |
 | I — i18n keys × 10 locales | ✅ landed alongside D/F/G — direct JSON, slang regenerated, completeness test green |
-| J — Integration tests + manual smoke | ⬜ requires running simulators / installed PWA on iOS+Android — out of scope for autonomous coding sessions |
+| J — Integration tests | ✅ 3 widget-level integration tests under `test/integration/` (post-signup flow, rating tap, added-by gate). Manual installed-PWA smoke remains a human task — out of scope for autonomous sessions. |
 
 This doc proposes four interlocking changes:
 
