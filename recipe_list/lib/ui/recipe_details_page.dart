@@ -673,12 +673,16 @@ String _detailsThumb(String url) {
   return url;
 }
 
-/// Овнер-блок в left-top hero-фото: «удалить» + «редактировать».
-/// Виден только если рецепт лежит в [ownedRecipesStoreNotifier]
-/// (создан владельцем устройства). Сервер дополнительно фильтрует
-/// PUT/DELETE по floor-id ≥ 1_000_000 — даже если клиент случайно
-/// пометит как «свой» базу TheMealDB, он получит 404.
-/// См. docs/owner-edit-delete.md.
+/// Owner-block on the hero photo: «delete» + «edit». Visible only to
+/// admins or the verified author of [recipe] (server-authoritative
+/// match between `recipe.creatorUserId` and `myProfileNotifier.value.id`).
+/// The previous implementation used the per-device
+/// [OwnedRecipesStore] (and a permissive
+/// `userLoggedIn && id >= userMealIdFloor` fallback) which leaked
+/// edit/delete to anyone signed in on a device that ever cached the
+/// recipe — including completely different accounts. The server still
+/// rejects PUT/DELETE for non-authors with 403/404, but the buttons
+/// must not be visible in the first place.
 class _OwnerActions extends StatelessWidget {
   const _OwnerActions({
     required this.recipe,
@@ -693,86 +697,29 @@ class _OwnerActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    return ValueListenableBuilder<OwnedRecipesStore?>(
-      valueListenable: ownedRecipesStoreNotifier,
-      builder: (context, store, _) {
-        if (store == null) {
-          return ValueListenableBuilder<bool>(
-            valueListenable: adminLoggedInNotifier,
-            builder: (context, isAdmin, __) {
-              return ValueListenableBuilder<bool>(
-                valueListenable: userLoggedInNotifier,
-                builder: (context, userLoggedIn, ___) {
-                  final isUserCandidate =
-                      userLoggedIn &&
-                      !isAdmin &&
-                      recipe.id >= OwnedRecipesStore.userMealIdFloor;
-                  if (!isAdmin && !isUserCandidate) {
-                    return const SizedBox.shrink();
-                  }
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _CircleIconButton(
-                        icon: Icons.delete_outline,
-                        tooltip: s.adminDeleteAction,
-                        onPressed: () => _confirmAndDelete(context),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      _CircleIconButton(
-                        icon: Icons.edit,
-                        tooltip: s.adminEditAction,
-                        onPressed: () => _openEdit(context),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          );
-        }
-        return ValueListenableBuilder<Set<int>>(
-          valueListenable: store.ids,
-          builder: (context, ids, __) {
-            return ValueListenableBuilder<bool>(
-              valueListenable: adminLoggedInNotifier,
-              builder: (context, isAdmin, ___) {
-                return ValueListenableBuilder<bool>(
-                  valueListenable: userLoggedInNotifier,
-                  builder: (context, userLoggedIn, ____) {
-                    final isOwner = ids.contains(recipe.id);
-                    // Also show buttons for any user-level recipe id (≥ floor)
-                    // when a regular (non-admin) user is logged in. The server
-                    // is the authority — it rejects writes for recipes the user
-                    // doesn't own. This handles recipes created before
-                    // owned_recipes was initialised (store was null, ?.add()
-                    // was a no-op) and the startup backfill missed them.
-                    final isUserCandidate =
-                        userLoggedIn &&
-                        !isAdmin &&
-                        recipe.id >= OwnedRecipesStore.userMealIdFloor;
-                    if (!isOwner && !isAdmin && !isUserCandidate) {
-                      return const SizedBox.shrink();
-                    }
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _CircleIconButton(
-                          icon: Icons.delete_outline,
-                          tooltip: s.adminDeleteAction,
-                          onPressed: () => _confirmAndDelete(context),
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        _CircleIconButton(
-                          icon: Icons.edit,
-                          tooltip: s.adminEditAction,
-                          onPressed: () => _openEdit(context),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
+    return ValueListenableBuilder<bool>(
+      valueListenable: adminLoggedInNotifier,
+      builder: (context, isAdmin, _) {
+        return ValueListenableBuilder<UserProfileSnapshot?>(
+          valueListenable: myProfileNotifier,
+          builder: (context, _, __) {
+            final canManage = isAdmin || isCurrentUserAuthor(recipe);
+            if (!canManage) return const SizedBox.shrink();
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _CircleIconButton(
+                  icon: Icons.delete_outline,
+                  tooltip: s.adminDeleteAction,
+                  onPressed: () => _confirmAndDelete(context),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                _CircleIconButton(
+                  icon: Icons.edit,
+                  tooltip: s.adminEditAction,
+                  onPressed: () => _openEdit(context),
+                ),
+              ],
             );
           },
         );

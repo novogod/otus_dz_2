@@ -540,10 +540,13 @@ class _RecipeListPageState extends State<RecipeListPage> {
   }
 
   Future<void> _openEditRecipe(BuildContext context, Recipe recipe) async {
+    // Server-authoritative author check only. The per-device
+    // OwnedRecipesStore was removed from this gate because its
+    // ensureLoaded() backfill marks every cached user-recipe as
+    // owned by THIS device, leaking edit access to anonymous
+    // visitors who simply opened the card.
     final canManage =
-        adminLoggedInNotifier.value ||
-        isCurrentUserAuthor(recipe) ||
-        (ownedRecipesStoreNotifier.value?.isOwned(recipe.id) ?? false);
+        adminLoggedInNotifier.value || isCurrentUserAuthor(recipe);
     if (!canManage) return;
     final base = Routes.currentBranchBase(GoRouterState.of(context).uri.path);
     await context.push<Recipe>(
@@ -557,9 +560,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
     Recipe recipe,
   ) async {
     final canManage =
-        adminLoggedInNotifier.value ||
-        isCurrentUserAuthor(recipe) ||
-        (ownedRecipesStoreNotifier.value?.isOwned(recipe.id) ?? false);
+        adminLoggedInNotifier.value || isCurrentUserAuthor(recipe);
     if (!canManage) return;
     final s = S.of(context);
     final confirmed = await showDialog<bool>(

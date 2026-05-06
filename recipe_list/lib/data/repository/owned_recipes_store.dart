@@ -35,59 +35,28 @@ class OwnedRecipesStore {
   static const int userMealIdFloor = 1000000;
 
   Future<Set<int>> ensureLoaded() async {
-    if (_loaded) {
-      // Even after the initial load, re-scan for newly cached user recipes
-      // that were added to the `recipes` table after the first pass (e.g.
-      // created when the store was null and ?.add() was a silent no-op).
-      final candidateRows = await _db.query(
-        'recipes',
-        columns: const ['id'],
+    // The store is now strictly an offline-create-replay aid: ids are
+    // added only via [add] from the create flow. Ownership for
+    // edit/delete UI is decided server-side via
+    // `attachSocialSignals(creatorUserId)` matched against
+    // `myProfileNotifier.value.id`.
+    //
+    // The previous implementation auto-marked every cached
+    // user-recipe (id ≥ [userMealIdFloor]) as "owned by this device"
+    // — which leaked edit/delete buttons to anonymous visitors as
+    // soon as they cached a card. We now also purge any rows that
+    // backfill may have inserted earlier so historical poisoning is
+    // cleared on next launch.
+    if (!_loaded) {
+      await _db.delete(
+        'owned_recipes',
         where: 'id >= ?',
         whereArgs: [userMealIdFloor],
       );
-      final candidates = {for (final r in candidateRows) r['id']! as int};
-      final newOnes = candidates.difference(ids.value);
-      if (newOnes.isNotEmpty) {
-        final batch = _db.batch();
-        final nowMs = _now().millisecondsSinceEpoch;
-        for (final id in newOnes) {
-          batch.insert('owned_recipes', {
-            'id': id,
-            'created_at': nowMs,
-          }, conflictAlgorithm: ConflictAlgorithm.ignore);
-        }
-        await batch.commit(noResult: true);
-        ids.value = {...ids.value, ...newOnes};
-      }
-      return ids.value;
     }
-    // Бэкфил: до v7-миграции таблица `owned_recipes` не существовала,
-    // но сами пользовательские рецепты уже могли быть созданы (их id
-    // ≥ [userMealIdFloor]). Один раз при первой загрузке заносим
-    // такие записи в реестр, чтобы owner-кнопки появились на ранее
-    // созданных рецептах.
     final ownedRows = await _db.query('owned_recipes', columns: const ['id']);
     final existing = {for (final r in ownedRows) r['id']! as int};
-    final candidateRows = await _db.query(
-      'recipes',
-      columns: const ['id'],
-      where: 'id >= ?',
-      whereArgs: [userMealIdFloor],
-    );
-    final candidates = {for (final r in candidateRows) r['id']! as int};
-    final missing = candidates.difference(existing);
-    if (missing.isNotEmpty) {
-      final batch = _db.batch();
-      final nowMs = _now().millisecondsSinceEpoch;
-      for (final id in missing) {
-        batch.insert('owned_recipes', {
-          'id': id,
-          'created_at': nowMs,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
-      }
-      await batch.commit(noResult: true);
-    }
-    ids.value = existing.union(candidates);
+    ids.value = existing;
     _loaded = true;
     return ids.value;
   }

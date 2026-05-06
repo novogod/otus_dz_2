@@ -112,13 +112,7 @@ class RecipeCard extends StatelessWidget {
                                 String? name = recipe.creatorDisplayName;
                                 String? avatar = recipe.creatorAvatarPath;
                                 int? added = recipe.creatorRecipesAdded;
-                                final isMine =
-                                    isCurrentUserAuthor(recipe) ||
-                                    (recipe.id >=
-                                            OwnedRecipesStore.userMealIdFloor &&
-                                        (ownedRecipesStoreNotifier.value
-                                                ?.isOwned(recipe.id) ??
-                                            false));
+                                final isMine = isCurrentUserAuthor(recipe);
                                 if ((name == null || name.isEmpty) &&
                                     isMine &&
                                     me != null &&
@@ -173,53 +167,34 @@ class RecipeCard extends StatelessWidget {
         Positioned(
           top: outerPadding.top + AppSpacing.sm,
           left: outerPadding.left + AppSpacing.sm,
-          child: ValueListenableBuilder<OwnedRecipesStore?>(
-            valueListenable: ownedRecipesStoreNotifier,
-            builder: (context, ownedStore, _) {
+          child: ValueListenableBuilder<bool>(
+            valueListenable: adminLoggedInNotifier,
+            builder: (context, isAdmin, _) {
               if (onEdit == null && onDelete == null) {
                 return const SizedBox.shrink();
               }
-              if (ownedStore == null) {
-                return ValueListenableBuilder<bool>(
-                  valueListenable: adminLoggedInNotifier,
-                  builder: (context, isAdmin, _) {
-                    if (!isAdmin) return const SizedBox.shrink();
-                    return _CardActions(onEdit: onEdit, onDelete: onDelete);
-                  },
-                );
-              }
-              return ValueListenableBuilder<Set<int>>(
-                valueListenable: ownedStore.ids,
-                builder: (context, ownedIds, _) {
-                  return ValueListenableBuilder<bool>(
-                    valueListenable: adminLoggedInNotifier,
-                    builder: (context, isAdmin, _) {
-                      return ValueListenableBuilder<UserProfileSnapshot?>(
-                        valueListenable: myProfileNotifier,
-                        builder: (context, _, __) {
-                          // Server-authoritative: the creatorUserId
-                          // projected by attachSocialSignals is matched
-                          // against the current /recipes/users/me id
-                          // via [isCurrentUserAuthor]. Owner-edit/-delete
-                          // therefore work on every device the same
-                          // account signs in on, not just the one where
-                          // the recipe was originally created. The local
-                          // [OwnedRecipesStore] is kept as a fallback so
-                          // a recipe just created in this session is
-                          // editable even before the server's projection
-                          // round-trips.
-                          final canManage =
-                              isAdmin ||
-                              isCurrentUserAuthor(recipe) ||
-                              ownedIds.contains(recipe.id);
-                          if (!canManage) return const SizedBox.shrink();
-                          return _CardActions(
-                            onEdit: onEdit,
-                            onDelete: onDelete,
-                          );
-                        },
-                      );
-                    },
+              return ValueListenableBuilder<UserProfileSnapshot?>(
+                valueListenable: myProfileNotifier,
+                builder: (context, _, __) {
+                  // Server-authoritative: the creatorUserId projected
+                  // by attachSocialSignals is matched against the
+                  // current /recipes/users/me id via
+                  // [isCurrentUserAuthor]. The per-device
+                  // OwnedRecipesStore was previously OR-ed into this
+                  // gate, but its `ensureLoaded` backfill marks every
+                  // cached user-recipe (id ≥ userMealIdFloor) as
+                  // owned by THIS device — an anonymous visitor who
+                  // simply opens a card has the row written to
+                  // sqflite, the backfill flips it to "owned", and
+                  // edit/delete buttons appear. Drop the local
+                  // fallback entirely; only admins or the verified
+                  // author may manage a recipe, on every device.
+                  final canManage =
+                      isAdmin || isCurrentUserAuthor(recipe);
+                  if (!canManage) return const SizedBox.shrink();
+                  return _CardActions(
+                    onEdit: onEdit,
+                    onDelete: onDelete,
                   );
                 },
               );
