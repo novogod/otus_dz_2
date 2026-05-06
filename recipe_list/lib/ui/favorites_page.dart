@@ -110,6 +110,35 @@ class _FavoritesPageState extends State<FavoritesPage> {
         );
       }
     }
+    // Backfill: refresh any cached favourite whose creator chip
+    // metadata is NULL. v14 of the local schema added the four
+    // creator columns; rows written by older client builds (or
+    // before today's deploy) have them empty even when the server
+    // does carry the projection. One-time per (lang, id) lookup
+    // re-upserts the row with creator fields filled in, so the
+    // RecipeCard shows the chip on the next rebuild.
+    if (repo != null) {
+      final list = await store.list(lang);
+      final stale = <int>[];
+      final attempted = _attemptedHydration.putIfAbsent(lang, () => <int>{});
+      for (final r in list) {
+        if (r.id < 1000000) continue; // only user-authored ids
+        if (r.creatorDisplayName != null) continue;
+        if (attempted.contains(r.id)) continue;
+        stale.add(r.id);
+      }
+      if (stale.isNotEmpty) {
+        attempted.addAll(stale);
+        await Future.wait(
+          stale.map(
+            (id) => repo
+                .lookup(id, lang)
+                .then<Recipe?>((r) => r)
+                .catchError((Object _) => null),
+          ),
+        );
+      }
+    }
     return store.list(lang);
   }
 
