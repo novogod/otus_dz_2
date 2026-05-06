@@ -50,6 +50,74 @@
       height: calc(100% - env(safe-area-inset-top, 0px)) !important;
     }
     html.pwa-standalone body { background-color: #2ECC71; }
+
+    /* ─── HTML splash + spinner ────────────────────────────────────
+       Flutter web on a slow connection downloads ~1-2 MB of JS/CSS
+       before flutter_bootstrap.js mounts the canvas. Until then the
+       page is blank. We show a static splash that mirrors the Dart
+       kSplashGradient (lib/ui/app_theme.dart): linear gradient from
+       AppColors.primary #2ECC71 to AppColors.primaryDark #165932,
+       roughly top-right to bottom-left, with the app icon centered
+       and a Material-spec circular progress indicator below it.
+       Removed by JS once Flutter dispatches `flutter-first-frame`,
+       or 30 s after page load (timeout fallback). Tokens come from
+       Figma file alUTMeT3w9XlbNf3orwyFA — see docs/design_system.md
+       (CircularProgressIndicator(color: primary), §"Состояния"). */
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      background:
+        linear-gradient(
+          to bottom left,
+          #2ECC71 0%,
+          #165932 100%
+        );
+      transition: opacity 320ms ease-out;
+      will-change: opacity;
+    }
+    #boot-splash.hidden { opacity: 0; pointer-events: none; }
+    #boot-splash img {
+      width: 128px;
+      height: 128px;
+      border-radius: 28px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    /* Material-spec indeterminate CircularProgressIndicator:
+       48 dp diameter, 4 dp stroke, arc sweeps via two combined
+       animations (container rotation + stroke dasharray cycle). */
+    #boot-splash .spinner {
+      width: 48px;
+      height: 48px;
+      animation: boot-rotate 1.4s linear infinite;
+    }
+    #boot-splash .spinner circle {
+      fill: none;
+      stroke: #FFFFFF;
+      stroke-width: 4;
+      stroke-linecap: round;
+      transform-origin: 24px 24px;
+      animation: boot-dash 1.4s ease-in-out infinite;
+    }
+    @keyframes boot-rotate {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes boot-dash {
+      0%   { stroke-dasharray:  1, 130; stroke-dashoffset: 0;    }
+      50%  { stroke-dasharray: 90, 130; stroke-dashoffset: -32;  }
+      100% { stroke-dasharray: 90, 130; stroke-dashoffset: -120; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #boot-splash .spinner { animation-duration: 6s; }
+      #boot-splash .spinner circle { animation-duration: 6s; }
+    }
   </style>
 
   <!-- ─── SEO: core meta ──────────────────────────────────────────
@@ -376,6 +444,36 @@
   </script>
 </head>
 <body>
+  <!-- HTML splash, removed once Flutter renders the first frame.
+       See <style> block for design-token rationale. -->
+  <div id="boot-splash" role="status" aria-live="polite" aria-label="Loading Otus Food">
+    <img src="icons/Icon-192.png" alt="" decoding="async" fetchpriority="high">
+    <svg class="spinner" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="20"></circle>
+    </svg>
+  </div>
+  <script>
+    (function () {
+      var splash = document.getElementById('boot-splash');
+      if (!splash) return;
+      var removed = false;
+      function dismiss() {
+        if (removed) return;
+        removed = true;
+        splash.classList.add('hidden');
+        setTimeout(function () {
+          if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+        }, 360);
+      }
+      // Flutter dispatches this on the document once the engine
+      // has rendered its first frame.
+      window.addEventListener('flutter-first-frame', dismiss);
+      // Safety net: hide the splash after 30s even if Flutter
+      // never signals — better an empty canvas than a frozen
+      // spinner.
+      setTimeout(dismiss, 30000);
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
