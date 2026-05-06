@@ -1,5 +1,100 @@
 # Project Log
 
+## Social signals lost on cold start; AddedByRow missing on user-authored recipes
+
+**Date:** 2026-05-06
+
+**Commit:** `b5ac4d0` — fix(social): refresh ratings/favorites/creator from server on details + list cold start
+
+### Symptoms
+
+1. **AddedByRow absent on a freshly-created recipe.** A recipe authored
+   by the logged-in user (e.g. "test", id `1000011`) showed no creator
+   avatar / display name / `recipesAdded` chip on its details page.
+2. **Stars and favorites lost across app launches.** A recipe rated 5★
+   and favorited (e.g. id `52772`) cold-started with `0★ / 0♥` after
+   the app was killed and reopened, even though the backend had
+   persisted the values correctly.
+
+### Root causes
+
+- **Bug A.** Server projects `creatorUserId` and `creatorRecipesAdded`
+  on `/recipes/page` and `/recipes/lookup/:id`, but does **not**
+  JOIN `creatorDisplayName` / `creatorAvatarPath`. The client gate
+  `if (recipe.creatorDisplayName != null)` therefore always failed
+  for self-authored recipes and the row never rendered.
+- **Bug B.** Per chunk E of `docs/user-card-and-social-signals.md`,
+  social-signal aggregates (`favoritesCount`, `ratingsCount`,
+  `ratingsSum`, `myRating`) are intentionally **not** persisted in
+  the local sqflite cache (schema stays at v12). Cached rows always
+  reconstruct with zeros; the spec requires "the loader refreshes
+  them on the next list fetch". `_RecipeListLoaderState` had a
+  cache-first short-circuit that returned cached rows on cold start
+  **without** ever calling `/recipes/page`, so the zero seed stuck
+  until the user manually pulled to refresh.
+
+### Fix
+
+- `recipe_list/lib/data/api/recipe_api.dart`
+  - Added top-level `myProfileNotifier` (process-wide
+    `ValueNotifier<UserProfileSnapshot?>`).
+  - `fetchMyProfile()` now writes the parsed snapshot into the
+    notifier in addition to returning it.
+- `recipe_list/lib/ui/recipe_details_page.dart`
+  - On `initState`, fires `api.fetchMyProfile()` if logged in and
+    cache is empty (no-op otherwise).
+  - On `initState`, fires `_refreshFromServer()` which calls
+    `api.lookup(recipe.id)` and overwrites the cached `_recipe`
+    with the live aggregate (also nudges
+    `RatingStore.refresh(id)` so the in-memory snapshot picks up
+    the new seed). This makes social signals self-heal on every
+    details open without waiting for the list-level refresh.
+  - AddedByRow gate now triggers on `recipe.id >= 1000000` alone;
+    a `ValueListenableBuilder<UserProfileSnapshot?>` watches
+    `myProfileNotifier` and back-fills `creatorDisplayName`,
+    `creatorAvatarPath`, `creatorRecipesAdded` from the cached
+    profile when `recipe.creatorUserId == me.id`.
+- `recipe_list/lib/ui/recipe_list_loader.dart`
+  - Mahallem branch: on cache hit (`repo.countFor(lang) >= 50`)
+    no longer returns immediately. Publishes the cached feed for
+    snappy paint, then falls through into `/recipes/page` so the
+    cards get refreshed with live `favoritesCount`, `ratingsCount`,
+    `ratingsSum`, `myRating`.
+  - On `/recipes/page` failure with a non-empty cache, returns the
+    already-published `_lastResult` instead of running
+    `_seedFromCategories` (which would reshuffle the feed).
+
+### Verification
+
+- `flutter test` 169/169 green (including the
+  `recipe_list_loader_*_test.dart` and AddedByRow visibility tests).
+- `flutter build ios --simulator --debug` + install on iPhone 16e:
+  cold-start screenshot shows non-zero `favoritesCount` /
+  `ratingsCount` on cards (`Teriyaki Chicken Casserole` showed
+  `1 ♥`, `★ 1`), confirming the loader refresh path is wired.
+- Backend persistence verified independently via curl round-trip:
+  `POST /recipes/52772/rating {stars:5}` → `GET /recipes/52772/rating`
+  returns `{count:1,sum:5,avg:5,my:5}` and `/recipes/page`
+  reflects the same.
+- `flutter build ios --release` + `xcrun devicectl device install`
+  on NovogodOne (iPad, `9926E27D-…`).
+
+### Notes for future work
+
+- Server-side enhancement option: project `creatorDisplayName` and
+  `creatorAvatarPath` directly from the existing JOIN against the
+  user-portal users table; would let the client drop the
+  `myProfileNotifier`-based hydration for self-authored recipes
+  and also display authorship correctly for recipes added by
+  *other* users (currently AddedByRow stays hidden in that case).
+- The "publish cached, then refresh" pattern in
+  `recipe_list_loader.dart` is now duplicated for the
+  details-page case via `_refreshFromServer`. If a third surface
+  needs the same self-heal it should be lifted into a shared
+  helper rather than copy-pasted.
+
+---
+
 ## PWA installed-mode bugs — safe-area, reload spinner, SQLite corruption
 
 **Date:** 2026-05-05
