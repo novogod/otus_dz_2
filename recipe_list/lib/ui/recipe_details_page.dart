@@ -88,8 +88,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     // projects `creatorUserId` but not `creatorDisplayName` /
     // `creatorAvatarPath`, so we back-fill from `/users/me` when
     // it lands. Cheap no-op when already cached or unauthenticated.
-    if (myProfileNotifier.value == null &&
-        userLoggedInNotifier.value == true) {
+    if (myProfileNotifier.value == null && userLoggedInNotifier.value == true) {
       final api = appServicesNotifier.value?.api;
       if (api != null) {
         // ignore: discarded_futures

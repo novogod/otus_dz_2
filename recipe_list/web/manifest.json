@@ -4,11 +4,15 @@
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
-    "background_color": "#FFFFFF",
+    "background_color": "#000000",
     "theme_color": "#2ECC71",
     "description": "Free recipes from around the world. Browse, search, save and cook with step-by-step instructions, ingredients and a built-in shopping list.",
     "lang": "en",
-    "categories": ["food", "lifestyle", "utilities"],
+    "categories": [
+        "food",
+        "lifestyle",
+        "utilities"
+    ],
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -1,30 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Background: brand green rounded square -->
-  <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224" fill="#2ECC71"/>
+  <!--
+    App icon — diagonal gradient (top-left BLACK -> bottom-right
+    theme green #2ECC71), centered hot beverage glyph (☕ / U+2615 style:
+    cup + handle + saucer + 3 steam swirls). Cup occupies ~1/3 of surface.
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000000"/>
+      <stop offset="1" stop-color="#2ECC71"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224" fill="url(#bg)"/>
 
-  <!-- Steam: 3 wavy strokes rising from bowl -->
-  <g fill="none" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round">
-    <path d="M 380 360
-             C 340 320, 420 280, 380 240
-             C 340 200, 420 160, 380 120"/>
-    <path d="M 512 380
-             C 472 340, 552 300, 512 260
-             C 472 220, 552 180, 512 140"/>
-    <path d="M 644 360
-             C 604 320, 684 280, 644 240
-             C 604 200, 684 160, 644 120"/>
+  <!-- Steam: 3 wavy white strokes -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" opacity="0.95">
+    <path d="M 430 440 C 395 405, 465 370, 430 335 C 395 300, 465 265, 430 230"/>
+    <path d="M 512 460 C 477 425, 547 390, 512 355 C 477 320, 547 285, 512 250"/>
+    <path d="M 594 440 C 559 405, 629 370, 594 335 C 559 300, 629 265, 594 230"/>
   </g>
 
-  <!-- Bowl: white half-ellipse with rim -->
-  <!-- Rim (top oval) -->
-  <ellipse cx="512" cy="500" rx="320" ry="42" fill="#FFFFFF"/>
-  <!-- Body (bottom half-ellipse) -->
-  <path d="M 192 500
-           A 320 320 0 0 0 832 500
-           Z" fill="#FFFFFF"/>
-  <!-- Inner shadow on rim -->
-  <ellipse cx="512" cy="500" rx="300" ry="30" fill="#E8F8EF"/>
+  <!-- Saucer -->
+  <ellipse cx="512" cy="780" rx="260" ry="30" fill="#FFFFFF" opacity="0.92"/>
+  <ellipse cx="512" cy="775" rx="240" ry="20" fill="url(#bg)" opacity="0.35"/>
 
-  <!-- Plate under bowl -->
-  <ellipse cx="512" cy="820" rx="400" ry="40" fill="#FFFFFF"/>
+  <!-- Handle -->
+  <path d="M 678 540 C 780 540, 800 700, 678 700"
+        fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round"/>
+
+  <!-- Cup body -->
+  <path d="M 342 490 Q 342 470, 362 470 L 662 470 Q 682 470, 682 490 L 682 690 Q 682 740, 632 750 L 392 750 Q 342 740, 342 690 Z"
+        fill="#FFFFFF"/>
+
+  <!-- Coffee surface -->
+  <ellipse cx="512" cy="490" rx="160" ry="22" fill="#3B2415"/>
+  <ellipse cx="512" cy="488" rx="148" ry="14" fill="#5A3A24"/>
 </svg>

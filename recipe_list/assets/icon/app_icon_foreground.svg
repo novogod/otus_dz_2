@@ -1,27 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Transparent background; content sits inside Android adaptive safe-zone (~66% center) -->
-  <!-- Steam -->
-  <g fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round">
-    <path d="M 410 470
-             C 360 420, 460 370, 410 320
-             C 360 270, 460 220, 410 170"/>
-    <path d="M 552 490
-             C 502 440, 602 390, 552 340
-             C 502 290, 602 240, 552 190"/>
-    <path d="M 694 470
-             C 644 420, 744 370, 694 320
-             C 644 270, 744 220, 694 170"/>
+  <!-- Foreground for Android adaptive icon: just the cup + steam,
+       no background. Centered in a 432x432 safe zone (Android docs);
+       we keep our existing 1024 canvas — content sized so it fits the
+       66% safe rect. -->
+  <g transform="translate(0,40)">
+    <g fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" opacity="0.95">
+      <path d="M 430 440 C 395 405, 465 370, 430 335 C 395 300, 465 265, 430 230"/>
+      <path d="M 512 460 C 477 425, 547 390, 512 355 C 477 320, 547 285, 512 250"/>
+      <path d="M 594 440 C 559 405, 629 370, 594 335 C 559 300, 629 265, 594 230"/>
+    </g>
+    <ellipse cx="512" cy="780" rx="260" ry="30" fill="#FFFFFF" opacity="0.92"/>
+    <path d="M 678 540 C 780 540, 800 700, 678 700"
+          fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round"/>
+    <path d="M 342 490 Q 342 470, 362 470 L 662 470 Q 682 470, 682 490 L 682 690 Q 682 740, 632 750 L 392 750 Q 342 740, 342 690 Z"
+          fill="#FFFFFF"/>
+    <ellipse cx="512" cy="490" rx="160" ry="22" fill="#3B2415"/>
+    <ellipse cx="512" cy="488" rx="148" ry="14" fill="#5A3A24"/>
   </g>
-
-  <!-- Bowl rim -->
-  <ellipse cx="552" cy="610" rx="320" ry="42" fill="#FFFFFF"/>
-  <!-- Bowl body -->
-  <path d="M 232 610
-           A 320 320 0 0 0 872 610
-           Z" fill="#FFFFFF"/>
-  <!-- Inner highlight on rim -->
-  <ellipse cx="552" cy="610" rx="300" ry="30" fill="#E8F8EF"/>
-
-  <!-- Plate -->
-  <ellipse cx="552" cy="900" rx="380" ry="36" fill="#FFFFFF" opacity="0.92"/>
 </svg>
