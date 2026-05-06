@@ -304,11 +304,11 @@ class _Photo extends StatelessWidget {
                 right: AppSpacing.sm,
                 bottom: AppSpacing.sm,
                 child: PointerInterceptor(
-                  child: _YoutubeBadge(url: recipe.youtubeUrl!),
+                  child: YoutubeBadge(url: recipe.youtubeUrl!),
                 ),
               ),
             // Share badge anchored to the top-left of the photo,
-            // mirroring [_YoutubeBadge]'s circular shape and size
+            // mirroring [YoutubeBadge]'s circular shape and size
             // but tinted with the brand primary so the affordance
             // reads as "share this recipe" (rather than the global
             // app-share button in the AppBar). Tapping opens the
@@ -318,7 +318,7 @@ class _Photo extends StatelessWidget {
               left: AppSpacing.sm,
               top: AppSpacing.sm,
               child: PointerInterceptor(
-                child: _PhotoShareBadge(recipe: recipe),
+                child: PhotoShareBadge(recipe: recipe),
               ),
             ),
             // Star-rating pill on every photo (per
@@ -331,7 +331,7 @@ class _Photo extends StatelessWidget {
               left: AppSpacing.sm,
               bottom: AppSpacing.sm,
               child: PointerInterceptor(
-                child: _PhotoRatingPill(recipe: recipe),
+                child: PhotoRatingPill(recipe: recipe),
               ),
             ),
           ],
@@ -357,10 +357,10 @@ class _Photo extends StatelessWidget {
   }
 }
 
-class _YoutubeBadge extends StatelessWidget {
+class YoutubeBadge extends StatelessWidget {
   final String url;
 
-  const _YoutubeBadge({required this.url});
+  const YoutubeBadge({super.key, required this.url});
 
   Future<void> _launch() async {
     final uri = Uri.tryParse(url);
@@ -386,14 +386,14 @@ class _YoutubeBadge extends StatelessWidget {
 }
 
 /// Share badge anchored to the top-left of the recipe photo.
-/// Mirrors [_YoutubeBadge]'s circular 40dp / semi-transparent black
+/// Mirrors [YoutubeBadge]'s circular 40dp / semi-transparent black
 /// chrome, but the glyph is tinted with the brand primary green so
 /// it reads as the "share this recipe" affordance rather than the
 /// global AppBar share button. Tapping invokes [shareRecipe], which
 /// opens the system share sheet (iOS/Android) or the social-network
 /// dropdown (web) pre-filled with the deep-link to this recipe.
-class _PhotoShareBadge extends StatelessWidget {
-  const _PhotoShareBadge({required this.recipe});
+class PhotoShareBadge extends StatelessWidget {
+  const PhotoShareBadge({super.key, required this.recipe});
 
   final Recipe recipe;
 
@@ -419,7 +419,7 @@ class _PhotoShareBadge extends StatelessWidget {
 }
 
 /// 5-star rating pill anchored to the bottom-left corner of every
-/// recipe photo, inline with [_YoutubeBadge]. Visual weight matches
+/// recipe photo, inline with [YoutubeBadge]. Visual weight matches
 /// the YouTube badge (semi-transparent black, white/primary glyphs)
 /// so the two badges read as a pair.
 ///
@@ -428,8 +428,8 @@ class _PhotoShareBadge extends StatelessWidget {
 /// while logged out surfaces the registration-required snackbar;
 /// while logged in, sends the vote through [RatingStore]. The vote
 /// count is shown to the right of the stars.
-class _PhotoRatingPill extends StatelessWidget {
-  const _PhotoRatingPill({required this.recipe});
+class PhotoRatingPill extends StatelessWidget {
+  const PhotoRatingPill({super.key, required this.recipe});
 
   final Recipe recipe;
 
@@ -563,7 +563,7 @@ class _PhotoRatingPillView extends StatelessWidget {
 }
 
 /// Бейдж-сердце в правом верхнем углу карточки. Зеркалит размер и
-/// визуальный вес [_YoutubeBadge]: круг 40×40, полупрозрачный
+/// визуальный вес [YoutubeBadge]: круг 40×40, полупрозрачный
 /// чёрный фон, белый/зелёный глиф.
 ///
 /// Слушает [favoritesStoreNotifier] и нотифаер по текущему языку

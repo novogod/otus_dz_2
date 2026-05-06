@@ -19,7 +19,8 @@ import '../utils/imgproxy.dart';
 import '../utils/instructions_format.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
-import 'recipe_card.dart' show FavoriteBadge;
+import 'recipe_card.dart'
+    show FavoriteBadge, PhotoRatingPill, PhotoShareBadge, YoutubeBadge;
 import 'social/added_by_row.dart';
 import 'social/recipe_rating_row.dart';
 
@@ -342,6 +343,45 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                                 api: widget.api,
                                 repository: widget.repository,
                               ),
+                            ),
+                          ),
+                          // Mirror the recipes-list card photo
+                          // chrome on the details hero so the page
+                          // exposes the same affordances:
+                          //   • PhotoShareBadge — top-left,
+                          //     deep-link share-this-recipe.
+                          //   • YoutubeBadge — bottom-right,
+                          //     opens the source video.
+                          //   • PhotoRatingPill — bottom-left,
+                          //     5-star vote + count.
+                          // _OwnerActions already occupies the
+                          // top-left when the viewer can manage
+                          // this recipe; the share badge sits next
+                          // to it (offset right) so both stay
+                          // tappable. On non-owner views the
+                          // owner-actions widget collapses to a
+                          // SizedBox.shrink and only the share
+                          // badge is visible at top-left.
+                          Positioned(
+                            top: AppSpacing.sm,
+                            left: AppSpacing.sm + AppSpacing.xl + AppSpacing.md,
+                            child: PointerInterceptor(
+                              child: PhotoShareBadge(recipe: recipe),
+                            ),
+                          ),
+                          if (recipe.youtubeUrl != null)
+                            Positioned(
+                              right: AppSpacing.sm,
+                              bottom: AppSpacing.sm,
+                              child: PointerInterceptor(
+                                child: YoutubeBadge(url: recipe.youtubeUrl!),
+                              ),
+                            ),
+                          Positioned(
+                            left: AppSpacing.sm,
+                            bottom: AppSpacing.sm,
+                            child: PointerInterceptor(
+                              child: PhotoRatingPill(recipe: recipe),
                             ),
                           ),
                         ],
