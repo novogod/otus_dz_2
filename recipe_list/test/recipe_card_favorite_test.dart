@@ -6,6 +6,7 @@ import 'package:recipe_list/data/local/recipe_db.dart';
 import 'package:recipe_list/data/repository/favorites_store.dart';
 import 'package:recipe_list/i18n.dart';
 import 'package:recipe_list/models/recipe.dart';
+import 'package:recipe_list/ui/app_theme.dart';
 import 'package:recipe_list/ui/recipe_card.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -72,7 +73,9 @@ void main() {
         ),
       );
       expect(icon.icon, Icons.favorite_border);
-      expect(icon.color, Colors.white);
+      // FavoriteBadge is now always a pill: non-favorited heart uses
+      // textSecondary instead of the legacy white-on-black square.
+      expect(icon.color, AppColors.textSecondary);
     });
 
     testWidgets('tap toggles to filled green heart and persists', (

@@ -26,10 +26,23 @@ Widget _harness(Widget child) => TranslationProvider(
 
 void main() {
   group('FavoriteBadge layout', () {
+    testWidgets(
+      'default — pill with "0" and outline heart even when count is zero',
+      (tester) async {
+        await tester.pumpWidget(_harness(const FavoriteBadge(recipeId: 1)));
+
+        // Spec: heart is ALWAYS a pill with a visible count, including 0.
+        expect(find.text('0'), findsOneWidget);
+        expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      },
+    );
+
     testWidgets('showCount = false → legacy 32×32 square, no number', (
       tester,
     ) async {
-      await tester.pumpWidget(_harness(const FavoriteBadge(recipeId: 1)));
+      await tester.pumpWidget(
+        _harness(const FavoriteBadge(recipeId: 2, showCount: false)),
+      );
 
       // No number text.
       expect(find.text('0'), findsNothing);
@@ -46,19 +59,23 @@ void main() {
       expect(squareCount, greaterThanOrEqualTo(1));
     });
 
-    testWidgets('showCount = true, favoritesCount = 0 → square fallback', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _harness(
-          const FavoriteBadge(recipeId: 2, favoritesCount: 0, showCount: true),
-        ),
-      );
+    testWidgets(
+      'showCount = true, favoritesCount = 0 → pill with "0" + outline heart',
+      (tester) async {
+        await tester.pumpWidget(
+          _harness(
+            const FavoriteBadge(
+              recipeId: 3,
+              favoritesCount: 0,
+              showCount: true,
+            ),
+          ),
+        );
 
-      // No number rendered (falls through to square).
-      expect(find.text('0'), findsNothing);
-      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
-    });
+        expect(find.text('0'), findsOneWidget);
+        expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'showCount = true, favoritesCount = 7 → pill with "7" + outline heart',
@@ -66,7 +83,7 @@ void main() {
         await tester.pumpWidget(
           _harness(
             const FavoriteBadge(
-              recipeId: 3,
+              recipeId: 4,
               favoritesCount: 7,
               showCount: true,
             ),
@@ -89,7 +106,7 @@ void main() {
       await tester.pumpWidget(
         _harness(
           const FavoriteBadge(
-            recipeId: 4,
+            recipeId: 5,
             favoritesCount: 1234,
             showCount: true,
           ),

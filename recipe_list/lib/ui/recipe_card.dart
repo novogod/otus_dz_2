@@ -441,9 +441,7 @@ class _PhotoRatingPillView extends StatelessWidget {
                         ? Icons.star_rounded
                         : Icons.star_outline_rounded,
                     size: 18,
-                    color: i <= highlighted
-                        ? AppColors.primary
-                        : Colors.white,
+                    color: i <= highlighted ? AppColors.primary : Colors.white,
                   ),
                 ),
               ),
@@ -486,18 +484,16 @@ class FavoriteBadge extends StatelessWidget {
   /// ignored.
   final int favoritesCount;
 
-  /// When true and `favoritesCount > 0`, render the pill layout
-  /// (number + heart). Otherwise fall back to the legacy 32×32
-  /// dark circle. Set to `false` for callers that just need the
-  /// affordance (e.g. logged-out badge in lists where counts
-  /// haven't shipped yet).
+  /// When true, always render the pill layout (number + heart),
+  /// even when [favoritesCount] is zero. Per the spec the heart
+  /// is always a pill with a visible count. Defaults to `true`.
   final bool showCount;
 
   const FavoriteBadge({
     super.key,
     required this.recipeId,
     this.favoritesCount = 0,
-    this.showCount = false,
+    this.showCount = true,
   });
 
   @override
@@ -585,11 +581,10 @@ class _FavoriteBadgeView extends StatelessWidget {
     // другого InkWell не всегда получает тап — событие уходит в
     // родительский Material карточки. GestureDetector с opaque всегда
     // поглощает тап независимо от платформы.
-    final renderPill = showCount && favoritesCount > 0;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: renderPill ? _buildPill(context) : _buildSquare(),
+      child: showCount ? _buildPill(context) : _buildSquare(),
     );
   }
 

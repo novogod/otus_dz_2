@@ -264,7 +264,10 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                             top: AppSpacing.sm,
                             right: AppSpacing.sm,
                             child: PointerInterceptor(
-                              child: FavoriteBadge(recipeId: recipe.id),
+                              child: FavoriteBadge(
+                                recipeId: recipe.id,
+                                favoritesCount: recipe.favoritesCount,
+                              ),
                             ),
                           ),
                           // Owner-actions (delete + edit) — top-left.

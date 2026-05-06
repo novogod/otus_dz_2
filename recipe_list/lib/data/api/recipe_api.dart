@@ -312,8 +312,7 @@ class RecipeApi {
       );
     }
     final fresh = await fetchRating(recipeId);
-    return fresh ??
-        RecipeRatingSnapshot(count: 1, sum: stars, my: stars);
+    return fresh ?? RecipeRatingSnapshot(count: 1, sum: stars, my: stars);
   }
 
   /// mahallem-only: DELETE /recipes/:id/rating. Removes the
