@@ -143,6 +143,15 @@ export function buildSpaUrl({ origin, locale, id }) {
 // which keeps the share-link unfurl correct.
 
 const PUBLIC_HOST = 'https://recipies.mahallem.ist';
+// Recipe / avatar images live on the mahallem.ist host — the user-
+// portal API ships them as host-relative storage paths
+// (`/storage/v1/object/public/recipe-photos/...`) which only resolve
+// against that origin, NOT against `recipies.mahallem.ist` (which only
+// proxies the SPA + the prerender). Used to absolutize og:image /
+// twitter:image / JSON-LD image so OG scrapers can fetch the unfurl
+// thumbnail.
+const STORAGE_HOST =
+  (process.env && process.env.STORAGE_ORIGIN) || 'https://mahallem.ist';
 
 // HTML-escape for attribute / text contexts. We only emit a small,
 // well-known set of tags so a single escaper is enough.
@@ -223,12 +232,13 @@ export function buildRecipeSeoHead(recipe) {
   // Absolutize image URL — OG scrapers (Telegram, Facebook, X) require
   // a fully-qualified `og:image` and silently drop the unfurl card if
   // the value starts with `/`. Recipe payloads from the user-portal
-  // can ship a relative storage path (e.g.
-  // `/storage/v1/object/public/recipe-photos/...`) so we prefix our
-  // public host when no scheme is present.
+  // ship a relative storage path (e.g.
+  // `/storage/v1/object/public/recipe-photos/...`) which resolves
+  // against `mahallem.ist`, not `recipies.mahallem.ist`. Already-
+  // absolute URLs (themealdb CDN) are passed through untouched.
   const imageAbs = /^https?:\/\//i.test(image)
     ? image
-    : `${PUBLIC_HOST}${image.startsWith('/') ? '' : '/'}${image}`;
+    : `${STORAGE_HOST}${image.startsWith('/') ? '' : '/'}${image}`;
   const canonical = `${PUBLIC_HOST}/${locale}/recipes/${id}`;
   const lines = [];
   const e = htmlEscape;

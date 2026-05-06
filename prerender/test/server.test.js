@@ -382,10 +382,12 @@ test('buildRecipeSeoHead returns "" for invalid input', () => {
 });
 
 test('buildRecipeSeoHead absolutizes relative og:image paths', () => {
-  // Recipe payloads from the user-portal can ship a relative storage
-  // path (e.g. /storage/v1/object/public/recipe-photos/...). Telegram
-  // and Facebook silently drop the unfurl card if og:image isn't a
-  // fully-qualified URL — prefix our public host when no scheme.
+  // Recipe payloads from the user-portal ship a relative storage path
+  // (e.g. /storage/v1/object/public/recipe-photos/...) which resolves
+  // against mahallem.ist, not recipies.mahallem.ist (which only
+  // proxies the SPA + prerender). Telegram and Facebook silently drop
+  // the unfurl card if og:image isn't a fully-qualified URL — prefix
+  // the storage host when no scheme is present.
   const head = buildRecipeSeoHead({
     id: 1,
     locale: 'en',
@@ -394,11 +396,11 @@ test('buildRecipeSeoHead absolutizes relative og:image paths', () => {
   });
   assert.match(
     head,
-    /property="og:image" content="https:\/\/recipies\.mahallem\.ist\/storage\/v1\/object\/public\/recipe-photos\/1\/photo\.jpg"/,
+    /property="og:image" content="https:\/\/mahallem\.ist\/storage\/v1\/object\/public\/recipe-photos\/1\/photo\.jpg"/,
   );
   assert.match(
     head,
-    /name="twitter:image" content="https:\/\/recipies\.mahallem\.ist\/storage\/v1\/object\/public\/recipe-photos\/1\/photo\.jpg"/,
+    /name="twitter:image" content="https:\/\/mahallem\.ist\/storage\/v1\/object\/public\/recipe-photos\/1\/photo\.jpg"/,
   );
   // Already-absolute URLs are passed through untouched.
   const head2 = buildRecipeSeoHead({
