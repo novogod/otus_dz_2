@@ -690,6 +690,13 @@ class _AddRecipePageState extends State<AddRecipePage> {
                       labelText: s.addRecipeInstructions,
                       alignLabelWithHint: true,
                     ),
+                    // Multiline + newline action: iOS PWA otherwise
+                    // hides the Enter key on a non-multiline keyboard
+                    // and the user's "1/ step" / "2/ step" stays on a
+                    // single line. With these flags Enter inserts \n
+                    // and the server stores the paragraph breaks.
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
                     maxLines: 6,
                     minLines: 3,
                   ),

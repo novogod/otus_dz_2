@@ -16,6 +16,7 @@ import '../models/recipe.dart';
 import '../router/routes.dart';
 import '../seo/seo_head.dart';
 import '../utils/imgproxy.dart';
+import '../utils/instructions_format.dart';
 import 'app_page_bar.dart';
 import 'app_theme.dart';
 import 'recipe_card.dart' show FavoriteBadge;
@@ -449,7 +450,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                         ),
                         const SizedBox(height: AppSpacing.md),
                         Text(
-                          recipe.instructions!,
+                          formatInstructions(recipe.instructions),
                           style: const TextStyle(
                             fontFamily: AppTextStyles.fontFamily,
                             fontWeight: FontWeight.w400,
@@ -491,7 +492,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                               return const SizedBox.shrink();
                             }
                             return Text(
-                              body,
+                              formatInstructions(body),
                               style: const TextStyle(
                                 fontFamily: AppTextStyles.fontFamily,
                                 fontWeight: FontWeight.w400,

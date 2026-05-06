@@ -115,8 +115,7 @@ class RecipeCard extends StatelessWidget {
                                 final isMine =
                                     isCurrentUserAuthor(recipe) ||
                                     (recipe.id >=
-                                            OwnedRecipesStore
-                                                .userMealIdFloor &&
+                                            OwnedRecipesStore.userMealIdFloor &&
                                         (ownedRecipesStoreNotifier.value
                                                 ?.isOwned(recipe.id) ??
                                             false));
