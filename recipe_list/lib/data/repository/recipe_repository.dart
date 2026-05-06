@@ -113,10 +113,15 @@ class RecipeRepository {
     final apiHits = await apiFuture;
 
     // Дедуп по id, кэш — первым (LRU «свежак»), затем то, что докинула сеть.
+    // Если ID встречается в обоих списках, берём API-версию: она несёт
+    // server-projected creator/favorites поля, которые в локальной строке
+    // могут быть NULL (старый upsert до chunk H), и автор/счётчик
+    // отображаются корректно без ожидания следующего фонового апдейта.
+    final apiById = <int, Recipe>{for (final r in apiHits) r.id: r};
     final seen = <int>{};
     final merged = <Recipe>[];
     for (final r in cacheHits) {
-      if (seen.add(r.id)) merged.add(r);
+      if (seen.add(r.id)) merged.add(apiById[r.id] ?? r);
     }
     for (final r in apiHits) {
       if (seen.add(r.id)) merged.add(r);

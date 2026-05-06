@@ -94,52 +94,55 @@ class RecipeCard extends StatelessWidget {
                                 count: recipe.ingredients.length,
                               ),
                             ],
-                            if (recipe.creatorDisplayName != null) ...[
-                              const SizedBox(height: AppSpacing.sm),
-                              _AuthorChip(
-                                name: recipe.creatorDisplayName!,
-                                avatarPath: recipe.creatorAvatarPath,
-                                recipesAdded: recipe.creatorRecipesAdded,
-                              ),
-                            ] else if (isCurrentUserAuthor(recipe) ||
-                                recipe.id >=
-                                        OwnedRecipesStore.userMealIdFloor &&
-                                    (ownedRecipesStoreNotifier.value?.isOwned(
-                                          recipe.id,
-                                        ) ??
-                                        false)) ...[
-                              // Cross-device fallback: the locally-cached
-                              // recipe row may have been written before
-                              // creator columns shipped (v14 schema), or
-                              // attachSocialSignals dropped the projection
-                              // because of a transient SQL error. When we
-                              // KNOW the current user authored this recipe
-                              // (via creatorUserId match against
-                              // [myProfileNotifier], or as a last resort
-                              // via the per-device owned_recipes registry)
-                              // hydrate the chip from /recipes/users/me so
-                              // the author signal is never silently
-                              // missing.
-                              ValueListenableBuilder<UserProfileSnapshot?>(
-                                valueListenable: myProfileNotifier,
-                                builder: (context, me, _) {
-                                  if (me == null ||
-                                      (me.displayName ?? '').isEmpty) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return Padding(
-                                    padding: const EdgeInsets.only(
-                                      top: AppSpacing.sm,
-                                    ),
-                                    child: _AuthorChip(
-                                      name: me.displayName!,
-                                      avatarPath: me.avatarPath,
-                                      recipesAdded: me.recipesAdded,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
+                            // Author chip. Prefers the server-projected
+                            // creator metadata; when the local cache row
+                            // was written before `attachSocialSignals`
+                            // shipped (or the projection failed) but we
+                            // still know the current user authored this
+                            // recipe, hydrate the chip from
+                            // `/recipes/users/me` so the author signal
+                            // is never silently missing on the author's
+                            // own card. Wrapped in a
+                            // [ValueListenableBuilder] so the chip
+                            // appears as soon as the profile finishes
+                            // loading after a fresh login.
+                            ValueListenableBuilder<UserProfileSnapshot?>(
+                              valueListenable: myProfileNotifier,
+                              builder: (context, me, _) {
+                                String? name = recipe.creatorDisplayName;
+                                String? avatar = recipe.creatorAvatarPath;
+                                int? added = recipe.creatorRecipesAdded;
+                                final isMine =
+                                    isCurrentUserAuthor(recipe) ||
+                                    (recipe.id >=
+                                            OwnedRecipesStore
+                                                .userMealIdFloor &&
+                                        (ownedRecipesStoreNotifier.value
+                                                ?.isOwned(recipe.id) ??
+                                            false));
+                                if ((name == null || name.isEmpty) &&
+                                    isMine &&
+                                    me != null &&
+                                    (me.displayName ?? '').isNotEmpty) {
+                                  name = me.displayName;
+                                  avatar = me.avatarPath;
+                                  added = me.recipesAdded;
+                                }
+                                if (name == null || name.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: AppSpacing.sm,
+                                  ),
+                                  child: _AuthorChip(
+                                    name: name,
+                                    avatarPath: avatar,
+                                    recipesAdded: added,
+                                  ),
+                                );
+                              },
+                            ),
                           ],
                         ],
                       ),
