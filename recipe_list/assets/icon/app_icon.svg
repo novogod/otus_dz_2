@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <!--
-    App icon — diagonal gradient (top-left BLACK -> bottom-right
-    theme green #2ECC71), centered hot beverage glyph (☕ / U+2615 style:
+    App icon — diagonal gradient (top-left theme GREEN #2ECC71 ->
+    bottom-right BLACK), centered hot beverage glyph (☕ / U+2615 style:
     cup + handle + saucer + 3 steam swirls). Cup occupies ~1/3 of surface.
   -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#000000"/>
-      <stop offset="1" stop-color="#2ECC71"/>
+      <stop offset="0" stop-color="#2ECC71"/>
+      <stop offset="1" stop-color="#000000"/>
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224" fill="url(#bg)"/>
