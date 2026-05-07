@@ -11,3 +11,6 @@ recipe_list/docs/figma/
 .env_gemini
 recipe_list/.env_gemini
 PREreleases/
+
+# v2 extension proposals — local design scratchpad, not shipped with repo
+docs/extensions_for_v2/

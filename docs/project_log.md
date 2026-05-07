@@ -1,5 +1,73 @@
 # Project Log
 
+## Auth: 365-day session + friendly 401 on rating
+
+**Date:** 2026-05-07
+
+**Commits:**
+- `otus_dz_2` `80e8a32` — auth: 365-day session + friendly 401 handling on rating
+- `mahallem_ist` `78ee36a4` — auth: 365-day token TTLs for recipes user + admin
+
+### Symptoms
+
+Two production users (a regular logged-in user on the web, and the
+admin on the iOS Novogod release build) saw the same toast on the
+recipe-list view when tapping the star pill on a card:
+
+```
+Rating failed: DioException [bad response]: this exception was
+thrown because the response has a status code of 401 …
+```
+
+Rating, favorites and other write actions had worked the previous
+day. The UI still rendered both users as logged-in.
+
+### Root causes
+
+1. **Backend issued short-lived tokens.** In `local_user_portal/routes/auth.js`,
+   `issueRecipesUserToken()` hard-coded `exp` to 30 days, and
+   `RECIPE_ADMIN_TOKEN_TTL_SECONDS` defaulted to 8 hours
+   (`28800`). The admin's iPhone session therefore expired every
+   overnight cycle; any regular user older than 30 days hit the
+   same path.
+2. **Client treated a stale login row as "logged in".** In
+   `recipe_list/lib/auth/admin_session.dart`, `_setSessionState`
+   flipped `userLoggedInNotifier` purely on the persisted `login`
+   string. When the token had expired/been cleared while `login`
+   was still present, the rating widget's `if (!loggedIn) …`
+   guard passed, the POST went out without an auth header, the
+   backend returned 401, and `PhotoRatingPill`'s catch leaked the
+   raw `DioException` into a snackbar.
+
+### Fixes
+
+- **Backend** (`mahallem_ist` repo, deployed):
+  - `routes/auth.js` introduces `RECIPES_USER_TOKEN_TTL_SECONDS`
+    (default `60 * 60 * 24 * 365` = 31_536_000).
+  - `local_docker_admin_backend/docker-compose.yml` bumps
+    `RECIPE_ADMIN_TOKEN_TTL_SECONDS` default to 31_536_000 and
+    plumbs `RECIPES_USER_TOKEN_TTL_SECONDS=31536000` to
+    `mahallem-user-portal`. Container rebuilt; env verified live.
+- **Client** (this repo):
+  - [`admin_session.dart`](../recipe_list/lib/auth/admin_session.dart)
+    `_setSessionState`: `userLoggedInNotifier` now also requires a
+    backing token (or the admin path). A stale `login` row alone no
+    longer flips the flag.
+  - [`recipe_card.dart`](../recipe_list/lib/ui/recipe_card.dart)
+    `PhotoRatingPill.onTap`: `DioException` 401/403 drops the stale
+    session via `logoutAdmin()` and shows the localized
+    "please register / log in" snackbar instead of the raw error.
+
+### Migration
+
+Existing sessions whose 30-day / 8-hour tokens had already expired
+must log in once more. Every login from now on is good for
+**365 days** on the device (web localStorage / iOS app sqlite
+mirror), with all logged-in features (favorites, ratings, owner
+edit/delete) working uninterrupted within that window.
+
+Full incident write-up: [`docs/auth-session-401-rating.md`](auth-session-401-rating.md).
+
 ## Share link preview, deep-link bootstrap, photo chrome unification, favicon
 
 **Date:** 2026-05-06
