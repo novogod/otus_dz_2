@@ -330,10 +330,14 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                               ),
                             ),
                           ),
-                          // Owner-actions (delete + edit) — top-left.
-                          // Видны только если рецепт помечен как
-                          // «свой» в [ownedRecipesStoreNotifier]
-                          // (см. docs/owner-edit-delete.md).
+                          // Owner-actions row — top-left.
+                          // Always shows the share-this-recipe
+                          // badge; when the viewer is the recipe's
+                          // author (or an admin) the row also
+                          // surfaces inline edit + delete buttons.
+                          // Mirrors recipe_card.dart's `_CardActions`
+                          // so the affordance order is consistent
+                          // across list and details views.
                           Positioned(
                             top: AppSpacing.sm,
                             left: AppSpacing.sm,
@@ -343,30 +347,6 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                                 api: widget.api,
                                 repository: widget.repository,
                               ),
-                            ),
-                          ),
-                          // Mirror the recipes-list card photo
-                          // chrome on the details hero so the page
-                          // exposes the same affordances:
-                          //   • PhotoShareBadge — top-left,
-                          //     deep-link share-this-recipe.
-                          //   • YoutubeBadge — bottom-right,
-                          //     opens the source video.
-                          //   • PhotoRatingPill — bottom-left,
-                          //     5-star vote + count.
-                          // _OwnerActions already occupies the
-                          // top-left when the viewer can manage
-                          // this recipe; the share badge sits next
-                          // to it (offset right) so both stay
-                          // tappable. On non-owner views the
-                          // owner-actions widget collapses to a
-                          // SizedBox.shrink and only the share
-                          // badge is visible at top-left.
-                          Positioned(
-                            top: AppSpacing.sm,
-                            left: AppSpacing.sm + AppSpacing.xl + AppSpacing.md,
-                            child: PointerInterceptor(
-                              child: PhotoShareBadge(recipe: recipe),
                             ),
                           ),
                           if (recipe.youtubeUrl != null)
@@ -744,21 +724,26 @@ class _OwnerActions extends StatelessWidget {
           valueListenable: myProfileNotifier,
           builder: (context, _, __) {
             final canManage = isAdmin || isCurrentUserAuthor(recipe);
-            if (!canManage) return const SizedBox.shrink();
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _CircleIconButton(
-                  icon: Icons.delete_outline,
-                  tooltip: s.adminDeleteAction,
-                  onPressed: () => _confirmAndDelete(context),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                _CircleIconButton(
-                  icon: Icons.edit,
-                  tooltip: s.adminEditAction,
-                  onPressed: () => _openEdit(context),
-                ),
+                // Share-this-recipe is always available; for owners
+                // it sits inline with the edit/delete pair.
+                PhotoShareBadge(recipe: recipe),
+                if (canManage) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  _CircleIconButton(
+                    icon: Icons.delete_outline,
+                    tooltip: s.adminDeleteAction,
+                    onPressed: () => _confirmAndDelete(context),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  _CircleIconButton(
+                    icon: Icons.edit,
+                    tooltip: s.adminEditAction,
+                    onPressed: () => _openEdit(context),
+                  ),
+                ],
               ],
             );
           },

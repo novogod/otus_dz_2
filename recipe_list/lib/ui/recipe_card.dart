@@ -171,9 +171,6 @@ class RecipeCard extends StatelessWidget {
           child: ValueListenableBuilder<bool>(
             valueListenable: adminLoggedInNotifier,
             builder: (context, isAdmin, _) {
-              if (onEdit == null && onDelete == null) {
-                return const SizedBox.shrink();
-              }
               return ValueListenableBuilder<UserProfileSnapshot?>(
                 valueListenable: myProfileNotifier,
                 builder: (context, _, __) {
@@ -191,8 +188,11 @@ class RecipeCard extends StatelessWidget {
                   // fallback entirely; only admins or the verified
                   // author may manage a recipe, on every device.
                   final canManage = isAdmin || isCurrentUserAuthor(recipe);
-                  if (!canManage) return const SizedBox.shrink();
-                  return _CardActions(onEdit: onEdit, onDelete: onDelete);
+                  return _CardActions(
+                    recipe: recipe,
+                    onEdit: canManage ? onEdit : null,
+                    onDelete: canManage ? onDelete : null,
+                  );
                 },
               );
             },
@@ -204,8 +204,13 @@ class RecipeCard extends StatelessWidget {
 }
 
 class _CardActions extends StatelessWidget {
-  const _CardActions({required this.onEdit, required this.onDelete});
+  const _CardActions({
+    required this.recipe,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
+  final Recipe recipe;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
@@ -215,12 +220,18 @@ class _CardActions extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (onDelete != null)
-            _AdminActionBadge(icon: Icons.delete_outline, onTap: onDelete!),
-          if (onDelete != null && onEdit != null)
+          // Share-this-recipe always shows; sits inline with the
+          // owner-only edit/delete pair when the viewer can manage
+          // this recipe so all three affordances are reachable.
+          PhotoShareBadge(recipe: recipe),
+          if (onDelete != null) ...[
             const SizedBox(width: AppSpacing.xs),
-          if (onEdit != null)
+            _AdminActionBadge(icon: Icons.delete_outline, onTap: onDelete!),
+          ],
+          if (onEdit != null) ...[
+            const SizedBox(width: AppSpacing.xs),
             _AdminActionBadge(icon: Icons.edit, onTap: onEdit!),
+          ],
         ],
       ),
     );
@@ -307,18 +318,11 @@ class _Photo extends StatelessWidget {
                   child: YoutubeBadge(url: recipe.youtubeUrl!),
                 ),
               ),
-            // Share badge anchored to the top-left of the photo,
-            // mirroring [YoutubeBadge]'s circular shape and size
-            // but tinted with the brand primary so the affordance
-            // reads as "share this recipe" (rather than the global
-            // app-share button in the AppBar). Tapping opens the
-            // same dropdown / system share sheet, but pre-fills the
-            // payload with the deep-link to *this* recipe.
-            Positioned(
-              left: AppSpacing.sm,
-              top: AppSpacing.sm,
-              child: PointerInterceptor(child: PhotoShareBadge(recipe: recipe)),
-            ),
+            // Share badge is no longer rendered inside the photo
+            // — it lives in the outer Stack alongside the
+            // owner-only edit/delete row so all three affordances
+            // sit inline at top-left without overlap. See
+            // [_CardActions] in recipe_card.dart.
             // Star-rating pill on every photo (per
             // docs/prompts.md "stars on ALL recipe cards are
             // present and clickable"). Sits inline with the

@@ -1,6 +1,6 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'i18n.dart';
 import 'i18n/strings.g.dart';
@@ -8,6 +8,8 @@ import 'router/app_router.dart';
 import 'ui/app_theme.dart';
 import 'ui/splash_and_recipes.dart';
 import 'ui/web_share/pwa_install.dart';
+import 'web/url_strategy_stub.dart'
+    if (dart.library.js_interop) 'web/url_strategy_web.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,8 +21,13 @@ void main() {
   // `usePathUrlStrategy()` makes go_router read the real `pathname`,
   // so the `/:lang/recipes/:id` redirect fires and the receiver lands
   // on the recipe details page.
-  // No-op on iOS/Android/desktop (the helper compiles to a stub).
-  usePathUrlStrategy();
+  // No-op on iOS/Android/desktop — the helper is web-only, so we
+  // gate it behind `kIsWeb` and resolve the import at runtime via
+  // a deferred import to keep iOS/Android binaries from referencing
+  // `dart:html` symbols at all.
+  if (kIsWeb) {
+    enablePathUrlStrategy();
+  }
   // Pick up the device / browser locale before initI18n wires the
   // ValueNotifier into slang. If the user has a stored session,
   // admin_session.dart will overwrite this with their preferred
