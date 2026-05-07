@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -474,6 +475,20 @@ class PhotoRatingPill extends StatelessWidget {
                         await store.setMyRating(recipe.id, stars);
                       }
                     } catch (e) {
+                      // Token expired / cleared server-side. Surface a
+                      // friendly "log in to rate" prompt instead of the
+                      // raw DioException, and drop the stale session so
+                      // the next tap routes through the login flow.
+                      final status = e is DioException
+                          ? e.response?.statusCode
+                          : null;
+                      if (status == 401 || status == 403) {
+                        await logoutAdmin();
+                        if (context.mounted) {
+                          showRegistrationRequiredSnackBar(context);
+                        }
+                        return;
+                      }
                       messenger?.showSnackBar(
                         SnackBar(
                           content: Text('Rating failed: $e'),

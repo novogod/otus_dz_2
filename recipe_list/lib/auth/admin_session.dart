@@ -503,7 +503,16 @@ void _setSessionState({
 }) {
   currentUserLoginNotifier.value = login;
   currentUserTokenNotifier.value = token;
-  userLoggedInNotifier.value = login != null && login.isNotEmpty;
+  // A session is "logged in" only when we have credentials backing it: a
+  // user token (regular users), or the admin path (which carries its own
+  // bearer token in `currentRecipeAdminTokenNotifier`). Without this
+  // guard a stale `login` row whose token has been cleared/expired would
+  // still render as logged-in, and writes (favorites/ratings/etc.) would
+  // hit the backend with no Authorization header and return 401.
+  userLoggedInNotifier.value =
+      login != null &&
+      login.isNotEmpty &&
+      (isAdmin || (token != null && token.isNotEmpty));
   adminLoggedInNotifier.value = userLoggedInNotifier.value && isAdmin;
   if (!adminLoggedInNotifier.value) {
     _sessionAdminPassword = null;
