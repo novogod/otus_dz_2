@@ -81,10 +81,16 @@ Future<void> _systemShare({
   // `_socialTargets` below — they don't have this constraint
   // because the URL travels in its own query parameter and the
   // server unfurls it independently of the caption.
+  //
+  // Pass the URL via `uri:` only — share_plus 13.x asserts that
+  // `text` and `uri` are mutually exclusive on `ShareParams` and
+  // silently no-ops in release if both are set. Receivers (the
+  // iOS share extension, navigator.share, ACTION_SEND) treat the
+  // URI as the canonical payload and will resolve a preview card
+  // from its og:* atoms automatically.
   await SharePlus.instance.share(
     ShareParams(
       title: title,
-      text: url,
       uri: Uri.parse(url),
       subject: title,
       sharePositionOrigin: sharePositionOrigin,
