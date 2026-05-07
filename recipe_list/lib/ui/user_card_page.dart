@@ -338,17 +338,16 @@ class _UserCardPageState extends State<UserCardPage> {
               _buildDisplayNameField(s),
               const SizedBox(height: AppSpacing.md),
               _buildLanguagePicker(s),
+              if (!widget.isPostSignup) ...[
+                const SizedBox(height: AppSpacing.md),
+                _buildNewPasswordField(),
+              ],
               const SizedBox(height: AppSpacing.lg),
               _buildStats(s, theme),
               const SizedBox(height: AppSpacing.xl),
               _buildPrimaryRow(s),
               const SizedBox(height: AppSpacing.md),
-              if (!widget.isPostSignup) ...[
-                const Divider(height: AppSpacing.xl * 2),
-                _buildChangePasswordSection(),
-                const SizedBox(height: AppSpacing.md),
-                _buildLogoutButton(s),
-              ],
+              if (!widget.isPostSignup) _buildLogoutButton(s),
             ],
           ),
         ),
@@ -499,78 +498,36 @@ class _UserCardPageState extends State<UserCardPage> {
     );
   }
 
-  Widget _buildChangePasswordSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        const Text(
-          'Change password',
-          style: TextStyle(
-            fontFamily: AppTextStyles.fontFamily,
-            fontWeight: FontWeight.w500,
-            fontSize: 16,
-            color: AppColors.primaryDark,
+  /// Inline password-change field, rendered with the other profile
+  /// fields (display name, language). Submitting via the on-screen
+  /// keyboard "done" action triggers the change; the helperText
+  /// "Change password" doubles as the affordance hint so we don't
+  /// need a second CTA button below the field.
+  Widget _buildNewPasswordField() {
+    return TextField(
+      controller: _newPasswordController,
+      obscureText: _newPasswordObscured,
+      enabled: !_changingPassword,
+      autocorrect: false,
+      enableSuggestions: false,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _submitNewPassword(),
+      style: const TextStyle(color: AppColors.textPrimary),
+      decoration: InputDecoration(
+        labelText: 'New password',
+        helperText: 'Change password',
+        border: const OutlineInputBorder(),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _newPasswordObscured ? Icons.visibility : Icons.visibility_off,
           ),
+          onPressed: _changingPassword
+              ? null
+              : () => setState(
+                  () => _newPasswordObscured = !_newPasswordObscured,
+                ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        TextField(
-          controller: _newPasswordController,
-          obscureText: _newPasswordObscured,
-          enabled: !_changingPassword,
-          autocorrect: false,
-          enableSuggestions: false,
-          textInputAction: TextInputAction.done,
-          onSubmitted: (_) => _submitNewPassword(),
-          decoration: InputDecoration(
-            labelText: 'New password',
-            helperText:
-                'Min 6 characters. We will email it to you as a reminder.',
-            border: const OutlineInputBorder(),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _newPasswordObscured ? Icons.visibility : Icons.visibility_off,
-              ),
-              onPressed: () =>
-                  setState(() => _newPasswordObscured = !_newPasswordObscured),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryDark,
-              foregroundColor: AppColors.surface,
-              disabledBackgroundColor: AppColors.primaryDark.withValues(
-                alpha: 0.6,
-              ),
-              disabledForegroundColor: AppColors.surface,
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-              textStyle: const TextStyle(
-                fontFamily: AppTextStyles.fontFamily,
-                fontWeight: FontWeight.w500,
-                fontSize: 16,
-              ),
-            ),
-            onPressed: _changingPassword ? null : _submitNewPassword,
-            icon: _changingPassword
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.surface,
-                    ),
-                  )
-                : const Icon(Icons.lock_reset),
-            label: const Text('Change password'),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
