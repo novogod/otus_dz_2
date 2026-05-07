@@ -1,5 +1,154 @@
 # Project Log
 
+## Share link preview, deep-link bootstrap, photo chrome unification, favicon
+
+**Date:** 2026-05-06
+
+**Commits (otus_dz, newest first):**
+- `13a35d0` — share: route WhatsApp tile via Web Share API to fix preview unfurl
+- `5189e5e` — card+details: inline share with edit/delete on photo top-left
+- `43a60ee` — web: regenerate favicon from assets/icon/app_icon.png
+- `d00ecb6` — web/nginx: also fall back PWA manifest icons to /icons/
+- `1fceeec` — web/nginx: fall back deep-linked asset paths to site root
+- `e68f06b` — details: mirror card photo chrome on hero (share / youtube / rating)
+- `99d7b73` — share: send URL only on WhatsApp + OS share sheet (fix unfurl)
+- `58c3f7c` — recipes: enable path URL strategy on web (fixes share deep-links)
+- `b1b7db7` — prerender: absolutize storage paths against mahallem.ist host
+- `5067256` — prerender: absolutize og:image / twitter:image / JSON-LD image
+- `50cbef4` — prerender: drop static og:*/twitter:*/description before injection
+- `b30df0b` — prerender: per-recipe SEO injection groundwork
+
+### Symptoms
+
+1. Sharing a recipe to WhatsApp via the in-app share badge produced a
+   plain-text link: no `og:image`, no title preview. Pasting the same
+   URL into the same chat by hand rendered the preview correctly.
+2. Telegram/Facebook/X consistently unfurled the landing-page card
+   ("Otus Food — recipes from around the world") regardless of which
+   recipe URL was shared.
+3. Tapping a shared link (e.g. `/en/recipes/52772`) opened the SPA
+   shell on green boot splash that span forever — recipe never
+   rendered.
+4. Owner viewing their own recipe saw `edit`/`delete` only — the
+   share-this-recipe affordance was hidden behind them.
+5. Browser tab favicon was a stale 16×16 stub from an earlier build.
+
+### Root causes
+
+- **Per-recipe OG was correctly injected by the prerender, but the
+  static landing-page `og:*` / `twitter:*` / `description` atoms in
+  `web/index.html` came first in the document.** Most OG scrapers
+  honour the **first** occurrence, so the static landing card always
+  won.
+- **`og:image` URLs were relative** (`/storage/v1/object/public/…`)
+  — Telegram/FB/X drop the unfurl card unless the image is a fully
+  qualified `http(s)` URL. The prerender absolutized against
+  `PUBLIC_HOST` (`recipies.mahallem.ist`), but storage paths only
+  resolve on `mahallem.ist`. Both fixes shipped.
+- **Flutter web defaulted to hash-URL routing** (`/#/foo`). Share
+  links use clean paths, so go_router saw an empty hash and
+  `initialLocation: Routes.recipes` won. Fix: call
+  `usePathUrlStrategy()` from `package:flutter_web_plugins` before
+  `runApp()`.
+- **Path-URL strategy then exposed a deep-link asset bug.** Under
+  `pathname='/en/recipes/52772'`, Dart's `Uri.base` resolves
+  `fetch('sqlite3.wasm')` against `window.location.href`, so the
+  browser fetched `/en/recipes/sqlite3.wasm` and got 404 from
+  nginx; sqflite_common_ffi_web threw, recipe-bootstrap never ran,
+  and the boot splash never went away. Same effect on
+  `/en/recipes/icons/Icon-apple-180.png`. Fix: `nginx.conf`
+  asset-location regex now captures the basename and tries
+  `$uri /$asset /icons/$asset =404`.
+- **WhatsApp message body suppression.** The OS share sheet (and the
+  WhatsApp dropdown tile) sent `"Check out \"<recipe>\" on Otus Food
+  <url>"`. WhatsApp / iMessage / many Android RCS clients only
+  render the link-preview card when the body is exactly a single
+  URL. Fix: `_systemShare` and the WhatsApp tile send only the URL.
+- **WhatsApp prefill via `wa.me/?text=…` skips the link-preview
+  fetch.** Recent iOS/Android WhatsApp builds only trigger the
+  preview hook on (a) clipboard paste, (b) typed text, or (c) the
+  share-extension pipeline. The wa.me deep-link prefill goes through
+  none of those. Fix: `_ShareTarget.preferSystemShare` now routes
+  the WhatsApp tile through the Web Share API (`navigator.share` /
+  `share_plus`), with `wa.me` as a fallback when the API is missing
+  or activation has been lost.
+- **Owner photo overlay shadowed share button.** Both
+  `_CardActions` and `PhotoShareBadge` anchored to the photo's
+  top-left, so on owner cards the share affordance was painted
+  underneath the edit/delete pair.
+- **Stale favicon.** `web/favicon.png` was a 16×16 531-byte stub
+  from an old build.
+
+### Fix
+
+- **Prerender** (`prerender/server.js`):
+  - `injectRecipeSeo` now strips static `og:*`, `twitter:*`,
+    `description`, `<title>`, `<link rel="canonical">` from the head
+    before re-emitting the per-recipe atoms (each guarded by
+    `data-recipe-seo="1"` so cache regeneration is idempotent).
+  - `buildRecipeSeoHead` absolutizes relative storage image URLs
+    against `STORAGE_HOST` (env `STORAGE_ORIGIN`, default
+    `https://mahallem.ist`); already-absolute URLs (e.g. themealdb)
+    pass through.
+- **Routing** (`recipe_list/lib/main.dart`,
+  `recipe_list/lib/web/url_strategy_{stub,web}.dart`): conditional
+  import flips on `dart.library.js_interop` so
+  `flutter_web_plugins.usePathUrlStrategy()` runs only on web; iOS
+  and Android binaries don't link the package and the
+  `depend_on_referenced_packages` analyzer warning goes away.
+- **Nginx** (`recipe_list/nginx.conf`): asset location regex
+  captures basename via a named group and tries
+  `$uri /$asset /icons/$asset =404`. `wasm`, `js`, `css`, image and
+  font extensions all fall back to root, so deep-linked SPAs find
+  their dependencies regardless of the page path the request came
+  from.
+- **Share UX**
+  (`recipe_list/lib/ui/web_share/web_action_buttons.dart`):
+  - `_systemShare` sends only the URL (no caption prose).
+  - WhatsApp tile gets `preferSystemShare: true`; the menu
+    dispatcher tries `SharePlus` first when the flag is set, falls
+    through to the existing `wa.me` deep-link if the OS path
+    rejects.
+  - Telegram/X/FB/Reddit/LinkedIn/VK/Pinterest/Email keep their
+    descriptive copy in the dedicated `text=` query parameter —
+    those servers fetch the unfurl independently of the caption,
+    so previews already render correctly.
+- **Photo chrome** (`recipe_list/lib/ui/recipe_card.dart`,
+  `recipe_list/lib/ui/recipe_details_page.dart`): the in-photo
+  `PhotoShareBadge` `Positioned` is gone. The top-left action row
+  (`_CardActions` on lists, `_OwnerActions` on details) always
+  renders the share badge first and appends edit + delete inline
+  when `isAdmin || isCurrentUserAuthor`. Order matches across list
+  and details: `[share] → [delete] → [edit]`.
+- **Favicon** (`recipe_list/web/favicon.{png,ico}`,
+  `recipe_list/web/index.html`): regenerated from
+  `assets/icon/app_icon.png` (1024×1024) with ImageMagick.
+  `favicon.png` is now 32×32 (1657 B); `favicon.ico` is a multi-res
+  16/32/48 ICO (15342 B). `<link rel="icon">` advertises both.
+
+### How to deploy
+
+```sh
+git pull && docker compose -f docker-compose.web.yml build flutter-web prerender \
+  && docker compose -f docker-compose.web.yml up -d flutter-web prerender \
+  && docker exec recipe_list_prerender sh -c "rm -f /var/cache/prerender/*.html"
+```
+
+### Verification
+
+- Bot-UA snapshot for `/en/recipes/52772` = 21,018 bytes; `og:title`,
+  `og:description`, `og:image` all `data-recipe-seo="1"`-tagged;
+  static landing atoms absent.
+- `og:image` for themealdb recipes: HTTP 200 from
+  `www.themealdb.com`.
+- `og:image` for user-uploaded recipes: HTTP 200 from
+  `mahallem.ist/storage/v1/object/public/recipe-photos/…`.
+- `/en/recipes/sqlite3.wasm` → 200, 706316 bytes.
+- `/en/recipes/icons/Icon-apple-180.png` → 200.
+- `/favicon.ico`, `/favicon.png` → 200.
+
+---
+
 ## Owner edit/delete leak + missing author chip on search-result cards
 
 **Date:** 2026-05-06
