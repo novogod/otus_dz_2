@@ -5,8 +5,8 @@ Source requirements:
 - `docs/design_system.md`
 
 Goal: exhaustively verify and fix all listed features using automated tests plus iPhone Simulator UI checks (cliclick), with credentials:
-- user: `info@lagente.do`
-- password: `111111`
+- user: `test-user@example.com`
+- password: `<redacted>`
 
 ---
 
@@ -38,7 +38,7 @@ Goal: exhaustively verify and fix all listed features using automated tests plus
 - "stars on ALL recipe cards are present and clickable by user"
 
 ### UI checks (cliclick)
-1. Login as `info@lagente.do` / `111111`.
+1. Login as `test-user@example.com` / `<redacted>`.
 2. Open recipes list and scroll through multiple pages.
 3. Verify each visible recipe card renders rating aggregate/stars area.
 4. Tap star area on multiple cards and open details to verify update consistency.

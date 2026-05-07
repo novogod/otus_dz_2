@@ -893,7 +893,7 @@ Upstream-CORS обрезается, наружу идёт только nginx-в�
 **Verification.**
 
 * `POST /reset-password` из Flutter web — nginx access log
-  `200 239`, server log `Password updated for user info@lagente.do`.
+  `200 239`, server log `Password updated for user test-user@example.com`.
 * Login — после hot-reload форма реагирует, snackbar теперь
   показывает реальную причину при ошибке.
 
@@ -1619,7 +1619,7 @@ auth-домен Otus Food от общего Mahallem `users`.
 - Проверка `alarmdcs@gmail.com`:
   - `users.preferred_language = ru`
   - `recipe_app_users.preferred_language = en`
-- Проверка `info@lagente.do`:
+- Проверка `test-user@example.com`:
   - был только в `users` (`tr`),
   - добавлен в `recipe_app_users`, выставлен `preferred_language = ru`.
 

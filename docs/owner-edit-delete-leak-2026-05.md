@@ -160,7 +160,7 @@ strictly server-authoritative.
   the recipe-list shows the "Andrey" author chip; no edit/delete
   badge in the card top-left or the details hero photo.
 - Logged in as a different non-author account: same as anonymous.
-- Logged in as `info@lagente.do` (the actual author): edit/delete
+- Logged in as `test-user@example.com` (the actual author): edit/delete
   visible on both the card and the details page on every device, on
   fresh installs and on devices that never created the recipe.
 - Server `GET /recipes/search?q=unload&lang=en` returns the

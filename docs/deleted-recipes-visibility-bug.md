@@ -138,7 +138,7 @@ Cache invalidation on DELETE/PUT ensures fresh data is fetched from database.
 ## Testing Results
 
 ✅ **Manual E2E test performed (2026-05-04):**
-- Admin (Novogod) deletes recipe created by info@lagente.do
+- Admin (Novogod) deletes recipe created by test-user@example.com
 - Recipe immediately removed from admin "Recipes added" list (after refresh)
 - Recipe immediately removed from creator's feed (after refresh)
 - Audit trail preserved in `recipe_app_recipe_creators` table

@@ -154,7 +154,7 @@ await pool.query(
       "creatorType": "user",
       "creatorUserId": "uuid-123",
       "creatorName": "Andrey",
-      "creatorEmail": "info@lagente.do",
+      "creatorEmail": "test-user@example.com",
       "creatorLink": "/api/recipe-admin/users/uuid-123",
       "createdAt": "2026-05-04T03:45:18Z"
     }
@@ -194,7 +194,7 @@ SELECT c.recipe_id,
 ### Manual Testing (Production)
 - Deployed to `https://mahallem.ist`
 - Admin credentials: `foodapi@lagente.do`
-- Test user account: `info@lagente.do`
+- Test user account: `test-user@example.com`
 - Endpoint: `GET https://mahallem.ist/api/recipe-admin/recipes-added`
 
 ## Links

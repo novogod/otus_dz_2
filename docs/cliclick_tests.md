@@ -7,7 +7,7 @@ and run on the iPhone 16e simulator
 `com.otus.recipeList` connected to production
 `https://mahallem.ist/recipes`.
 
-Test creds: `info@lagente.do` / `111111`.
+Test creds: `test-user@example.com` / `<redacted>`.
 
 Driver: `cliclick` for taps on screen-space coordinates of the
 booted Simulator window; `xcrun simctl io … screenshot` for
