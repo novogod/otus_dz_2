@@ -114,6 +114,8 @@ class RecipeCard extends StatelessWidget {
                                 String? name = recipe.creatorDisplayName;
                                 String? avatar = recipe.creatorAvatarPath;
                                 int? added = recipe.creatorRecipesAdded;
+                                String? city = recipe.creatorCity;
+                                String? country = recipe.creatorCountry;
                                 final isMine = isCurrentUserAuthor(recipe);
                                 if ((name == null || name.isEmpty) &&
                                     isMine &&
@@ -122,6 +124,10 @@ class RecipeCard extends StatelessWidget {
                                   name = me.displayName;
                                   avatar = me.avatarPath;
                                   added = me.recipesAdded;
+                                }
+                                if (isMine && me != null) {
+                                  city ??= me.city;
+                                  country ??= me.country;
                                 }
                                 if (name == null || name.isEmpty) {
                                   return const SizedBox.shrink();
@@ -134,6 +140,8 @@ class RecipeCard extends StatelessWidget {
                                     name: name,
                                     avatarPath: avatar,
                                     recipesAdded: added,
+                                    city: city,
+                                    country: country,
                                   ),
                                 );
                               },
@@ -948,11 +956,15 @@ class _AuthorChip extends StatelessWidget {
     required this.name,
     required this.avatarPath,
     required this.recipesAdded,
+    this.city,
+    this.country,
   });
 
   final String name;
   final String? avatarPath;
   final int? recipesAdded;
+  final String? city;
+  final String? country;
 
   static const double _avatarSize = 40;
 
@@ -1007,6 +1019,17 @@ class _AuthorChip extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
+                if (_locationLabel().isNotEmpty)
+                  TextSpan(
+                    text: ' (${_locationLabel()})',
+                    style: const TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 13,
+                      height: 20 / 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 if (added != null && added > 0)
                   TextSpan(
                     text: '  •  ${s.recipeAuthorRecipes(added)}',
@@ -1026,5 +1049,17 @@ class _AuthorChip extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Joins non-empty city / country with a `/` separator. Returns
+  /// an empty string when both are missing — caller skips the
+  /// `(...)` span entirely.
+  String _locationLabel() {
+    final parts = <String>[];
+    final c = city?.trim();
+    final co = country?.trim();
+    if (c != null && c.isNotEmpty) parts.add(c);
+    if (co != null && co.isNotEmpty) parts.add(co);
+    return parts.join('/');
   }
 }

@@ -373,6 +373,8 @@ class RecipeApi {
   Future<UserProfileSnapshot> updateMyProfile({
     String? displayName,
     String? language,
+    String? city,
+    String? country,
   }) async {
     if (_client.backend != RecipeBackend.mahallem) {
       throw StateError('updateMyProfile requires the mahallem backend');
@@ -380,6 +382,10 @@ class RecipeApi {
     final body = <String, Object?>{};
     if (displayName != null) body['displayName'] = displayName;
     if (language != null) body['language'] = language;
+    // City / country accept the empty string as "clear this field".
+    // Server side trims and stores NULL on empty input.
+    if (city != null) body['city'] = city;
+    if (country != null) body['country'] = country;
     final res = await _client.dio.put<Map<String, dynamic>>(
       '/users/me',
       data: body,
@@ -538,6 +544,8 @@ class UserProfileSnapshot {
     required this.language,
     required this.avatarPath,
     required this.avatarUrl,
+    required this.city,
+    required this.country,
     required this.recipesAdded,
     required this.memberSince,
   });
@@ -548,6 +556,8 @@ class UserProfileSnapshot {
   final String? language;
   final String? avatarPath;
   final String? avatarUrl;
+  final String? city;
+  final String? country;
   final int recipesAdded;
   final DateTime? memberSince;
 
@@ -559,17 +569,21 @@ class UserProfileSnapshot {
       return null;
     }
 
+    String? trimmedOrNull(Object? raw) {
+      if (raw is! String) return null;
+      final t = raw.trim();
+      return t.isEmpty ? null : t;
+    }
+
     return UserProfileSnapshot(
       id: (json['id'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-      displayName: (json['displayName'] as String?)?.trim().isEmpty == true
-          ? null
-          : json['displayName'] as String?,
-      language: (json['language'] as String?)?.trim().isEmpty == true
-          ? null
-          : json['language'] as String?,
+      displayName: trimmedOrNull(json['displayName']),
+      language: trimmedOrNull(json['language']),
       avatarPath: json['avatarPath'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
+      city: trimmedOrNull(json['city']),
+      country: trimmedOrNull(json['country']),
       recipesAdded: (json['recipesAdded'] as num?)?.toInt() ?? 0,
       memberSince: parseDate(json['memberSince']),
     );

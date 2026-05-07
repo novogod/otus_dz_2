@@ -54,6 +54,8 @@ class UserCardPage extends StatefulWidget {
 class _UserCardPageState extends State<UserCardPage> {
   late final TextEditingController _nameController;
   final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
   late bool _editing;
   AppLang _selectedLang = appLang.value;
   bool _busy = false;
@@ -82,6 +84,10 @@ class _UserCardPageState extends State<UserCardPage> {
       if (!_editing && (snap.displayName ?? '').isNotEmpty) {
         _nameController.text = snap.displayName!;
       }
+      if (!_editing) {
+        _cityController.text = snap.city ?? '';
+        _countryController.text = snap.country ?? '';
+      }
       final fromServer = AppLang.values
           .where((l) => l.name == (snap.language ?? ''))
           .firstOrNull;
@@ -93,9 +99,10 @@ class _UserCardPageState extends State<UserCardPage> {
   void dispose() {
     _nameController.dispose();
     _newPasswordController.dispose();
+    _cityController.dispose();
+    _countryController.dispose();
     super.dispose();
   }
-
 
   Future<void> _handleSave() async {
     if (_busy) return;
@@ -127,6 +134,8 @@ class _UserCardPageState extends State<UserCardPage> {
         final updated = await api.updateMyProfile(
           displayName: _nameController.text.trim(),
           language: _selectedLang.name,
+          city: _cityController.text.trim(),
+          country: _countryController.text.trim(),
         );
         if (mounted) {
           setState(
@@ -137,6 +146,8 @@ class _UserCardPageState extends State<UserCardPage> {
               language: updated.language,
               avatarPath: updated.avatarPath,
               avatarUrl: updated.avatarUrl,
+              city: updated.city,
+              country: updated.country,
               recipesAdded: _profile?.recipesAdded ?? 0,
               memberSince: updated.memberSince ?? _profile?.memberSince,
             ),
@@ -234,6 +245,8 @@ class _UserCardPageState extends State<UserCardPage> {
               language: p.language,
               avatarPath: null,
               avatarUrl: null,
+              city: p.city,
+              country: p.country,
               recipesAdded: p.recipesAdded,
               memberSince: p.memberSince,
             );
@@ -274,6 +287,8 @@ class _UserCardPageState extends State<UserCardPage> {
             language: p.language,
             avatarPath: url,
             avatarUrl: url,
+            city: p.city,
+            country: p.country,
             recipesAdded: p.recipesAdded,
             memberSince: p.memberSince,
           );
@@ -316,6 +331,10 @@ class _UserCardPageState extends State<UserCardPage> {
               _buildDisplayNameField(s),
               const SizedBox(height: AppSpacing.md),
               _buildLanguagePicker(s),
+              const SizedBox(height: AppSpacing.md),
+              _buildCityField(s),
+              const SizedBox(height: AppSpacing.md),
+              _buildCountryField(s),
               if (_editing && !widget.isPostSignup) ...[
                 const SizedBox(height: AppSpacing.md),
                 _buildNewPasswordField(),
@@ -341,6 +360,34 @@ class _UserCardPageState extends State<UserCardPage> {
       decoration: InputDecoration(
         labelText: s.profileDisplayName,
         border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  Widget _buildCityField(S s) {
+    return TextField(
+      controller: _cityController,
+      enabled: _editing,
+      maxLength: 80,
+      style: const TextStyle(color: AppColors.textPrimary),
+      decoration: const InputDecoration(
+        labelText: 'City',
+        border: OutlineInputBorder(),
+        counterText: '',
+      ),
+    );
+  }
+
+  Widget _buildCountryField(S s) {
+    return TextField(
+      controller: _countryController,
+      enabled: _editing,
+      maxLength: 80,
+      style: const TextStyle(color: AppColors.textPrimary),
+      decoration: const InputDecoration(
+        labelText: 'Country',
+        border: OutlineInputBorder(),
+        counterText: '',
       ),
     );
   }

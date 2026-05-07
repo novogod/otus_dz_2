@@ -94,7 +94,13 @@ Future<void> deleteRecipeDatabaseWebOnly() async {
 /// docs/user-card-and-social-signals.md §1, §3 and chunk B). Both
 /// are additive — `recipes` / `favorites` / `owned_recipes` /
 /// `auth_credentials` are preserved on upgrade.
-const int kRecipeDbSchemaVersion = 14;
+/// v14: persist server-projected creator chip metadata
+/// (creatorUserId / creatorDisplayName / creatorAvatarPath /
+/// creatorRecipesAdded) on the cached `recipes` row.
+/// v15: persist optional `creator_city` / `creator_country` so the
+/// recipe card / details can render `(<City>/<Country>)` next to
+/// the author name when reading from cache (Favourites list, etc.).
+const int kRecipeDbSchemaVersion = 15;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -124,6 +130,8 @@ CREATE TABLE recipes (
   creator_user_id TEXT,
   creator_display_name TEXT,
   creator_avatar_path TEXT,
+  creator_city TEXT,
+  creator_country TEXT,
   creator_recipes_added INTEGER,
   PRIMARY KEY (id, lang)
 );
@@ -463,6 +471,27 @@ Future<void> _onRecipeDbUpgrade(
   if (oldVersion < 14) {
     await applyRecipeCreatorColumns(db);
   }
+  // v14 → v15: add optional creator_city / creator_country columns
+  // to the cached `recipes` row so the author chip / "Added by"
+  // can render `(<City>/<Country>)` even when reading from cache.
+  if (oldVersion < 15) {
+    await applyRecipeCreatorLocationColumns(db);
+  }
+}
+
+/// v14 → v15: idempotent additive migration that adds the two
+/// creator-location columns to the `recipes` cache.
+Future<void> applyRecipeCreatorLocationColumns(Database db) async {
+  for (final stmt in const [
+    'ALTER TABLE recipes ADD COLUMN creator_city TEXT',
+    'ALTER TABLE recipes ADD COLUMN creator_country TEXT',
+  ]) {
+    try {
+      await db.execute(stmt);
+    } catch (_) {
+      // Column already exists — idempotent no-op.
+    }
+  }
 }
 
 /// v13 → v14: idempotent additive migration that adds the four
@@ -550,6 +579,8 @@ Recipe readRecipe(Map<String, Object?> row) {
     creatorUserId: row['creator_user_id'] as String?,
     creatorDisplayName: row['creator_display_name'] as String?,
     creatorAvatarPath: row['creator_avatar_path'] as String?,
+    creatorCity: row['creator_city'] as String?,
+    creatorCountry: row['creator_country'] as String?,
     creatorRecipesAdded: row['creator_recipes_added'] as int?,
   );
 }
@@ -596,6 +627,8 @@ Map<String, Object?> writeRecipe(
     'creator_user_id': r.creatorUserId,
     'creator_display_name': r.creatorDisplayName,
     'creator_avatar_path': r.creatorAvatarPath,
+    'creator_city': r.creatorCity,
+    'creator_country': r.creatorCountry,
     'creator_recipes_added': r.creatorRecipesAdded,
   };
 }

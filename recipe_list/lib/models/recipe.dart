@@ -63,6 +63,15 @@ class Recipe {
   /// rendered (we never store the full imgproxy URL on disk).
   final String? creatorAvatarPath;
 
+  /// Optional free-form city the author entered on their profile.
+  /// Rendered as `(<City>/<Country>)` next to the author name on
+  /// recipe cards / details. Null when the author hasn't filled
+  /// the field, or for upstream (TheMealDB) recipes.
+  final String? creatorCity;
+
+  /// Optional free-form country, see [creatorCity].
+  final String? creatorCountry;
+
   /// Total number of recipes added by the author (denormalised on
   /// the `recipes_users` table server-side). Used in the
   /// "Added by" footer and the optional card chip.
@@ -98,6 +107,8 @@ class Recipe {
     this.creatorUserId,
     this.creatorDisplayName,
     this.creatorAvatarPath,
+    this.creatorCity,
+    this.creatorCountry,
     this.creatorRecipesAdded,
     this.favoritesCount = 0,
     this.ratingsCount = 0,
@@ -154,6 +165,8 @@ class Recipe {
       creatorUserId: nullIfBlank(json['creatorUserId']),
       creatorDisplayName: nullIfBlank(json['creatorDisplayName']),
       creatorAvatarPath: nullIfBlank(json['creatorAvatarPath']),
+      creatorCity: nullIfBlank(json['creatorCity']),
+      creatorCountry: nullIfBlank(json['creatorCountry']),
       creatorRecipesAdded: _intOrNull(json['creatorRecipesAdded']),
       favoritesCount: _intOr(json['favoritesCount'], 0),
       ratingsCount: _intOr(json['ratingsCount'], 0),
@@ -188,6 +201,8 @@ class Recipe {
           other.creatorUserId == creatorUserId &&
           other.creatorDisplayName == creatorDisplayName &&
           other.creatorAvatarPath == creatorAvatarPath &&
+          other.creatorCity == creatorCity &&
+          other.creatorCountry == creatorCountry &&
           other.creatorRecipesAdded == creatorRecipesAdded &&
           other.favoritesCount == favoritesCount &&
           other.ratingsCount == ratingsCount &&
@@ -210,6 +225,8 @@ class Recipe {
       creatorUserId,
       creatorDisplayName,
       creatorAvatarPath,
+      creatorCity,
+      creatorCountry,
       creatorRecipesAdded,
       favoritesCount,
       ratingsCount,

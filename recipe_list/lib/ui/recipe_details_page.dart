@@ -436,6 +436,8 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                             String? name = recipe.creatorDisplayName;
                             String? avatar = recipe.creatorAvatarPath;
                             int? added = recipe.creatorRecipesAdded;
+                            String? city = recipe.creatorCity;
+                            String? country = recipe.creatorCountry;
                             if (me != null &&
                                 recipe.creatorUserId != null &&
                                 recipe.creatorUserId == me.id) {
@@ -444,11 +446,15 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                                   : me.email;
                               avatar ??= me.avatarPath;
                               added ??= me.recipesAdded;
+                              city ??= me.city;
+                              country ??= me.country;
                             }
                             return AddedByRow(
                               name: name,
                               avatarPath: avatar,
                               recipesAdded: added,
+                              city: city,
+                              country: country,
                             );
                           },
                         ),

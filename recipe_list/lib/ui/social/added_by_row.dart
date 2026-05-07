@@ -23,11 +23,24 @@ class AddedByRow extends StatelessWidget {
     required this.name,
     required this.avatarPath,
     required this.recipesAdded,
+    this.city,
+    this.country,
   });
 
   final String? name;
   final String? avatarPath;
   final int? recipesAdded;
+  final String? city;
+  final String? country;
+
+  String _locationLabel() {
+    final parts = <String>[];
+    final c = city?.trim();
+    final co = country?.trim();
+    if (c != null && c.isNotEmpty) parts.add(c);
+    if (co != null && co.isNotEmpty) parts.add(co);
+    return parts.join('/');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +64,7 @@ class AddedByRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${s.recipeAddedByPrefix} $n',
+                  '${s.recipeAddedByPrefix} $n${_locationLabel().isEmpty ? '' : ' (${_locationLabel()})'}',
                   style: const TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontWeight: FontWeight.w600,
