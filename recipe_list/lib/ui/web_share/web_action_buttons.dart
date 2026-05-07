@@ -115,13 +115,18 @@ List<_ShareTarget> _socialTargets(
       label: 'WhatsApp',
       bg: const Color(0xFF25D366),
       icon: const Icon(Icons.chat_bubble, size: 18, color: Colors.white),
-      // Pass the URL alone — see comment in `_systemShare` above.
-      // `wa.me/?text=…` prefills the WhatsApp composer with whatever
-      // we send; if it contains anything besides the bare URL the
-      // recipient client refuses to render the og:image preview
-      // card. Recipe `og:title` / `og:description` come from the
-      // prerender snapshot and show up in the unfurl on their own.
+      // Prefer the OS share sheet over `wa.me/?text=…` on web. The
+      // wa.me deep-link prefills the WhatsApp composer but, on
+      // recent iOS/Android WhatsApp clients, that prefill path
+      // skips the link-preview fetch hook — the URL appears as
+      // plain text and the og:image card never renders. Going
+      // through `navigator.share` hands the URL to WhatsApp via
+      // the standard share-extension pipeline (the same code path
+      // a clipboard paste hits), which always triggers the
+      // preview fetch. If `navigator.share` is unavailable we fall
+      // back to wa.me — see [_dispatchTarget].
       uri: Uri.parse('https://wa.me/?text=$urlEnc'),
+      preferSystemShare: true,
     ),
     _ShareTarget(
       label: 'Telegram',
@@ -194,6 +199,7 @@ class _ShareTarget {
   final Widget icon;
   final Uri? uri;
   final bool copyToClipboard;
+  final bool preferSystemShare;
 
   const _ShareTarget({
     required this.label,
@@ -202,6 +208,7 @@ class _ShareTarget {
     this.iconColor = Colors.white,
     this.uri,
     this.copyToClipboard = false,
+    this.preferSystemShare = false,
   });
 }
 
@@ -294,6 +301,21 @@ Future<void> _showShareMenu(
           ),
         );
       return;
+    }
+    if (t.preferSystemShare) {
+      // Try the system share sheet first (Web Share API on
+      // mobile browsers / SharePlus on native). When WhatsApp is
+      // chosen from the OS picker the URL travels through its
+      // share extension and the preview card renders. If
+      // navigator.share is missing or the user activation has
+      // been lost across the menu await, share_plus throws —
+      // fall back to the wa.me deep-link.
+      try {
+        await _systemShare(content: content);
+        return;
+      } catch (_) {
+        // intentional fallthrough → wa.me below.
+      }
     }
     if (t.uri != null) {
       await _open(t.uri!);
