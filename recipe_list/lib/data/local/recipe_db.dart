@@ -314,12 +314,26 @@ Future<void> applyUserProfileAndCreatorCacheSchema(Database db) async {
   );
 }
 
+/// Process-wide cache for the opened recipe Database. Without this
+/// every caller (RecipeListLoader, FavoritesStore, the new
+/// startup-time auth bootstrap in main.dart) would `openDatabase`
+/// independently. On web that means multiple sqflite_common_ffi_web
+/// connections to the same IndexedDB — observed to either fail with
+/// "database is locked" or to read stale state. iOS/Android tolerate
+/// it but it's still wasteful. The cache holds the Future so
+/// concurrent callers await the same open.
+Future<Database>? _openRecipeDatabaseFuture;
+
 /// Открывает persistent БД в `getApplicationSupportDirectory()`.
 /// На web вместо файловой системы используется
 /// `sqflite_common_ffi_web` (IndexedDB-backed sqlite3.wasm) — см.
 /// docs/web-favorites.md. Тесты вместо этого передают `Database`
 /// напрямую через `RecipeRepository(db: ...)`.
-Future<Database> openRecipeDatabase() async {
+Future<Database> openRecipeDatabase() {
+  return _openRecipeDatabaseFuture ??= _openRecipeDatabaseImpl();
+}
+
+Future<Database> _openRecipeDatabaseImpl() async {
   if (kIsWeb) {
     // На web нет файловой системы — sqflite_common_ffi_web хранит
     // БД в IndexedDB. Имя играет роль ключа в indexedDB-сторадже.

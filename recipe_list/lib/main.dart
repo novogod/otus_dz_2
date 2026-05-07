@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'auth/admin_session.dart';
+import 'data/local/recipe_db.dart';
 import 'i18n.dart';
 import 'i18n/strings.g.dart';
 import 'router/app_router.dart';
@@ -38,6 +42,21 @@ void main() {
   // `beforeinstallprompt` so the Install-PWA button knows when to
   // surface itself. No-op on iOS/Android/desktop (stub).
   initPwaInstallWatcher();
+  // Restore the persisted login session BEFORE the user can navigate
+  // anywhere that depends on `userLoggedInNotifier` / `adminLoggedIn
+  // Notifier`. Previously bootstrap only ran from `RecipeListLoader.
+  // _defaultRepoBuilder`, which mounts on the recipes/home route. On
+  // web reload at e.g. `/profile`, the loader never mounts, the
+  // notifiers stayed `false`, and the user was kicked to LoginPage
+  // even though their credentials were sitting in IndexedDB. Fire-
+  // and-forget here; `_ProfileBranchRoot` listens to the notifiers
+  // and rebuilds once bootstrap flips them.
+  unawaited(
+    openRecipeDatabase()
+        .then((db) => bootstrapAdminSession(db: db))
+        // ignore: avoid_print
+        .catchError((Object e) => print('[main] auth bootstrap failed: $e')),
+  );
   runApp(TranslationProvider(child: const RecipeApp()));
 }
 
