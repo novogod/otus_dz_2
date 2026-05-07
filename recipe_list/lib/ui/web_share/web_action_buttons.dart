@@ -82,16 +82,27 @@ Future<void> _systemShare({
   // because the URL travels in its own query parameter and the
   // server unfurls it independently of the caption.
   //
-  // Pass the URL via `uri:` only — share_plus 13.x asserts that
-  // `text` and `uri` are mutually exclusive on `ShareParams` and
-  // silently no-ops in release if both are set. Receivers (the
-  // iOS share extension, navigator.share, ACTION_SEND) treat the
-  // URI as the canonical payload and will resolve a preview card
-  // from its og:* atoms automatically.
+  // Pass the URL via `text:` (NOT `uri:`). share_plus 13.x asserts
+  // that `text` and `uri` are mutually exclusive, and on iOS the
+  // two paths produce DIFFERENT behaviour in WhatsApp's share
+  // extension:
+  //   * `uri:` → NSURL activity item → WhatsApp inserts the URL
+  //     into the chat but skips its link-preview scraper, so the
+  //     receiver sees a bare clickable URL with no card.
+  //   * `text:` → NSString activity item → WhatsApp's extension
+  //     treats the string the same as a manually-pasted URL,
+  //     runs the scraper against our prerender's og:* atoms and
+  //     renders the preview card (title + image).
+  //
+  // On Android ACTION_SEND both shapes work because Telegram /
+  // WhatsApp / Messages all unfurl text payloads. On the Web
+  // Share API (used by the WhatsApp tile in `_showShareMenu`)
+  // SharePlus maps `text` to navigator.share({text}), which
+  // WhatsApp Web also previews.
   await SharePlus.instance.share(
     ShareParams(
       title: title,
-      uri: Uri.parse(url),
+      text: url,
       subject: title,
       sharePositionOrigin: sharePositionOrigin,
     ),
