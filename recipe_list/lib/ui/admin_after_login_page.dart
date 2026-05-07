@@ -44,6 +44,9 @@ class AdminAfterLoginPage extends StatefulWidget {
 class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
   bool _busy = false;
   bool _biometricSaved = false;
+  final TextEditingController _newPasswordController = TextEditingController();
+  bool _newPasswordObscured = true;
+  bool _changingPassword = false;
 
   // §9a top-bar title: Roboto 400/20, #165932
   static const _titleStyle = TextStyle(
@@ -80,6 +83,12 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
   void initState() {
     super.initState();
     _refreshBiometricSaved();
+  }
+
+  @override
+  void dispose() {
+    _newPasswordController.dispose();
+    super.dispose();
   }
 
   Future<void> _refreshBiometricSaved() async {
@@ -121,6 +130,67 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(s.logoutButton)));
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _submitNewPassword() async {
+    if (_changingPassword) return;
+    final newPassword = _newPasswordController.text;
+    if (newPassword.length < 6) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Password must be at least 6 characters.'),
+          ),
+        );
+      return;
+    }
+    setState(() => _changingPassword = true);
+    final result = await changeUserPassword(newPassword);
+    if (!mounted) return;
+    setState(() => _changingPassword = false);
+    final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
+    switch (result) {
+      case ChangePasswordResult.success:
+        _newPasswordController.clear();
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Password changed. A reminder has been emailed to you.',
+            ),
+          ),
+        );
+        break;
+      case ChangePasswordResult.passwordTooShort:
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Password must be at least 6 characters.'),
+          ),
+        );
+        break;
+      case ChangePasswordResult.notLoggedIn:
+      case ChangePasswordResult.unauthorized:
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Session expired. Please sign in again.'),
+          ),
+        );
+        break;
+      case ChangePasswordResult.networkError:
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Network error. Please check your connection.'),
+          ),
+        );
+        break;
+      case ChangePasswordResult.serverError:
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Could not change password. Please try again.'),
+          ),
+        );
+        break;
+    }
   }
 
   @override
@@ -205,6 +275,61 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
                     label: Text(s.adminEditCards),
                   ),
                   const SizedBox(height: AppSpacing.md),
+                  if (!isAdmin) ...[
+                    const Divider(height: AppSpacing.xl * 2),
+                    const Text(
+                      'Change password',
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    TextField(
+                      controller: _newPasswordController,
+                      obscureText: _newPasswordObscured,
+                      enabled: !_changingPassword,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submitNewPassword(),
+                      decoration: InputDecoration(
+                        labelText: 'New password',
+                        helperText:
+                            'Min 6 characters. We will email it to you as a reminder.',
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _newPasswordObscured
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () => setState(
+                            () => _newPasswordObscured = !_newPasswordObscured,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    FilledButton.icon(
+                      style: _primaryButtonStyle,
+                      onPressed: _changingPassword ? null : _submitNewPassword,
+                      icon: _changingPassword
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.surface,
+                              ),
+                            )
+                          : const Icon(Icons.lock_reset),
+                      label: const Text('Change password'),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                   FilledButton.icon(
                     style: _dangerButtonStyle,
                     onPressed: _busy ? null : _logout,

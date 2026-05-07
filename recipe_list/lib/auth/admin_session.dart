@@ -98,6 +98,15 @@ enum PasswordResetResult {
   serverError,
 }
 
+enum ChangePasswordResult {
+  success,
+  passwordTooShort,
+  notLoggedIn,
+  unauthorized,
+  networkError,
+  serverError,
+}
+
 class AdminRecipeUser {
   const AdminRecipeUser({
     required this.id,
@@ -734,6 +743,59 @@ Future<PasswordResetResult> resetPasswordWithCode({
       return PasswordResetResult.networkError;
     }
     return PasswordResetResult.serverError;
+  }
+}
+
+/// Self-service password change for the currently logged-in recipe-app
+/// user. Requires a valid `x-recipes-user-token` and posts to
+/// `POST /recipes/account/password`. The backend hashes + stores the
+/// new password and emails the user a plaintext reminder.
+Future<ChangePasswordResult> changeUserPassword(String newPassword) async {
+  if (newPassword.length < 6) {
+    return ChangePasswordResult.passwordTooShort;
+  }
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) {
+    return ChangePasswordResult.serverError;
+  }
+  final token = currentUserTokenNotifier.value;
+  if (token == null || token.isEmpty) {
+    return ChangePasswordResult.notLoggedIn;
+  }
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: RecipeApiConfig.activeBaseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      validateStatus: (_) => true,
+      headers: {'x-recipes-user-token': token},
+    ),
+  );
+  try {
+    final res = await dio.post<Map<String, dynamic>>(
+      '/account/password',
+      data: {'newPassword': newPassword},
+    );
+    final status = res.statusCode ?? 0;
+    if (status >= 200 && status < 300 && res.data?['success'] == true) {
+      return ChangePasswordResult.success;
+    }
+    if (status == 401 || status == 403) {
+      return ChangePasswordResult.unauthorized;
+    }
+    final err = (res.data?['error'] ?? '').toString();
+    if (err == 'password_too_short') {
+      return ChangePasswordResult.passwordTooShort;
+    }
+    return ChangePasswordResult.serverError;
+  } on DioException catch (e) {
+    if (e.type == DioExceptionType.connectionError ||
+        e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      return ChangePasswordResult.networkError;
+    }
+    return ChangePasswordResult.serverError;
   }
 }
 

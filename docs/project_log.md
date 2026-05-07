@@ -1,5 +1,54 @@
 # Project Log
 
+## Profile: self-service password change
+
+**Date:** 2026-05-07
+
+**Commits:**
+- `mahallem_ist` `3d65d750` — recipes: self-service password change endpoint
+- `otus_dz_2` (pending) — profile: change-password form on profile page
+
+### What changed
+
+Added a "Change password" block on the user profile page
+(`AdminAfterLoginPage`), shown only for non-admin users. Single
+"New password" field + submit button. On submit, the client posts
+to a new authenticated backend endpoint and shows a snackbar.
+
+- **Backend** — new route in `local_user_portal/routes/recipes.js`:
+  `POST /recipes/account/password` (auth: `x-recipes-user-token`).
+  Body `{newPassword}`, min 6 chars. Hashes with bcrypt cost 10,
+  updates `recipe_app_users.password_hash` for the calling user,
+  then asynchronously emails the new plaintext to the user via
+  the existing `email-verification-api` (`/send-notification`)
+  service as a reminder. Email failures do not roll back the
+  password change.
+- **Client** — `changeUserPassword(newPassword)` in
+  `lib/auth/admin_session.dart` returns a `ChangePasswordResult`
+  enum (`success / passwordTooShort / notLoggedIn /
+  unauthorized / networkError / serverError`). Uses
+  `RecipeApiConfig.activeBaseUrl` + `/account/password` with
+  `x-recipes-user-token` header.
+- **UI** — `lib/ui/admin_after_login_page.dart`: added obscured
+  TextField with show/hide toggle, primary submit button with
+  in-progress spinner, divider above the section, and per-result
+  snackbars. Admin sessions don't see this section (their password
+  belongs to `recipe_app_admins`, not `recipe_app_users`).
+
+### Deploy
+
+1. `mahallem_ist`: `git pull` on prod, then
+   `docker compose build user-portal && docker compose up -d user-portal`
+   from `local_docker_admin_backend/` (compose bakes routes into
+   the image; `docker restart` alone does not pick up new code).
+2. `otus_dz_2`: `git pull` on prod, then
+   `docker compose -f docker-compose.web.yml build flutter-web &&
+   docker compose -f docker-compose.web.yml up -d flutter-web`.
+3. iOS: `flutter build ios --release` then
+   `xcrun devicectl device install app --device 00008140-0014399E0EF3001C build/ios/iphoneos/Runner.app`.
+
+---
+
 ## Auth: 365-day session + friendly 401 on rating
 
 **Date:** 2026-05-07
