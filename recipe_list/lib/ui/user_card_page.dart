@@ -58,7 +58,6 @@ class _UserCardPageState extends State<UserCardPage> {
   AppLang _selectedLang = appLang.value;
   bool _busy = false;
   bool _newPasswordObscured = true;
-  bool _changingPassword = false;
   UserProfileSnapshot? _profile;
 
   @override
@@ -97,10 +96,12 @@ class _UserCardPageState extends State<UserCardPage> {
     super.dispose();
   }
 
-  Future<void> _submitNewPassword() async {
-    if (_changingPassword) return;
+
+  Future<void> _handleSave() async {
+    if (_busy) return;
     final newPassword = _newPasswordController.text;
-    if (newPassword.length < 6) {
+    final wantsPasswordChange = newPassword.isNotEmpty;
+    if (wantsPasswordChange && newPassword.length < 6) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -110,56 +111,6 @@ class _UserCardPageState extends State<UserCardPage> {
         );
       return;
     }
-    setState(() => _changingPassword = true);
-    final result = await changeUserPassword(newPassword);
-    if (!mounted) return;
-    setState(() => _changingPassword = false);
-    final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
-    switch (result) {
-      case ChangePasswordResult.success:
-        _newPasswordController.clear();
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Password changed. A reminder has been emailed to you.',
-            ),
-          ),
-        );
-        break;
-      case ChangePasswordResult.passwordTooShort:
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Password must be at least 6 characters.'),
-          ),
-        );
-        break;
-      case ChangePasswordResult.notLoggedIn:
-      case ChangePasswordResult.unauthorized:
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Session expired. Please sign in again.'),
-          ),
-        );
-        break;
-      case ChangePasswordResult.networkError:
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Network error. Please check your connection.'),
-          ),
-        );
-        break;
-      case ChangePasswordResult.serverError:
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Could not change password. Please try again.'),
-          ),
-        );
-        break;
-    }
-  }
-
-  Future<void> _handleSave() async {
-    if (_busy) return;
     setState(() => _busy = true);
     // Persist language change globally — this is wired to slang
     // and updates all visible UI (`AppLangScope` listens).
@@ -195,21 +146,48 @@ class _UserCardPageState extends State<UserCardPage> {
         errorMessage = e.toString();
       }
     }
+    // Password change rides along with the rest of the Save
+    // action: a non-empty New password field triggers the
+    // backend POST /recipes/account/password call, with its own
+    // toast on failure so the name/language outcome stays clear.
+    String? passwordMessage;
+    if (wantsPasswordChange) {
+      final result = await changeUserPassword(newPassword);
+      if (!mounted) return;
+      switch (result) {
+        case ChangePasswordResult.success:
+          _newPasswordController.clear();
+          passwordMessage =
+              'Password changed. A reminder has been emailed to you.';
+          break;
+        case ChangePasswordResult.passwordTooShort:
+          passwordMessage = 'Password must be at least 6 characters.';
+          break;
+        case ChangePasswordResult.notLoggedIn:
+        case ChangePasswordResult.unauthorized:
+          passwordMessage = 'Session expired. Please sign in again.';
+          break;
+        case ChangePasswordResult.networkError:
+          passwordMessage = 'Network error. Please check your connection.';
+          break;
+        case ChangePasswordResult.serverError:
+          passwordMessage = 'Could not change password. Please try again.';
+          break;
+      }
+    }
     if (!mounted) return;
     setState(() {
       _busy = false;
       _editing = false;
     });
     final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          errorMessage == null
-              ? S.of(context).profileSavedToast
-              : 'Save failed: $errorMessage',
-        ),
-      ),
-    );
+    final profileMessage = errorMessage == null
+        ? S.of(context).profileSavedToast
+        : 'Save failed: $errorMessage';
+    final combined = passwordMessage == null
+        ? profileMessage
+        : '$profileMessage $passwordMessage';
+    messenger.showSnackBar(SnackBar(content: Text(combined)));
     if (widget.isPostSignup) {
       context.go(Routes.recipes);
     }
@@ -338,7 +316,7 @@ class _UserCardPageState extends State<UserCardPage> {
               _buildDisplayNameField(s),
               const SizedBox(height: AppSpacing.md),
               _buildLanguagePicker(s),
-              if (!widget.isPostSignup) ...[
+              if (_editing && !widget.isPostSignup) ...[
                 const SizedBox(height: AppSpacing.md),
                 _buildNewPasswordField(),
               ],
@@ -498,20 +476,18 @@ class _UserCardPageState extends State<UserCardPage> {
     );
   }
 
-  /// Inline password-change field, rendered with the other profile
-  /// fields (display name, language). Submitting via the on-screen
-  /// keyboard "done" action triggers the change; the helperText
-  /// "Change password" doubles as the affordance hint so we don't
-  /// need a second CTA button below the field.
+  /// Inline password-change field, rendered alongside the other
+  /// editable profile fields. Only visible in edit mode; the value
+  /// is submitted by the same Save button that persists name and
+  /// language (see [_handleSave]).
   Widget _buildNewPasswordField() {
     return TextField(
       controller: _newPasswordController,
       obscureText: _newPasswordObscured,
-      enabled: !_changingPassword,
+      enabled: !_busy,
       autocorrect: false,
       enableSuggestions: false,
       textInputAction: TextInputAction.done,
-      onSubmitted: (_) => _submitNewPassword(),
       style: const TextStyle(color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: 'New password',
@@ -521,7 +497,7 @@ class _UserCardPageState extends State<UserCardPage> {
           icon: Icon(
             _newPasswordObscured ? Icons.visibility : Icons.visibility_off,
           ),
-          onPressed: _changingPassword
+          onPressed: _busy
               ? null
               : () => setState(
                   () => _newPasswordObscured = !_newPasswordObscured,
