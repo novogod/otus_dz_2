@@ -35,8 +35,26 @@ Status legend: ⬜ not started · 🟨 in working tree, not committed
     (returns 401 after secret rotation) [⬜]
 19. Backend — decouple `RECIPES_API_SECRET` (optional `/recipes/*`
     gate) from JWT signing keys (regression caused by Chunk 2) [✅]
-19. Backend — decouple `RECIPES_API_SECRET` (optional /recipes/*
-    gate) from JWT signing keys (regression caused by Chunk 2) [✅]
+20. Client — gate the rating pill on `currentUserTokenNotifier`,
+    not `userLoggedInNotifier`, so admin-only sessions cannot
+    trigger the 401 → kick-out cascade (regression observed
+    after Chunks 1-19) [✅]
+21. Backend — DB migration: `recipe_app_user_credentials`
+    + `webauthn_challenges` (foundation for web biometric) [⬜]
+22. Backend — `/recipes/auth/passkey/{register,login}/{start,complete}`
+    + list/delete, JWT-bearer auth, mirrors `routes/auth-passkey.js` [⬜]
+23. Client web — `recipe_list/web/passkey_bridge.js`
+    (`navigator.credentials.create / get`, base64url helpers) [⬜]
+24. Client dart — `recipe_list/lib/auth/passkey_web.dart`
+    (conditional import, JS interop, returns `unsupported` on
+    non-web) [⬜]
+25. Client UI — replace the two "not supported in web mode"
+    snackbars in `login_page.dart` with passkey register / login
+    flows; keep native `local_auth` path unchanged [⬜]
+26. Verification matrix — add web (Magic Keyboard Touch ID,
+    Windows Hello, Android Chrome) rows to Chunk 14 [⬜]
+27. Deploy — backend migration + endpoints + web rebuild;
+    smoke-test register + login on Magic Keyboard [⬜]
 
 ---
 
@@ -552,6 +570,274 @@ test 200 across `page` / `filter` / `count`.
 misleading name — it has nothing to do with API access in the
 JWT sense. Rename to `RECIPES_API_GATE_TOKEN` in a separate
 commit so the dual-purpose confusion can never recur.
+
+---
+
+# Web biometric (Magic Keyboard Touch ID etc.) — Chunks 20-26
+
+The recipe app currently shows two "not supported in web mode"
+snackbars in `recipe_list/lib/ui/login_page.dart` (lines 216
+and 251). The work below replaces them with a real
+WebAuthn / passkey flow that mirrors the existing partner-login
+implementation in `mahallem_ist/local_user_portal`
+(`routes/auth-passkey.js` + `utils/webauthn.js`), which already
+runs in production for the partner portal and uses
+`@simplewebauthn/server`.
+
+Architecture notes:
+- Recipe-app users live in `recipe_app_users` (not the partner
+  `users` table), so we need a parallel
+  `recipe_app_user_credentials` table — we do NOT reuse
+  `user_credentials` because `user_id` there is FK'd to `users`.
+- `webauthn_challenges` is keyed by challenge string + type
+  only; safe to reuse across both flows. Verify it exists on
+  prod before assuming.
+- Auth on these endpoints is JWT bearer
+  (`x-recipes-user-token`), not session cookie. Login-complete
+  must mint a fresh `RECIPES_USER_TOKEN` (via
+  `issueRecipesUserToken` from `routes/auth.js`) and return it
+  in the JSON response so the client can stash it.
+- `WEBAUTHN_RP_ID` and `WEBAUTHN_ORIGIN` env vars are already
+  set on prod for the partner flow — we reuse them.
+- iOS / Android keep using `local_auth` unchanged. Optional
+  later step: parity passkey path on native too, so a passkey
+  registered in Safari also works in the iOS app via the
+  iCloud Keychain shared credential store.
+
+## Chunk 20 — Backend: DB migration `recipe_app_user_credentials` [⬜]
+
+**Why:** the `user_credentials` table FKs to `users.id`. Recipe
+app users live in `recipe_app_users` and have UUIDs that are
+not guaranteed to exist in `users`. We need a parallel table.
+
+**Files:**
+- `mahallem_ist/local_user_portal/migrations/NNN_recipe_app_passkeys.sql`
+  (next migration number — confirm by `ls migrations | sort -V | tail -3`):
+
+  ```sql
+  CREATE TABLE IF NOT EXISTS recipe_app_user_credentials (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID NOT NULL REFERENCES recipe_app_users(id) ON DELETE CASCADE,
+    credential_id   TEXT NOT NULL UNIQUE,    -- base64url
+    public_key      TEXT NOT NULL,           -- base64url
+    counter         BIGINT NOT NULL DEFAULT 0,
+    device_name     TEXT,
+    device_type     TEXT,
+    os_name         TEXT,
+    browser_name    TEXT,
+    transports      TEXT[] NOT NULL DEFAULT ARRAY['internal']::text[],
+    aaguid          TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_used_at    TIMESTAMPTZ
+  );
+  CREATE INDEX IF NOT EXISTS idx_recipe_app_user_credentials_user
+    ON recipe_app_user_credentials(user_id);
+  ```
+
+  Plus an idempotent `CREATE TABLE IF NOT EXISTS
+  webauthn_challenges` block in case prod doesn't have it yet
+  (it should — used by the partner flow — but the migration
+  must be self-contained for fresh installs).
+
+**Acceptance:**
+- Apply on prod via the project's existing migration runner.
+- `\d recipe_app_user_credentials` in psql shows the schema.
+- Rollback path documented (just `DROP TABLE
+  recipe_app_user_credentials`; nothing else depends on it).
+
+**DoD:** migration committed; applied on prod; no other
+container restarted (this is a pure DDL change).
+
+---
+
+## Chunk 21 — Backend: `routes/auth-passkey-recipes.js` [⬜]
+
+**Why:** new namespace `/recipes/auth/passkey/*` so it is
+clearly the recipe-app variant, separate from
+`/api/auth/passkey/*` used by the partner portal.
+
+**Endpoints (all JSON):**
+- `GET  /recipes/auth/passkey/available` — public; returns
+  `{ available: true, rpId: <env> }`. No DB hit.
+- `POST /recipes/auth/passkey/register/start`
+  — auth: `x-recipes-user-token` required (uses
+  `recipesUserAuthMiddleware` from `routes/recipes.js`).
+  Returns `PublicKeyCredentialCreationOptionsJSON` with
+  challenge stored in `webauthn_challenges`.
+- `POST /recipes/auth/passkey/register/complete`
+  — auth: same. Body is the registration response from the
+  browser. Verifies, stores in `recipe_app_user_credentials`,
+  returns `{ success: true, credential: { id, deviceName,
+  createdAt } }`.
+- `POST /recipes/auth/passkey/login/start`
+  — anonymous. Optional `{ email }` body to scope
+  `allowCredentials`; otherwise discoverable. Returns
+  `PublicKeyCredentialRequestOptionsJSON`.
+- `POST /recipes/auth/passkey/login/complete`
+  — anonymous. Verifies; on success, looks up
+  `recipe_app_users` row, mints a fresh
+  `RECIPES_USER_TOKEN` via `issueRecipesUserToken({ userId,
+  email })` (already exported from `routes/auth.js`), returns
+  `{ success: true, token, user: { id, email, fullName, isAdmin } }`.
+  Bearer token TTL is the same 31536000 s as the password
+  flow (Chunk 1).
+- `GET    /recipes/auth/passkey/credentials` — JWT bearer
+  required. Lists user's passkeys.
+- `DELETE /recipes/auth/passkey/credentials/:id` — JWT bearer
+  required.
+
+Implementation may import most helpers verbatim from
+`utils/webauthn.js` — only the queries that touch `users` /
+`user_credentials` need parallel versions for `recipe_app_users`
+/ `recipe_app_user_credentials`.
+
+**Files:**
+- `mahallem_ist/local_user_portal/routes/auth-passkey-recipes.js`
+  — new file, ~400 lines.
+- `mahallem_ist/local_user_portal/utils/webauthn-recipes.js`
+  — new file, exports `generateRecipeAppPasskeyRegistrationOptions`,
+  `verifyRecipeAppPasskeyRegistration`,
+  `generateRecipeAppPasskeyAuthenticationOptions`,
+  `verifyRecipeAppPasskeyAuthentication`,
+  `getRecipeAppUserCredentials`,
+  `deleteRecipeAppCredential`. Reuses `storeChallenge` /
+  `verifyAndConsumeChallenge` from `utils/webauthn.js`.
+- `mahallem_ist/local_user_portal/server.js` — mount
+  `passkeyRecipesRoutes(app, pool)` next to existing
+  `passkeyRoutes(app, pool)`.
+- `mahallem_ist/local_user_portal/routes/auth.js` — export
+  `issueRecipesUserToken` if not already exported (it is, per
+  Chunk 9 test).
+
+**Acceptance:**
+- `node --test tests/passkey-recipes.test.js` — at least a
+  smoke test that `register/start` returns a challenge of the
+  right shape when called with a valid bearer.
+- Manual: `curl -H 'x-recipes-user-token: <jwt>'
+  https://recipies.mahallem.ist/recipes/auth/passkey/register/start`
+  returns 200 with `challenge` and `pubKeyCredParams`.
+
+**DoD:** committed; deployed; no regression on existing
+`/api/auth/passkey/*` partner endpoints.
+
+---
+
+## Chunk 22 — Web: JS bridge `recipe_list/web/passkey_bridge.js` [⬜]
+
+**Why:** `dart:js_interop` can call WebAuthn directly, but the
+base64url ↔ ArrayBuffer plumbing is tedious. A 50-line JS
+shim that exposes `window.recipeAppPasskey.{register,login}`
+keeps the Dart side simple.
+
+**Files:**
+- `recipe_list/web/passkey_bridge.js` — exports
+  `register(optionsJson) → response` and
+  `login(optionsJson) → response`. Uses
+  `PublicKeyCredential.parseCreationOptionsFromJSON` /
+  `parseRequestOptionsFromJSON` if available; otherwise
+  base64url-decodes manually.
+- `recipe_list/web/index.html` — `<script defer
+  src="passkey_bridge.js"></script>` before the Dart bootstrap.
+
+**Acceptance:**
+- `window.recipeAppPasskey` exists in the browser console.
+- Calling `register` with hand-crafted options surfaces the
+  Touch ID prompt on a Magic Keyboard.
+
+---
+
+## Chunk 23 — Dart: `recipe_list/lib/auth/passkey_web.dart` [⬜]
+
+**Why:** unified Dart API regardless of platform.
+`passkey_web.dart` (web build) calls into
+`window.recipeAppPasskey`; `passkey_native.dart` (non-web)
+returns `Future.error(PasskeyUnsupportedException())`.
+
+**Files:**
+- `recipe_list/lib/auth/passkey_api.dart` — abstract surface:
+  `Future<bool> isAvailable()`,
+  `Future<void> registerPasskey({required String token})`,
+  `Future<({String token, bool isAdmin, String email})> loginWithPasskey({String? email})`,
+  `Future<List<PasskeyDescriptor>> listPasskeys({required String token})`,
+  `Future<void> deletePasskey({required String id, required String token})`.
+- `recipe_list/lib/auth/passkey_web.dart` — implements via
+  `package:web` + `dart:js_interop` and the bridge in
+  Chunk 22. Talks to `/recipes/auth/passkey/*`.
+- `recipe_list/lib/auth/passkey_stub.dart` — non-web throws
+  `PasskeyUnsupportedException`.
+- Conditional import in `passkey_api.dart`:
+  `if (dart.library.html) 'passkey_web.dart'`
+  `else                   'passkey_stub.dart'`.
+
+**Acceptance:** `flutter analyze` clean on web and iOS targets.
+
+---
+
+## Chunk 24 — UI: wire passkey into `login_page.dart` [⬜]
+
+**Why:** replace the two "not supported in web mode"
+snackbars (lines 216, 251) with the real flow.
+
+**Behaviour:**
+- `_saveCurrentSessionForBiometric` on web: call
+  `passkeyApi.registerPasskey(token: currentUserTokenNotifier.value!)`.
+  On success, snackbar "Passkey saved. Use Touch ID to sign in
+  next time."
+- `_loginWithBiometrics` on web: call
+  `passkeyApi.loginWithPasskey(email: <prefilled login>)`.
+  On success, drop the returned token into
+  `currentUserTokenNotifier`, set state notifiers, navigate
+  same as password flow.
+- Keep native `local_auth` branch as it is.
+
+**Files:**
+- `recipe_list/lib/ui/login_page.dart` — guard on `kIsWeb`,
+  branch into `passkey_api.dart` instead of showing the
+  snackbar.
+- `recipe_list/lib/auth/admin_session.dart` — small helper
+  `applyPasskeyLoginResult({token, email, isAdmin})` that
+  centralises the state-flip; reused by `loginWithPasskey`.
+
+**Acceptance:**
+- Web: button "Save current session for Face ID / Fingerprint"
+  on a Magic Keyboard pops the Touch ID system sheet, then
+  shows success snackbar.
+- Web: button "Sign in with Face ID / Fingerprint" pops Touch
+  ID, then logs the user in without password entry.
+- iOS / Android: no behavioural change vs today.
+
+---
+
+## Chunk 25 — Verification matrix [⬜]
+
+Add to Chunk 14:
+
+| Platform / Device | Save session | Login with biometric |
+|---|---|---|
+| Web (Mac, Magic Keyboard Touch ID) | ✅ Touch ID prompt → success | ✅ |
+| Web (iOS Safari) | ✅ Face ID prompt → success | ✅ |
+| Web (Windows, Hello) | ✅ Hello prompt → success | ✅ |
+| Web (Android Chrome) | ✅ Fingerprint → success | ✅ |
+| iOS Novogod | ✅ Face ID (`local_auth`) | ✅ |
+| iOS NovogodOne | ✅ Face ID (`local_auth`) | ✅ |
+
+---
+
+## Chunk 26 — Deploy [⬜]
+
+1. Apply Chunk 20 migration on prod (psql).
+2. `cd /root/mahallem/mahallem_ist && git pull && cd
+   local_docker_admin_backend && docker compose up -d --build
+   user-portal`. Smoke-check
+   `curl https://recipies.mahallem.ist/recipes/auth/passkey/available`
+   returns 200.
+3. `cd /var/www/recipie/otus_dz_2 && git pull && docker
+   compose -f docker-compose.web.yml up -d --build flutter-web`.
+4. Manual passes on Magic Keyboard, iOS Safari, Windows Hello,
+   Android Chrome.
+
+**DoD:** matrix in Chunk 25 all green; release note in
+`docs/project_log.md`.
 
 ---
 

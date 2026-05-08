@@ -465,15 +465,28 @@ class PhotoRatingPill extends StatelessWidget {
         return ValueListenableBuilder<RecipeRatingSnapshot>(
           valueListenable: store.watch(recipe.id, initial: initial),
           builder: (context, snap, _) {
-            return ValueListenableBuilder<bool>(
-              valueListenable: userLoggedInNotifier,
-              builder: (context, loggedIn, _) {
+            return ValueListenableBuilder<String?>(
+              valueListenable: currentUserTokenNotifier,
+              builder: (context, userToken, _) {
+                // Rating is a per-user action and the backend
+                // endpoint (`POST /recipes/:id/rating`) is gated
+                // by `recipesUserAuthMiddleware`, which only
+                // accepts the `x-recipes-user-token` header.
+                // Admin-only sessions hold a `Bearer <admin>`
+                // token but no user token, so attempting the
+                // request returns 401 and our 401 catch below
+                // would kick the admin out (recurrence of
+                // 2026-05-08). Treat "no user token" as
+                // "not logged in for rating purposes" and short
+                // circuit before any network call. See
+                // docs/auth-session-401-recurrence-2026-05-08.md.
+                final canRate = userToken != null && userToken.isNotEmpty;
                 return _PhotoRatingPillView(
                   count: snap.count,
                   sum: snap.sum,
                   my: snap.my,
                   onTap: (stars) async {
-                    if (!loggedIn) {
+                    if (!canRate) {
                       showRegistrationRequiredSnackBar(context);
                       return;
                     }

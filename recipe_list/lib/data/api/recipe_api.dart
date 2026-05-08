@@ -350,6 +350,15 @@ class RecipeApi {
   /// to local cache.
   Future<UserProfileSnapshot?> fetchMyProfile() async {
     if (_client.backend != RecipeBackend.mahallem) return null;
+    // The endpoint is gated by `recipesUserAuthMiddleware` on the
+    // backend, which only honours `x-recipes-user-token`. An
+    // admin-only session holds a `Bearer <admin>` token but no
+    // user token, so the request would return 401 (visible as
+    // console noise on every admin login). Short circuit to keep
+    // the console clean and save a round trip; the User Card
+    // screen already tolerates `myProfileNotifier.value == null`.
+    final userToken = currentUserTokenNotifier.value;
+    if (userToken == null || userToken.isEmpty) return null;
     try {
       final res = await _client.dio.get<Map<String, dynamic>>(
         '/users/me',
