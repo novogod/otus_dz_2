@@ -475,6 +475,13 @@
       setTimeout(dismiss, 30000);
     })();
   </script>
+  <!-- Passkey bridge — exposes window.recipeAppPasskey.{register,
+       login, available} to Dart for the web biometric login flow.
+       Loaded as a regular synchronous <script> so it's parsed BEFORE
+       flutter_bootstrap.js fetches/executes; that guarantees the
+       global is defined by the time Dart code asks for it. See
+       Chunk 23 of todo/auth-session-401-recurrence-2026-05-08.md. -->
+  <script src="passkey_bridge.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

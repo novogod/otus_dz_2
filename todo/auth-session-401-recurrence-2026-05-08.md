@@ -48,7 +48,9 @@ Status legend: ⬜ not started · 🟨 in working tree, not committed
     `POST /register/start` no-bearer 401, `POST /login/start`
     anon returns real challenge]
 23. Client web — `recipe_list/web/passkey_bridge.js`
-    (`navigator.credentials.create / get`, base64url helpers) [⬜]
+    (`navigator.credentials.create / get`, base64url helpers)
+    [✅ `otus_dz@<pending-push>`; 11/11 unit tests green;
+    loaded before `flutter_bootstrap.js` in `web/index.html`]
 24. Client dart — `recipe_list/lib/auth/passkey_web.dart`
     (conditional import, JS interop, returns `unsupported` on
     non-web) [⬜]
@@ -736,7 +738,7 @@ Implementation may import most helpers verbatim from
 
 ---
 
-## Chunk 23 — Web: JS bridge `recipe_list/web/passkey_bridge.js` [⬜]
+## Chunk 23 — Web: JS bridge `recipe_list/web/passkey_bridge.js` [✅ 11/11 tests green]
 
 **Why:** `dart:js_interop` can call WebAuthn directly, but the
 base64url ↔ ArrayBuffer plumbing is tedious. A 50-line JS
