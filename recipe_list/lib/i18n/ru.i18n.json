@@ -154,5 +154,13 @@
   "addRecipePhotoRemove": "Удалить фото",
   "addRecipePhotoSourceTitle": "Добавить фото",
   "addRecipePhotoErrorAccessDenied": "Доступ к фото запрещён. Разрешите доступ в настройках.",
-  "addRecipePhotoErrorTooLarge": "Фото слишком большое даже после сжатия. Выберите другое."
+  "addRecipePhotoErrorTooLarge": "Фото слишком большое даже после сжатия. Выберите другое.",
+  "profileAddPasskeyButton": "Добавить ключ доступа (Touch ID / Face ID / Hello)",
+  "profileSaveBiometricButton": "Сохранить биометрический вход",
+  "profilePasskeyAdded": "Ключ доступа добавлен. В следующий раз входите через Touch ID / Face ID / Windows Hello.",
+  "profilePasskeyAddFailed": "Не удалось добавить ключ доступа: ${error}",
+  "profileBiometricSaved": "Биометрический вход сохранён. Используйте Face ID или отпечаток пальца.",
+  "profileBiometricSaveFailed": "Не удалось сохранить биометрический вход. Убедитесь, что биометрия настроена на устройстве.",
+  "profilePasskeySignInFirst": "Сначала войдите в аккаунт, а затем добавьте ключ доступа.",
+  "profilePasskeyNotSupported": "Ключи доступа не поддерживаются в этом браузере."
 }

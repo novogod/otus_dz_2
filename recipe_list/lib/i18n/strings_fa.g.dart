@@ -178,6 +178,14 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhotoSourceTitle => 'افزودن عکس';
 	@override String get addRecipePhotoErrorAccessDenied => 'دسترسی به عکس‌ها رد شد. در تنظیمات اجازه دهید.';
 	@override String get addRecipePhotoErrorTooLarge => 'عکس حتی پس از فشرده‌سازی هم خیلی بزرگ است. یکی دیگر را امتحان کنید.';
+	@override String get profileAddPasskeyButton => 'افزودن کلید عبور (Touch ID / Face ID / Hello)';
+	@override String get profileSaveBiometricButton => 'ذخیره ورود بیومتریک';
+	@override String get profilePasskeyAdded => 'کلید عبور اضافه شد. دفعه بعد با Touch ID / Face ID / Windows Hello وارد شوید.';
+	@override String profilePasskeyAddFailed({required Object error}) => 'افزودن کلید عبور ممکن نشد: ${error}';
+	@override String get profileBiometricSaved => 'ورود بیومتریک ذخیره شد. دفعه بعد از Face ID یا اثر انگشت استفاده کنید.';
+	@override String get profileBiometricSaveFailed => 'ذخیره ورود بیومتریک ممکن نشد. مطمئن شوید بیومتریک روی این دستگاه تنظیم شده است.';
+	@override String get profilePasskeySignInFirst => 'ابتدا وارد شوید، سپس کلید عبور اضافه کنید.';
+	@override String get profilePasskeyNotSupported => 'کلیدهای عبور در این مرورگر پشتیبانی نمی‌شوند.';
 }
 
 // Path: a11y
@@ -344,6 +352,14 @@ extension on TranslationsFa {
 			'addRecipePhotoSourceTitle' => 'افزودن عکس',
 			'addRecipePhotoErrorAccessDenied' => 'دسترسی به عکس‌ها رد شد. در تنظیمات اجازه دهید.',
 			'addRecipePhotoErrorTooLarge' => 'عکس حتی پس از فشرده‌سازی هم خیلی بزرگ است. یکی دیگر را امتحان کنید.',
+			'profileAddPasskeyButton' => 'افزودن کلید عبور (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'ذخیره ورود بیومتریک',
+			'profilePasskeyAdded' => 'کلید عبور اضافه شد. دفعه بعد با Touch ID / Face ID / Windows Hello وارد شوید.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'افزودن کلید عبور ممکن نشد: ${error}',
+			'profileBiometricSaved' => 'ورود بیومتریک ذخیره شد. دفعه بعد از Face ID یا اثر انگشت استفاده کنید.',
+			'profileBiometricSaveFailed' => 'ذخیره ورود بیومتریک ممکن نشد. مطمئن شوید بیومتریک روی این دستگاه تنظیم شده است.',
+			'profilePasskeySignInFirst' => 'ابتدا وارد شوید، سپس کلید عبور اضافه کنید.',
+			'profilePasskeyNotSupported' => 'کلیدهای عبور در این مرورگر پشتیبانی نمی‌شوند.',
 			_ => null,
 		};
 	}

@@ -178,6 +178,14 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhotoSourceTitle => 'Ajouter une photo';
 	@override String get addRecipePhotoErrorAccessDenied => 'Accès aux photos refusé. Autorisez-le dans les Réglages.';
 	@override String get addRecipePhotoErrorTooLarge => 'Photo trop volumineuse même après compression. Essayez-en une autre.';
+	@override String get profileAddPasskeyButton => 'Ajouter une clé d\'accès (Touch ID / Face ID / Hello)';
+	@override String get profileSaveBiometricButton => 'Enregistrer la connexion biométrique';
+	@override String get profilePasskeyAdded => 'Clé d\'accès ajoutée. Connectez-vous avec Touch ID / Face ID / Windows Hello la prochaine fois.';
+	@override String profilePasskeyAddFailed({required Object error}) => 'Impossible d\'ajouter la clé d\'accès : ${error}';
+	@override String get profileBiometricSaved => 'Connexion biométrique enregistrée. Utilisez Face ID ou l\'empreinte la prochaine fois.';
+	@override String get profileBiometricSaveFailed => 'Impossible d\'enregistrer la connexion biométrique. Vérifiez que la biométrie est configurée sur cet appareil.';
+	@override String get profilePasskeySignInFirst => 'Connectez-vous d\'abord, puis ajoutez une clé d\'accès.';
+	@override String get profilePasskeyNotSupported => 'Les clés d\'accès ne sont pas prises en charge par ce navigateur.';
 }
 
 // Path: a11y
@@ -344,6 +352,14 @@ extension on TranslationsFr {
 			'addRecipePhotoSourceTitle' => 'Ajouter une photo',
 			'addRecipePhotoErrorAccessDenied' => 'Accès aux photos refusé. Autorisez-le dans les Réglages.',
 			'addRecipePhotoErrorTooLarge' => 'Photo trop volumineuse même après compression. Essayez-en une autre.',
+			'profileAddPasskeyButton' => 'Ajouter une clé d\'accès (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'Enregistrer la connexion biométrique',
+			'profilePasskeyAdded' => 'Clé d\'accès ajoutée. Connectez-vous avec Touch ID / Face ID / Windows Hello la prochaine fois.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'Impossible d\'ajouter la clé d\'accès : ${error}',
+			'profileBiometricSaved' => 'Connexion biométrique enregistrée. Utilisez Face ID ou l\'empreinte la prochaine fois.',
+			'profileBiometricSaveFailed' => 'Impossible d\'enregistrer la connexion biométrique. Vérifiez que la biométrie est configurée sur cet appareil.',
+			'profilePasskeySignInFirst' => 'Connectez-vous d\'abord, puis ajoutez une clé d\'accès.',
+			'profilePasskeyNotSupported' => 'Les clés d\'accès ne sont pas prises en charge par ce navigateur.',
 			_ => null,
 		};
 	}

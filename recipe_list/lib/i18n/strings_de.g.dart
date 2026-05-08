@@ -178,6 +178,14 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhotoSourceTitle => 'Foto hinzufügen';
 	@override String get addRecipePhotoErrorAccessDenied => 'Zugriff auf Fotos verweigert. Bitte in den Einstellungen erlauben.';
 	@override String get addRecipePhotoErrorTooLarge => 'Foto ist auch nach der Komprimierung zu groß. Bitte ein anderes wählen.';
+	@override String get profileAddPasskeyButton => 'Passkey hinzufügen (Touch ID / Face ID / Hello)';
+	@override String get profileSaveBiometricButton => 'Biometrischen Login speichern';
+	@override String get profilePasskeyAdded => 'Passkey hinzugefügt. Beim nächsten Mal mit Touch ID / Face ID / Windows Hello anmelden.';
+	@override String profilePasskeyAddFailed({required Object error}) => 'Passkey konnte nicht hinzugefügt werden: ${error}';
+	@override String get profileBiometricSaved => 'Biometrischer Login gespeichert. Beim nächsten Mal Face ID oder Fingerabdruck verwenden.';
+	@override String get profileBiometricSaveFailed => 'Biometrischer Login konnte nicht gespeichert werden. Stellen Sie sicher, dass Biometrie auf diesem Gerät eingerichtet ist.';
+	@override String get profilePasskeySignInFirst => 'Bitte zuerst anmelden, dann einen Passkey hinzufügen.';
+	@override String get profilePasskeyNotSupported => 'Passkeys werden in diesem Browser nicht unterstützt.';
 }
 
 // Path: a11y
@@ -344,6 +352,14 @@ extension on TranslationsDe {
 			'addRecipePhotoSourceTitle' => 'Foto hinzufügen',
 			'addRecipePhotoErrorAccessDenied' => 'Zugriff auf Fotos verweigert. Bitte in den Einstellungen erlauben.',
 			'addRecipePhotoErrorTooLarge' => 'Foto ist auch nach der Komprimierung zu groß. Bitte ein anderes wählen.',
+			'profileAddPasskeyButton' => 'Passkey hinzufügen (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'Biometrischen Login speichern',
+			'profilePasskeyAdded' => 'Passkey hinzugefügt. Beim nächsten Mal mit Touch ID / Face ID / Windows Hello anmelden.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'Passkey konnte nicht hinzugefügt werden: ${error}',
+			'profileBiometricSaved' => 'Biometrischer Login gespeichert. Beim nächsten Mal Face ID oder Fingerabdruck verwenden.',
+			'profileBiometricSaveFailed' => 'Biometrischer Login konnte nicht gespeichert werden. Stellen Sie sicher, dass Biometrie auf diesem Gerät eingerichtet ist.',
+			'profilePasskeySignInFirst' => 'Bitte zuerst anmelden, dann einen Passkey hinzufügen.',
+			'profilePasskeyNotSupported' => 'Passkeys werden in diesem Browser nicht unterstützt.',
 			_ => null,
 		};
 	}

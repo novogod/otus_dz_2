@@ -156,5 +156,13 @@
   "addRecipePhotoRemove": "إزالة الصورة",
   "addRecipePhotoSourceTitle": "أضف صورة",
   "addRecipePhotoErrorAccessDenied": "تم رفض الوصول إلى الصور. اسمح بالوصول من الإعدادات.",
-  "addRecipePhotoErrorTooLarge": "الصورة كبيرة جدًا حتى بعد الضغط. جرّب صورة أخرى."
+  "addRecipePhotoErrorTooLarge": "الصورة كبيرة جدًا حتى بعد الضغط. جرّب صورة أخرى.",
+  "profileAddPasskeyButton": "إضافة مفتاح مرور (Touch ID / Face ID / Hello)",
+  "profileSaveBiometricButton": "حفظ تسجيل الدخول البيومتري",
+  "profilePasskeyAdded": "تمت إضافة مفتاح المرور. سجّل الدخول باستخدام Touch ID / Face ID / Windows Hello في المرة القادمة.",
+  "profilePasskeyAddFailed": "تعذّر إضافة مفتاح المرور: ${error}",
+  "profileBiometricSaved": "تم حفظ تسجيل الدخول البيومتري. استخدم Face ID أو بصمة الإصبع في المرة القادمة.",
+  "profileBiometricSaveFailed": "تعذّر حفظ تسجيل الدخول البيومتري. تأكد من إعداد البيومترية على هذا الجهاز.",
+  "profilePasskeySignInFirst": "سجّل الدخول أولاً ثم أضف مفتاح المرور.",
+  "profilePasskeyNotSupported": "مفاتيح المرور غير مدعومة في هذا المتصفح."
 }

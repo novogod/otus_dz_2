@@ -178,6 +178,14 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhotoSourceTitle => 'Añadir una foto';
 	@override String get addRecipePhotoErrorAccessDenied => 'Acceso a fotos denegado. Permítelo en Ajustes.';
 	@override String get addRecipePhotoErrorTooLarge => 'La foto es demasiado grande incluso tras comprimirla. Prueba otra.';
+	@override String get profileAddPasskeyButton => 'Añadir clave de acceso (Touch ID / Face ID / Hello)';
+	@override String get profileSaveBiometricButton => 'Guardar inicio biométrico';
+	@override String get profilePasskeyAdded => 'Clave de acceso añadida. La próxima vez usa Touch ID / Face ID / Windows Hello.';
+	@override String profilePasskeyAddFailed({required Object error}) => 'No se pudo añadir la clave de acceso: ${error}';
+	@override String get profileBiometricSaved => 'Inicio biométrico guardado. Usa Face ID o huella dactilar la próxima vez.';
+	@override String get profileBiometricSaveFailed => 'No se pudo guardar el inicio biométrico. Asegúrate de que la biometría esté configurada en este dispositivo.';
+	@override String get profilePasskeySignInFirst => 'Inicia sesión primero y luego añade una clave de acceso.';
+	@override String get profilePasskeyNotSupported => 'Las claves de acceso no son compatibles con este navegador.';
 }
 
 // Path: a11y
@@ -344,6 +352,14 @@ extension on TranslationsEs {
 			'addRecipePhotoSourceTitle' => 'Añadir una foto',
 			'addRecipePhotoErrorAccessDenied' => 'Acceso a fotos denegado. Permítelo en Ajustes.',
 			'addRecipePhotoErrorTooLarge' => 'La foto es demasiado grande incluso tras comprimirla. Prueba otra.',
+			'profileAddPasskeyButton' => 'Añadir clave de acceso (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'Guardar inicio biométrico',
+			'profilePasskeyAdded' => 'Clave de acceso añadida. La próxima vez usa Touch ID / Face ID / Windows Hello.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'No se pudo añadir la clave de acceso: ${error}',
+			'profileBiometricSaved' => 'Inicio biométrico guardado. Usa Face ID o huella dactilar la próxima vez.',
+			'profileBiometricSaveFailed' => 'No se pudo guardar el inicio biométrico. Asegúrate de que la biometría esté configurada en este dispositivo.',
+			'profilePasskeySignInFirst' => 'Inicia sesión primero y luego añade una clave de acceso.',
+			'profilePasskeyNotSupported' => 'Las claves de acceso no son compatibles con este navegador.',
 			_ => null,
 		};
 	}

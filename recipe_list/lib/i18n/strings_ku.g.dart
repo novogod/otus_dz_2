@@ -178,6 +178,14 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhotoSourceTitle => 'Wêneyek lê zêde bike';
 	@override String get addRecipePhotoErrorAccessDenied => 'Gihîştina wêneyan hat redkirin. Ji Mîhengan destûr bide.';
 	@override String get addRecipePhotoErrorTooLarge => 'Wêne piştî perçiqandinê jî pir mezin e. Yekê din biceribîne.';
+	@override String get profileAddPasskeyButton => 'Mifteya derbasbûnê zêde bike (Touch ID / Face ID / Hello)';
+	@override String get profileSaveBiometricButton => 'Têketina biyometrîk tomar bike';
+	@override String get profilePasskeyAdded => 'Mifteya derbasbûnê hat zêdekirin. Cara bê bi Touch ID / Face ID / Windows Hello têkeve.';
+	@override String profilePasskeyAddFailed({required Object error}) => 'Mifteya derbasbûnê nehat zêdekirin: ${error}';
+	@override String get profileBiometricSaved => 'Têketina biyometrîk hat tomarkirin. Cara bê Face ID an şopa tiliyê bikar bîne.';
+	@override String get profileBiometricSaveFailed => 'Têketina biyometrîk nehat tomarkirin. Bişkîne ku biyometrîk li ser vê cîhazê hatibe sazlêdan.';
+	@override String get profilePasskeySignInFirst => 'Pêşî têkeve, paşê mifteya derbasbûnê zêde bike.';
+	@override String get profilePasskeyNotSupported => 'Mifteyên derbasbûnê di vê gerokê de nayên piştgirî kirin.';
 }
 
 // Path: a11y
@@ -344,6 +352,14 @@ extension on TranslationsKu {
 			'addRecipePhotoSourceTitle' => 'Wêneyek lê zêde bike',
 			'addRecipePhotoErrorAccessDenied' => 'Gihîştina wêneyan hat redkirin. Ji Mîhengan destûr bide.',
 			'addRecipePhotoErrorTooLarge' => 'Wêne piştî perçiqandinê jî pir mezin e. Yekê din biceribîne.',
+			'profileAddPasskeyButton' => 'Mifteya derbasbûnê zêde bike (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'Têketina biyometrîk tomar bike',
+			'profilePasskeyAdded' => 'Mifteya derbasbûnê hat zêdekirin. Cara bê bi Touch ID / Face ID / Windows Hello têkeve.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'Mifteya derbasbûnê nehat zêdekirin: ${error}',
+			'profileBiometricSaved' => 'Têketina biyometrîk hat tomarkirin. Cara bê Face ID an şopa tiliyê bikar bîne.',
+			'profileBiometricSaveFailed' => 'Têketina biyometrîk nehat tomarkirin. Bişkîne ku biyometrîk li ser vê cîhazê hatibe sazlêdan.',
+			'profilePasskeySignInFirst' => 'Pêşî têkeve, paşê mifteya derbasbûnê zêde bike.',
+			'profilePasskeyNotSupported' => 'Mifteyên derbasbûnê di vê gerokê de nayên piştgirî kirin.',
 			_ => null,
 		};
 	}

@@ -444,6 +444,30 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// en: 'Photo is too large even after compression. Try another one.'
 	String get addRecipePhotoErrorTooLarge => 'Photo is too large even after compression. Try another one.';
+
+	/// en: 'Add passkey (Touch ID / Face ID / Hello)'
+	String get profileAddPasskeyButton => 'Add passkey (Touch ID / Face ID / Hello)';
+
+	/// en: 'Save biometric login'
+	String get profileSaveBiometricButton => 'Save biometric login';
+
+	/// en: 'Passkey added. Sign in with Touch ID / Face ID / Windows Hello next time.'
+	String get profilePasskeyAdded => 'Passkey added. Sign in with Touch ID / Face ID / Windows Hello next time.';
+
+	/// en: 'Could not add passkey: ${error}'
+	String profilePasskeyAddFailed({required Object error}) => 'Could not add passkey: ${error}';
+
+	/// en: 'Biometric login saved. Use Face ID or fingerprint to sign in next time.'
+	String get profileBiometricSaved => 'Biometric login saved. Use Face ID or fingerprint to sign in next time.';
+
+	/// en: 'Could not save biometric login. Make sure biometrics are set up on this device.'
+	String get profileBiometricSaveFailed => 'Could not save biometric login. Make sure biometrics are set up on this device.';
+
+	/// en: 'Sign in first, then add a passkey.'
+	String get profilePasskeySignInFirst => 'Sign in first, then add a passkey.';
+
+	/// en: 'Passkeys are not supported in this browser.'
+	String get profilePasskeyNotSupported => 'Passkeys are not supported in this browser.';
 }
 
 // Path: a11y
@@ -626,6 +650,14 @@ extension on Translations {
 			'addRecipePhotoSourceTitle' => 'Add a photo',
 			'addRecipePhotoErrorAccessDenied' => 'Access to photos denied. Allow access in Settings.',
 			'addRecipePhotoErrorTooLarge' => 'Photo is too large even after compression. Try another one.',
+			'profileAddPasskeyButton' => 'Add passkey (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'Save biometric login',
+			'profilePasskeyAdded' => 'Passkey added. Sign in with Touch ID / Face ID / Windows Hello next time.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'Could not add passkey: ${error}',
+			'profileBiometricSaved' => 'Biometric login saved. Use Face ID or fingerprint to sign in next time.',
+			'profileBiometricSaveFailed' => 'Could not save biometric login. Make sure biometrics are set up on this device.',
+			'profilePasskeySignInFirst' => 'Sign in first, then add a passkey.',
+			'profilePasskeyNotSupported' => 'Passkeys are not supported in this browser.',
 			_ => null,
 		};
 	}

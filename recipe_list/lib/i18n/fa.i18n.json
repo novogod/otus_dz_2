@@ -148,5 +148,13 @@
   "addRecipePhotoRemove": "حذف عکس",
   "addRecipePhotoSourceTitle": "افزودن عکس",
   "addRecipePhotoErrorAccessDenied": "دسترسی به عکس‌ها رد شد. در تنظیمات اجازه دهید.",
-  "addRecipePhotoErrorTooLarge": "عکس حتی پس از فشرده‌سازی هم خیلی بزرگ است. یکی دیگر را امتحان کنید."
+  "addRecipePhotoErrorTooLarge": "عکس حتی پس از فشرده‌سازی هم خیلی بزرگ است. یکی دیگر را امتحان کنید.",
+  "profileAddPasskeyButton": "افزودن کلید عبور (Touch ID / Face ID / Hello)",
+  "profileSaveBiometricButton": "ذخیره ورود بیومتریک",
+  "profilePasskeyAdded": "کلید عبور اضافه شد. دفعه بعد با Touch ID / Face ID / Windows Hello وارد شوید.",
+  "profilePasskeyAddFailed": "افزودن کلید عبور ممکن نشد: ${error}",
+  "profileBiometricSaved": "ورود بیومتریک ذخیره شد. دفعه بعد از Face ID یا اثر انگشت استفاده کنید.",
+  "profileBiometricSaveFailed": "ذخیره ورود بیومتریک ممکن نشد. مطمئن شوید بیومتریک روی این دستگاه تنظیم شده است.",
+  "profilePasskeySignInFirst": "ابتدا وارد شوید، سپس کلید عبور اضافه کنید.",
+  "profilePasskeyNotSupported": "کلیدهای عبور در این مرورگر پشتیبانی نمی‌شوند."
 }

@@ -186,6 +186,14 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhotoSourceTitle => 'أضف صورة';
 	@override String get addRecipePhotoErrorAccessDenied => 'تم رفض الوصول إلى الصور. اسمح بالوصول من الإعدادات.';
 	@override String get addRecipePhotoErrorTooLarge => 'الصورة كبيرة جدًا حتى بعد الضغط. جرّب صورة أخرى.';
+	@override String get profileAddPasskeyButton => 'إضافة مفتاح مرور (Touch ID / Face ID / Hello)';
+	@override String get profileSaveBiometricButton => 'حفظ تسجيل الدخول البيومتري';
+	@override String get profilePasskeyAdded => 'تمت إضافة مفتاح المرور. سجّل الدخول باستخدام Touch ID / Face ID / Windows Hello في المرة القادمة.';
+	@override String profilePasskeyAddFailed({required Object error}) => 'تعذّر إضافة مفتاح المرور: ${error}';
+	@override String get profileBiometricSaved => 'تم حفظ تسجيل الدخول البيومتري. استخدم Face ID أو بصمة الإصبع في المرة القادمة.';
+	@override String get profileBiometricSaveFailed => 'تعذّر حفظ تسجيل الدخول البيومتري. تأكد من إعداد البيومترية على هذا الجهاز.';
+	@override String get profilePasskeySignInFirst => 'سجّل الدخول أولاً ثم أضف مفتاح المرور.';
+	@override String get profilePasskeyNotSupported => 'مفاتيح المرور غير مدعومة في هذا المتصفح.';
 }
 
 // Path: a11y
@@ -352,6 +360,14 @@ extension on TranslationsAr {
 			'addRecipePhotoSourceTitle' => 'أضف صورة',
 			'addRecipePhotoErrorAccessDenied' => 'تم رفض الوصول إلى الصور. اسمح بالوصول من الإعدادات.',
 			'addRecipePhotoErrorTooLarge' => 'الصورة كبيرة جدًا حتى بعد الضغط. جرّب صورة أخرى.',
+			'profileAddPasskeyButton' => 'إضافة مفتاح مرور (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'حفظ تسجيل الدخول البيومتري',
+			'profilePasskeyAdded' => 'تمت إضافة مفتاح المرور. سجّل الدخول باستخدام Touch ID / Face ID / Windows Hello في المرة القادمة.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'تعذّر إضافة مفتاح المرور: ${error}',
+			'profileBiometricSaved' => 'تم حفظ تسجيل الدخول البيومتري. استخدم Face ID أو بصمة الإصبع في المرة القادمة.',
+			'profileBiometricSaveFailed' => 'تعذّر حفظ تسجيل الدخول البيومتري. تأكد من إعداد البيومترية على هذا الجهاز.',
+			'profilePasskeySignInFirst' => 'سجّل الدخول أولاً ثم أضف مفتاح المرور.',
+			'profilePasskeyNotSupported' => 'مفاتيح المرور غير مدعومة في هذا المتصفح.',
 			_ => null,
 		};
 	}

@@ -304,6 +304,15 @@ class S {
   String get profileSkip => _t.profileSkip;
   String get profileSavedToast => _t.profileSavedToast;
   String get profileLogout => _t.profileLogout;
+  String get profileAddPasskeyButton => _t.profileAddPasskeyButton;
+  String get profileSaveBiometricButton => _t.profileSaveBiometricButton;
+  String get profilePasskeyAdded => _t.profilePasskeyAdded;
+  String profilePasskeyAddFailed({required Object error}) =>
+      _t.profilePasskeyAddFailed(error: error);
+  String get profileBiometricSaved => _t.profileBiometricSaved;
+  String get profileBiometricSaveFailed => _t.profileBiometricSaveFailed;
+  String get profilePasskeySignInFirst => _t.profilePasskeySignInFirst;
+  String get profilePasskeyNotSupported => _t.profilePasskeyNotSupported;
 
   // Accessibility labels.
   String switchLanguageTo(String label) =>

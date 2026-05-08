@@ -148,5 +148,13 @@
   "addRecipePhotoRemove": "Wêneyê rake",
   "addRecipePhotoSourceTitle": "Wêneyek lê zêde bike",
   "addRecipePhotoErrorAccessDenied": "Gihîştina wêneyan hat redkirin. Ji Mîhengan destûr bide.",
-  "addRecipePhotoErrorTooLarge": "Wêne piştî perçiqandinê jî pir mezin e. Yekê din biceribîne."
+  "addRecipePhotoErrorTooLarge": "Wêne piştî perçiqandinê jî pir mezin e. Yekê din biceribîne.",
+  "profileAddPasskeyButton": "Mifteya derbasbûnê zêde bike (Touch ID / Face ID / Hello)",
+  "profileSaveBiometricButton": "Têketina biyometrîk tomar bike",
+  "profilePasskeyAdded": "Mifteya derbasbûnê hat zêdekirin. Cara bê bi Touch ID / Face ID / Windows Hello têkeve.",
+  "profilePasskeyAddFailed": "Mifteya derbasbûnê nehat zêdekirin: ${error}",
+  "profileBiometricSaved": "Têketina biyometrîk hat tomarkirin. Cara bê Face ID an şopa tiliyê bikar bîne.",
+  "profileBiometricSaveFailed": "Têketina biyometrîk nehat tomarkirin. Bişkîne ku biyometrîk li ser vê cîhazê hatibe sazlêdan.",
+  "profilePasskeySignInFirst": "Pêşî têkeve, paşê mifteya derbasbûnê zêde bike.",
+  "profilePasskeyNotSupported": "Mifteyên derbasbûnê di vê gerokê de nayên piştgirî kirin."
 }

@@ -148,5 +148,13 @@
   "addRecipePhotoRemove": "Supprimer la photo",
   "addRecipePhotoSourceTitle": "Ajouter une photo",
   "addRecipePhotoErrorAccessDenied": "Accès aux photos refusé. Autorisez-le dans les Réglages.",
-  "addRecipePhotoErrorTooLarge": "Photo trop volumineuse même après compression. Essayez-en une autre."
+  "addRecipePhotoErrorTooLarge": "Photo trop volumineuse même après compression. Essayez-en une autre.",
+  "profileAddPasskeyButton": "Ajouter une clé d'accès (Touch ID / Face ID / Hello)",
+  "profileSaveBiometricButton": "Enregistrer la connexion biométrique",
+  "profilePasskeyAdded": "Clé d'accès ajoutée. Connectez-vous avec Touch ID / Face ID / Windows Hello la prochaine fois.",
+  "profilePasskeyAddFailed": "Impossible d'ajouter la clé d'accès : ${error}",
+  "profileBiometricSaved": "Connexion biométrique enregistrée. Utilisez Face ID ou l'empreinte la prochaine fois.",
+  "profileBiometricSaveFailed": "Impossible d'enregistrer la connexion biométrique. Vérifiez que la biométrie est configurée sur cet appareil.",
+  "profilePasskeySignInFirst": "Connectez-vous d'abord, puis ajoutez une clé d'accès.",
+  "profilePasskeyNotSupported": "Les clés d'accès ne sont pas prises en charge par ce navigateur."
 }

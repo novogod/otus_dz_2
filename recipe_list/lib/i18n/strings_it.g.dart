@@ -178,6 +178,14 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhotoSourceTitle => 'Aggiungi una foto';
 	@override String get addRecipePhotoErrorAccessDenied => 'Accesso alle foto negato. Consentilo nelle Impostazioni.';
 	@override String get addRecipePhotoErrorTooLarge => 'La foto è troppo grande anche dopo la compressione. Provane un\'altra.';
+	@override String get profileAddPasskeyButton => 'Aggiungi passkey (Touch ID / Face ID / Hello)';
+	@override String get profileSaveBiometricButton => 'Salva accesso biometrico';
+	@override String get profilePasskeyAdded => 'Passkey aggiunta. Accedi con Touch ID / Face ID / Windows Hello la prossima volta.';
+	@override String profilePasskeyAddFailed({required Object error}) => 'Impossibile aggiungere la passkey: ${error}';
+	@override String get profileBiometricSaved => 'Accesso biometrico salvato. Usa Face ID o l\'impronta la prossima volta.';
+	@override String get profileBiometricSaveFailed => 'Impossibile salvare l\'accesso biometrico. Assicurati che la biometria sia configurata su questo dispositivo.';
+	@override String get profilePasskeySignInFirst => 'Accedi prima, poi aggiungi una passkey.';
+	@override String get profilePasskeyNotSupported => 'Le passkey non sono supportate in questo browser.';
 }
 
 // Path: a11y
@@ -344,6 +352,14 @@ extension on TranslationsIt {
 			'addRecipePhotoSourceTitle' => 'Aggiungi una foto',
 			'addRecipePhotoErrorAccessDenied' => 'Accesso alle foto negato. Consentilo nelle Impostazioni.',
 			'addRecipePhotoErrorTooLarge' => 'La foto è troppo grande anche dopo la compressione. Provane un\'altra.',
+			'profileAddPasskeyButton' => 'Aggiungi passkey (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'Salva accesso biometrico',
+			'profilePasskeyAdded' => 'Passkey aggiunta. Accedi con Touch ID / Face ID / Windows Hello la prossima volta.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'Impossibile aggiungere la passkey: ${error}',
+			'profileBiometricSaved' => 'Accesso biometrico salvato. Usa Face ID o l\'impronta la prossima volta.',
+			'profileBiometricSaveFailed' => 'Impossibile salvare l\'accesso biometrico. Assicurati che la biometria sia configurata su questo dispositivo.',
+			'profilePasskeySignInFirst' => 'Accedi prima, poi aggiungi una passkey.',
+			'profilePasskeyNotSupported' => 'Le passkey non sono supportate in questo browser.',
 			_ => null,
 		};
 	}

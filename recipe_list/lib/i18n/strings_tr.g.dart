@@ -178,6 +178,14 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhotoSourceTitle => 'Fotoğraf ekle';
 	@override String get addRecipePhotoErrorAccessDenied => 'Fotoğraflara erişim reddedildi. Ayarlardan izin verin.';
 	@override String get addRecipePhotoErrorTooLarge => 'Fotoğraf sıkıştırmadan sonra bile çok büyük. Başkasını deneyin.';
+	@override String get profileAddPasskeyButton => 'Geçiş anahtarı ekle (Touch ID / Face ID / Hello)';
+	@override String get profileSaveBiometricButton => 'Biyometrik girişi kaydet';
+	@override String get profilePasskeyAdded => 'Geçiş anahtarı eklendi. Bir sonraki girişte Touch ID / Face ID / Windows Hello kullanın.';
+	@override String profilePasskeyAddFailed({required Object error}) => 'Geçiş anahtarı eklenemedi: ${error}';
+	@override String get profileBiometricSaved => 'Biyometrik giriş kaydedildi. Bir sonraki girişte Face ID veya parmak izini kullanın.';
+	@override String get profileBiometricSaveFailed => 'Biyometrik giriş kaydedilemedi. Cihazda biyometrik ayarlandığından emin olun.';
+	@override String get profilePasskeySignInFirst => 'Önce giriş yapın, ardından geçiş anahtarı ekleyin.';
+	@override String get profilePasskeyNotSupported => 'Bu tarayıcıda geçiş anahtarları desteklenmiyor.';
 }
 
 // Path: a11y
@@ -344,6 +352,14 @@ extension on TranslationsTr {
 			'addRecipePhotoSourceTitle' => 'Fotoğraf ekle',
 			'addRecipePhotoErrorAccessDenied' => 'Fotoğraflara erişim reddedildi. Ayarlardan izin verin.',
 			'addRecipePhotoErrorTooLarge' => 'Fotoğraf sıkıştırmadan sonra bile çok büyük. Başkasını deneyin.',
+			'profileAddPasskeyButton' => 'Geçiş anahtarı ekle (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'Biyometrik girişi kaydet',
+			'profilePasskeyAdded' => 'Geçiş anahtarı eklendi. Bir sonraki girişte Touch ID / Face ID / Windows Hello kullanın.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'Geçiş anahtarı eklenemedi: ${error}',
+			'profileBiometricSaved' => 'Biyometrik giriş kaydedildi. Bir sonraki girişte Face ID veya parmak izini kullanın.',
+			'profileBiometricSaveFailed' => 'Biyometrik giriş kaydedilemedi. Cihazda biyometrik ayarlandığından emin olun.',
+			'profilePasskeySignInFirst' => 'Önce giriş yapın, ardından geçiş anahtarı ekleyin.',
+			'profilePasskeyNotSupported' => 'Bu tarayıcıda geçiş anahtarları desteklenmiyor.',
 			_ => null,
 		};
 	}

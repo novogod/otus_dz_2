@@ -11,6 +11,7 @@
 //   * The button is wired into the build() column (call site).
 
 import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -84,6 +85,43 @@ void main() {
         contains('_buildPasskeyButton()'),
         reason: '_buildPasskeyButton() must be called from the build column',
       );
+    });
+
+    test('button label uses i18n profileAddPasskeyButton (not hardcoded)', () {
+      expect(
+        src,
+        contains('s.profileAddPasskeyButton'),
+        reason: 'button label must use the translated string, not a hardcoded literal',
+      );
+    });
+
+    test('button label uses i18n profileSaveBiometricButton for native', () {
+      expect(
+        src,
+        contains('s.profileSaveBiometricButton'),
+        reason: 'native button label must use the translated string',
+      );
+    });
+
+    test('passkey added snackbar uses i18n profilePasskeyAdded', () {
+      expect(
+        src,
+        contains('s.profilePasskeyAdded'),
+      );
+    });
+
+    test('passkey error snackbar uses i18n profilePasskeyAddFailed', () {
+      expect(
+        src,
+        contains('s.profilePasskeyAddFailed'),
+      );
+    });
+
+    test('no hardcoded English passkey strings remain', () {
+      expect(src, isNot(contains("'Add passkey (Touch ID")));
+      expect(src, isNot(contains("'Save biometric login'")));
+      expect(src, isNot(contains("'Passkey added.")));
+      expect(src, isNot(contains("'Could not add passkey:")));
     });
   });
 }

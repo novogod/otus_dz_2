@@ -148,5 +148,13 @@
   "addRecipePhotoRemove": "Remove photo",
   "addRecipePhotoSourceTitle": "Add a photo",
   "addRecipePhotoErrorAccessDenied": "Access to photos denied. Allow access in Settings.",
-  "addRecipePhotoErrorTooLarge": "Photo is too large even after compression. Try another one."
+  "addRecipePhotoErrorTooLarge": "Photo is too large even after compression. Try another one.",
+  "profileAddPasskeyButton": "Add passkey (Touch ID / Face ID / Hello)",
+  "profileSaveBiometricButton": "Save biometric login",
+  "profilePasskeyAdded": "Passkey added. Sign in with Touch ID / Face ID / Windows Hello next time.",
+  "profilePasskeyAddFailed": "Could not add passkey: ${error}",
+  "profileBiometricSaved": "Biometric login saved. Use Face ID or fingerprint to sign in next time.",
+  "profileBiometricSaveFailed": "Could not save biometric login. Make sure biometrics are set up on this device.",
+  "profilePasskeySignInFirst": "Sign in first, then add a passkey.",
+  "profilePasskeyNotSupported": "Passkeys are not supported in this browser."
 }

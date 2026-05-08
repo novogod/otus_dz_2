@@ -148,5 +148,13 @@
   "addRecipePhotoRemove": "Fotoğrafı kaldır",
   "addRecipePhotoSourceTitle": "Fotoğraf ekle",
   "addRecipePhotoErrorAccessDenied": "Fotoğraflara erişim reddedildi. Ayarlardan izin verin.",
-  "addRecipePhotoErrorTooLarge": "Fotoğraf sıkıştırmadan sonra bile çok büyük. Başkasını deneyin."
+  "addRecipePhotoErrorTooLarge": "Fotoğraf sıkıştırmadan sonra bile çok büyük. Başkasını deneyin.",
+  "profileAddPasskeyButton": "Geçiş anahtarı ekle (Touch ID / Face ID / Hello)",
+  "profileSaveBiometricButton": "Biyometrik girişi kaydet",
+  "profilePasskeyAdded": "Geçiş anahtarı eklendi. Bir sonraki girişte Touch ID / Face ID / Windows Hello kullanın.",
+  "profilePasskeyAddFailed": "Geçiş anahtarı eklenemedi: ${error}",
+  "profileBiometricSaved": "Biyometrik giriş kaydedildi. Bir sonraki girişte Face ID veya parmak izini kullanın.",
+  "profileBiometricSaveFailed": "Biyometrik giriş kaydedilemedi. Cihazda biyometrik ayarlandığından emin olun.",
+  "profilePasskeySignInFirst": "Önce giriş yapın, ardından geçiş anahtarı ekleyin.",
+  "profilePasskeyNotSupported": "Bu tarayıcıda geçiş anahtarları desteklenmiyor."
 }

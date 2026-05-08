@@ -184,6 +184,14 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get addRecipePhotoSourceTitle => 'Добавить фото';
 	@override String get addRecipePhotoErrorAccessDenied => 'Доступ к фото запрещён. Разрешите доступ в настройках.';
 	@override String get addRecipePhotoErrorTooLarge => 'Фото слишком большое даже после сжатия. Выберите другое.';
+	@override String get profileAddPasskeyButton => 'Добавить ключ доступа (Touch ID / Face ID / Hello)';
+	@override String get profileSaveBiometricButton => 'Сохранить биометрический вход';
+	@override String get profilePasskeyAdded => 'Ключ доступа добавлен. В следующий раз входите через Touch ID / Face ID / Windows Hello.';
+	@override String profilePasskeyAddFailed({required Object error}) => 'Не удалось добавить ключ доступа: ${error}';
+	@override String get profileBiometricSaved => 'Биометрический вход сохранён. Используйте Face ID или отпечаток пальца.';
+	@override String get profileBiometricSaveFailed => 'Не удалось сохранить биометрический вход. Убедитесь, что биометрия настроена на устройстве.';
+	@override String get profilePasskeySignInFirst => 'Сначала войдите в аккаунт, а затем добавьте ключ доступа.';
+	@override String get profilePasskeyNotSupported => 'Ключи доступа не поддерживаются в этом браузере.';
 }
 
 // Path: a11y
@@ -350,6 +358,14 @@ extension on TranslationsRu {
 			'addRecipePhotoSourceTitle' => 'Добавить фото',
 			'addRecipePhotoErrorAccessDenied' => 'Доступ к фото запрещён. Разрешите доступ в настройках.',
 			'addRecipePhotoErrorTooLarge' => 'Фото слишком большое даже после сжатия. Выберите другое.',
+			'profileAddPasskeyButton' => 'Добавить ключ доступа (Touch ID / Face ID / Hello)',
+			'profileSaveBiometricButton' => 'Сохранить биометрический вход',
+			'profilePasskeyAdded' => 'Ключ доступа добавлен. В следующий раз входите через Touch ID / Face ID / Windows Hello.',
+			'profilePasskeyAddFailed' => ({required Object error}) => 'Не удалось добавить ключ доступа: ${error}',
+			'profileBiometricSaved' => 'Биометрический вход сохранён. Используйте Face ID или отпечаток пальца.',
+			'profileBiometricSaveFailed' => 'Не удалось сохранить биометрический вход. Убедитесь, что биометрия настроена на устройстве.',
+			'profilePasskeySignInFirst' => 'Сначала войдите в аккаунт, а затем добавьте ключ доступа.',
+			'profilePasskeyNotSupported' => 'Ключи доступа не поддерживаются в этом браузере.',
 			_ => null,
 		};
 	}

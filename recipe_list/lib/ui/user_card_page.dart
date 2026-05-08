@@ -234,13 +234,14 @@ class _UserCardPageState extends State<UserCardPage> {
 
   Future<void> _addPasskey() async {
     if (_busy || _passkeyBusy) return;
+    final s = S.of(context);
     if (kIsWeb) {
       final token = currentUserTokenNotifier.value;
       if (token == null || token.isEmpty) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(content: Text('Sign in first, then add a passkey.')),
+            SnackBar(content: Text(s.profilePasskeySignInFirst)),
           );
         return;
       }
@@ -248,9 +249,7 @@ class _UserCardPageState extends State<UserCardPage> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(
-              content: Text('Passkeys are not supported in this browser.'),
-            ),
+            SnackBar(content: Text(s.profilePasskeyNotSupported)),
           );
         return;
       }
@@ -261,17 +260,15 @@ class _UserCardPageState extends State<UserCardPage> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Passkey added. Sign in with Touch ID / Face ID / Windows Hello next time.',
-              ),
-            ),
+            SnackBar(content: Text(s.profilePasskeyAdded)),
           );
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text('Could not add passkey: $e')));
+          ..showSnackBar(
+            SnackBar(content: Text(s.profilePasskeyAddFailed(error: e))),
+          );
       } finally {
         if (mounted) setState(() => _passkeyBusy = false);
       }
@@ -287,9 +284,7 @@ class _UserCardPageState extends State<UserCardPage> {
       ..showSnackBar(
         SnackBar(
           content: Text(
-            ok
-                ? 'Biometric login saved. Use Face ID or fingerprint to sign in next time.'
-                : 'Could not save biometric login. Make sure biometrics are set up on this device.',
+            ok ? s.profileBiometricSaved : s.profileBiometricSaveFailed,
           ),
         ),
       );
@@ -869,9 +864,8 @@ class _UserCardPageState extends State<UserCardPage> {
 
   Widget _buildPasskeyButton() {
     if (!userLoggedInNotifier.value) return const SizedBox.shrink();
-    final label = kIsWeb
-        ? 'Add passkey (Touch ID / Face ID / Hello)'
-        : 'Save biometric login';
+    final s = S.of(context);
+    final label = kIsWeb ? s.profileAddPasskeyButton : s.profileSaveBiometricButton;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
