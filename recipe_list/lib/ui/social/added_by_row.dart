@@ -70,19 +70,45 @@ class AddedByRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '${s.recipeAddedByPrefix} $n${_locationLabel(context).isEmpty ? '' : ' (${_locationLabel(context)})'}',
-                  style: const TextStyle(
-                    fontFamily: AppTextStyles.fontFamily,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    height: 22 / 16,
-                    color: AppColors.textPrimary,
+                // Upper row (above avatar's horizontal axis):
+                // "Added by ${name}" + "  •  N recipes" if known.
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '${s.recipeAddedByPrefix} $n',
+                        style: const TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          height: 22 / 16,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      if (added != null && added > 0)
+                        TextSpan(
+                          text: '  •  ${s.recipeAuthorRecipes(added)}',
+                          style: const TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14,
+                            height: 20 / 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                    ],
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                if (added != null && added > 0)
+                // Lower row (below avatar's horizontal axis):
+                // city/country without brackets. Hidden when both
+                // are missing.
+                if (_locationLabel(context).isNotEmpty)
                   Text(
-                    s.recipeAuthorRecipes(added),
+                    _locationLabel(context),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: AppTextStyles.fontFamily,
                       fontWeight: FontWeight.w400,

@@ -1007,45 +1007,59 @@ class _AuthorChip extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: Text.rich(
-            TextSpan(
-              children: [
+          // Two-row author block: the upper row (name + recipe
+          // count) sits above the avatar's horizontal axis, while
+          // the lower row (city/country) sits below it. The Row's
+          // `crossAxisAlignment.center` aligns the avatar's
+          // vertical center with the Column's center, which falls
+          // between these two rows.
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text.rich(
                 TextSpan(
-                  text: name,
+                  children: [
+                    TextSpan(
+                      text: name,
+                      style: const TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        height: 20 / 14,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if (added != null && added > 0)
+                      TextSpan(
+                        text: '  •  ${s.recipeAuthorRecipes(added)}',
+                        style: const TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 13,
+                          height: 18 / 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                  ],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (_locationLabel(context).isNotEmpty)
+                Text(
+                  _locationLabel(context),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    height: 20 / 14,
-                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 13,
+                    height: 18 / 13,
+                    color: AppColors.textSecondary,
                   ),
                 ),
-                if (_locationLabel(context).isNotEmpty)
-                  TextSpan(
-                    text: ' (${_locationLabel(context)})',
-                    style: const TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 13,
-                      height: 20 / 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                if (added != null && added > 0)
-                  TextSpan(
-                    text: '  •  ${s.recipeAuthorRecipes(added)}',
-                    style: const TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 13,
-                      height: 18 / 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-              ],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            ],
           ),
         ),
       ],

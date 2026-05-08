@@ -57,6 +57,7 @@ class _UserCardPageState extends State<UserCardPage> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _countryController = TextEditingController();
+
   /// ISO 3166-1 alpha-2 country code currently selected by the
   /// user. Stored separately from [_countryController] (which is
   /// kept in sync with the picker for legacy reasons) so we can
@@ -395,9 +396,7 @@ class _UserCardPageState extends State<UserCardPage> {
         : null;
     final emoji = code != null ? _flagEmoji(code) : null;
     final placeholder = TextStyle(
-      color: AppColors.textPrimary.withValues(
-        alpha: _editing ? 0.55 : 0.4,
-      ),
+      color: AppColors.textPrimary.withValues(alpha: _editing ? 0.55 : 0.4),
     );
     return InkWell(
       onTap: _editing ? _openCountryPicker : null,
@@ -439,10 +438,7 @@ class _UserCardPageState extends State<UserCardPage> {
                 ),
               ),
             if (_editing)
-              const Icon(
-                Icons.arrow_drop_down,
-                color: AppColors.textSecondary,
-              ),
+              const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
           ],
         ),
       ),
