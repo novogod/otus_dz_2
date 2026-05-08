@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:country_flags/country_flags.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -530,7 +531,6 @@ class _UserCardPageState extends State<UserCardPage> {
     final name = (code != null && loc != null)
         ? (loc.countryName(countryCode: code) ?? code)
         : null;
-    final emoji = code != null ? _flagEmoji(code) : null;
     final placeholder = TextStyle(
       color: AppColors.textPrimary.withValues(alpha: _editing ? 0.55 : 0.4),
     );
@@ -544,8 +544,20 @@ class _UserCardPageState extends State<UserCardPage> {
         ),
         child: Row(
           children: [
-            if (emoji != null) ...[
-              Text(emoji, style: const TextStyle(fontSize: 20)),
+            if (code != null) ...[
+              CountryFlag.fromCountryCode(
+                code,
+                theme: const ImageTheme(width: 28, height: 20),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                code,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
               const SizedBox(width: AppSpacing.sm),
             ],
             Expanded(
@@ -586,6 +598,16 @@ class _UserCardPageState extends State<UserCardPage> {
       context: context,
       showPhoneCode: false,
       useSafeArea: true,
+      // Override the default emoji-flag with an SVG so it renders
+      // identically across all platforms. Web (Chromium) has no
+      // built-in flag glyphs and otherwise shows '?' boxes.
+      customFlagBuilder: (country) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: CountryFlag.fromCountryCode(
+          country.countryCode,
+          theme: const ImageTheme(width: 28, height: 20),
+        ),
+      ),
       onSelect: (country) {
         setState(() {
           _countryCode = country.countryCode;
@@ -596,8 +618,11 @@ class _UserCardPageState extends State<UserCardPage> {
   }
 
   /// Converts an ISO 3166-1 alpha-2 [code] to its regional indicator
-  /// flag emoji ("TR" → 🇹🇷). Pure offset arithmetic, no
-  /// network or asset lookup.
+  /// flag emoji ("TR" → "🇹🇷"). Pure offset arithmetic, no
+  /// network or asset lookup. Currently unused now that flags
+  /// render as SVG via [CountryFlag] — kept commented as a
+  /// reference for future Cupertino-style chip experiments.
+  // ignore: unused_element
   String? _flagEmoji(String code) {
     if (code.length != 2) return null;
     final base = 0x1F1E6 - 0x41;
