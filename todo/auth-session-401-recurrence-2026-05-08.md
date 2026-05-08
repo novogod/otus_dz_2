@@ -49,11 +49,12 @@ Status legend: ⬜ not started · 🟨 in working tree, not committed
     anon returns real challenge]
 23. Client web — `recipe_list/web/passkey_bridge.js`
     (`navigator.credentials.create / get`, base64url helpers)
-    [✅ `otus_dz@<pending-push>`; 11/11 unit tests green;
+    [✅ `otus_dz@da9d8b4`; 11/11 unit tests green;
     loaded before `flutter_bootstrap.js` in `web/index.html`]
 24. Client dart — `recipe_list/lib/auth/passkey_web.dart`
     (conditional import, JS interop, returns `unsupported` on
-    non-web) [⬜]
+    non-web) [✅ `otus_dz@<pending>`; 5/5 stub tests green;
+    `flutter analyze` clean on all targets]
 25. Client UI — replace the two "not supported in web mode"
     snackbars in `login_page.dart` with passkey register / login
     flows; keep native `local_auth` path unchanged [⬜]
@@ -762,7 +763,7 @@ keeps the Dart side simple.
 
 ---
 
-## Chunk 24 — Dart: `recipe_list/lib/auth/passkey_web.dart` [⬜]
+## Chunk 24 — Dart: `recipe_list/lib/auth/passkey_web.dart` [✅ 5/5 stub tests green]
 
 **Why:** unified Dart API regardless of platform.
 `passkey_web.dart` (web build) calls into
