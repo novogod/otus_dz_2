@@ -1,5 +1,90 @@
 # Project Log
 
+## Profile: City/Country fields + creator-city translation
+
+**Date:** 2026-05-07
+
+**Commits:**
+- `mahallem_ist` `edabe73c` — recipes: add city/country to user profile + creator projection
+- `mahallem_ist` `3be40d31` — recipes: tighten country to ISO alpha-2
+- `mahallem_ist` `0266df5d` — recipes: translate creatorCity via translateLabel + per-process cache
+- `otus_dz_2` `94bacfb` — profile: add City/Country fields shown next to author name
+- `otus_dz_2` `11f93a3` — profile: country picker (ISO alpha-2) + localized display
+- `otus_dz_2` `2608c14` — profile: show city/country as second row under author name
+- `otus_dz_2` `4408405` — details: remove Source button
+- `otus_dz_2` `abcbf17` — profile: city autocomplete via OSM Nominatim
+- `otus_dz_2` `876ed33` — ui: constrain profile pages to 480px max width
+
+### What changed
+
+Recipe author location is now shown on every recipe card and on
+the details page, localized to the viewer's UI language.
+
+- **Country** is stored as ISO 3166-1 alpha-2 and rendered
+  client-side via the `country_picker` package's
+  `CountryLocalizations.countryName()`. Profile edit replaces the
+  free-form text field with a flag-emoji + localized-name picker
+  tile; `showCountryPicker(...)` opens the search modal.
+- **City** is free-form. Profile edit replaces the plain TextField
+  with a `RawAutocomplete` that queries OSM Nominatim
+  (`accept-language` = UI lang, `countrycodes` scoped to the
+  picked country) with 350 ms debounce + race-guard. Falls back to
+  free-text on network failure; UA header per Nominatim policy.
+- **Translation in the cards list / details** runs server-side
+  inside `attachSocialSignals` after the meal-row projection.
+  `translateCityCached(city, srcLang, tgtLang)` wraps
+  `translateLabel` (same MyMemory → LibreTranslate → Gemini
+  cascade used for `strMeal`/`strCategory`). Per-process LRU
+  capped at 2000 entries; key is `${src}|${tgt}|${rawCity}`.
+  `srcLang` is the creator's `preferred_language` column.
+  Threaded through all five recipe endpoints (`/search`,
+  `/lookup`, `/random`, `/filter`, `/page`).
+- **Author chip layout** is now a two-row `Column` instead of an
+  inline parenthetical: upper row `name • N recipes` above the
+  avatar's horizontal axis, lower row `city/country` below it.
+  Same on `_AuthorChip` (cards) and `AddedByRow` (details).
+- **Source button** removed from the recipe details page (added
+  no business value, polluted the design). Underlying
+  `Routes.sourceSubpath` route is left intact for future use.
+- **Profile pages** (`UserCardPage`, `AdminAfterLoginPage`) now
+  cap content width at 480 px and center on wide viewports
+  (web, iPad, tablet). Added scrolling on the admin page so
+  short viewports don't overflow vertically.
+
+Why split country (client) vs city (server):
+
+- Country has ~250 fixed codes and high-quality offline i18n in
+  `country_picker` — no engine spend, no cache invalidation
+  surface.
+- City is unbounded so it leans on the existing translation
+  engines. Doing it inside `attachSocialSignals` avoids touching
+  the recipe redis cache (keyed by `recipeId × lang`) — a profile
+  edit never invalidates a recipe row.
+
+### Migrations
+
+`recipe_app_users` gained `city TEXT` and `country TEXT`, applied
+idempotently at backend boot inside
+`ensureRecipeAppUsersAvatarColumn`. Client SQLite bumped to
+`kRecipeDbSchemaVersion = 15` with `applyRecipeCreatorLocationColumns`.
+
+### Detailed feature doc
+
+See [`docs/profile-city-country-and-translation.md`](profile-city-country-and-translation.md).
+
+### Deploy
+
+1. `mahallem_ist`: pushed → `git pull` on prod →
+   `docker compose build user-portal && docker compose up -d user-portal`
+   from `local_docker_admin_backend/`.
+2. `otus_dz_2`: pushed → `git pull` on prod →
+   `docker compose -f docker-compose.web.yml build flutter-web &&
+   docker compose -f docker-compose.web.yml up -d flutter-web`.
+3. iOS rebuild + install on Novogod / NovogodOne is pending —
+   web is already live for both feature increments.
+
+---
+
 ## Profile: self-service password change
 
 **Date:** 2026-05-07

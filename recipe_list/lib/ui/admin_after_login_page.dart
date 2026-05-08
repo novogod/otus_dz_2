@@ -221,128 +221,133 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
                 builder: (context, isAdmin, _) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (isAdmin) ...[
-                    FilledButton.icon(
-                      style: _primaryButtonStyle,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => AdminUsersPage(
-                              adminLogin: widget.adminLogin,
-                              adminPassword: widget.adminPassword,
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.people_alt_outlined),
-                      label: Text(s.adminEditUsersList),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    FilledButton.icon(
-                      style: _primaryButtonStyle,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => AdminAddedRecipesPage(
-                              adminLogin: widget.adminLogin,
-                              adminPassword: widget.adminPassword,
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.library_books_outlined),
-                      label: const Text('Recipes added'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : _saveForBiometric,
-                    icon: Icon(
-                      _biometricSaved ? Icons.verified_user : Icons.fingerprint,
-                    ),
-                    label: Text(
-                      _biometricSaved
-                          ? 'Face ID / Fingerprint is saved for admin login'
-                          : 'Save admin login for Face ID / Fingerprint',
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  FilledButton.icon(
-                    style: _primaryButtonStyle,
-                    onPressed: () {
-                      // Open the recipes list (go_router root).
-                      context.go(Routes.recipes);
-                    },
-                    icon: const Icon(Icons.restaurant_menu),
-                    label: Text(s.adminEditCards),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  if (!isAdmin) ...[
-                    const Divider(height: AppSpacing.xl * 2),
-                    const Text(
-                      'Change password',
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16,
-                        color: AppColors.primaryDark,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    TextField(
-                      controller: _newPasswordController,
-                      obscureText: _newPasswordObscured,
-                      enabled: !_changingPassword,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _submitNewPassword(),
-                      decoration: InputDecoration(
-                        labelText: 'New password',
-                        helperText:
-                            'Min 6 characters. We will email it to you as a reminder.',
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _newPasswordObscured
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () => setState(
-                            () => _newPasswordObscured = !_newPasswordObscured,
-                          ),
+                    children: [
+                      if (isAdmin) ...[
+                        FilledButton.icon(
+                          style: _primaryButtonStyle,
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => AdminUsersPage(
+                                  adminLogin: widget.adminLogin,
+                                  adminPassword: widget.adminPassword,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.people_alt_outlined),
+                          label: Text(s.adminEditUsersList),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        FilledButton.icon(
+                          style: _primaryButtonStyle,
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => AdminAddedRecipesPage(
+                                  adminLogin: widget.adminLogin,
+                                  adminPassword: widget.adminPassword,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.library_books_outlined),
+                          label: const Text('Recipes added'),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      OutlinedButton.icon(
+                        onPressed: _busy ? null : _saveForBiometric,
+                        icon: Icon(
+                          _biometricSaved
+                              ? Icons.verified_user
+                              : Icons.fingerprint,
+                        ),
+                        label: Text(
+                          _biometricSaved
+                              ? 'Face ID / Fingerprint is saved for admin login'
+                              : 'Save admin login for Face ID / Fingerprint',
                         ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    FilledButton.icon(
-                      style: _primaryButtonStyle,
-                      onPressed: _changingPassword ? null : _submitNewPassword,
-                      icon: _changingPassword
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.surface,
+                      const SizedBox(height: AppSpacing.md),
+                      FilledButton.icon(
+                        style: _primaryButtonStyle,
+                        onPressed: () {
+                          // Open the recipes list (go_router root).
+                          context.go(Routes.recipes);
+                        },
+                        icon: const Icon(Icons.restaurant_menu),
+                        label: Text(s.adminEditCards),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      if (!isAdmin) ...[
+                        const Divider(height: AppSpacing.xl * 2),
+                        const Text(
+                          'Change password',
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            color: AppColors.primaryDark,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        TextField(
+                          controller: _newPasswordController,
+                          obscureText: _newPasswordObscured,
+                          enabled: !_changingPassword,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _submitNewPassword(),
+                          decoration: InputDecoration(
+                            labelText: 'New password',
+                            helperText:
+                                'Min 6 characters. We will email it to you as a reminder.',
+                            border: const OutlineInputBorder(),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _newPasswordObscured
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
                               ),
-                            )
-                          : const Icon(Icons.lock_reset),
-                      label: const Text('Change password'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  FilledButton.icon(
-                    style: _dangerButtonStyle,
-                    onPressed: _busy ? null : _logout,
-                    icon: const Icon(Icons.logout),
-                    label: Text(s.logoutButton),
-                  ),
-                ],
-              );
-            },
-          ),
+                              onPressed: () => setState(
+                                () => _newPasswordObscured =
+                                    !_newPasswordObscured,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        FilledButton.icon(
+                          style: _primaryButtonStyle,
+                          onPressed: _changingPassword
+                              ? null
+                              : _submitNewPassword,
+                          icon: _changingPassword
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.surface,
+                                  ),
+                                )
+                              : const Icon(Icons.lock_reset),
+                          label: const Text('Change password'),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      FilledButton.icon(
+                        style: _dangerButtonStyle,
+                        onPressed: _busy ? null : _logout,
+                        icon: const Icon(Icons.logout),
+                        label: Text(s.logoutButton),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),

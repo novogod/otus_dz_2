@@ -348,32 +348,32 @@ class _UserCardPageState extends State<UserCardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-              Center(
-                child: _AvatarSlot(
-                  avatarUrl: _profile?.avatarUrl,
-                  onTap: _editing ? _showAvatarPickerStub : null,
-                ),
+                  Center(
+                    child: _AvatarSlot(
+                      avatarUrl: _profile?.avatarUrl,
+                      onTap: _editing ? _showAvatarPickerStub : null,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildDisplayNameField(s),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildLanguagePicker(s),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildCityField(s),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildCountryField(s),
+                  if (_editing && !widget.isPostSignup) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNewPasswordField(),
+                  ],
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildStats(s, theme),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildPrimaryRow(s),
+                  const SizedBox(height: AppSpacing.md),
+                  if (!widget.isPostSignup) _buildLogoutButton(s),
+                ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              _buildDisplayNameField(s),
-              const SizedBox(height: AppSpacing.md),
-              _buildLanguagePicker(s),
-              const SizedBox(height: AppSpacing.md),
-              _buildCityField(s),
-              const SizedBox(height: AppSpacing.md),
-              _buildCountryField(s),
-              if (_editing && !widget.isPostSignup) ...[
-                const SizedBox(height: AppSpacing.md),
-                _buildNewPasswordField(),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              _buildStats(s, theme),
-              const SizedBox(height: AppSpacing.xl),
-              _buildPrimaryRow(s),
-              const SizedBox(height: AppSpacing.md),
-              if (!widget.isPostSignup) _buildLogoutButton(s),
-            ],
-          ),
             ),
           ),
         ),
@@ -505,12 +505,13 @@ class _UserCardPageState extends State<UserCardPage> {
         final addr = raw['address'];
         String? name;
         if (addr is Map) {
-          name = (addr['city'] ??
-                  addr['town'] ??
-                  addr['village'] ??
-                  addr['municipality'] ??
-                  addr['hamlet'])
-              as String?;
+          name =
+              (addr['city'] ??
+                      addr['town'] ??
+                      addr['village'] ??
+                      addr['municipality'] ??
+                      addr['hamlet'])
+                  as String?;
         }
         name ??= raw['name'] as String?;
         if (name == null || name.isEmpty) continue;
