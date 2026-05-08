@@ -40,7 +40,7 @@ Status legend: ⬜ not started · 🟨 in working tree, not committed
     trigger the 401 → kick-out cascade (regression observed
     after Chunks 1-19) [✅]
 21. Backend — DB migration: `recipe_app_user_credentials`
-    + `webauthn_challenges` (foundation for web biometric) [🟨 stub at `mahallem_ist/database/migrations/20260508_recipe_app_passkeys.sql`, uncommitted; intended path per body is `local_user_portal/migrations/`]
+    + `recipe_app_webauthn_challenges` (foundation for web biometric) [✅ `mahallem_ist@f52e135b`, applied to prod 2026-05-08]
 22. Backend — `/recipes/auth/passkey/{register,login}/{start,complete}`
     + list/delete, JWT-bearer auth, mirrors `routes/auth-passkey.js` [⬜]
 23. Client web — `recipe_list/web/passkey_bridge.js`
@@ -604,7 +604,16 @@ Architecture notes:
   registered in Safari also works in the iOS app via the
   iCloud Keychain shared credential store.
 
-## Chunk 21 — Backend: DB migration `recipe_app_user_credentials` [🟨]
+## Chunk 21 — Backend: DB migration `recipe_app_user_credentials` [✅]
+
+**Deployed:** `mahallem_ist@f52e135b` (2026-05-08).
+Migration `database/migrations/20260508_recipe_app_passkeys.sql`
+applied to prod via `docker exec mahallem-db psql` after a
+BEGIN/ROLLBACK dry-run. Both `recipe_app_user_credentials` and
+`recipe_app_webauthn_challenges` are present on prod.
+Regression test:
+`local_user_portal/tests/recipe-app-passkey-migration.test.js`
+(7 source-shape assertions, all green).
 
 **Why:** the `user_credentials` table FKs to `users.id`. Recipe
 app users live in `recipe_app_users` and have UUIDs that are
