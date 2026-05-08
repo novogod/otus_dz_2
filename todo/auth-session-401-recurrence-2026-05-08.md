@@ -12,33 +12,44 @@ Status legend: ⬜ not started · 🟨 in working tree, not committed
 
 ## Chunk index
 
-1. Backend — re-apply user-token TTL fix [🟨]
-2. Backend — fail-fast signing-secret plumbing [🟨]
-3. Client — preserve biometric blob on 401 in `PhotoRatingPill` [🟨]
-4. Client — delete the `AdminAfterLoginPage` ghost (rejected design) [🟨]
-5. Client — auto-pop `AdminAfterLoginPage` when admin context is lost [🟨]
-6. Client — admin-session-loss diagnostic event channel + snackbar [🟨]
-7. Doc amendments + project log [🟨]
+1. Backend — fail-fast signing-secret plumbing (root cause of 2026-05-08 outage) [✅]
+2. Backend — re-apply user-token TTL fix (latent 30-day tripwire) [✅]
+3. Client — preserve biometric blob on 401 in `PhotoRatingPill` [✅]
+4. Client — delete the `AdminAfterLoginPage` ghost (rejected design) [✅]
+5. Client — auto-pop `AdminAfterLoginPage` when admin context is lost [✅]
+6. Client — admin-session-loss diagnostic event channel + snackbar [✅]
+7. Doc amendments + project log [✅]
 8. Process — respect on-disk drift; never dismiss "file changed
    on disk" warnings [⬜ ongoing]
-9. Backend — regression test for `issueRecipesUserToken` TTL [🟨]
-10. Commit + push (laptop) [⬜]
-11. Deploy backend (`mahallem_ist`) [⬜]
-12. Deploy web (`otus_dz_2`) [⬜]
-13. Rebuild + install iOS on Novogod / NovogodOne [⬜]
-14. Verification matrix on web + iOS [⬜]
+9. Backend — regression test for `issueRecipesUserToken` TTL [✅]
+10. Commit + push (this dev machine, Mac mini) [✅]
+11. Deploy backend (`mahallem_ist`) [✅]
+12. Deploy web (`otus_dz_2`) [✅]
+13. Rebuild + install iOS on Novogod / NovogodOne [🟦 simulator only — physical devices pending]
+14. Verification matrix on web + iOS [⬜ manual]
 15. Follow-up: in-place re-auth on 401 (replaces the kick-out) [⬜ multi-day]
 16. Follow-up: WebAuthn / passkey parity for web biometric [⬜ multi-day]
 17. Follow-up: write-actions inventory — pipe every 401 through the
     diagnostic channel [⬜]
+18. Backend — fix `/root/build_recipe_sitemap.sh` baked-in token
+    (returns 401 after secret rotation) [⬜]
+19. Backend — decouple `RECIPES_API_SECRET` (optional `/recipes/*`
+    gate) from JWT signing keys (regression caused by Chunk 2) [✅]
+19. Backend — decouple `RECIPES_API_SECRET` (optional /recipes/*
+    gate) from JWT signing keys (regression caused by Chunk 2) [✅]
 
 ---
 
-## Chunk 1 — Backend: re-apply user-token TTL fix [🟨]
+## Chunk 1 — Backend: re-apply user-token TTL fix (latent tripwire) [✅]
 
 **Why:** commit `bc13c91f` paste-overwrote `78ee36a4` and
-re-introduced a hard-coded 30-day user-token TTL. Mornings ship
-expired user tokens and 401s flow back to the client.
+re-introduced a hard-coded 30-day user-token TTL. This is a
+**latent bug** — it would have caused 401s 30 days after each
+login even if the secret had been stable. It is **not** what
+triggered the 2026-05-08 morning outage (yesterday's logins
+were < 24 h old, well inside any 30-day TTL). See Chunk 2 for
+the actual trigger. Re-applying the fix here so the tripwire
+is disarmed for future logins.
 
 **Files:**
 - `mahallem_ist/local_user_portal/routes/auth.js` (lines ~51-71):
@@ -55,12 +66,23 @@ expired user tokens and 401s flow back to the client.
 
 ---
 
-## Chunk 2 — Backend: fail-fast signing-secret plumbing [🟨]
+## Chunk 2 — Backend: fail-fast signing-secret plumbing (root cause) [✅]
 
-**Why:** before this fix `RECIPE_ADMIN_TOKEN_SECRET:` defaulted
-to empty, falling through to `'change-me'` inside `auth.js`. Any
-restart with the host env unset silently rotates the secret and
-invalidates every previously-issued bearer token.
+**Why (corrected):** this is the actual trigger of the
+2026-05-08 outage. The compose file declared
+`RECIPE_ADMIN_TOKEN_SECRET: ${RECIPE_ADMIN_TOKEN_SECRET:-}`
+with no `RECIPES_API_SECRET` entry at all, and the host `.env`
+on prod had `RECIPE_ADMIN_TOKEN_SECRET` set but **no**
+`RECIPES_API_SECRET` (verified during this deploy's
+preflight). When the user-portal container was restarted
+(yesterday's hot-fix deploy or any later `docker compose up -d`),
+whichever variable was empty fell through to the `'change-me'`
+literal in `auth.js`, silently rotating the signing key. From
+that restart onward, every previously-issued bearer token —
+user, admin, biometric-stored — failed signature verification
+and the server returned 401 immediately, regardless of the
+token's claimed `exp`. That is what users saw this morning
+when they tapped a star.
 
 **Files:**
 - `mahallem_ist/local_docker_admin_backend/docker-compose.yml`
@@ -80,7 +102,7 @@ invalidates every previously-issued bearer token.
 
 ---
 
-## Chunk 3 — Client: preserve biometric blob on 401 [🟨]
+## Chunk 3 — Client: preserve biometric blob on 401 [✅]
 
 **Why:** yesterday's friendly-401 catch called `logoutAdmin()`
 with the default `clearSavedSession: true`, nulling the
@@ -101,7 +123,7 @@ with the default `clearSavedSession: true`, nulling the
 
 ---
 
-## Chunk 4 — Client: delete the `AdminAfterLoginPage` ghost [🟨]
+## Chunk 4 — Client: delete the `AdminAfterLoginPage` ghost [✅]
 
 **Why:** the rejected first-iteration "Change password" UI
 (separate `TextField` + standalone `FilledButton`) survived as
@@ -128,7 +150,7 @@ no longer appears post-401.
 
 ---
 
-## Chunk 5 — Client: auto-pop `AdminAfterLoginPage` on admin-loss [🟨]
+## Chunk 5 — Client: auto-pop `AdminAfterLoginPage` on admin-loss [✅]
 
 **Why:** even after Chunk 4 the page would render *some*
 non-admin variant if it stayed on top of the Navigator stack
@@ -153,7 +175,7 @@ on contract violation it must disappear, exposing
 
 ---
 
-## Chunk 6 — Client: admin-session-loss diagnostic channel [🟨]
+## Chunk 6 — Client: admin-session-loss diagnostic channel [✅]
 
 **Why:** "admin context is lost" today is a silent state flip.
 We need full forensic detail (status, request URL, response
@@ -249,7 +271,7 @@ in the snackbar and in the device log.
 
 ---
 
-## Chunk 7 — Doc amendments + project log [🟨]
+## Chunk 7 — Doc amendments + project log [✅]
 
 **Files:**
 - `docs/auth-session-401-recurrence-2026-05-08.md`:
@@ -308,7 +330,7 @@ code that an earlier commit removed. Spot-check via
 on `mahallem_ist`.
 ---
 
-## Chunk 9 — Backend: regression test for user-token TTL [⬜]
+## Chunk 9 — Backend: regression test for user-token TTL [✅]
 
 **Why:** CI on the laptop would have caught `bc13c91f` before
 push. This is the only structural defense against the same
@@ -336,7 +358,7 @@ silent revert recurring.
 
 ---
 
-## Chunk 10 — Commit + push (this dev machine, Mac mini) [⬜]
+## Chunk 10 — Commit + push (this dev machine, Mac mini) [✅]
 
 Two repos, separate commits:
 
@@ -357,7 +379,7 @@ to GitHub; CI green where applicable.
 
 ---
 
-## Chunk 11 — Deploy backend (`mahallem_ist`) [⬜]
+## Chunk 11 — Deploy backend (`mahallem_ist`) [✅]
 
 ```sh
 cd /root/mahallem/mahallem_ist
@@ -377,7 +399,7 @@ docker exec mahallem-user-portal node -e "
 
 ---
 
-## Chunk 12 — Deploy web (`otus_dz_2`) [⬜]
+## Chunk 12 — Deploy web (`otus_dz_2`) [✅]
 
 **Why:** missing yesterday — the web container was still
 running a build from before commit `80e8a32`, which is why web
@@ -397,7 +419,7 @@ contains the friendly-401 catch (no raw DioException toast on
 
 ---
 
-## Chunk 13 — Rebuild + install iOS [⬜]
+## Chunk 13 — Rebuild + install iOS [🟦 simulator only]
 
 Devices:
 - Novogod `00008140-0014399E0EF3001C`
@@ -409,7 +431,7 @@ Chunks 3-6. Manual smoke test: induce 401 → friendly snackbar
 
 ---
 
-## Chunk 14 — Verification matrix [⬜]
+## Chunk 14 — Verification matrix [⬜ in progress]
 
 For each platform (web, iOS Novogod, iOS NovogodOne, PWA):
 
@@ -478,6 +500,58 @@ no idea why" without a diagnostic dump.
 **Acceptance:** all write actions surface the same snackbar +
 log dump as the rating pill on 401. Add to the verification
 matrix in Chunk 14.
+
+---
+
+## Chunk 19 — Backend: decouple `RECIPES_API_SECRET` from JWT signing keys [✅]
+
+**Why (regression introduced by Chunk 2):** `RECIPES_API_SECRET`
+plays two unrelated roles in `local_user_portal`:
+
+1. *Optional shared-secret gate* read by `authMiddleware` in
+   `routes/recipes.js` (lines 121-131). When set, every request
+   to `/recipes/*` must carry header `x-recipes-token: <value>`.
+   The Flutter web/iOS clients do not send this header — these
+   read endpoints are intentionally public. In prod the env var
+   was always unset; the gate was off.
+2. *Fallback signing key* for `RECIPES_USER_TOKEN_SECRET` and
+   `RECIPE_ADMIN_TOKEN_SECRET` if those weren't explicitly set.
+
+Chunk 2 made `RECIPES_API_SECRET` fail-fast required and used
+`:-${RECIPES_API_SECRET}` defaults to derive both signing
+keys from it. Side effect: the gate flipped ON.
+Within an hour the web client was 401-ing on `/recipes/page`,
+`/recipes/filter`, `/recipes/visit`, `/recipes/count`.
+
+**Files:**
+- `mahallem_ist/local_docker_admin_backend/docker-compose.yml`
+  (user-portal env block):
+  - `RECIPES_API_SECRET: ${RECIPES_API_SECRET:-}` (gate
+    optional, off by default).
+  - `RECIPES_USER_TOKEN_SECRET: ${RECIPES_USER_TOKEN_SECRET:?…must be set…}`
+    (independent fail-fast).
+  - `RECIPE_ADMIN_TOKEN_SECRET: ${RECIPE_ADMIN_TOKEN_SECRET:?…must be set…}`
+    (independent fail-fast).
+- Prod `.env`: added explicit `RECIPES_USER_TOKEN_SECRET=<same
+  value as RECIPE_ADMIN_TOKEN_SECRET>` so any user token issued
+  during the regression window continues to verify; commented
+  out the `RECIPES_API_SECRET=` line.
+
+**Acceptance:**
+- `curl http://localhost:4000/recipes/page?offset=0&limit=1&lang=en`
+  returns `200`.
+- `curl https://recipies.mahallem.ist/recipes/page?…` returns `200`.
+- `docker exec mahallem-user-portal node -e "console.log(Boolean(process.env.RECIPES_USER_TOKEN_SECRET))"`
+  prints `true`; same for `RECIPE_ADMIN_TOKEN_SECRET`;
+  `RECIPES_API_SECRET` is empty/unset.
+
+**DoD:** committed (`bc4163c0`), pushed, deployed; web smoke
+test 200 across `page` / `filter` / `count`.
+
+**Follow-up rename (deferred):** `RECIPES_API_SECRET` is a
+misleading name — it has nothing to do with API access in the
+JWT sense. Rename to `RECIPES_API_GATE_TOKEN` in a separate
+commit so the dual-purpose confusion can never recur.
 
 ---
 

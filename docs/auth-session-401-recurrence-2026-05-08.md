@@ -43,7 +43,111 @@ hit.
 
 ## Investigation
 
-### Why yesterday's fix did not survive overnight
+### What actually caused this morning's 401 (corrected after triage)
+
+Initial framing in this doc blamed the user-token TTL revert in
+`bc13c91f` for the morning's outage. **That framing was wrong on
+timing.** The previous day's logins were < 24 h old — well inside
+even a 30-day TTL — so a 30-day cap could not have been what
+expired them. The TTL revert is a real latent bug (it would have
+bitten us on day 30) but it is **not the trigger of today's
+incident**.
+
+The actual trigger was the **signing-secret rotation at restart**
+(see "Empty signing-secret default in compose" below). The
+sequence was:
+
+1. The compose file declared
+   `RECIPE_ADMIN_TOKEN_SECRET: ${RECIPE_ADMIN_TOKEN_SECRET:-}`
+   with no `RECIPES_API_SECRET` entry at all. The host `.env`
+   file on prod had `RECIPE_ADMIN_TOKEN_SECRET` set but **no**
+   `RECIPES_API_SECRET` (verified during this incident's
+   deploy preflight).
+2. Yesterday's hot-fix deploy (or any subsequent
+   `docker compose up -d`) restarted the user-portal container.
+   Whichever environment variable was empty at that moment fell
+   through to the `'change-me'` literal in `auth.js`.
+3. From that restart onward, every previously-issued bearer
+   token (user, admin, biometric-stored) failed signature
+   verification → server returned 401 immediately, regardless
+   of the token's claimed `exp`.
+4. Next time the user opened the app and tapped a star, the
+   401 path fired and produced the symptoms in §1.
+
+The TTL revert is fixed in the same commit because we were
+already in the file, but it is logically a **separate latent
+bug** — a tripwire that would have caused the same symptoms 30
+days from now even if the secret had been stable.
+
+### Regression introduced by the first fix attempt (Chunk 19)
+
+About an hour after deploying the original Chunk 2 fix the web
+client surfaced a fresh wave of 401s — this time on
+**anonymous read** endpoints (`/recipes/page`,
+`/recipes/filter`, `/recipes/visit`, `/recipes/count`). The
+client is not even sending an admin/user token to these routes;
+they are public.
+
+Root cause: `RECIPES_API_SECRET` is **two unrelated things** in
+the user-portal codebase, and the first fix conflated them:
+
+1. It is the env var read by `authMiddleware` in
+   `local_user_portal/routes/recipes.js` (lines 121-131), an
+   *optional shared-secret gate* that sits in front of every
+   `/recipes/*` request:
+
+   ```js
+   function authMiddleware(req, res, next) {
+     const expected = process.env.RECIPES_API_SECRET;
+     if (!expected) return next();           // gating disabled
+     const got = req.get('x-recipes-token');
+     if (got && got === expected) return next();
+     return res.status(401).json({ error: 'unauthorized' });
+   }
+   ```
+
+   In production it had always been **unset** (gate disabled).
+   The Flutter client does not send `x-recipes-token` and
+   should not — these endpoints are intentionally public.
+
+2. It was *also* used in `auth.js` and `recipes.js` as a
+   *fallback source* for `RECIPES_USER_TOKEN_SECRET` and
+   `RECIPE_ADMIN_TOKEN_SECRET` if those weren't set. That is
+   what the first-attempt compose change exploited, by making
+   `RECIPES_API_SECRET` fail-fast required and using `:-`
+   defaults to derive both signing keys from it.
+
+Setting `RECIPES_API_SECRET` to fix (2) **also flipped on (1)**.
+Anonymous web traffic immediately started 401-ing.
+
+Fix (commit `bc4163c0`):
+
+* `RECIPES_API_SECRET: ${RECIPES_API_SECRET:-}` — restored to
+  optional/empty default, gate stays off in production.
+* `RECIPES_USER_TOKEN_SECRET: ${…:?…must be set…}` — fail-fast
+  required, **independent** of `RECIPES_API_SECRET`.
+* `RECIPE_ADMIN_TOKEN_SECRET: ${…:?…must be set…}` — same.
+
+On prod's `.env` an explicit `RECIPES_USER_TOKEN_SECRET` was
+added with the **same value** that was just signing user
+tokens (= the seeded `RECIPES_API_SECRET` value, which itself
+equalled `RECIPE_ADMIN_TOKEN_SECRET`), so any user token
+issued in the gap between the first deploy and the regression
+fix continues to verify. The `RECIPES_API_SECRET=…` line in
+`.env` was commented out. Smoke test:
+
+```
+GET /recipes/page    → 200
+GET /recipes/filter  → 200
+GET /recipes/count   → 200
+```
+
+Lesson: `RECIPES_API_SECRET` is a misleading name. It should
+have been `RECIPES_API_GATE_TOKEN` from the start. The signing
+keys (`RECIPES_USER_TOKEN_SECRET`, `RECIPE_ADMIN_TOKEN_SECRET`)
+were always meant to be independent and they now are.
+
+### How `bc13c91f` happened (separate process bug)
 
 Walking the `mahallem_ist` history of `local_user_portal/routes/auth.js`:
 
@@ -52,7 +156,7 @@ git log 78ee36a4..HEAD -- local_user_portal/routes/auth.js
 bc13c91f auth: auto-detect resetPasswordScope when session cookie is missing
 ```
 
-The unrelated reset-password-scope commit `bc13c91f`, made on prod
+The unrelated reset-password-scope commit `bc13c91f`, made
 roughly 40 minutes after the TTL fix `78ee36a4`, **silently
 reverted the TTL fix** in the same file:
 
