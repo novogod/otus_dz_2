@@ -335,7 +335,12 @@ class _LoginPageState extends State<LoginPage> {
     // so "Logout" returns to login screen but still allows Face ID/
     // fingerprint sign-in later. Admin logout remains full-clear.
     final preserveBiometric = !adminLoggedInNotifier.value && _biometricSaved;
-    await logoutAdmin(clearSavedSession: !preserveBiometric);
+    await logoutAdmin(
+      clearSavedSession: !preserveBiometric,
+      lossEvent: AdminSessionLossEvent(
+        reason: 'User tapped Logout in LoginPage',
+      ),
+    );
     if (!mounted) return;
     setState(() {
       _authBusy = false;

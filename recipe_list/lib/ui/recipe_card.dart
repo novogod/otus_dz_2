@@ -484,16 +484,44 @@ class PhotoRatingPill extends StatelessWidget {
                       } else {
                         await store.setMyRating(recipe.id, stars);
                       }
-                    } catch (e) {
+                    } catch (e, st) {
                       // Token expired / cleared server-side. Surface a
                       // friendly "log in to rate" prompt instead of the
                       // raw DioException, and drop the stale session so
                       // the next tap routes through the login flow.
-                      final status = e is DioException
-                          ? e.response?.statusCode
-                          : null;
+                      final dioErr = e is DioException ? e : null;
+                      final status = dioErr?.response?.statusCode;
                       if (status == 401 || status == 403) {
-                        await logoutAdmin();
+                        // Drop the active session so the next tap
+                        // routes through the login flow, but keep
+                        // the saved-session row intact so biometric
+                        // login still works after the user
+                        // re-authenticates. clearSavedSession=true
+                        // (the default) wiped the token blob and
+                        // produced "no biometric data for this
+                        // session" on the next app start.
+                        // See docs/auth-session-401-recurrence-2026-05-08.md.
+                        //
+                        // Publish a diagnostic record so any active
+                        // session-loss listener (e.g.
+                        // AdminAfterLoginPage) can surface the full
+                        // server response + stack trace. This is what
+                        // we want captured next time an admin gets
+                        // kicked out in the wild.
+                        final body = dioErr?.response?.data;
+                        await logoutAdmin(
+                          clearSavedSession: false,
+                          lossEvent: AdminSessionLossEvent(
+                            reason: 'Rating pill received $status from backend',
+                            statusCode: status,
+                            requestMethod: dioErr?.requestOptions.method,
+                            requestPath: dioErr?.requestOptions.uri.toString(),
+                            responseBody: body?.toString(),
+                            errorType: e.runtimeType.toString(),
+                            errorMessage: e.toString(),
+                            stackTrace: st.toString(),
+                          ),
+                        );
                         if (context.mounted) {
                           showRegistrationRequiredSnackBar(context);
                         }

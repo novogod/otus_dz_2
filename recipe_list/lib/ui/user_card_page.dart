@@ -232,7 +232,12 @@ class _UserCardPageState extends State<UserCardPage> {
   Future<void> _handleLogout() async {
     if (_busy) return;
     setState(() => _busy = true);
-    await logoutAdmin(clearSavedSession: true);
+    await logoutAdmin(
+      clearSavedSession: true,
+      lossEvent: AdminSessionLossEvent(
+        reason: 'User tapped Logout in profile (UserCardPage)',
+      ),
+    );
     if (!mounted) return;
     context.go(Routes.recipes);
   }

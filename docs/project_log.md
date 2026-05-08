@@ -1,5 +1,111 @@
 # Project Log
 
+## Auth: 401-on-rating recurrence + biometric wipe
+
+**Date:** 2026-05-08
+
+**Commits:**
+- `mahallem_ist` (pending) — auth: re-apply RECIPES_USER_TOKEN_TTL_SECONDS; pin signing secrets in compose
+- `otus_dz_2` (pending) — recipe_card: preserve biometric blob on 401 logout; admin_after_login_page: delete rejected-design ghost + auto-pop on admin-loss; admin_session: AdminSessionLossEvent diagnostic channel; admin_after_login_page: surface diagnostic snackbar with Copy-details action
+
+### Symptoms
+
+Same morning-of-401 toast as 2026-05-07 came back overnight:
+
+- Web admin: `Rating failed: DioException [bad response] … 401`
+  (raw, with no friendly catch — web bundle was not rebuilt
+  after `80e8a32`).
+- iOS admin: friendly "this feature requires a registered user"
+  snackbar fired, then biometric login on next launch threw
+  "no biometric data for this session".
+
+### Root causes
+
+1. **Yesterday's TTL fix was paste-overwritten on prod.** Commit
+   `mahallem_ist@bc13c91f` ("auto-detect resetPasswordScope")
+   was authored by the agent directly on the production host
+   (`root@mahallem.ist`) against a working copy that had not
+   pulled `78ee36a4`. It dropped `RECIPES_USER_TOKEN_TTL_SECONDS`
+   plus the env-driven `exp` in `issueRecipesUserToken`. Every
+   user-token issued since has been capped at the old hard-coded
+   30 days; the env var plumbed via compose was ignored. Same
+   anti-pattern as the earlier `9682d4bf` "Production sync" \u2014
+   also a prod-host paste-overwrite. Process fix: stop committing
+   on prod (see follow-ups in the long-form doc).
+2. **Empty signing-secret default in compose.**
+   `RECIPE_ADMIN_TOKEN_SECRET: ${…:-}` falls through to
+   `'change-me'` when the host shell doesn't export the secret.
+   Every container restart could silently rotate the secret and
+   invalidate every previously-issued bearer.
+3. **`logoutAdmin()` clears the biometric blob by default.**
+   The friendly-401 catch added yesterday in
+   `PhotoRatingPill.onTap` called `logoutAdmin()` with
+   `clearSavedSession: true` (default), nulling the `token`
+   column in `auth_credentials` — converting a one-shot 401 into
+   a permanent biometric break until the user re-logged in.
+
+### Fixes
+
+- [`mahallem_ist/local_user_portal/routes/auth.js`](https://github.com/…/mahallem_ist/blob/main/local_user_portal/routes/auth.js)
+  — re-introduce `RECIPES_USER_TOKEN_TTL_SECONDS` (default 365 d)
+  and use it in `issueRecipesUserToken`.
+- [`mahallem_ist/local_docker_admin_backend/docker-compose.yml`](https://github.com/…/mahallem_ist/blob/main/local_docker_admin_backend/docker-compose.yml)
+  — plumb `RECIPES_API_SECRET` (required, `:?` fail-fast),
+  derive `RECIPES_USER_TOKEN_SECRET` and `RECIPE_ADMIN_TOKEN_SECRET`
+  from it. A redeploy can no longer silently rotate the bearer
+  signing key.
+- [`recipe_list/lib/ui/recipe_card.dart`](../recipe_list/lib/ui/recipe_card.dart)
+  — `PhotoRatingPill.onTap` now calls
+  `logoutAdmin(clearSavedSession: false)` on 401/403, preserving
+  the biometric token row so the user's next launch can still
+  unlock with Face/Touch ID.
+- [`recipe_list/lib/ui/admin_after_login_page.dart`](../recipe_list/lib/ui/admin_after_login_page.dart)
+  — deleted the rejected-design `if (!isAdmin) { … }` block
+  (separate "New password" `TextField` + standalone
+  "Change password" `FilledButton`) and its supporting state
+  (`_newPasswordController`, `_newPasswordObscured`,
+  `_changingPassword`, `_submitNewPassword`). The page is
+  admin-only by contract; on `adminLoggedInNotifier=false` it
+  now `popUntil((r) => r.isFirst)` so `_ProfileBranchRoot`
+  re-routes to `LoginPage` / `UserCardPage`.
+- [`recipe_list/lib/auth/admin_session.dart`](../recipe_list/lib/auth/admin_session.dart)
+  — added `AdminSessionLossEvent` (status, request
+  method/path, response body, error type/message, stack trace)
+  and `adminSessionLossNotifier`. `logoutAdmin` accepts an
+  optional `lossEvent` and publishes it to the notifier and
+  to `dart:developer` (`name=admin_session`, `level=900`).
+- `PhotoRatingPill` (recipe_card.dart) populates the event with
+  full Dio request/response/stack trace on 401/403.
+  `AdminAfterLoginPage` surfaces it as a 12-second snackbar
+  with a **Copy details** action that places the multi-line
+  dump on the clipboard, and mirrors the dump to
+  `developer.log` (`name=admin_after_login_page`).
+- All other `logoutAdmin` callers (`AdminAfterLoginPage._logout`,
+  `LoginPage._logout`, `UserCardPage._handleLogout`) now publish
+  an explicit `reason: 'User tapped Logout in …'` event so no
+  session-state flip is silent.
+
+### Long-form write-up
+
+[`docs/auth-session-401-recurrence-2026-05-08.md`](auth-session-401-recurrence-2026-05-08.md)
+— full timeline, evidence, deploy/verification commands,
+defense-in-depth notes, and open follow-ups (re-login probe in
+`loginWithSavedTokenSession`, regression test for
+`issueRecipesUserToken` TTL).
+
+### Deploy
+
+1. `mahallem_ist`: ensure `RECIPES_API_SECRET` is exported on
+   prod; `git pull && docker compose build user-portal &&
+   docker compose up -d user-portal`. Compose now refuses to
+   start without the secret.
+2. `otus_dz_2` web: `git pull && docker compose -f
+   docker-compose.web.yml build flutter-web && up -d flutter-web`
+   — this rebuild is what was missing yesterday.
+3. iOS rebuild + install on Novogod / NovogodOne (still pending).
+
+---
+
 ## Profile: City/Country fields + creator-city translation
 
 **Date:** 2026-05-07

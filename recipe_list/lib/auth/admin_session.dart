@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -20,6 +22,83 @@ final ValueNotifier<String?> currentUserTokenNotifier = ValueNotifier<String?>(
 );
 final ValueNotifier<String?> currentRecipeAdminTokenNotifier =
     ValueNotifier<String?>(null);
+
+/// Diagnostic record describing why the admin (or user) session was
+/// dropped. Listeners surface it as a long-duration snackbar with a
+/// Copy action so we can capture full server response and stack trace
+/// the next time the kick-out happens in the wild.
+class AdminSessionLossEvent {
+  AdminSessionLossEvent({
+    required this.reason,
+    this.statusCode,
+    this.requestMethod,
+    this.requestPath,
+    this.responseBody,
+    this.errorType,
+    this.errorMessage,
+    this.stackTrace,
+  }) : at = DateTime.now().toUtc();
+
+  final DateTime at;
+  final String reason;
+  final int? statusCode;
+  final String? requestMethod;
+  final String? requestPath;
+  final String? responseBody;
+  final String? errorType;
+  final String? errorMessage;
+  final String? stackTrace;
+
+  /// Multi-line dump suitable for console + clipboard.
+  String toDiagnosticString() {
+    final b = StringBuffer()
+      ..writeln('AdminSessionLossEvent @ ${at.toIso8601String()}')
+      ..writeln('reason: $reason');
+    if (statusCode != null) b.writeln('status: $statusCode');
+    if (requestMethod != null || requestPath != null) {
+      b.writeln('request: ${requestMethod ?? '?'} ${requestPath ?? '?'}');
+    }
+    if (errorType != null) b.writeln('errorType: $errorType');
+    if (errorMessage != null) b.writeln('errorMessage: $errorMessage');
+    if (responseBody != null && responseBody!.isNotEmpty) {
+      b.writeln('responseBody:');
+      b.writeln(responseBody);
+    }
+    if (stackTrace != null && stackTrace!.isNotEmpty) {
+      b.writeln('stackTrace:');
+      b.writeln(stackTrace);
+    }
+    return b.toString();
+  }
+
+  /// Short one-liner suitable for the snackbar header.
+  String toShortString() {
+    final parts = <String>[reason];
+    if (statusCode != null) parts.add('HTTP $statusCode');
+    if (requestMethod != null || requestPath != null) {
+      parts.add('${requestMethod ?? '?'} ${requestPath ?? '?'}');
+    }
+    if (errorType != null) parts.add(errorType!);
+    return parts.join(' | ');
+  }
+}
+
+/// Latest reason the admin session was dropped. UI listens to this
+/// (e.g. AdminAfterLoginPage) to surface a diagnostic snackbar.
+final ValueNotifier<AdminSessionLossEvent?> adminSessionLossNotifier =
+    ValueNotifier<AdminSessionLossEvent?>(null);
+
+/// Helper used internally by `logoutAdmin` and any other code path that
+/// invalidates the session — publishes the event to the notifier and
+/// also dumps it to `dart:developer` so it shows up in flutter logs.
+void _publishAdminSessionLoss(AdminSessionLossEvent event) {
+  developer.log(
+    event.toDiagnosticString(),
+    name: 'admin_session',
+    level: 900, // warning
+  );
+  adminSessionLossNotifier.value = event;
+}
 
 String? _sessionAdminPassword;
 
@@ -329,7 +408,10 @@ Future<bool> loginAsAdmin({
   return ok;
 }
 
-Future<void> logoutAdmin({bool clearSavedSession = true}) async {
+Future<void> logoutAdmin({
+  bool clearSavedSession = true,
+  AdminSessionLossEvent? lossEvent,
+}) async {
   final db = _db;
   if (db != null) {
     await db.transaction((txn) async {
@@ -343,6 +425,9 @@ Future<void> logoutAdmin({bool clearSavedSession = true}) async {
   _setSessionState(login: null, token: null, isAdmin: false);
   currentRecipeAdminTokenNotifier.value = null;
   _sessionAdminPassword = null;
+  if (lossEvent != null) {
+    _publishAdminSessionLoss(lossEvent);
+  }
 }
 
 /// Restores a previously authorized session from local mirrored credentials.

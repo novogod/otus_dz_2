@@ -1,4 +1,7 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
@@ -44,9 +47,6 @@ class AdminAfterLoginPage extends StatefulWidget {
 class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
   bool _busy = false;
   bool _biometricSaved = false;
-  final TextEditingController _newPasswordController = TextEditingController();
-  bool _newPasswordObscured = true;
-  bool _changingPassword = false;
 
   // §9a top-bar title: Roboto 400/20, #165932
   static const _titleStyle = TextStyle(
@@ -83,11 +83,73 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
   void initState() {
     super.initState();
     _refreshBiometricSaved();
+    // This page assumes an admin session. If the admin context
+    // disappears while we are mounted (e.g. a 401 on a write
+    // action triggered logoutAdmin), pop ourselves so the user
+    // does not see a non-admin variant of an admin-only page.
+    // The dead `if (!isAdmin)` rejected-design password block
+    // that used to render here was removed in commit
+    // <pending>; this guard makes sure no other future
+    // non-admin branch can leak through.
+    adminLoggedInNotifier.addListener(_handleAdminLoggedInChanged);
+  }
+
+  void _handleAdminLoggedInChanged() {
+    if (!mounted) return;
+    if (!adminLoggedInNotifier.value) {
+      // Capture any diagnostic record published by the caller
+      // (rating pill 401, restoreAdminSession failure, manual
+      // logout, ...) before popping ourselves. Surface the full
+      // dump as a long-duration snackbar with a Copy action so
+      // we can collect it from the field next time.
+      final loss = adminSessionLossNotifier.value;
+      _showSessionLossSnackBar(loss);
+      // Drop back to whatever was below us in the Navigator stack;
+      // _ProfileBranchRoot will then route to LoginPage / UserCardPage
+      // based on the current notifiers.
+      Navigator.of(context).popUntil((r) => r.isFirst);
+    }
+  }
+
+  void _showSessionLossSnackBar(AdminSessionLossEvent? loss) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    final headline = loss == null
+        ? 'Admin session ended'
+        : 'Admin session ended: ${loss.toShortString()}';
+    final fullDump = loss?.toDiagnosticString();
+    if (fullDump != null) {
+      developer.log(fullDump, name: 'admin_after_login_page', level: 900);
+    }
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(headline),
+          duration: const Duration(seconds: 12),
+          action: fullDump == null
+              ? null
+              : SnackBarAction(
+                  label: 'Copy details',
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: fullDump));
+                    if (!mounted) return;
+                    final m = ScaffoldMessenger.maybeOf(context);
+                    m?.showSnackBar(
+                      const SnackBar(
+                        content: Text('Diagnostic copied to clipboard'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      );
   }
 
   @override
   void dispose() {
-    _newPasswordController.dispose();
+    adminLoggedInNotifier.removeListener(_handleAdminLoggedInChanged);
     super.dispose();
   }
 
@@ -122,7 +184,12 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
     if (_busy) return;
     setState(() => _busy = true);
     final preserveBiometric = _biometricSaved;
-    await logoutAdmin(clearSavedSession: !preserveBiometric);
+    await logoutAdmin(
+      clearSavedSession: !preserveBiometric,
+      lossEvent: AdminSessionLossEvent(
+        reason: 'User tapped Logout in AdminAfterLoginPage',
+      ),
+    );
     if (!mounted) return;
     setState(() => _busy = false);
     final s = S.of(context);
@@ -130,67 +197,6 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(s.logoutButton)));
     Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
-  Future<void> _submitNewPassword() async {
-    if (_changingPassword) return;
-    final newPassword = _newPasswordController.text;
-    if (newPassword.length < 6) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Password must be at least 6 characters.'),
-          ),
-        );
-      return;
-    }
-    setState(() => _changingPassword = true);
-    final result = await changeUserPassword(newPassword);
-    if (!mounted) return;
-    setState(() => _changingPassword = false);
-    final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
-    switch (result) {
-      case ChangePasswordResult.success:
-        _newPasswordController.clear();
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Password changed. A reminder has been emailed to you.',
-            ),
-          ),
-        );
-        break;
-      case ChangePasswordResult.passwordTooShort:
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Password must be at least 6 characters.'),
-          ),
-        );
-        break;
-      case ChangePasswordResult.notLoggedIn:
-      case ChangePasswordResult.unauthorized:
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Session expired. Please sign in again.'),
-          ),
-        );
-        break;
-      case ChangePasswordResult.networkError:
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Network error. Please check your connection.'),
-          ),
-        );
-        break;
-      case ChangePasswordResult.serverError:
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Could not change password. Please try again.'),
-          ),
-        );
-        break;
-    }
   }
 
   @override
@@ -280,64 +286,6 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
                         label: Text(s.adminEditCards),
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      if (!isAdmin) ...[
-                        const Divider(height: AppSpacing.xl * 2),
-                        const Text(
-                          'Change password',
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                            color: AppColors.primaryDark,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        TextField(
-                          controller: _newPasswordController,
-                          obscureText: _newPasswordObscured,
-                          enabled: !_changingPassword,
-                          autocorrect: false,
-                          enableSuggestions: false,
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _submitNewPassword(),
-                          decoration: InputDecoration(
-                            labelText: 'New password',
-                            helperText:
-                                'Min 6 characters. We will email it to you as a reminder.',
-                            border: const OutlineInputBorder(),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _newPasswordObscured
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                              ),
-                              onPressed: () => setState(
-                                () => _newPasswordObscured =
-                                    !_newPasswordObscured,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        FilledButton.icon(
-                          style: _primaryButtonStyle,
-                          onPressed: _changingPassword
-                              ? null
-                              : _submitNewPassword,
-                          icon: _changingPassword
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.surface,
-                                  ),
-                                )
-                              : const Icon(Icons.lock_reset),
-                          label: const Text('Change password'),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
                       FilledButton.icon(
                         style: _dangerButtonStyle,
                         onPressed: _busy ? null : _logout,
