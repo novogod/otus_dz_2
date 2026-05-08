@@ -40,7 +40,7 @@ Status legend: ⬜ not started · 🟨 in working tree, not committed
     trigger the 401 → kick-out cascade (regression observed
     after Chunks 1-19) [✅]
 21. Backend — DB migration: `recipe_app_user_credentials`
-    + `webauthn_challenges` (foundation for web biometric) [⬜]
+    + `webauthn_challenges` (foundation for web biometric) [🟨 stub at `mahallem_ist/database/migrations/20260508_recipe_app_passkeys.sql`, uncommitted; intended path per body is `local_user_portal/migrations/`]
 22. Backend — `/recipes/auth/passkey/{register,login}/{start,complete}`
     + list/delete, JWT-bearer auth, mirrors `routes/auth-passkey.js` [⬜]
 23. Client web — `recipe_list/web/passkey_bridge.js`
@@ -573,7 +573,7 @@ commit so the dual-purpose confusion can never recur.
 
 ---
 
-# Web biometric (Magic Keyboard Touch ID etc.) — Chunks 20-26
+# Web biometric (Magic Keyboard Touch ID etc.) — Chunks 21-27
 
 The recipe app currently shows two "not supported in web mode"
 snackbars in `recipe_list/lib/ui/login_page.dart` (lines 216
@@ -604,7 +604,7 @@ Architecture notes:
   registered in Safari also works in the iOS app via the
   iCloud Keychain shared credential store.
 
-## Chunk 20 — Backend: DB migration `recipe_app_user_credentials` [⬜]
+## Chunk 21 — Backend: DB migration `recipe_app_user_credentials` [🟨]
 
 **Why:** the `user_credentials` table FKs to `users.id`. Recipe
 app users live in `recipe_app_users` and have UUIDs that are
@@ -650,8 +650,9 @@ container restarted (this is a pure DDL change).
 
 ---
 
-## Chunk 21 — Backend: `routes/auth-passkey-recipes.js` [⬜]
-
+## Chunk 22 — Backend: `routes/auth-passkey-recipes.js` [⬜]
+_(was `## Chunk 21` — renumbered 2026-05-08 to align with index after
+the rating-pill gate became Chunk 20.)_
 **Why:** new namespace `/recipes/auth/passkey/*` so it is
 clearly the recipe-app variant, separate from
 `/api/auth/passkey/*` used by the partner portal.
@@ -722,7 +723,7 @@ Implementation may import most helpers verbatim from
 
 ---
 
-## Chunk 22 — Web: JS bridge `recipe_list/web/passkey_bridge.js` [⬜]
+## Chunk 23 — Web: JS bridge `recipe_list/web/passkey_bridge.js` [⬜]
 
 **Why:** `dart:js_interop` can call WebAuthn directly, but the
 base64url ↔ ArrayBuffer plumbing is tedious. A 50-line JS
@@ -746,7 +747,7 @@ keeps the Dart side simple.
 
 ---
 
-## Chunk 23 — Dart: `recipe_list/lib/auth/passkey_web.dart` [⬜]
+## Chunk 24 — Dart: `recipe_list/lib/auth/passkey_web.dart` [⬜]
 
 **Why:** unified Dart API regardless of platform.
 `passkey_web.dart` (web build) calls into
@@ -773,7 +774,7 @@ returns `Future.error(PasskeyUnsupportedException())`.
 
 ---
 
-## Chunk 24 — UI: wire passkey into `login_page.dart` [⬜]
+## Chunk 25 — UI: wire passkey into `login_page.dart` [⬜]
 
 **Why:** replace the two "not supported in web mode"
 snackbars (lines 216, 251) with the real flow.
@@ -808,7 +809,7 @@ snackbars (lines 216, 251) with the real flow.
 
 ---
 
-## Chunk 25 — Verification matrix [⬜]
+## Chunk 26 — Verification matrix [⬜]
 
 Add to Chunk 14:
 
@@ -823,7 +824,7 @@ Add to Chunk 14:
 
 ---
 
-## Chunk 26 — Deploy [⬜]
+## Chunk 27 — Deploy [⬜]
 
 1. Apply Chunk 20 migration on prod (psql).
 2. `cd /root/mahallem/mahallem_ist && git pull && cd
