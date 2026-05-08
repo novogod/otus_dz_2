@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'i18n/strings.g.dart';
 import 'web/browser_locale_stub.dart'
-  if (dart.library.js_interop) 'web/browser_locale_web.dart';
+    if (dart.library.js_interop) 'web/browser_locale_web.dart';
 
 /// Поддерживаемые языки UI. Совпадают с языками платформы
 /// mahallem_ist (см. `routes/post-job.js` — `phrase_<code>` в БД):
