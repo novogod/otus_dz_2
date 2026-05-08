@@ -44,7 +44,9 @@ Future<void> main() async {
   appLang.value = detected;
   initI18n();
   // ignore: avoid_print
-  print('[main] after initI18n, LocaleSettings.currentLocale = ${LocaleSettings.currentLocale}');
+  print(
+    '[main] after initI18n, LocaleSettings.currentLocale = ${LocaleSettings.currentLocale}',
+  );
   // Web-only: start polling the JS shim that captured
   // `beforeinstallprompt` so the Install-PWA button knows when to
   // surface itself. No-op on iOS/Android/desktop (stub).

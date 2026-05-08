@@ -88,6 +88,17 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _checkingConsent = false;
       _consentAccepted = accepted;
     });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Device locale detected: ${appLang.value.name.toUpperCase()} '
+            '(LocaleSettings=${LocaleSettings.currentLocale})',
+          ),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
     if (accepted && mounted) {
       _controller.forward();
     }
