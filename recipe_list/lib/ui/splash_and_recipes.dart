@@ -98,17 +98,17 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     if (uri == null) {
       if (!mounted) return;
       final t = Translations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.consentDocUrlInvalid)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.consentDocUrlInvalid)));
       return;
     }
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
       final t = Translations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.consentDocOpenFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.consentDocOpenFailed)));
     }
   }
 
@@ -118,9 +118,9 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
         _consentChecks.isNotEmpty && _consentChecks.every((checked) => checked);
     if (!allChecked) {
       final t = Translations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.consentCheckAll)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.consentCheckAll)));
       return;
     }
     setState(() => _savingConsent = true);
@@ -313,7 +313,7 @@ class _ConsentRow extends StatelessWidget {
               child: Text(label),
             ),
           ),
-          TextButton(onPressed: onOpen, child: Text('Open "$linkTitle"')),
+          TextButton(onPressed: onOpen, child: Text(linkTitle)),
         ],
       ),
     );
