@@ -87,5 +87,33 @@ void main() {
             'replaced by the passkey flow on web',
       );
     });
+
+    test('login_page.dart renders the translated trust-device checkbox', () {
+      expect(
+        loginPageSrc,
+        contains('CheckboxListTile.adaptive'),
+        reason: 'LoginPage should render a checkbox for trusted-device opt-in',
+      );
+      expect(
+        loginPageSrc,
+        contains('s.loginTrustThisDevice'),
+        reason: 'The trust-device checkbox label must come from i18n',
+      );
+    });
+
+    test('password and passkey login both pass trustDevice state through', () {
+      expect(
+        loginPageSrc,
+        contains('trustDevice: _trustThisDevice'),
+        reason:
+            'LoginPage must forward trust-device state to the login/persist layer',
+      );
+    });
+
+    test('admin_session.dart exposes trustDevice-aware login helpers', () {
+      expect(adminSessionSrc, contains('bool trustDevice = false'));
+      expect(adminSessionSrc, contains('_persistTrustedSession'));
+      expect(adminSessionSrc, contains('_clearPersistedSession'));
+    });
   });
 }

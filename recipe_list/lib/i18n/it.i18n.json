@@ -39,6 +39,7 @@
   "signUpSuccess": "Account creato. Credenziali inviate via email.",
   "signUpChooseLanguage": "Scegli la tua lingua",
   "loginInvalidCredentials": "Login o password non validi",
+  "loginTrustThisDevice": "Considera attendibile questo dispositivo",
   "loginSuccessAdmin": "Modalità amministratore attivata",
   "loginSuccessUser": "Accesso effettuato con successo",
   "favoritesRegistrationRequired": "Registrazione richiesta per questa funzione, tocca il pulsante ${button}",

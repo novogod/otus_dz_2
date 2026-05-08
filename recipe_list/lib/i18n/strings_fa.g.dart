@@ -77,6 +77,7 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSuccess => 'حساب ایجاد شد. اطلاعات ورود به ایمیل شما ارسال شد.';
 	@override String get signUpChooseLanguage => 'زبان خود را انتخاب کنید';
 	@override String get loginInvalidCredentials => 'نام کاربری یا رمز عبور نادرست است';
+	@override String get loginTrustThisDevice => 'به این دستگاه اعتماد کن';
 	@override String get loginSuccessAdmin => 'حالت مدیر فعال شد';
 	@override String get loginSuccessUser => 'ورود با موفقیت انجام شد';
 	@override String favoritesRegistrationRequired({required Object button}) => 'برای این قابلیت ثبت‌نام لازم است، لطفاً روی دکمه ${button} بزنید';
@@ -253,6 +254,7 @@ extension on TranslationsFa {
 			'signUpSuccess' => 'حساب ایجاد شد. اطلاعات ورود به ایمیل شما ارسال شد.',
 			'signUpChooseLanguage' => 'زبان خود را انتخاب کنید',
 			'loginInvalidCredentials' => 'نام کاربری یا رمز عبور نادرست است',
+			'loginTrustThisDevice' => 'به این دستگاه اعتماد کن',
 			'loginSuccessAdmin' => 'حالت مدیر فعال شد',
 			'loginSuccessUser' => 'ورود با موفقیت انجام شد',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'برای این قابلیت ثبت‌نام لازم است، لطفاً روی دکمه ${button} بزنید',

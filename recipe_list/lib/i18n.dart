@@ -47,6 +47,8 @@ final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.en);
 AppLang detectDeviceAppLang() {
   try {
     final deviceLocale = AppLocaleUtils.findDeviceLocale();
+    final byLanguageCode = appLangFromLanguageCode(deviceLocale.languageCode);
+    if (byLanguageCode != null) return byLanguageCode;
     for (final lang in AppLang.values) {
       if (lang.locale == deviceLocale) return lang;
     }
@@ -54,6 +56,22 @@ AppLang detectDeviceAppLang() {
     // Some test environments throw when probing platform locale.
   }
   return AppLang.en;
+}
+
+/// Best-effort mapping from a raw locale language code (`en`, `ru`,
+/// `en-US`, `pt_BR`) to one of the supported app languages.
+/// Returns null for unsupported languages so callers can fall back.
+AppLang? appLangFromLanguageCode(String? rawCode) {
+  if (rawCode == null) return null;
+  final normalized = rawCode.trim().toLowerCase();
+  if (normalized.isEmpty) return null;
+  final base = normalized.split(RegExp(r'[-_]')).first;
+  for (final lang in AppLang.values) {
+    if (lang.name == base || lang.locale.languageCode == base) {
+      return lang;
+    }
+  }
+  return null;
 }
 
 /// Глобальный «тикер» принудительной перезагрузки ленты. Кнопка
@@ -379,6 +397,7 @@ class S {
   String get signUpSuccess => _t.signUpSuccess;
   String get signUpChooseLanguage => _t.signUpChooseLanguage;
   String get loginInvalidCredentials => _t.loginInvalidCredentials;
+  String get loginTrustThisDevice => _t.loginTrustThisDevice;
   String get loginSuccessAdmin => _t.loginSuccessAdmin;
   String get loginSuccessUser => _t.loginSuccessUser;
   String favoritesRegistrationRequired({required Object button}) =>

@@ -39,6 +39,7 @@
   "signUpSuccess": "Аккаунт создан. Данные отправлены на ваш email.",
   "signUpChooseLanguage": "Выберите язык",
   "loginInvalidCredentials": "Неверный логин или пароль",
+  "loginTrustThisDevice": "Доверять этому устройству",
   "loginSuccessAdmin": "Режим администратора включён",
   "loginSuccessUser": "Вход выполнен",
   "favoritesRegistrationRequired": "Для этой функции нужна регистрация, пожалуйста нажмите кнопку ${button}",

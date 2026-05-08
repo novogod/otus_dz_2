@@ -39,6 +39,7 @@
   "signUpSuccess": "Hesap oluşturuldu. Bilgiler e-postanıza gönderildi.",
   "signUpChooseLanguage": "Dilinizi seçin",
   "loginInvalidCredentials": "Kullanıcı adı veya şifre hatalı",
+  "loginTrustThisDevice": "Bu cihaza güven",
   "loginSuccessAdmin": "Yönetici modu etkin",
   "loginSuccessUser": "Başarıyla giriş yapıldı",
   "favoritesRegistrationRequired": "Bu özellik için kayıt gerekiyor, lütfen ${button} düğmesine dokunun",

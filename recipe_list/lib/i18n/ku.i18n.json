@@ -39,6 +39,7 @@
   "signUpSuccess": "هەژمار دروست بوو. زانیاری چوونەژوورەوە نێردرا بۆ ئیمەیڵەکەت.",
   "signUpChooseLanguage": "Zimanê xwe hilbijêre",
   "loginInvalidCredentials": "ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە",
+  "loginTrustThisDevice": "متمانە بە ئەم ئامێرە بکە",
   "loginSuccessAdmin": "دۆخی ئەدمین چالاک کرا",
   "loginSuccessUser": "چوونەژوورەوە سەرکەوتوو بوو",
   "favoritesRegistrationRequired": "بۆ ئەم تایبەتمەندییە تۆمارکردن پێویستە، تکایە دوگمەی ${button} دابگرە",

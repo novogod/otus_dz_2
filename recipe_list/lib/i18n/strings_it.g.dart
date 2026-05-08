@@ -77,6 +77,7 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSuccess => 'Account creato. Credenziali inviate via email.';
 	@override String get signUpChooseLanguage => 'Scegli la tua lingua';
 	@override String get loginInvalidCredentials => 'Login o password non validi';
+	@override String get loginTrustThisDevice => 'Considera attendibile questo dispositivo';
 	@override String get loginSuccessAdmin => 'Modalità amministratore attivata';
 	@override String get loginSuccessUser => 'Accesso effettuato con successo';
 	@override String favoritesRegistrationRequired({required Object button}) => 'Registrazione richiesta per questa funzione, tocca il pulsante ${button}';
@@ -253,6 +254,7 @@ extension on TranslationsIt {
 			'signUpSuccess' => 'Account creato. Credenziali inviate via email.',
 			'signUpChooseLanguage' => 'Scegli la tua lingua',
 			'loginInvalidCredentials' => 'Login o password non validi',
+			'loginTrustThisDevice' => 'Considera attendibile questo dispositivo',
 			'loginSuccessAdmin' => 'Modalità amministratore attivata',
 			'loginSuccessUser' => 'Accesso effettuato con successo',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'Registrazione richiesta per questa funzione, tocca il pulsante ${button}',

@@ -77,6 +77,7 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSuccess => 'Cuenta creada. Las credenciales se enviaron a tu correo.';
 	@override String get signUpChooseLanguage => 'Elige tu idioma';
 	@override String get loginInvalidCredentials => 'Usuario o contraseña incorrectos';
+	@override String get loginTrustThisDevice => 'Confiar en este dispositivo';
 	@override String get loginSuccessAdmin => 'Modo administrador activado';
 	@override String get loginSuccessUser => 'Sesión iniciada correctamente';
 	@override String favoritesRegistrationRequired({required Object button}) => 'Se requiere registro para esta función; por favor, pulse el botón ${button}';
@@ -253,6 +254,7 @@ extension on TranslationsEs {
 			'signUpSuccess' => 'Cuenta creada. Las credenciales se enviaron a tu correo.',
 			'signUpChooseLanguage' => 'Elige tu idioma',
 			'loginInvalidCredentials' => 'Usuario o contraseña incorrectos',
+			'loginTrustThisDevice' => 'Confiar en este dispositivo',
 			'loginSuccessAdmin' => 'Modo administrador activado',
 			'loginSuccessUser' => 'Sesión iniciada correctamente',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'Se requiere registro para esta función; por favor, pulse el botón ${button}',

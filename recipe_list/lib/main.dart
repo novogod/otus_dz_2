@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:country_picker/country_picker.dart';
 
 import 'auth/admin_session.dart';
 import 'data/local/recipe_db.dart';
@@ -16,7 +16,7 @@ import 'ui/web_share/pwa_install.dart';
 import 'web/url_strategy_stub.dart'
     if (dart.library.js_interop) 'web/url_strategy_web.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Web-only: switch from the default hash-URL strategy (`/#/foo`) to
   // path-URL strategy (`/foo`). Without this, share-links that point
@@ -35,29 +35,27 @@ void main() {
   }
   // Pick up the device / browser locale before initI18n wires the
   // ValueNotifier into slang. If the user has a stored session,
-  // admin_session.dart will overwrite this with their preferred
-  // language during the splash sequence.
+  // the startup session bootstrap below may overwrite this with
+  // their preferred language BEFORE runApp, so the first recipe
+  // load already happens in the final startup locale.
   appLang.value = detectDeviceAppLang();
   initI18n();
   // Web-only: start polling the JS shim that captured
   // `beforeinstallprompt` so the Install-PWA button knows when to
   // surface itself. No-op on iOS/Android/desktop (stub).
   initPwaInstallWatcher();
-  // Restore the persisted login session BEFORE the user can navigate
-  // anywhere that depends on `userLoggedInNotifier` / `adminLoggedIn
-  // Notifier`. Previously bootstrap only ran from `RecipeListLoader.
-  // _defaultRepoBuilder`, which mounts on the recipes/home route. On
-  // web reload at e.g. `/profile`, the loader never mounts, the
-  // notifiers stayed `false`, and the user was kicked to LoginPage
-  // even though their credentials were sitting in IndexedDB. Fire-
-  // and-forget here; `_ProfileBranchRoot` listens to the notifiers
-  // and rebuilds once bootstrap flips them.
-  unawaited(
-    openRecipeDatabase()
-        .then((db) => bootstrapAdminSession(db: db))
-        // ignore: avoid_print
-        .catchError((Object e) => print('[main] auth bootstrap failed: $e')),
-  );
+  // Restore the persisted login session (and any stored preferred
+  // language) BEFORE the first frame. This avoids a cold-start race
+  // where the list would begin loading in the device locale, then
+  // retranslate after bootstrapAdminSession restored the persisted
+  // language from IndexedDB / sqflite.
+  try {
+    final db = await openRecipeDatabase();
+    await bootstrapAdminSession(db: db);
+  } catch (e) {
+    // ignore: avoid_print
+    print('[main] auth bootstrap failed: $e');
+  }
   runApp(TranslationProvider(child: const RecipeApp()));
 }
 

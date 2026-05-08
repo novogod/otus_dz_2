@@ -77,6 +77,7 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSuccess => 'Konto erstellt. Zugangsdaten wurden per E-Mail gesendet.';
 	@override String get signUpChooseLanguage => 'Wählen Sie Ihre Sprache';
 	@override String get loginInvalidCredentials => 'Login oder Passwort ungültig';
+	@override String get loginTrustThisDevice => 'Diesem Gerät vertrauen';
 	@override String get loginSuccessAdmin => 'Admin-Modus aktiviert';
 	@override String get loginSuccessUser => 'Erfolgreich angemeldet';
 	@override String favoritesRegistrationRequired({required Object button}) => 'Für diese Funktion ist eine Registrierung erforderlich. Bitte tippen Sie auf die Schaltfläche ${button}';
@@ -253,6 +254,7 @@ extension on TranslationsDe {
 			'signUpSuccess' => 'Konto erstellt. Zugangsdaten wurden per E-Mail gesendet.',
 			'signUpChooseLanguage' => 'Wählen Sie Ihre Sprache',
 			'loginInvalidCredentials' => 'Login oder Passwort ungültig',
+			'loginTrustThisDevice' => 'Diesem Gerät vertrauen',
 			'loginSuccessAdmin' => 'Admin-Modus aktiviert',
 			'loginSuccessUser' => 'Erfolgreich angemeldet',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'Für diese Funktion ist eine Registrierung erforderlich. Bitte tippen Sie auf die Schaltfläche ${button}',

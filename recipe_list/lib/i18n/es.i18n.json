@@ -39,6 +39,7 @@
   "signUpSuccess": "Cuenta creada. Las credenciales se enviaron a tu correo.",
   "signUpChooseLanguage": "Elige tu idioma",
   "loginInvalidCredentials": "Usuario o contraseña incorrectos",
+  "loginTrustThisDevice": "Confiar en este dispositivo",
   "loginSuccessAdmin": "Modo administrador activado",
   "loginSuccessUser": "Sesión iniciada correctamente",
   "favoritesRegistrationRequired": "Se requiere registro para esta función; por favor, pulse el botón ${button}",

@@ -89,6 +89,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool _authBusy = false;
   bool _biometricSaved = false;
+  bool _trustThisDevice = false;
   ui.Image? _logoImage;
 
   @override
@@ -147,6 +148,7 @@ class _LoginPageState extends State<LoginPage> {
       ok = await loginAsAdmin(
         login: _loginController.text,
         password: _passwordController.text,
+        trustDevice: _trustThisDevice,
       );
     } catch (e, st) {
       loginError = e;
@@ -314,6 +316,7 @@ class _LoginPageState extends State<LoginPage> {
           email: result.email,
           isAdmin: result.isAdmin,
           preferredLanguage: result.preferredLanguage,
+          trustDevice: _trustThisDevice,
         );
         if (!mounted) return;
         setState(() => _authBusy = false);
@@ -648,6 +651,24 @@ class _LoginPageState extends State<LoginPage> {
                                         ? s.addRecipeRequired
                                         : null,
                                   ),
+                                  if (!loggedIn) ...[
+                                    const SizedBox(height: AppSpacing.sm),
+                                    CheckboxListTile.adaptive(
+                                      value: _trustThisDevice,
+                                      contentPadding: EdgeInsets.zero,
+                                      controlAffinity:
+                                          ListTileControlAffinity.leading,
+                                      title: Text(s.loginTrustThisDevice),
+                                      onChanged: _authBusy
+                                          ? null
+                                          : (value) {
+                                              setState(
+                                                () => _trustThisDevice =
+                                                    value ?? false,
+                                              );
+                                            },
+                                    ),
+                                  ],
                                   const SizedBox(height: AppSpacing.lg),
                                   SizedBox(
                                     width: double.infinity,

@@ -1,5 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../consent/startup_consent.dart';
+import '../i18n.dart';
 import '../main.dart' show bottomNavVisibleNotifier;
 import 'app_theme.dart';
 import 'recipe_list_loader.dart';
@@ -31,6 +35,11 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<Offset> _slide;
+  StartupConsentSpec? _consentSpec;
+  List<bool> _consentChecks = const [];
+  bool _checkingConsent = true;
+  bool _consentAccepted = false;
+  bool _savingConsent = false;
 
   /// Ключ для `RecipeListLoader`, чтобы при перезапуске
   /// последовательности (см. [restart]) Flutter создал новый
@@ -57,10 +66,70 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
         bottomNavVisibleNotifier.value = true;
       }
     });
+    _bootstrapConsentAndStart();
+  }
 
-    Future<void>.delayed(AppDurations.splash, () {
-      if (mounted) _controller.forward();
+  Future<void> _bootstrapConsentAndStart() async {
+    final spec = startupConsentSpecFor(appLang.value, isWeb: kIsWeb);
+    bool accepted = false;
+    try {
+      accepted = await hasAcceptedStartupConsent(
+        lang: appLang.value,
+        isWeb: kIsWeb,
+      );
+    } catch (_) {
+      accepted = false;
+    }
+    if (!mounted) return;
+    setState(() {
+      _consentSpec = spec;
+      _consentChecks = List<bool>.filled(spec.requiredItems.length, false);
+      _checkingConsent = false;
+      _consentAccepted = accepted;
     });
+    if (accepted && mounted) {
+      _controller.forward();
+    }
+  }
+
+  Future<void> _openDoc(String rawUrl) async {
+    final uri = Uri.tryParse(rawUrl);
+    if (uri == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Legal document URL is invalid')),
+      );
+      return;
+    }
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to open legal document')),
+      );
+    }
+  }
+
+  Future<void> _agreeAndContinue() async {
+    if (_consentSpec == null) return;
+    final allChecked =
+        _consentChecks.isNotEmpty && _consentChecks.every((checked) => checked);
+    if (!allChecked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please check all required consents')),
+      );
+      return;
+    }
+    setState(() => _savingConsent = true);
+    try {
+      await acceptStartupConsent(lang: appLang.value, isWeb: kIsWeb);
+      if (!mounted) return;
+      setState(() {
+        _consentAccepted = true;
+      });
+      _controller.forward();
+    } finally {
+      if (mounted) setState(() => _savingConsent = false);
+    }
   }
 
   /// Перезапускает splash-последовательность. Сбрасывает
@@ -74,10 +143,10 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     bottomNavVisibleNotifier.value = false;
     setState(() {
       _loaderKey = UniqueKey();
+      _consentAccepted = false;
+      _checkingConsent = true;
     });
-    Future<void>.delayed(AppDurations.splash, () {
-      if (mounted) _controller.forward();
-    });
+    _bootstrapConsentAndStart();
   }
 
   @override
@@ -88,6 +157,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
 
   @override
   Widget build(BuildContext context) {
+    final showConsent = !_checkingConsent && !_consentAccepted;
     // Material нужен, чтобы Text внутри splash/list получил
     // DefaultTextStyle темы вместо debug-fallback (жёлтое
     // подчёркивание, неверный вес).
@@ -100,12 +170,141 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
           const Positioned.fill(child: SplashPage()),
           // Список «въезжает» снизу, заслоняя splash. Переключатель
           // языка живёт в его AppBar — пока splash, кнопки нет.
-          Positioned.fill(
-            child: SlideTransition(
-              position: _slide,
-              child: RecipeListLoader(key: _loaderKey),
+          if (_consentAccepted)
+            Positioned.fill(
+              child: SlideTransition(
+                position: _slide,
+                child: RecipeListLoader(key: _loaderKey),
+              ),
+            ),
+          if (_checkingConsent)
+            const Positioned.fill(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          if (showConsent)
+            Positioned.fill(
+              child: _StartupConsentPanel(
+                spec: _consentSpec!,
+                checks: _consentChecks,
+                saving: _savingConsent,
+                onToggle: (index, value) {
+                  setState(() {
+                    _consentChecks[index] = value;
+                  });
+                },
+                onOpenDoc: _openDoc,
+                onAgree: _agreeAndContinue,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StartupConsentPanel extends StatelessWidget {
+  const _StartupConsentPanel({
+    required this.spec,
+    required this.checks,
+    required this.saving,
+    required this.onToggle,
+    required this.onOpenDoc,
+    required this.onAgree,
+  });
+
+  final StartupConsentSpec spec;
+  final List<bool> checks;
+  final bool saving;
+  final void Function(int index, bool value) onToggle;
+  final void Function(String url) onOpenDoc;
+  final VoidCallback onAgree;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Colors.black.withValues(alpha: 0.5),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: Card(
+            margin: const EdgeInsets.all(AppSpacing.lg),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Legal consent required',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Country: ${spec.countryName} (${spec.countryCode}) · ${spec.legislationLabel}',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    for (var i = 0; i < spec.requiredItems.length; i++)
+                      _ConsentRow(
+                        checked: checks[i],
+                        label: startupConsentLabel(spec.requiredItems[i]),
+                        linkTitle: spec.requiredItems[i].docTitle,
+                        onChanged: (v) => onToggle(i, v ?? false),
+                        onOpen: () => onOpenDoc(spec.requiredItems[i].docUrl),
+                      ),
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: saving ? null : onAgree,
+                        child: Text(saving ? 'Saving...' : 'I agree'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConsentRow extends StatelessWidget {
+  const _ConsentRow({
+    required this.checked,
+    required this.label,
+    required this.linkTitle,
+    required this.onChanged,
+    required this.onOpen,
+  });
+
+  final bool checked;
+  final String label;
+  final String linkTitle;
+  final ValueChanged<bool?> onChanged;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Checkbox(value: checked, onChanged: onChanged),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(label),
+            ),
+          ),
+          TextButton(onPressed: onOpen, child: Text('Open "$linkTitle"')),
         ],
       ),
     );

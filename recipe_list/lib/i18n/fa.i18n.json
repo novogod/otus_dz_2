@@ -39,6 +39,7 @@
   "signUpSuccess": "حساب ایجاد شد. اطلاعات ورود به ایمیل شما ارسال شد.",
   "signUpChooseLanguage": "زبان خود را انتخاب کنید",
   "loginInvalidCredentials": "نام کاربری یا رمز عبور نادرست است",
+  "loginTrustThisDevice": "به این دستگاه اعتماد کن",
   "loginSuccessAdmin": "حالت مدیر فعال شد",
   "loginSuccessUser": "ورود با موفقیت انجام شد",
   "favoritesRegistrationRequired": "برای این قابلیت ثبت‌نام لازم است، لطفاً روی دکمه ${button} بزنید",

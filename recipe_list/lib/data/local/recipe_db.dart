@@ -100,7 +100,10 @@ Future<void> deleteRecipeDatabaseWebOnly() async {
 /// v15: persist optional `creator_city` / `creator_country` so the
 /// recipe card / details can render `(<City>/<Country>)` next to
 /// the author name when reading from cache (Favourites list, etc.).
-const int kRecipeDbSchemaVersion = 15;
+/// v16: add `startup_consents` table — stores per-locale legal
+/// consent acceptance state so recipe loading can be gated until
+/// user presses "I agree" on the splash consent screen.
+const int kRecipeDbSchemaVersion = 16;
 
 /// SQL-схема локального кэша рецептов.
 ///
@@ -232,6 +235,19 @@ CREATE TABLE recipe_creator_cache (
 );
 ''';
 
+/// v16: startup legal-consent acceptance. One row per
+/// `(locale, platform)`; `version` allows invalidating previous
+/// consent copy when legal text changes.
+const String _kStartupConsentsSchema = '''
+CREATE TABLE startup_consents (
+  locale TEXT NOT NULL,
+  platform TEXT NOT NULL,
+  version TEXT NOT NULL,
+  accepted_at INTEGER NOT NULL,
+  PRIMARY KEY (locale, platform)
+);
+''';
+
 const List<String> _kIndexes = [
   'CREATE INDEX idx_recipes_lang_name_lower ON recipes(lang, name_lower);',
   'CREATE INDEX idx_recipes_last_used_at ON recipes(last_used_at);',
@@ -248,6 +264,7 @@ Future<void> applyRecipeSchema(Database db) async {
   await db.execute(_kAuthCredentialsSchema);
   await db.execute(_kUserProfileSchema);
   await db.execute(_kRecipeCreatorCacheSchema);
+  await db.execute(_kStartupConsentsSchema);
   for (final stmt in _kIndexes) {
     await db.execute(stmt);
   }
@@ -319,6 +336,18 @@ Future<void> applyUserProfileAndCreatorCacheSchema(Database db) async {
     'avatar_path TEXT, '
     'recipes_added INTEGER, '
     'cached_at INTEGER)',
+  );
+}
+
+/// v15 → v16: startup consent acceptance table.
+Future<void> applyStartupConsentsSchema(Database db) async {
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS startup_consents ('
+    'locale TEXT NOT NULL, '
+    'platform TEXT NOT NULL, '
+    'version TEXT NOT NULL, '
+    'accepted_at INTEGER NOT NULL, '
+    'PRIMARY KEY (locale, platform))',
   );
 }
 
@@ -476,6 +505,10 @@ Future<void> _onRecipeDbUpgrade(
   // can render `(<City>/<Country>)` even when reading from cache.
   if (oldVersion < 15) {
     await applyRecipeCreatorLocationColumns(db);
+  }
+  // v15 → v16: add startup legal-consent acceptance table.
+  if (oldVersion < 16) {
+    await applyStartupConsentsSchema(db);
   }
 }
 

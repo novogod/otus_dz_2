@@ -23,6 +23,8 @@ final ValueNotifier<String?> currentUserTokenNotifier = ValueNotifier<String?>(
 final ValueNotifier<String?> currentRecipeAdminTokenNotifier =
     ValueNotifier<String?>(null);
 
+const String _kPasskeyOnlyPasswordHash = '__passkey_only__';
+
 /// Diagnostic record describing why the admin (or user) session was
 /// dropped. Listeners surface it as a long-duration snackbar with a
 /// Copy action so we can capture full server response and stack trace
@@ -320,6 +322,7 @@ Future<void> bootstrapAdminSession({required Database db}) async {
 Future<bool> loginAsAdmin({
   required String login,
   required String password,
+  bool trustDevice = false,
 }) async {
   final db = _db;
   if (db == null) return false;
@@ -332,13 +335,17 @@ Future<bool> loginAsAdmin({
     password,
   );
   if (recipeAdminToken != null) {
-    await _saveMirroredCredentials(
-      db: db,
-      login: normalizedLogin,
-      passwordHash: _passwordHash(password),
-      token: recipeAdminToken,
-      isAdmin: true,
-    );
+    if (trustDevice) {
+      await _persistTrustedSession(
+        db: db,
+        login: normalizedLogin,
+        passwordHash: _passwordHash(password),
+        token: recipeAdminToken,
+        isAdmin: true,
+      );
+    } else {
+      await _clearPersistedSession(db: db, login: normalizedLogin);
+    }
     _setSessionState(login: normalizedLogin, token: null, isAdmin: true);
     currentRecipeAdminTokenNotifier.value = recipeAdminToken;
     _sessionAdminPassword = password;
@@ -353,14 +360,18 @@ Future<bool> loginAsAdmin({
           .firstOrNull;
       if (lang != null) cycleAppLangTo(lang);
     }
-    await _saveMirroredCredentials(
-      db: db,
-      login: normalizedLogin,
-      passwordHash: _passwordHash(password),
-      token: online.token,
-      preferredLang: online.preferredLang,
-      isAdmin: online.isAdmin,
-    );
+    if (trustDevice) {
+      await _persistTrustedSession(
+        db: db,
+        login: normalizedLogin,
+        passwordHash: _passwordHash(password),
+        token: online.token,
+        preferredLang: online.preferredLang,
+        isAdmin: online.isAdmin,
+      );
+    } else {
+      await _clearPersistedSession(db: db, login: normalizedLogin);
+    }
     _setSessionState(
       login: normalizedLogin,
       token: online.token,
@@ -506,18 +517,13 @@ Future<bool> saveCurrentSessionForBiometricLogin() async {
       : currentUserTokenNotifier.value;
   if (token == null || token.isEmpty) return false;
 
-  final updated = await db.update(
-    'auth_credentials',
-    {
-      'token': token,
-      'updated_at': DateTime.now().millisecondsSinceEpoch,
-      'is_admin': isAdmin ? 1 : 0,
-    },
-    where: 'login = ?',
-    whereArgs: [login],
+  await _persistTrustedSession(
+    db: db,
+    login: login,
+    token: token,
+    preferredLang: appLang.value.name,
+    isAdmin: isAdmin,
   );
-  if (updated == 0) return false;
-  await _setActiveLogin(db, login);
   return true;
 }
 
@@ -637,12 +643,23 @@ Future<void> applyPasskeyLoginResult({
   required String email,
   required bool isAdmin,
   String? preferredLanguage,
+  bool trustDevice = false,
 }) async {
   if (preferredLanguage != null) {
     final lang = AppLang.values
         .where((l) => l.name == preferredLanguage)
         .firstOrNull;
     if (lang != null) cycleAppLangTo(lang);
+  }
+  final db = _db;
+  if (trustDevice && db != null) {
+    await _persistTrustedSession(
+      db: db,
+      login: email,
+      token: token,
+      preferredLang: preferredLanguage,
+      isAdmin: isAdmin,
+    );
   }
   _setSessionState(
     login: email,
@@ -1431,6 +1448,64 @@ Future<void> _saveMirroredCredentials({
     where: 'login <> ?',
     whereArgs: [login],
   );
+}
+
+Future<void> _persistTrustedSession({
+  required Database db,
+  required String login,
+  required String? token,
+  String? preferredLang,
+  String? passwordHash,
+  bool isAdmin = false,
+}) async {
+  final existing = await db.query(
+    'auth_credentials',
+    columns: ['password_hash', 'preferred_language'],
+    where: 'login = ?',
+    whereArgs: [login],
+    limit: 1,
+  );
+  final existingHash = existing.isEmpty
+      ? null
+      : existing.first['password_hash'] as String?;
+  final existingLang = existing.isEmpty
+      ? null
+      : existing.first['preferred_language'] as String?;
+  final ts = DateTime.now().millisecondsSinceEpoch;
+  await db.insert('auth_credentials', {
+    'login': login,
+    'password_hash': passwordHash ?? existingHash ?? _kPasskeyOnlyPasswordHash,
+    'token': token,
+    'active': 1,
+    'updated_at': ts,
+    'preferred_language': preferredLang ?? existingLang ?? appLang.value.name,
+    'is_admin': isAdmin ? 1 : 0,
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
+  await db.update(
+    'auth_credentials',
+    {'active': 0},
+    where: 'login <> ?',
+    whereArgs: [login],
+  );
+}
+
+Future<void> _clearPersistedSession({
+  required Database db,
+  required String login,
+}) async {
+  await db.transaction((txn) async {
+    await txn.delete(
+      'auth_credentials',
+      where: 'login = ?',
+      whereArgs: [login],
+    );
+    await txn.update(
+      'auth_credentials',
+      {'active': 0},
+      where: 'login <> ?',
+      whereArgs: [login],
+    );
+  });
 }
 
 Future<void> _setActiveLogin(Database db, String login) async {

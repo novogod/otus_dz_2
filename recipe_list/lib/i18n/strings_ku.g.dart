@@ -77,6 +77,7 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSuccess => 'هەژمار دروست بوو. زانیاری چوونەژوورەوە نێردرا بۆ ئیمەیڵەکەت.';
 	@override String get signUpChooseLanguage => 'Zimanê xwe hilbijêre';
 	@override String get loginInvalidCredentials => 'ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە';
+	@override String get loginTrustThisDevice => 'متمانە بە ئەم ئامێرە بکە';
 	@override String get loginSuccessAdmin => 'دۆخی ئەدمین چالاک کرا';
 	@override String get loginSuccessUser => 'چوونەژوورەوە سەرکەوتوو بوو';
 	@override String favoritesRegistrationRequired({required Object button}) => 'بۆ ئەم تایبەتمەندییە تۆمارکردن پێویستە، تکایە دوگمەی ${button} دابگرە';
@@ -253,6 +254,7 @@ extension on TranslationsKu {
 			'signUpSuccess' => 'هەژمار دروست بوو. زانیاری چوونەژوورەوە نێردرا بۆ ئیمەیڵەکەت.',
 			'signUpChooseLanguage' => 'Zimanê xwe hilbijêre',
 			'loginInvalidCredentials' => 'ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە',
+			'loginTrustThisDevice' => 'متمانە بە ئەم ئامێرە بکە',
 			'loginSuccessAdmin' => 'دۆخی ئەدمین چالاک کرا',
 			'loginSuccessUser' => 'چوونەژوورەوە سەرکەوتوو بوو',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'بۆ ئەم تایبەتمەندییە تۆمارکردن پێویستە، تکایە دوگمەی ${button} دابگرە',

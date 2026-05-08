@@ -77,6 +77,7 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSuccess => 'Compte créé. Les identifiants ont été envoyés par e-mail.';
 	@override String get signUpChooseLanguage => 'Choisissez votre langue';
 	@override String get loginInvalidCredentials => 'Identifiant ou mot de passe incorrect';
+	@override String get loginTrustThisDevice => 'Faire confiance à cet appareil';
 	@override String get loginSuccessAdmin => 'Mode administrateur activé';
 	@override String get loginSuccessUser => 'Connexion réussie';
 	@override String favoritesRegistrationRequired({required Object button}) => 'L\'inscription est requise pour cette fonctionnalité, veuillez appuyer sur le bouton ${button}';
@@ -253,6 +254,7 @@ extension on TranslationsFr {
 			'signUpSuccess' => 'Compte créé. Les identifiants ont été envoyés par e-mail.',
 			'signUpChooseLanguage' => 'Choisissez votre langue',
 			'loginInvalidCredentials' => 'Identifiant ou mot de passe incorrect',
+			'loginTrustThisDevice' => 'Faire confiance à cet appareil',
 			'loginSuccessAdmin' => 'Mode administrateur activé',
 			'loginSuccessUser' => 'Connexion réussie',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'L\'inscription est requise pour cette fonctionnalité, veuillez appuyer sur le bouton ${button}',

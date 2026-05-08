@@ -77,6 +77,7 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSuccess => 'تم إنشاء الحساب. تم إرسال بيانات الدخول إلى بريدك.';
 	@override String get signUpChooseLanguage => 'اختر لغتك';
 	@override String get loginInvalidCredentials => 'اسم المستخدم أو كلمة المرور غير صحيحة';
+	@override String get loginTrustThisDevice => 'الوثوق بهذا الجهاز';
 	@override String get loginSuccessAdmin => 'تم تفعيل وضع المسؤول';
 	@override String get loginSuccessUser => 'تم تسجيل الدخول بنجاح';
 	@override String favoritesRegistrationRequired({required Object button}) => 'التسجيل مطلوب لهذه الميزة، يرجى الضغط على زر ${button}';
@@ -261,6 +262,7 @@ extension on TranslationsAr {
 			'signUpSuccess' => 'تم إنشاء الحساب. تم إرسال بيانات الدخول إلى بريدك.',
 			'signUpChooseLanguage' => 'اختر لغتك',
 			'loginInvalidCredentials' => 'اسم المستخدم أو كلمة المرور غير صحيحة',
+			'loginTrustThisDevice' => 'الوثوق بهذا الجهاز',
 			'loginSuccessAdmin' => 'تم تفعيل وضع المسؤول',
 			'loginSuccessUser' => 'تم تسجيل الدخول بنجاح',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'التسجيل مطلوب لهذه الميزة، يرجى الضغط على زر ${button}',

@@ -161,6 +161,9 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Invalid login or password'
 	String get loginInvalidCredentials => 'Invalid login or password';
 
+	/// en: 'Trust this device'
+	String get loginTrustThisDevice => 'Trust this device';
+
 	/// en: 'Admin mode enabled'
 	String get loginSuccessAdmin => 'Admin mode enabled';
 
@@ -551,6 +554,7 @@ extension on Translations {
 			'signUpSuccess' => 'Account created. Credentials were sent to your email.',
 			'signUpChooseLanguage' => 'Choose your language',
 			'loginInvalidCredentials' => 'Invalid login or password',
+			'loginTrustThisDevice' => 'Trust this device',
 			'loginSuccessAdmin' => 'Admin mode enabled',
 			'loginSuccessUser' => 'Logged in successfully',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'Registration required for this feature, please tap ${button} button',

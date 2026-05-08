@@ -77,6 +77,7 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSuccess => 'Аккаунт создан. Данные отправлены на ваш email.';
 	@override String get signUpChooseLanguage => 'Выберите язык';
 	@override String get loginInvalidCredentials => 'Неверный логин или пароль';
+	@override String get loginTrustThisDevice => 'Доверять этому устройству';
 	@override String get loginSuccessAdmin => 'Режим администратора включён';
 	@override String get loginSuccessUser => 'Вход выполнен';
 	@override String favoritesRegistrationRequired({required Object button}) => 'Для этой функции нужна регистрация, пожалуйста нажмите кнопку ${button}';
@@ -259,6 +260,7 @@ extension on TranslationsRu {
 			'signUpSuccess' => 'Аккаунт создан. Данные отправлены на ваш email.',
 			'signUpChooseLanguage' => 'Выберите язык',
 			'loginInvalidCredentials' => 'Неверный логин или пароль',
+			'loginTrustThisDevice' => 'Доверять этому устройству',
 			'loginSuccessAdmin' => 'Режим администратора включён',
 			'loginSuccessUser' => 'Вход выполнен',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'Для этой функции нужна регистрация, пожалуйста нажмите кнопку ${button}',

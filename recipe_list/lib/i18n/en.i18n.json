@@ -39,6 +39,7 @@
   "signUpSuccess": "Account created. Credentials were sent to your email.",
   "signUpChooseLanguage": "Choose your language",
   "loginInvalidCredentials": "Invalid login or password",
+  "loginTrustThisDevice": "Trust this device",
   "loginSuccessAdmin": "Admin mode enabled",
   "loginSuccessUser": "Logged in successfully",
   "favoritesRegistrationRequired": "Registration required for this feature, please tap ${button} button",

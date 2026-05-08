@@ -39,6 +39,7 @@
   "signUpSuccess": "تم إنشاء الحساب. تم إرسال بيانات الدخول إلى بريدك.",
   "signUpChooseLanguage": "اختر لغتك",
   "loginInvalidCredentials": "اسم المستخدم أو كلمة المرور غير صحيحة",
+  "loginTrustThisDevice": "الوثوق بهذا الجهاز",
   "loginSuccessAdmin": "تم تفعيل وضع المسؤول",
   "loginSuccessUser": "تم تسجيل الدخول بنجاح",
   "favoritesRegistrationRequired": "التسجيل مطلوب لهذه الميزة، يرجى الضغط على زر ${button}",

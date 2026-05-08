@@ -77,6 +77,7 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get signUpSuccess => 'Hesap oluşturuldu. Bilgiler e-postanıza gönderildi.';
 	@override String get signUpChooseLanguage => 'Dilinizi seçin';
 	@override String get loginInvalidCredentials => 'Kullanıcı adı veya şifre hatalı';
+	@override String get loginTrustThisDevice => 'Bu cihaza güven';
 	@override String get loginSuccessAdmin => 'Yönetici modu etkin';
 	@override String get loginSuccessUser => 'Başarıyla giriş yapıldı';
 	@override String favoritesRegistrationRequired({required Object button}) => 'Bu özellik için kayıt gerekiyor, lütfen ${button} düğmesine dokunun';
@@ -253,6 +254,7 @@ extension on TranslationsTr {
 			'signUpSuccess' => 'Hesap oluşturuldu. Bilgiler e-postanıza gönderildi.',
 			'signUpChooseLanguage' => 'Dilinizi seçin',
 			'loginInvalidCredentials' => 'Kullanıcı adı veya şifre hatalı',
+			'loginTrustThisDevice' => 'Bu cihaza güven',
 			'loginSuccessAdmin' => 'Yönetici modu etkin',
 			'loginSuccessUser' => 'Başarıyla giriş yapıldı',
 			'favoritesRegistrationRequired' => ({required Object button}) => 'Bu özellik için kayıt gerekiyor, lütfen ${button} düğmesine dokunun',

@@ -39,6 +39,7 @@
   "signUpSuccess": "Konto erstellt. Zugangsdaten wurden per E-Mail gesendet.",
   "signUpChooseLanguage": "Wählen Sie Ihre Sprache",
   "loginInvalidCredentials": "Login oder Passwort ungültig",
+  "loginTrustThisDevice": "Diesem Gerät vertrauen",
   "loginSuccessAdmin": "Admin-Modus aktiviert",
   "loginSuccessUser": "Erfolgreich angemeldet",
   "favoritesRegistrationRequired": "Für diese Funktion ist eine Registrierung erforderlich. Bitte tippen Sie auf die Schaltfläche ${button}",
