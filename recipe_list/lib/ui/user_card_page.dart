@@ -5,11 +5,13 @@ import 'dart:async';
 import 'package:country_flags/country_flags.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../auth/admin_session.dart';
+import '../auth/passkey_api.dart' as passkey_api;
 import '../data/api/recipe_api.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/app_services.dart';
@@ -80,6 +82,7 @@ class _UserCardPageState extends State<UserCardPage> {
   late bool _editing;
   AppLang _selectedLang = appLang.value;
   bool _busy = false;
+  bool _passkeyBusy = false;
   bool _newPasswordObscured = true;
   UserProfileSnapshot? _profile;
 
@@ -227,6 +230,69 @@ class _UserCardPageState extends State<UserCardPage> {
     if (widget.isPostSignup) {
       context.go(Routes.recipes);
     }
+  }
+
+  Future<void> _addPasskey() async {
+    if (_busy || _passkeyBusy) return;
+    if (kIsWeb) {
+      final token = currentUserTokenNotifier.value;
+      if (token == null || token.isEmpty) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Sign in first, then add a passkey.')),
+          );
+        return;
+      }
+      if (!passkey_api.isPasskeySupported) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Passkeys are not supported in this browser.'),
+            ),
+          );
+        return;
+      }
+      setState(() => _passkeyBusy = true);
+      try {
+        await passkey_api.registerPasskey(token: token);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Passkey added. Sign in with Touch ID / Face ID / Windows Hello next time.',
+              ),
+            ),
+          );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text('Could not add passkey: $e')));
+      } finally {
+        if (mounted) setState(() => _passkeyBusy = false);
+      }
+      return;
+    }
+    // Native (iOS / Android): save current session for biometric login.
+    setState(() => _passkeyBusy = true);
+    final ok = await saveCurrentSessionForBiometricLogin();
+    if (!mounted) return;
+    setState(() => _passkeyBusy = false);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            ok
+                ? 'Biometric login saved. Use Face ID or fingerprint to sign in next time.'
+                : 'Could not save biometric login. Make sure biometrics are set up on this device.',
+          ),
+        ),
+      );
   }
 
   Future<void> _handleLogout() async {
@@ -377,6 +443,7 @@ class _UserCardPageState extends State<UserCardPage> {
                   const SizedBox(height: AppSpacing.xl),
                   _buildPrimaryRow(s),
                   const SizedBox(height: AppSpacing.md),
+                  if (!widget.isPostSignup) _buildPasskeyButton(),
                   if (!widget.isPostSignup) _buildLogoutButton(s),
                 ],
               ),
@@ -797,6 +864,43 @@ class _UserCardPageState extends State<UserCardPage> {
                 ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPasskeyButton() {
+    if (!userLoggedInNotifier.value) return const SizedBox.shrink();
+    final label = kIsWeb
+        ? 'Add passkey (Touch ID / Face ID / Hello)'
+        : 'Save biometric login';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primaryDark,
+            side: const BorderSide(color: AppColors.primaryDark),
+            minimumSize: const Size.fromHeight(48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
+            textStyle: const TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+            ),
+          ),
+          icon: _passkeyBusy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.fingerprint),
+          onPressed: (_busy || _passkeyBusy) ? null : _addPasskey,
+          label: Text(label),
+        ),
+        const SizedBox(height: AppSpacing.md),
+      ],
     );
   }
 
