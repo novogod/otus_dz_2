@@ -4534,3 +4534,44 @@ Tests: `tool/passkey_bridge.test.js` 11/11 green (`node --test`).
 | iOS Safari 17+ | ⬜ | ⬜ |
 | Windows Hello | ⬜ | ⬜ |
 | Android Chrome | ⬜ | ⬜ |
+
+## Passkey button i18n — all 10 languages (2026-05-08)
+
+**Commit:** `otus_dz@9891ed5`
+
+Added 8 new i18n keys to every language JSON (`en`, `ru`, `tr`, `es`,
+`fr`, `de`, `it`, `ar`, `fa`, `ku`) and regenerated `strings*.g.dart`
+via `dart run slang`:
+
+| Key | Purpose |
+|---|---|
+| `profileAddPasskeyButton` | Web button label |
+| `profileSaveBiometricButton` | Native button label |
+| `profilePasskeyAdded` | Web success snackbar |
+| `profilePasskeyAddFailed` | Web error snackbar (`${error}` param) |
+| `profileBiometricSaved` | Native success snackbar |
+| `profileBiometricSaveFailed` | Native error snackbar |
+| `profilePasskeySignInFirst` | No-token guard message |
+| `profilePasskeyNotSupported` | Browser-not-capable message |
+
+All hardcoded English literals removed from `user_card_page.dart`;
+replaced with `S.of(context).<key>` calls. `S` wrapper getters added
+to `lib/i18n.dart`. Tests: `test/user_card_passkey_test.dart` 13/13
+green (5 new assertions verify i18n usage and absence of hardcoded
+strings).
+
+## Fix: passkey register/start returned 405 on web (2026-05-08)
+
+**Commit:** `otus_dz@47703db`
+
+The flutter-web nginx was serving all non-asset paths via `try_files …
+/index.html`, which returns 405 for POST requests. Fixed by:
+
+1. **`recipe_list/nginx.conf`** — added `location /recipes/` proxy_pass
+   to `http://mahallem-user-portal:4000` before the catch-all location.
+2. **`docker-compose.web.yml`** — attached `flutter-web` to the
+   `local_docker_admin_backend_mahallem_network` bridge so the container
+   DNS resolves `mahallem-user-portal:4000`.
+
+See `docs/auth-session-401-recurrence-2026-05-08.md` §"Post-launch bug
+— 405 on passkey register/start" for full postmortem.

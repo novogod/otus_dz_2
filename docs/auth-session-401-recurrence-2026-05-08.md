@@ -557,6 +557,77 @@ a snackbar even if a future migration produces a real auth
 failure. The change here only narrows the side-effect (do not
 nuke the biometric blob).
 
+## Post-launch bug — 405 on passkey register/start (2026-05-08)
+
+### Symptom
+
+First press of the "Add passkey" button in `UserCardPage` on
+`recipies.mahallem.ist` immediately failed with:
+
+```
+recipes/auth/passkey/register/start:1  Failed to load resource: the server
+responded with a status of 405 ()
+```
+
+The browser console also showed a spurious `GET /api/recipe-admin/login → 401`
+(language-change probe) and a `Refused to set unsafe header "User-Agent"`
+warning (harmless — browser ignores the attempt and falls back).
+
+### Root cause
+
+The flutter-web nginx (`recipe_list/nginx.conf`) served **all** non-asset
+paths through `try_files … /index.html`. Nginx returns **405 Method Not
+Allowed** when `try_files` resolves to a static file for a `POST` request —
+so `POST /recipes/auth/passkey/register/start` never reached the Express
+backend running in the `mahallem-user-portal` container.
+
+Secondary root cause: the `flutter-web` container was not attached to the
+`local_docker_admin_backend_mahallem_network` Docker bridge, so even if
+nginx had been configured to proxy, `mahallem-user-portal:4000` would not
+have resolved inside the container.
+
+### Fix
+
+**`recipe_list/nginx.conf`** — added a `location /recipes/` block *before*
+the catch-all `location /`, forwarding all `/recipes/*` traffic to the
+backend:
+
+```nginx
+location /recipes/ {
+    proxy_pass http://mahallem-user-portal:4000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_connect_timeout 30s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+}
+```
+
+**`docker-compose.web.yml`** — added `mahallem` network to the `flutter-web`
+service so `mahallem-user-portal:4000` resolves via Docker's embedded DNS:
+
+```yaml
+networks:
+  - default
+  - mahallem
+```
+
+**Commit:** `otus_dz@47703db`
+
+### Why the existing proxy in the host nginx didn't help
+
+The host nginx (`/etc/nginx/sites-enabled/recipies.mahallem.ist`) proxies
+all requests to `127.0.0.1:8088` (the flutter-web container). The flutter-
+web nginx is the final hop, and it had no knowledge of the backend — it
+just served static files. The fix moves the backend proxy responsibility
+into the inner nginx so it is architecturally co-located with the container
+that needs it.
+
+---
+
 ## Open follow-ups
 
 - iOS rebuild + re-install on `00008140-0014399E0EF3001C` and
