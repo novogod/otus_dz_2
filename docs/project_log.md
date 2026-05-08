@@ -4471,3 +4471,66 @@ cd recipe_list
 flutter analyze    # No issues found
 flutter test       # 14/14 passed
 ```
+
+---
+
+## WebAuthn passkey rollout for recipe app (Chunks 21-27)
+
+**Date:** 2026-05-08
+
+**Commits:**
+- `mahallem_ist@f52e135b` — Chunk 21: DB migration `recipe_app_user_credentials` + `recipe_app_webauthn_challenges`
+- `mahallem_ist@2c6eb080` — Chunk 22: backend `routes/auth-passkey-recipes.js` + `utils/webauthn-recipes.js` + server.js mount
+- `otus_dz@da9d8b4` — Chunk 23: web JS bridge `recipe_list/web/passkey_bridge.js` + `index.html` injection
+- `otus_dz@e7d8281` — Chunk 24: Dart API `passkey_api.dart` + `passkey_web.dart` + `passkey_stub.dart`
+- `otus_dz@52f96f9` — Chunk 25: UI wiring in `login_page.dart` + `admin_session.applyPasskeyLoginResult`
+- `otus_dz@e28c463` — Chunks 26-27: verification matrix docs + web rebuild deployed
+
+### Summary
+
+Replaced the two "not supported in web mode" snackbars in
+`login_page.dart` with a real WebAuthn / passkey flow for the
+web build. iOS / Android continue using `local_auth` unchanged.
+
+### Backend (mahallem_ist)
+
+- **DB**: `recipe_app_user_credentials` (UUID PK, FK→`recipe_app_users`, stores base64url public key + counter + device metadata) and `recipe_app_webauthn_challenges` (challenge + expiry + type).
+- **Routes** (`/recipes/auth/passkey/*`): 7 endpoints — `GET available`, `POST register/start`, `POST register/complete`, `POST login/start`, `POST login/complete`, `GET credentials`, `DELETE credentials/:id`.
+- **JWT**: login/complete mints a fresh `RECIPES_USER_TOKEN` (HMAC-SHA256, TTL 365d, payload `{uid,email,src,exp}`), returns `{success,token,user:{id,email,fullName,avatarUrl,preferredLanguage,isAdmin}}`.
+- **Admin detection**: login/complete runs `EXISTS(SELECT 1 FROM recipe_app_admins WHERE LOWER(email)=LOWER(u.email))`.
+- **Tests**: `tests/recipe-app-passkey-routes.test.js` 8/8 green (`node --test`).
+
+### Web JS bridge (`recipe_list/web/passkey_bridge.js`)
+
+IIFE that exposes `window.recipeAppPasskey.{register,login,available}`.
+Uses `PublicKeyCredential.parseCreationOptionsFromJSON` / `parseRequestOptionsFromJSON` when present; falls back to manual base64url decode. Encodes the credential response via `.toJSON()` or manual. Loaded via `<script src="passkey_bridge.js">` in `index.html` before the Flutter bootstrap.
+Tests: `tool/passkey_bridge.test.js` 11/11 green (`node --test`).
+
+### Dart API (`recipe_list/lib/auth/`)
+
+- `passkey_api.dart` — public surface: `isPasskeySupported`, `probePasskeyAvailability()`, `registerPasskey({token})`, `loginWithPasskey({email?})`. Conditional import: `passkey_stub.dart` if (dart.library.js_interop) `passkey_web.dart`.
+- `passkey_web.dart` — calls `window.recipeAppPasskey` via `dart:js_interop` + `dart:js_interop_unsafe`.
+- `passkey_stub.dart` — all methods throw `PasskeyUnsupportedException` (non-web targets).
+- Tests: `test/passkey_stub_test.dart` 5/5 green; `test/passkey_login_wire_test.dart` 6/6 green.
+
+### UI wiring (`recipe_list/lib/ui/login_page.dart`)
+
+`kIsWeb` branches in both biometric buttons now:
+- **Save session**: calls `passkey_api.registerPasskey(token: currentUserTokenNotifier.value)` instead of showing the old snackbar.
+- **Sign in with biometric**: calls `passkey_api.loginWithPasskey(email: _loginController.text)`, then `admin_session.applyPasskeyLoginResult(...)` to set notifiers and route to `/recipes` or the admin panel.
+
+`admin_session.applyPasskeyLoginResult({token, email, isAdmin, preferredLanguage?})` — sets language, calls `_setSessionState`, mints admin token if `isAdmin`, clears saved password. Does **not** persist to `auth_credentials` table (passkey is the resume mechanism on web).
+
+### Deployment
+
+- Backend deployed to `mahallem.ist` (container `mahallem-user-portal`); `GET /recipes/auth/passkey/available` → `{"available":true,"rpId":"mahallem.ist"}` ✅
+- Web rebuilt and deployed to `recipies.mahallem.ist` via `docker compose -f docker-compose.web.yml up -d --build flutter-web` ✅
+
+### Pending manual verification
+
+| Platform | Register passkey | Login with passkey |
+|---|---|---|
+| Mac, Magic Keyboard Touch ID | ⬜ | ⬜ |
+| iOS Safari 17+ | ⬜ | ⬜ |
+| Windows Hello | ⬜ | ⬜ |
+| Android Chrome | ⬜ | ⬜ |
