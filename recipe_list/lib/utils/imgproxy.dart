@@ -13,10 +13,15 @@
 // `src` должен быть полным абсолютным URL — imgproxy сам сходит
 // по нему. Для относительных storage-путей (`/storage/v1/...`)
 // клеим хост mahallem перед base64-кодированием.
+//
+// Важно: imgproxy и storage живут ТОЛЬКО на `mahallem.ist`.
+// `recipies.mahallem.ist` nginx-а их не проксирует.
+// Поэтому origin здесь всегда `https://mahallem.ist`, независимо
+// от значения `RecipeApiConfig.mahallemBaseUrl`.
 
 import 'dart:convert';
 
-import '../data/api/recipe_api_config.dart';
+import '../data/api/recipe_api_config.dart' show RecipeApiConfig, RecipeBackend;
 
 /// Возвращает thumbnail-URL для отображения [src] в превью
 /// размером [w]×[h] dp.
@@ -29,8 +34,7 @@ String imgproxyUrl(String src, int w, int h) {
   if (src.isEmpty || src.startsWith('pending://')) return src;
   if (RecipeApiConfig.backend != RecipeBackend.mahallem) return src;
 
-  final origin = _mahallemOrigin();
-  if (origin == null) return src;
+  const origin = 'https://mahallem.ist';
 
   // Превращаем относительный storage-URL в абсолютный — imgproxy
   // не умеет в `host`-relative пути.
@@ -40,20 +44,4 @@ String imgproxyUrl(String src, int w, int h) {
   // Без padding — imgproxy не ожидает `=`-хвостов в URL-safe base64.
   final stripped = encoded.replaceAll('=', '');
   return '$origin/imgproxy/insecure/resize:fit:$w:$h:0/$stripped';
-}
-
-/// Origin (`scheme://host[:port]`) из `mahallemBaseUrl`.
-/// `https://recipies.mahallem.ist/recipes` → `https://recipies.mahallem.ist`.
-String? _mahallemOrigin() {
-  final base = RecipeApiConfig.mahallemBaseUrl;
-  if (base.isEmpty) return null;
-  final uri = Uri.tryParse(base);
-  if (uri == null || !uri.hasScheme || uri.host.isEmpty) return null;
-  final port =
-      (uri.hasPort &&
-          !((uri.scheme == 'http' && uri.port == 80) ||
-              (uri.scheme == 'https' && uri.port == 443)))
-      ? ':${uri.port}'
-      : '';
-  return '${uri.scheme}://${uri.host}$port';
 }
