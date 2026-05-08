@@ -53,11 +53,11 @@ Status legend: ⬜ not started · 🟨 in working tree, not committed
     loaded before `flutter_bootstrap.js` in `web/index.html`]
 24. Client dart — `recipe_list/lib/auth/passkey_web.dart`
     (conditional import, JS interop, returns `unsupported` on
-    non-web) [✅ `otus_dz@<pending>`; 5/5 stub tests green;
+    non-web) [✅ `otus_dz@e7d8281`; 5/5 stub tests green;
     `flutter analyze` clean on all targets]
 25. Client UI — replace the two "not supported in web mode"
     snackbars in `login_page.dart` with passkey register / login
-    flows; keep native `local_auth` path unchanged [⬜]
+    flows; keep native `local_auth` path unchanged [✅ `otus_dz@<pending>`; 6/6 source-shape tests green]
 26. Verification matrix — add web (Magic Keyboard Touch ID,
     Windows Hello, Android Chrome) rows to Chunk 14 [⬜]
 27. Deploy — backend migration + endpoints + web rebuild;
@@ -790,7 +790,7 @@ returns `Future.error(PasskeyUnsupportedException())`.
 
 ---
 
-## Chunk 25 — UI: wire passkey into `login_page.dart` [⬜]
+## Chunk 25 — UI: wire passkey into `login_page.dart` [✅ 6/6 tests green]
 
 **Why:** replace the two "not supported in web mode"
 snackbars (lines 216, 251) with the real flow.

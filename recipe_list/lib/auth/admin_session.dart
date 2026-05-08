@@ -614,6 +614,47 @@ void _setSessionState({
   }
 }
 
+/// Drops the result of a successful WebAuthn passkey login into
+/// the session-state notifiers. Used by the web build of the login
+/// page (Chunk 25); native targets reach this row via the regular
+/// password / biometric flows.
+///
+/// The passkey backend (`/recipes/auth/passkey/login/complete`,
+/// Chunk 22) hands us a freshly-minted `x-recipes-user-token`
+/// and a user record. We mirror what `loginWithSavedTokenSession`
+/// does:
+///   * route the bearer to `currentUserTokenNotifier` for regular
+///     users, or `currentRecipeAdminTokenNotifier` for admins, and
+///   * set `currentUserLoginNotifier` so subsequent reads see the
+///     active email.
+///
+/// Persisting to the local `auth_credentials` table is intentionally
+/// skipped here: on web the passkey itself IS the resume mechanism,
+/// so caching the bearer in IndexedDB would only widen the attack
+/// surface (a JS XSS could read it).
+Future<void> applyPasskeyLoginResult({
+  required String token,
+  required String email,
+  required bool isAdmin,
+  String? preferredLanguage,
+}) async {
+  if (preferredLanguage != null) {
+    final lang = AppLang.values
+        .where((l) => l.name == preferredLanguage)
+        .firstOrNull;
+    if (lang != null) cycleAppLangTo(lang);
+  }
+  _setSessionState(
+    login: email,
+    token: isAdmin ? null : token,
+    isAdmin: isAdmin,
+  );
+  if (isAdmin) {
+    currentRecipeAdminTokenNotifier.value = token;
+  }
+  _sessionAdminPassword = null;
+}
+
 Future<SignUpResult> signUpUser({
   required String name,
   required String email,

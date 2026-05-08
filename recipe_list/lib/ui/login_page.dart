@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../auth/admin_session.dart';
+import '../auth/passkey_api.dart' as passkey_api;
 import '../i18n.dart';
 import '../router/routes.dart';
 import 'admin_after_login_page.dart';
@@ -208,15 +209,59 @@ class _LoginPageState extends State<LoginPage> {
     if (_authBusy) return;
     if (!userLoggedInNotifier.value) return;
     if (kIsWeb) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Biometric session save is not supported in web mode.',
+      // Web: register a WebAuthn passkey on the current user. The
+      // device's platform authenticator (Touch ID / Windows Hello /
+      // Android biometric / Face ID on iOS Safari 16+) is what
+      // signs subsequent logins — there is no separate "saved
+      // session". See Chunks 22-25 of
+      // todo/auth-session-401-recurrence-2026-05-08.md.
+      final token = currentUserTokenNotifier.value;
+      if (token == null || token.isEmpty) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Sign in first, then save a passkey.'),
             ),
-          ),
-        );
+          );
+        return;
+      }
+      if (!passkey_api.isPasskeySupported) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Passkeys are not supported in this browser.'),
+            ),
+          );
+        return;
+      }
+      setState(() => _authBusy = true);
+      try {
+        await passkey_api.registerPasskey(token: token);
+        if (!mounted) return;
+        setState(() {
+          _authBusy = false;
+          _biometricSaved = true;
+        });
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Passkey registered. You can sign in with your device biometrics next time.',
+              ),
+            ),
+          );
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _authBusy = false);
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(content: Text('Could not register passkey: $e')),
+          );
+      }
       return;
     }
 
@@ -243,15 +288,55 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _loginWithBiometrics() async {
     if (_authBusy) return;
     if (kIsWeb) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Biometric authentication is not supported in web mode.',
+      // Web: WebAuthn passkey sign-in. See Chunk 25 of
+      // todo/auth-session-401-recurrence-2026-05-08.md.
+      if (!passkey_api.isPasskeySupported) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Passkeys are not supported in this browser.'),
             ),
-          ),
+          );
+        return;
+      }
+      setState(() => _authBusy = true);
+      try {
+        // Pass the email currently in the input field so the
+        // browser's allow-list is scoped — leaving it null lets
+        // the browser show every discoverable credential, which
+        // is fine but UX-noisier on shared devices.
+        final emailRaw = _loginController.text.trim();
+        final email = emailRaw.isEmpty ? null : emailRaw;
+        final result = await passkey_api.loginWithPasskey(email: email);
+        await applyPasskeyLoginResult(
+          token: result.token,
+          email: result.email,
+          isAdmin: result.isAdmin,
+          preferredLanguage: result.preferredLanguage,
         );
+        if (!mounted) return;
+        setState(() => _authBusy = false);
+        if (adminLoggedInNotifier.value) {
+          await openAdminAfterLoginPage(
+            context,
+            adminLogin: result.email,
+            adminPassword: '',
+          );
+          return;
+        }
+        if (widget.popOnSuccess && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(true);
+        } else {
+          context.go(Routes.recipes);
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _authBusy = false);
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text('Passkey sign-in failed: $e')));
+      }
       return;
     }
 
