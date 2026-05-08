@@ -226,6 +226,8 @@ class _StartupConsentPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Translations.of(context);
+    // ignore: avoid_print
+    print('[splash] _StartupConsentPanel.build() locale=${LocaleSettings.currentLocale}, appLang=${appLang.value.name}, consentTitle=${t.consentTitle}');
     return ColoredBox(
       color: Colors.black.withValues(alpha: 0.5),
       child: Center(
