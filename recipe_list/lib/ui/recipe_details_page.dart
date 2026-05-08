@@ -530,47 +530,26 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
                           },
                         ),
                       ],
-                      if (recipe.youtubeUrl != null ||
-                          recipe.sourceUrl != null) ...[
+                      if (recipe.youtubeUrl != null) ...[
                         const SizedBox(height: AppSpacing.xl),
                         Wrap(
                           spacing: AppSpacing.sm,
                           runSpacing: AppSpacing.sm,
                           children: [
-                            if (recipe.youtubeUrl != null)
-                              FilledButton.icon(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.primaryDark,
-                                  foregroundColor: AppColors.surface,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppRadii.button,
-                                    ),
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primaryDark,
+                                foregroundColor: AppColors.surface,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadii.button,
                                   ),
                                 ),
-                                onPressed: () => _open(recipe.youtubeUrl!),
-                                icon: const Icon(Icons.play_arrow),
-                                label: Text(s.youtube),
                               ),
-                            if (recipe.sourceUrl != null)
-                              OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.primaryDark,
-                                  side: const BorderSide(
-                                    color: AppColors.primaryDark,
-                                    width: 3,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppRadii.button,
-                                    ),
-                                  ),
-                                ),
-                                onPressed: () =>
-                                    _openSource(context, recipe.sourceUrl!),
-                                icon: const Icon(Icons.link),
-                                label: Text(s.source),
-                              ),
+                              onPressed: () => _open(recipe.youtubeUrl!),
+                              icon: const Icon(Icons.play_arrow),
+                              label: Text(s.youtube),
+                            ),
                           ],
                         ),
                       ],
@@ -600,11 +579,6 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage> {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-
-  static void _openSource(BuildContext context, String url) {
-    final base = Routes.currentBranchBase(GoRouterState.of(context).uri.path);
-    context.push(Routes.sourceUnder(base, url));
   }
 }
 
