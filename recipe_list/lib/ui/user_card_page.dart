@@ -1,6 +1,9 @@
 // ignore_for_file: deprecated_member_use, library_private_types_in_public_api
 
+import 'dart:async';
+
 import 'package:country_picker/country_picker.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -63,6 +66,16 @@ class _UserCardPageState extends State<UserCardPage> {
   /// kept in sync with the picker for legacy reasons) so we can
   /// render the localized country name in the picker tile.
   String? _countryCode;
+
+  /// Focus node for the city autocomplete field — required by
+  /// [RawAutocomplete] so we can pass the same controller as
+  /// [_cityController].
+  final FocusNode _cityFocus = FocusNode();
+
+  /// Most recent city query the user typed. Used to discard stale
+  /// Nominatim responses when the user keeps typing past a request
+  /// that's still in flight (debounce + race-guard).
+  String _latestCityQuery = '';
   late bool _editing;
   AppLang _selectedLang = appLang.value;
   bool _busy = false;
@@ -111,6 +124,7 @@ class _UserCardPageState extends State<UserCardPage> {
     _newPasswordController.dispose();
     _cityController.dispose();
     _countryController.dispose();
+    _cityFocus.dispose();
     super.dispose();
   }
 
@@ -375,17 +389,133 @@ class _UserCardPageState extends State<UserCardPage> {
   }
 
   Widget _buildCityField(S s) {
-    return TextField(
-      controller: _cityController,
-      enabled: _editing,
-      maxLength: 80,
-      style: const TextStyle(color: AppColors.textPrimary),
-      decoration: const InputDecoration(
-        labelText: 'City',
-        border: OutlineInputBorder(),
-        counterText: '',
-      ),
+    return RawAutocomplete<String>(
+      textEditingController: _cityController,
+      focusNode: _cityFocus,
+      optionsBuilder: _cityOptionsBuilder,
+      onSelected: (value) {
+        _cityController.value = TextEditingValue(
+          text: value,
+          selection: TextSelection.collapsed(offset: value.length),
+        );
+      },
+      fieldViewBuilder: (context, controller, focusNode, _) {
+        return TextField(
+          controller: controller,
+          focusNode: focusNode,
+          enabled: _editing,
+          maxLength: 80,
+          style: const TextStyle(color: AppColors.textPrimary),
+          decoration: const InputDecoration(
+            labelText: 'City',
+            border: OutlineInputBorder(),
+            counterText: '',
+          ),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(4),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 240, maxWidth: 360),
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: options.length,
+                itemBuilder: (context, index) {
+                  final option = options.elementAt(index);
+                  return ListTile(
+                    dense: true,
+                    title: Text(option),
+                    onTap: () => onSelected(option),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  /// Builds the suggestion list for the city autocomplete field.
+  ///
+  /// Debounces user input (350ms) and queries OSM Nominatim with
+  /// the current UI language and the user-selected country code
+  /// so the user sees city names localized to their app language
+  /// and scoped to their country (when one is set). A race-guard
+  /// via [_latestCityQuery] discards stale responses when the
+  /// user keeps typing past an in-flight request.
+  Future<Iterable<String>> _cityOptionsBuilder(TextEditingValue tev) async {
+    final query = tev.text.trim();
+    _latestCityQuery = query;
+    if (query.length < 2) return const <String>[];
+    // Debounce: wait briefly and bail out if the user has typed
+    // more characters since this call started.
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    if (_latestCityQuery != query) return const <String>[];
+    final results = await _fetchCitySuggestions(query);
+    if (_latestCityQuery != query) return const <String>[];
+    return results;
+  }
+
+  /// Fetches city suggestions from OSM Nominatim. Returns an
+  /// empty list on any network/parse error — the field then
+  /// degrades to plain free-text input. Uses a fresh [Dio]
+  /// instance to avoid leaking app auth headers to a 3rd-party
+  /// service.
+  Future<List<String>> _fetchCitySuggestions(String query) async {
+    try {
+      final lang = Localizations.localeOf(context).languageCode;
+      final cc = _countryCode?.toLowerCase();
+      final dio = Dio(
+        BaseOptions(
+          headers: {
+            // Nominatim usage policy requires an identifying UA.
+            'User-Agent': 'mahallem-recipes/1.0 (https://mahallem.com)',
+          },
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
+        ),
+      );
+      final resp = await dio.get<List<dynamic>>(
+        'https://nominatim.openstreetmap.org/search',
+        queryParameters: <String, dynamic>{
+          'q': query,
+          'format': 'jsonv2',
+          'addressdetails': 1,
+          'limit': 8,
+          'accept-language': lang,
+          if (cc != null && cc.isNotEmpty) 'countrycodes': cc,
+        },
+      );
+      final data = resp.data ?? const <dynamic>[];
+      final out = <String>[];
+      final seen = <String>{};
+      for (final raw in data) {
+        if (raw is! Map) continue;
+        final addr = raw['address'];
+        String? name;
+        if (addr is Map) {
+          name = (addr['city'] ??
+                  addr['town'] ??
+                  addr['village'] ??
+                  addr['municipality'] ??
+                  addr['hamlet'])
+              as String?;
+        }
+        name ??= raw['name'] as String?;
+        if (name == null || name.isEmpty) continue;
+        if (!seen.add(name.toLowerCase())) continue;
+        out.add(name);
+      }
+      return out;
+    } catch (_) {
+      return const <String>[];
+    }
   }
 
   Widget _buildCountryField(S s) {
