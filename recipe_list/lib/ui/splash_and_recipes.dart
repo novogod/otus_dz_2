@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 import '../consent/startup_consent.dart';
 import '../i18n.dart';
@@ -89,11 +90,13 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _consentAccepted = accepted;
     });
     if (mounted) {
+      final deviceInfoLine = await _readDeviceInfoLine();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Device locale detected: ${appLang.value.name.toUpperCase()} '
-            '(LocaleSettings=${LocaleSettings.currentLocale})',
+            '(LocaleSettings=${LocaleSettings.currentLocale}) '
+            '[$deviceInfoLine]',
           ),
           duration: const Duration(seconds: 5),
         ),
@@ -101,6 +104,37 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     }
     if (accepted && mounted) {
       _controller.forward();
+    }
+  }
+
+  Future<String> _readDeviceInfoLine() async {
+    final plugin = DeviceInfoPlugin();
+    try {
+      if (kIsWeb) {
+        final webInfo = await plugin.webBrowserInfo;
+        return 'web/${webInfo.browserName.name}';
+      }
+      switch (Theme.of(context).platform) {
+        case TargetPlatform.android:
+          final info = await plugin.androidInfo;
+          return 'android/${info.model}';
+        case TargetPlatform.iOS:
+          final info = await plugin.iosInfo;
+          return 'ios/${info.utsname.machine}';
+        case TargetPlatform.macOS:
+          final info = await plugin.macOsInfo;
+          return 'macos/${info.model}';
+        case TargetPlatform.windows:
+          final info = await plugin.windowsInfo;
+          return 'windows/${info.computerName}';
+        case TargetPlatform.linux:
+          final info = await plugin.linuxInfo;
+          return 'linux/${info.prettyName}';
+        case TargetPlatform.fuchsia:
+          return 'fuchsia';
+      }
+    } catch (_) {
+      return 'device-info-unavailable';
     }
   }
 

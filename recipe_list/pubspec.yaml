@@ -47,6 +47,8 @@ dependencies:
   path_provider: ^2.1.4
   flutter_svg: ^2.0.10+1
   intl: ^0.20.2
+  web: ^1.1.1
+  device_info_plus: ^13.1.0
   slang: ^4.14.0
   slang_flutter: ^4.14.0
   image_picker: ^1.0.7

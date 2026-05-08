@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'i18n/strings.g.dart';
 import 'web/browser_locale_stub.dart'
@@ -47,6 +48,17 @@ final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.en);
 /// из системной локали. Если локаль не входит в [AppLang.values],
 /// возвращает [AppLang.en].
 AppLang detectDeviceAppLang() {
+  // Preferred source across platforms in modern Flutter: platform locale list.
+  final platformLocales = PlatformDispatcher.instance.locales;
+  if (platformLocales.isNotEmpty) {
+    for (final loc in platformLocales) {
+      final byCode = appLangFromLanguageCode(loc.languageCode);
+      if (byCode != null) return byCode;
+      final full = appLangFromLanguageCode(loc.toLanguageTag());
+      if (full != null) return full;
+    }
+  }
+
   // Web first: inspect full browser preference list (navigator.languages),
   // not just a single resolved locale.
   final browserCodes = browserPreferredLanguages();
