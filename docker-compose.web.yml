@@ -7,6 +7,9 @@ services:
     ports:
       # Host nginx (sites-enabled/recipies.mahallem.ist) proxies to 8088.
       - "127.0.0.1:8088:80"
+    networks:
+      - default
+      - mahallem
     restart: unless-stopped
 
   # Bot-only pre-render service (todo/20 chunk E). The host nginx
