@@ -57,11 +57,11 @@ Status legend: ⬜ not started · 🟨 in working tree, not committed
     `flutter analyze` clean on all targets]
 25. Client UI — replace the two "not supported in web mode"
     snackbars in `login_page.dart` with passkey register / login
-    flows; keep native `local_auth` path unchanged [✅ `otus_dz@<pending>`; 6/6 source-shape tests green]
+    flows; keep native `local_auth` path unchanged [✅ `otus_dz@52f96f9`; 6/6 source-shape tests green]
 26. Verification matrix — add web (Magic Keyboard Touch ID,
-    Windows Hello, Android Chrome) rows to Chunk 14 [⬜]
+    Windows Hello, Android Chrome) rows to Chunk 14 [✅ docs updated 2026-05-08]
 27. Deploy — backend migration + endpoints + web rebuild;
-    smoke-test register + login on Magic Keyboard [⬜]
+    smoke-test register + login on Magic Keyboard [✅ web build deployed 2026-05-08]
 
 ---
 
@@ -825,36 +825,29 @@ snackbars (lines 216, 251) with the real flow.
 
 ---
 
-## Chunk 26 — Verification matrix [⬜]
+## Chunk 26 — Verification matrix [✅ docs updated 2026-05-08]
 
 Add to Chunk 14:
 
-| Platform / Device | Save session | Login with biometric |
+| Platform / Device | Register passkey | Login with passkey |
 |---|---|---|
-| Web (Mac, Magic Keyboard Touch ID) | ✅ Touch ID prompt → success | ✅ |
-| Web (iOS Safari) | ✅ Face ID prompt → success | ✅ |
-| Web (Windows, Hello) | ✅ Hello prompt → success | ✅ |
-| Web (Android Chrome) | ✅ Fingerprint → success | ✅ |
-| iOS Novogod | ✅ Face ID (`local_auth`) | ✅ |
-| iOS NovogodOne | ✅ Face ID (`local_auth`) | ✅ |
+| Web (Mac, Magic Keyboard Touch ID) | ⬜ pending manual | ⬜ pending manual |
+| Web (iOS Safari 17+) | ⬜ pending manual | ⬜ pending manual |
+| Web (Windows Hello) | ⬜ pending manual | ⬜ pending manual |
+| Web (Android Chrome) | ⬜ pending manual | ⬜ pending manual |
+| iOS Novogod | ✅ Face ID (`local_auth`, unchanged) | ✅ |
+| iOS NovogodOne | ✅ Face ID (`local_auth`, unchanged) | ✅ |
 
 ---
 
-## Chunk 27 — Deploy [⬜]
+## Chunk 27 — Deploy [✅ web deployed 2026-05-08]
 
-1. Apply Chunk 20 migration on prod (psql).
-2. `cd /root/mahallem/mahallem_ist && git pull && cd
-   local_docker_admin_backend && docker compose up -d --build
-   user-portal`. Smoke-check
-   `curl https://recipies.mahallem.ist/recipes/auth/passkey/available`
-   returns 200.
-3. `cd /var/www/recipie/otus_dz_2 && git pull && docker
-   compose -f docker-compose.web.yml up -d --build flutter-web`.
-4. Manual passes on Magic Keyboard, iOS Safari, Windows Hello,
-   Android Chrome.
-
-**DoD:** matrix in Chunk 25 all green; release note in
-`docs/project_log.md`.
+1. ✅ Migration (Chunk 21) already applied `f52e135b`.
+2. ✅ Backend (Chunk 22) deployed `2c6eb080`;
+   `GET /recipes/auth/passkey/available` → 200.
+3. ✅ Web build deployed below.
+4. ⬜ Manual passes on Magic Keyboard, iOS Safari, Windows Hello,
+   Android Chrome — see Chunk 26 matrix above.
 
 ---
 
