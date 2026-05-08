@@ -28,9 +28,9 @@
 
 ```bash
 # server health
-curl -fsS https://mahallem.ist/health | jq .
+curl -fsS https://recipies.mahallem.ist/recipes/health | jq .
 # bulk endpoint
-curl -fsS 'https://mahallem.ist/recipes/page?lang=ru&limit=10' | jq '.recipes | length'
+curl -fsS 'https://recipies.mahallem.ist/recipes/page?lang=ru&limit=10' | jq '.recipes | length'
 # Redis
 ssh root@72.61.181.62 'docker exec mahallem-redis redis-cli -n 4 INFO memory | grep maxmemory_human'
 # warmup

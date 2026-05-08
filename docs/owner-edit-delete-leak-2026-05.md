@@ -95,7 +95,7 @@ Mirrors the `optUid` + `attachSocialSignals` call already present in
 `/filter`. Verified post-deploy:
 
 ```
-$ curl -sS 'https://mahallem.ist/recipes/search?q=unload&lang=en' | jq '.meals[0] | {idMeal, creatorDisplayName, creatorUserId}'
+$ curl -sS 'https://recipies.mahallem.ist/recipes/search?q=unload&lang=en' | jq '.meals[0] | {idMeal, creatorDisplayName, creatorUserId}'
 {
   "idMeal": "1000012",
   "creatorDisplayName": "Andrey",

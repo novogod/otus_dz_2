@@ -374,7 +374,7 @@ After Fix A + restart:
 for lang in en ru es fr de it tr ar fa ku; do
   curl -fsS -m 5 -o /dev/null \
     -w "lang=$lang code=%{http_code} time=%{time_total}s\n" \
-    "https://mahallem.ist/recipes/page?lang=$lang&limit=200"
+    "https://recipies.mahallem.ist/recipes/page?lang=$lang&limit=200"
 done
 ```
 

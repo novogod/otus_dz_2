@@ -163,10 +163,10 @@ String _docUrl(String langCode, String slug) {
 }
 
 String _originFromBase(String base) {
-  if (base.isEmpty) return 'https://mahallem.ist';
+  if (base.isEmpty) return 'https://recipies.mahallem.ist';
   final uri = Uri.tryParse(base);
   if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
-    return 'https://mahallem.ist';
+    return 'https://recipies.mahallem.ist';
   }
   final port = uri.hasPort ? ':${uri.port}' : '';
   return '${uri.scheme}://${uri.host}$port';

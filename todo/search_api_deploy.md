@@ -23,7 +23,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done.
 ## B. Frontend — to do
 
 - [x] Replace direct `MealDbClient` URL with the production
-      mahallem host: **`https://mahallem.ist/recipes/...`** (Nginx
+      mahallem host: **`https://recipies.mahallem.ist/recipes/...`** (Nginx
       → `127.0.0.1:4001` Node, Frankfurt). Single touchpoint:
       `RecipeApi.baseUrl`. Switch via build flavor / `--dart-define`
       so debug builds can still hit a staging origin.
@@ -72,7 +72,7 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done.
 - [x] Nginx: existing `location / { proxy_pass http://127.0.0.1:4001; }`
       already covers `/recipes/*` — no Nginx config change required.
       Verified in `hostinger-deployment/nginx-configs/mahallem.ist`.
-- [x] Endpoint `GET https://mahallem.ist/recipes/search?q=<prefix>&lang=<ru|en>&limit=20`:
+- [x] Endpoint `GET https://recipies.mahallem.ist/recipes/search?q=<prefix>&lang=<ru|en>&limit=20`:
   - [x] Postgres `LOWER(i18n->'<lang>'->>'strMeal') LIKE '<prefix>%'`
         (escaped) against the cache.
   - [x] If hit count < 5 → fall back to TheMealDB
@@ -80,11 +80,11 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done.
         MyMemory pipeline (Section D), upsert.
   - [x] Return uniform TheMealDB-shape JSON `{meals: [...]}`
         (matches what the Flutter `RecipeApi` already parses).
-- [x] Endpoint `GET https://mahallem.ist/recipes/lookup/:id?lang=...`
+- [x] Endpoint `GET https://recipies.mahallem.ist/recipes/lookup/:id?lang=...`
       (details). Same on-miss fetch + translate.
-- [x] Endpoint `GET https://mahallem.ist/recipes/random?lang=...`.
-- [x] Endpoint `GET https://mahallem.ist/recipes/filter?{c|a|i}=...&lang=...`.
-- [x] Endpoint `GET https://mahallem.ist/recipes/health` (liveness;
+- [x] Endpoint `GET https://recipies.mahallem.ist/recipes/random?lang=...`.
+- [x] Endpoint `GET https://recipies.mahallem.ist/recipes/filter?{c|a|i}=...&lang=...`.
+- [x] Endpoint `GET https://recipies.mahallem.ist/recipes/health` (liveness;
       monitored by the existing mahallem uptime probe).
 - [x] Server-side cap: keep at most **2 000** recipes (configurable
       via `RECIPES_CACHE_CAP`), evict by `(popularity asc, fetched_at asc)`.

@@ -7,11 +7,11 @@
 
 | Что | Путь / имя |
 |-----|-----------|
-| Репозиторий на сервере | `/var/www/recipie/otus_dz_2/` (clone of `https://github.com/novogod/otus_dz_2.git`) |
-| Compose-файл | `/var/www/recipie/otus_dz_2/docker-compose.web.yml` |
+| Репозиторий на сервере | `/var/www/recipie/food/` (clone of `https://github.com/novogod/otus_dz.git`) |
+| Compose-файл | `/var/www/recipie/food/docker-compose.web.yml` |
 | Сервис | `flutter-web` |
 | Имя контейнера | `recipe_list_web` |
-| Образ | `otus_dz_2-flutter-web` (build local) |
+| Образ | `food-flutter-web` (build local) |
 | Dockerfile | `recipe_list/Dockerfile` |
 | nginx-конфиг внутри контейнера | `recipe_list/nginx.conf` |
 | Внутренний порт | `80` (nginx) |
@@ -26,9 +26,8 @@ HTTPS клиент → host nginx (sites-enabled/recipies.mahallem.ist, TLS Cert
                           serves /usr/share/nginx/html (Flutter web build)
 ```
 
-API (логин/recipes/etc.) запрашивается фронтом отдельно по
-`https://mahallem.ist/...` (через тот же host nginx, который
-проксирует на `mahallem-user-portal`, `mahallem-backend` и т.д.).
+API (логин/recipes/etc.) запрашивается фронтом через
+`https://recipies.mahallem.ist/...`.
 
 ## Dockerfile (multi-stage)
 
@@ -59,16 +58,16 @@ services:
     restart: unless-stopped
 ```
 
-Сеть compose — `otus_dz_2_default` (172.18.0.0/16). Контейнер не
+Сеть compose — `food_default` (172.18.0.0/16). Контейнер не
 ходит в `mahallem`-сеть: ему это и не нужно — он раздаёт
 статику, всё API-общение идёт от браузера к
-`mahallem.ist`/`recipies.mahallem.ist` напрямую.
+`recipies.mahallem.ist` напрямую.
 
 ## Стандартный re-deploy
 
 ```bash
 ssh -i ~/.ssh/mahallem_key_2 root@72.61.181.62
-cd /var/www/recipie/otus_dz_2
+cd /var/www/recipie/food
 git pull --ff-only
 docker compose -f docker-compose.web.yml build flutter-web
 docker compose -f docker-compose.web.yml up -d flutter-web

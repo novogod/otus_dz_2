@@ -149,7 +149,7 @@ forced reload) пересеивает выбор. Раньше можно был
 Куда уходит запрос. `_runLoad(forceReseed: true)` идёт в тот же
 `_seedFromCategories`, что и cold-start: для каждой из 10 свежевыбранных
 категорий вызывает `widget.api.filterByCategory(cat)` →
-`GET https://mahallem.ist/recipes/filter?c=<cat>&lang=<lang>&full=1`. На
+`GET https://recipies.mahallem.ist/recipes/filter?c=<cat>&lang=<lang>&full=1`. На
 сервере (`mahallem-user-portal`) запрос проходит штатный путь:
 
 1. Redis L1-буфер (когда §5 [translation-buffer.md](./translation-buffer.md)

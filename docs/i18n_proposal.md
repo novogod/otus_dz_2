@@ -112,7 +112,7 @@ So the recipe app's data flow in production is:
 
 ```
    Flutter app (recipe_list)
-       │  HTTPS to https://mahallem.ist/recipes/...
+      │  HTTPS to https://recipies.mahallem.ist/recipes/...
        ▼
    Nginx 443 (Frankfurt)         ──┐  Let's Encrypt, *.mahallem.ist
    proxy_pass 127.0.0.1:4001      │
@@ -138,7 +138,7 @@ The recipe app adds a new HTTP namespace under the existing public
 host. **No new domain, no new TLS cert, no new firewall rule needed.**
 Pick one of:
 
-* `https://mahallem.ist/recipes/...` — simplest; piggy-backs on the
+* `https://recipies.mahallem.ist/recipes/...` — simplest; piggy-backs on the
   Nginx vhost that already terminates TLS for the user portal. Add
   a `location /recipes/` block that proxies to the same
   `127.0.0.1:4001` Node process (`local_user_portal`) which handles
@@ -147,7 +147,7 @@ Pick one of:
   one new Nginx server block + one DNS A-record. Recommended once
   the recipe API has its own dependencies (currently it doesn't).
 
-We'll start with `https://mahallem.ist/recipes/...` and migrate to
+We'll start with `https://recipies.mahallem.ist/recipes/...` and migrate to
 `api.mahallem.ist` if the namespaces ever conflict.
 
 ### 4.1 Providers (production reality)
@@ -187,7 +187,7 @@ We'll start with `https://mahallem.ist/recipes/...` and migrate to
   `en/ru`.
 
 **What the phone sees.** The phone only ever calls the production
-public host — `https://mahallem.ist/recipes/...` — over HTTPS. It
+public host — `https://recipies.mahallem.ist/recipes/...` — over HTTPS. It
 does not know LibreTranslate exists and could not reach it even if
 it did (no host-port mapping, no DNS record). That is a deliberate
 mahallem design choice ("Internal-Only Services" in the deployment
@@ -326,12 +326,12 @@ payload itself goes into MongoDB.
 
 ### 5.2 Server endpoints
 
-| Method | Path (production: `https://mahallem.ist`) | Purpose |
+| Method | Path (production: `https://recipies.mahallem.ist`) | Purpose |
 | --- | --- | --- |
-| `GET` | `https://mahallem.ist/recipes?lang=ru&since=<iso>&limit=200` | Returns recipes updated after `since`, oldest-first, capped at `limit`. Used by the phone for incremental sync. |
-| `GET` | `https://mahallem.ist/recipes/:id?lang=ru` | Single recipe details, including image URLs, in the requested language. If missing in MongoDB, the server pulls from TheMealDB, translates, persists, then responds. |
-| `GET` | `https://mahallem.ist/recipes/search?q=...&lang=ru&limit=20` | Server-side text search over `i18n.<lang>.name`. On miss falls back to `TheMealDB /search.php?s=q`, then translates and persists each hit. |
-| `GET` | `https://mahallem.ist/recipes/health` | Liveness. |
+| `GET` | `https://recipies.mahallem.ist/recipes?lang=ru&since=<iso>&limit=200` | Returns recipes updated after `since`, oldest-first, capped at `limit`. Used by the phone for incremental sync. |
+| `GET` | `https://recipies.mahallem.ist/recipes/:id?lang=ru` | Single recipe details, including image URLs, in the requested language. If missing in MongoDB, the server pulls from TheMealDB, translates, persists, then responds. |
+| `GET` | `https://recipies.mahallem.ist/recipes/search?q=...&lang=ru&limit=20` | Server-side text search over `i18n.<lang>.name`. On miss falls back to `TheMealDB /search.php?s=q`, then translates and persists each hit. |
+| `GET` | `https://recipies.mahallem.ist/recipes/health` | Liveness. |
 
 All endpoints are protected by the same auth the rest of the
 mahallem_ist stack uses (App Check / signed app-attestation token).

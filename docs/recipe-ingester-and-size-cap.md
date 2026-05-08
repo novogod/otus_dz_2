@@ -109,7 +109,7 @@ ssh -i ~/.ssh/mahallem_key_2 root@72.61.181.62 \
 Чек после деплоя:
 
 ```sh
-curl -s 'https://mahallem.ist/recipes/page?offset=0&limit=1' \
+curl -s 'https://recipies.mahallem.ist/recipes/page?offset=0&limit=1' \
   | python3 -c "import json,sys;d=json.load(sys.stdin);print('total:',d['total'])"
 ```
 

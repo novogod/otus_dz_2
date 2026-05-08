@@ -587,7 +587,7 @@ Reported by an anonymous (not-logged-in) viewer:
 
 ### Verification
 
-- `curl 'https://mahallem.ist/recipes/search?q=unload&lang=en'` now
+- `curl 'https://recipies.mahallem.ist/recipes/search?q=unload&lang=en'` now
   returns `creatorDisplayName: "Andrey"`,
   `creatorUserId: bf703e42-...` for id `1000012`.
 - Anonymous web viewer (hard-refreshed PWA): author chip is visible
@@ -1127,7 +1127,7 @@ Upstream-CORS обрезается, наружу идёт только nginx-в�
 **Verification.**
 
 * `curl -sI -X POST -H 'Origin: https://recipies.mahallem.ist'
-  https://mahallem.ist/recipes/visit` — единственный
+  https://recipies.mahallem.ist/recipes/visit` — единственный
   `access-control-allow-origin: https://recipies.mahallem.ist`.
 * Браузер: `/visit → 200 {"count":N}`, ноль CORS-ошибок,
   splash снова показывает «Visitors: N» с blink-анимацией.
@@ -1916,7 +1916,7 @@ auth-домен Otus Food от общего Mahallem `users`.
   (`feat: isolate recipe app auth from mahallem users`).
 - Push в `main` + production deploy:
   `docker compose up -d --build user-portal` на `72.61.181.62`.
-- Smoke: `GET https://mahallem.ist/recipes/health` → `status: ok`.
+- Smoke: `GET https://recipies.mahallem.ist/recipes/health` → `status: ok`.
 
 ### Data checks / hotfixes
 
@@ -2923,7 +2923,7 @@ SELECT id, i18n FROM recipes
 
 ```text
 $ ssh prod 'git pull && docker compose up -d --build user-portal'
-$ curl -s 'https://mahallem.ist/recipes/search?q=soup&lang=ru' | jq
+$ curl -s 'https://recipies.mahallem.ist/recipes/search?q=soup&lang=ru' | jq
 hits=20
   - Красный гороховый суп
   - Росол (польский куриный суп)   ← Polish Chicken Soup
@@ -3030,7 +3030,7 @@ prod-redeploy (chunk 15) откладывается до явного запро
   `Service role can delete recipe photos`).
 - `docker compose up -d --build user-portal` — образ пересобран,
   контейнер пере-recreated и стартанул чисто.
-- Smoke: `curl -L --post301 --post302 -F meal=… -F photo=@… https://mahallem.ist/recipes`
+- Smoke: `curl -L --post301 --post302 -F meal=… -F photo=@… https://recipies.mahallem.ist/recipes`
   → `201 {"id":1000000,"meal":{…,"strMealThumb":"/storage/v1/object/public/recipe-photos/recipes/1000000/…jpg"}}`.
   `HEAD` на тот же URL → `200 image/jpeg`, `content-length` совпадает
   с исходником (124423 байт). Тестовая строка и файл удалены сразу
@@ -3038,7 +3038,7 @@ prod-redeploy (chunk 15) откладывается до явного запро
 
 **Follow-up: nginx trailing-slash fix (mahallem `ca0c895b`):**
 
-В первичном smoke-тесте `POST https://mahallem.ist/recipes` уходил
+В первичном smoke-тесте `POST https://recipies.mahallem.ist/recipes` уходил
 в 301 (`Location: http://mahallem.ist:4001/recipes/`) — проблема в
 двух-уровневом nginx: внешний (host) терминирует TLS и проксирует
 на `127.0.0.1:4001`; внутренний (`mahallem-nginx`, контейнер) имел
@@ -3084,7 +3084,7 @@ recipes/<id>/photo_<timestamp>_<random6>.<ext>
 фото на рецепт. Cleanup-запрос подходил под bucket-уровень
 (`LIKE '%/recipe-photos/%'`) и переход не задел.
 
-Re-smoke: `POST https://mahallem.ist/recipes` → 201,
+Re-smoke: `POST https://recipies.mahallem.ist/recipes` → 201,
 `strMealThumb=/storage/v1/object/public/recipe-photos/recipes/1000000/photo_1777507021938_8b1018.jpg`.
 
 **Docs catch-up (otus_dz `3bddcee`):**
@@ -3741,7 +3741,7 @@ SaaS, а локальный контейнер использовать как �
 
 ### Бэкенд по умолчанию
 
-- `lib/data/api/recipe_api_config.dart`: mahallem (`https://mahallem.ist/recipes`)
+- `lib/data/api/recipe_api_config.dart`: mahallem (`https://recipies.mahallem.ist/recipes`)
   теперь дефолт для всех платформ. Запуск `flutter run` без
   `--dart-define` сразу получает переводы. Передача
   `--dart-define=MAHALLEM_RECIPES_BASE=` (пустая строка) форсит
@@ -3807,9 +3807,9 @@ SaaS, а локальный контейнер использовать как �
   production-топологию — добавлена таблица "что где живёт", блок-
   схема с Nginx Frankfurt → Node :4001 → docker-internal
   LibreTranslate. §5.2 endpoints теперь абсолютные URL под
-  `https://mahallem.ist/recipes/...`.
+  `https://recipies.mahallem.ist/recipes/...`.
 - [docs/todo/search_api_deploy.md](todo/search_api_deploy.md): §B
-  ставит `RecipeApi.baseUrl` на `https://mahallem.ist/recipes/...`,
+  ставит `RecipeApi.baseUrl` на `https://recipies.mahallem.ist/recipes/...`,
   предлагает переключение через `--dart-define`. §C добавляет
   пункт "mount routes inside `local_user_portal` под /recipes",
   Nginx-блок `location /recipes/`, проверку
@@ -3817,7 +3817,7 @@ SaaS, а локальный контейнер использовать как �
 
 ### Решение по доменам
 
-* Стартуем с `https://mahallem.ist/recipes/...` — переиспользуем
+* Стартуем с `https://recipies.mahallem.ist/recipes/...` — переиспользуем
   существующий vhost, TLS-серт, фаервол. Нулевые расходы.
 * Переезд на `https://api.mahallem.ist/recipes/...` — опционально,
   когда recipe-API получит свои зависимости. Это +1 server block

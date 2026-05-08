@@ -391,17 +391,17 @@ ssh -i "$SSH_KEY" root@72.61.181.62 \
 
 ```bash
 # Health check
-curl -s https://mahallem.ist/recipes/health | python3 -m json.tool
+curl -s https://recipies.mahallem.ist/recipes/health | python3 -m json.tool
 
 # PUT floor guard (must be 404, not 404 "Cannot PUT")
-curl -s -X PUT https://mahallem.ist/recipes/52772 \
+curl -s -X PUT https://recipies.mahallem.ist/recipes/52772 \
   -H "Content-Type: application/json" \
   -H "x-recipes-user-token: invalid" \
   -d '{"meal":{"strMeal":"x","strMealThumb":"x"}}' | cat
 # Expect: {"error":"unauthorized"}
 
 # DELETE floor guard
-curl -s -o /dev/null -w "%{http_code}" -X DELETE https://mahallem.ist/recipes/52772 \
+curl -s -o /dev/null -w "%{http_code}" -X DELETE https://recipies.mahallem.ist/recipes/52772 \
   -H "x-recipes-user-token: invalid"
 # Expect: 401
 ```

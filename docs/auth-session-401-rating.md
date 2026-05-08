@@ -66,7 +66,7 @@ Two independent defects compounded:
 Reproduction against prod confirmed the 401:
 
 ```sh
-curl -i -X POST https://mahallem.ist/recipes/52772/rating \
+curl -i -X POST https://recipies.mahallem.ist/recipes/52772/rating \
      -H 'Content-Type: application/json' \
      -d '{"stars":5}'
 # HTTP/2 401 ; {"error":"unauthorized"}

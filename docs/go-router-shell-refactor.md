@@ -38,7 +38,7 @@
 * Используется `MaterialApp(home: ...)` (см.
   [main.dart:63](../recipe_list/lib/main.dart)) — без роутера,
   без deep linking, без shareable URLs (а проект уже работает на
-  Flutter web под `https://mahallem.ist`).
+  Flutter web под `https://recipies.mahallem.ist`).
 
 ### Проблемы
 
@@ -50,7 +50,7 @@
    на каждом переходе.
 4. **Стек растёт.** Recipes → Favorites → Details = 3 экрана в
    стеке вместо «вкладка Favorites + 1 деталей внутри её ветки».
-5. **Нет URL для веба.** На `https://mahallem.ist/#/recipes/123`
+5. **Нет URL для веба.** На `https://recipies.mahallem.ist/#/recipes/123`
    нельзя зайти напрямую.
 
 ## Что меняем
@@ -111,7 +111,7 @@ GoRouter (rootNavigatorKey)
    (`navShell.currentIndex`).
 5. **Состояние сохраняется** — `IndexedStack` под капотом
    `StatefulShellRoute` держит каждую ветку живой между переходами.
-6. **Deep linking** — на вебе `https://mahallem.ist/#/recipes/52772`
+6. **Deep linking** — на вебе `https://recipies.mahallem.ist/#/recipes/52772`
    открывает страницу деталей конкретного рецепта.
 7. **Type-safe навигация** — переходы через
    `context.go('/favorites')` / `context.push('/recipes/details/52772')`
@@ -175,7 +175,7 @@ GoRouter (rootNavigatorKey)
 
 * **`IndexedStack` без go_router.** Простое решение, но не даёт
   deep linking (на вебе все экраны под одним URL). Для проекта,
-  уже работающего на `https://mahallem.ist`, теряем shareable
+  уже работающего на `https://recipies.mahallem.ist`, теряем shareable
   links.
 * **Auto Route.** Code-gen из аннотаций. Мощнее, но избыточно
   для размера проекта; команда не использует build_runner-генераторы.
@@ -196,7 +196,7 @@ GoRouter (rootNavigatorKey)
   возвращается на Favorites с **сохранённой позицией скролла и
   поисковым запросом** (state ветки сохраняется через
   `StatefulShellRoute.indexedStack`).
-- [x] На вебе `https://mahallem.ist/#/recipes/details/52772` открывает
+- [x] На вебе `https://recipies.mahallem.ist/#/recipes/details/52772` открывает
   страницу деталей конкретного рецепта (без splash-а — попадаем
   сразу внутрь Recipes-ветки).
 - [x] Анимация slide-up для `/profile/login` и `/profile/admin`

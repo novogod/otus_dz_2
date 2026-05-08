@@ -159,7 +159,7 @@ Fix in `lib/ui/recipe_list_loader.dart`:
 
 ## C10 — recipe content gap (NEW, blocks PRIME DIRECTIVE) 🔴
 
-Verified on `2026-04-28` against `https://mahallem.ist/recipes/filter?c=Pork&lang=ru&full=1`:
+Verified on `2026-04-28` against `https://recipies.mahallem.ist/recipes/filter?c=Pork&lang=ru&full=1`:
 
 | field           | value                                  | translated? |
 |-----------------|----------------------------------------|-------------|
@@ -202,7 +202,7 @@ is contained to:
 ## C11 — scoring-gated persistence + poison purge (2026-04-28) 🔴
 
 Verified poisoning on `2026-04-28` against
-`https://mahallem.ist/recipes/lookup/52772?lang=es`: title/category/area
+`https://recipies.mahallem.ist/recipes/lookup/52772?lang=es`: title/category/area
 correctly Spanish, but `strInstructions` returned the English source
 verbatim because `_isEchoTranslation` only flags byte-equal blobs while
 the partial-Spanish output differs by whitespace. The English-leaked

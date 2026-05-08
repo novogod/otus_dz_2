@@ -43,7 +43,7 @@ String imgproxyUrl(String src, int w, int h) {
 }
 
 /// Origin (`scheme://host[:port]`) из `mahallemBaseUrl`.
-/// `https://mahallem.ist/recipes` → `https://mahallem.ist`.
+/// `https://recipies.mahallem.ist/recipes` → `https://recipies.mahallem.ist`.
 String? _mahallemOrigin() {
   final base = RecipeApiConfig.mahallemBaseUrl;
   if (base.isEmpty) return null;

@@ -428,7 +428,7 @@ runtime показывает новые лейблы.
 - [x] `docker compose up -d --build user-portal storage-api`.
 - [x] Smoke-test:
   ```sh
-  curl -X POST https://mahallem.ist/recipes \
+  curl -X POST https://recipies.mahallem.ist/recipes \
     -F meal='{"strMeal":"Smoke","strMealThumb":""}' \
     -F photo=@/path/to/test.jpg
   ```

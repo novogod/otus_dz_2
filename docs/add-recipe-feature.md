@@ -171,7 +171,7 @@ Future<Recipe> createRecipe(Recipe draft) async {
     },
   };
   final res = await _client.dio.post<Map<String, dynamic>>(
-    '',                                  // dio.baseUrl == https://mahallem.ist/recipes
+    '',                                  // dio.baseUrl == https://recipies.mahallem.ist/recipes
     data: {'meal': meal},
   );
   return Recipe.fromMealDb(res.data!['meal']);

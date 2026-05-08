@@ -14,7 +14,7 @@
 
 From `recipe_list/lib/data/api/recipe_api_config.dart` and `recipe_list/lib/auth/admin_session.dart`:
 
-- Recipe feed API base (default): `https://mahallem.ist/recipes`
+- Recipe feed API base (default): `https://recipies.mahallem.ist/recipes`
 - Auth/admin base: `https://mahallem.ist`
 - Client calls compatibility routes:
   - login: `/users/login` (plus aliases)

@@ -41,7 +41,7 @@ GET /recipes/page?lang=ru&offset=0&limit=500
 
 ## Acceptance
 
-* `curl 'https://mahallem.ist/recipes/page?lang=ru&limit=10'` returns
+* `curl 'https://recipies.mahallem.ist/recipes/page?lang=ru&limit=10'` returns
   10 fully-translated recipes < 5 s on warm DB.
 * Cold lang `tr` first call ≤ 90 s, subsequent ≤ 1 s.
 

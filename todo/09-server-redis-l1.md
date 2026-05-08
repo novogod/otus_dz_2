@@ -60,6 +60,6 @@ In-memory L1 cache of fully-translated recipes in front of Postgres
 * Smoke (after deploy):
   ```bash
   ssh root@72.61.181.62 'docker exec mahallem-redis redis-cli -n 4 INFO memory | grep -E "maxmemory_human|maxmemory_policy"'
-  curl -w '%{time_total}\n' 'https://mahallem.ist/recipes/page?lang=ru&limit=50' -o /dev/null  # warm
-  curl -w '%{time_total}\n' 'https://mahallem.ist/recipes/page?lang=ru&limit=50' -o /dev/null  # cached → near-zero
+  curl -w '%{time_total}\n' 'https://recipies.mahallem.ist/recipes/page?lang=ru&limit=50' -o /dev/null  # warm
+  curl -w '%{time_total}\n' 'https://recipies.mahallem.ist/recipes/page?lang=ru&limit=50' -o /dev/null  # cached → near-zero
   ```

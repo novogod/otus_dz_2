@@ -5,7 +5,7 @@ Test scope is derived from
 and run on the iPhone 16e simulator
 (`8BD26741-3207-42F9-A0D4-55D0CC63AED0`) against the Flutter app
 `com.otus.recipeList` connected to production
-`https://mahallem.ist/recipes`.
+`https://recipies.mahallem.ist/recipes`.
 
 Test creds: `test-user@example.com` / `<redacted>`.
 
@@ -128,7 +128,7 @@ Any miss → fix the card composition in
    default person icon).
 4. Background app (home) → re-foreground → avatar persists.
 5. Force quit + relaunch → avatar persists.
-6. Backend echo: hit `GET https://mahallem.ist/recipes/users/me`
+6. Backend echo: hit `GET https://recipies.mahallem.ist/recipes/users/me`
    with `x-recipes-user-token` and assert `avatarUrl != null`
    and content-type returned by HEAD on `avatarUrl` is
    `image/*`.

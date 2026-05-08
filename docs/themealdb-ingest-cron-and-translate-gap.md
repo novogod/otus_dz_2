@@ -341,7 +341,7 @@ After deploy:
   → expect `[ingest] hit id=…` lines after 04:00 Istanbul.
 * Immediately after the cron run:
   ```sh
-  curl -s 'https://mahallem.ist/recipes/page?lang=ru&limit=200' \
+  curl -s 'https://recipies.mahallem.ist/recipes/page?lang=ru&limit=200' \
     | python3 -c "import json,sys;d=json.load(sys.stdin);
                   print('recipes',len(d.get('recipes',[])),'total',d['total'])"
   ```

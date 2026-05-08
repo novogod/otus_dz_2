@@ -11,8 +11,8 @@
 ## Diagnosis
 
 ```bash
-curl -X PUT  https://mahallem.ist/recipes/1000012   → 404 Cannot PUT /recipes/1000012
-curl -X DELETE https://mahallem.ist/recipes/1000012 → 404 Cannot DELETE /recipes/1000012
+curl -X PUT  https://recipies.mahallem.ist/recipes/1000012   → 404 Cannot PUT /recipes/1000012
+curl -X DELETE https://recipies.mahallem.ist/recipes/1000012 → 404 Cannot DELETE /recipes/1000012
 ```
 
 The `PUT` and `DELETE` verb handlers exist in the design doc
@@ -229,7 +229,7 @@ See `todo/17-owner-edit-delete-routes.md` for chunk breakdown with test assertio
 ```bash
 # 1. Create a recipe (get a token first from /users/login)
 TOKEN="<x-recipes-user-token from login>"
-ID=$(curl -s -X POST https://mahallem.ist/recipes \
+ID=$(curl -s -X POST https://recipies.mahallem.ist/recipes \
   -H "x-recipes-user-token: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"meal":{"strMeal":"Test","strMealThumb":"https://x/t.jpg"}}' \
@@ -237,24 +237,24 @@ ID=$(curl -s -X POST https://mahallem.ist/recipes \
 echo "Created: $ID"
 
 # 2. Edit it
-curl -s -X PUT "https://mahallem.ist/recipes/$ID" \
+curl -s -X PUT "https://recipies.mahallem.ist/recipes/$ID" \
   -H "x-recipes-user-token: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"meal":{"strMeal":"Test Edited","strMealThumb":"https://x/t.jpg"}}' | python3 -m json.tool
 
 # 3. Delete it
-curl -s -o /dev/null -w "%{http_code}" -X DELETE "https://mahallem.ist/recipes/$ID" \
+curl -s -o /dev/null -w "%{http_code}" -X DELETE "https://recipies.mahallem.ist/recipes/$ID" \
   -H "x-recipes-user-token: $TOKEN"
 # Expect: 204
 
 # 4. Floor guard: cannot edit a TheMealDB recipe
-curl -s -X PUT "https://mahallem.ist/recipes/52772" \
+curl -s -X PUT "https://recipies.mahallem.ist/recipes/52772" \
   -H "x-recipes-user-token: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"meal":{"strMeal":"Hacked","strMealThumb":"x"}}' | python3 -m json.tool
 # Expect: 404 not_found
 
 # 5. No auth
-curl -s -o /dev/null -w "%{http_code}" -X DELETE "https://mahallem.ist/recipes/$ID"
+curl -s -o /dev/null -w "%{http_code}" -X DELETE "https://recipies.mahallem.ist/recipes/$ID"
 # Expect: 401
 ```

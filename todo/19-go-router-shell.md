@@ -272,7 +272,7 @@ deep-link URLs для Flutter web.
 ### Приёмка (финальная для всего todo)
 - [x] При навигации Favorites → Detail → Back позиция скролла
       и поисковый запрос сохранены.
-- [x] На вебе `https://mahallem.ist/#/recipes/details/52772`
+- [x] На вебе `https://recipies.mahallem.ist/#/recipes/details/52772`
       открывает страницу деталей конкретного рецепта без
       прохождения splash.
 - [x] Анимация slide-up для login/signup/recovery сохранилась

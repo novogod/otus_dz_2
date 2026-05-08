@@ -8,7 +8,7 @@
 Flutter web (`flutter run -d chrome`) и любой будущий PWA-фронтенд
 крутятся на чужом origin (`http://localhost:<port>` для дев, или
 `https://app.example` для прода). Браузер блокирует чтение ответов
-из `https://mahallem.ist/recipes/*`, потому что бэкенд не отдаёт
+из `https://recipies.mahallem.ist/recipes/*`, потому что бэкенд не отдаёт
 `Access-Control-Allow-Origin`. Native-клиенты (iOS/Android/desktop
 Flutter, curl, server-to-server) на CORS не смотрят и работают
 как и раньше.
@@ -88,7 +88,7 @@ curl -sD- -o /dev/null -X OPTIONS \
   -H 'Origin: http://localhost:8080' \
   -H 'Access-Control-Request-Method: GET' \
   -H 'Access-Control-Request-Headers: content-type' \
-  https://mahallem.ist/recipes/page | grep -i access-control
+  https://recipies.mahallem.ist/recipes/page | grep -i access-control
 ```
 
 Должны прийти:
@@ -109,7 +109,7 @@ access-control-max-age: 86400
 ## Follow-up 2026-05-05 — duplicate `Access-Control-Allow-Origin`
 
 После деплоя web-сборки на `https://recipies.mahallem.ist` все
-вызовы к `https://mahallem.ist/recipes/*` (включая `/visit`,
+вызовы к `https://recipies.mahallem.ist/recipes/*` (включая `/visit`,
 `/page`, `/filter`) падали в DevTools с:
 
 ```
@@ -149,7 +149,7 @@ nginx-вариант (с `$cors_origin` allow-list). Конфиг провере
 
 ```bash
 curl -sI -X POST -H 'Origin: https://recipies.mahallem.ist' \
-  https://mahallem.ist/recipes/visit | grep -i access-control
+  https://recipies.mahallem.ist/recipes/visit | grep -i access-control
 # access-control-allow-origin: https://recipies.mahallem.ist   ← один!
 # access-control-allow-credentials: true
 # access-control-allow-headers: Authorization,Content-Type,...

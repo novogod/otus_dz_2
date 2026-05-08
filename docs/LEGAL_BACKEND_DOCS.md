@@ -6,7 +6,7 @@ The startup consent splash now opens legal docs from backend URLs, not app asset
 
 `{MAHALLEM_ORIGIN}/recipes/legal/{lang}/{doc}.html`
 
-- `{MAHALLEM_ORIGIN}` = origin from `RecipeApiConfig.mahallemBaseUrl` (defaults to `https://mahallem.ist`)
+- `{MAHALLEM_ORIGIN}` = origin from `RecipeApiConfig.mahallemBaseUrl` (defaults to `https://recipies.mahallem.ist`)
 - `{lang}` in: `en`, `ru`, `es`, `fr`, `de`, `it`, `tr`, `ar`, `fa`, `ku`
 - `{doc}` in:
   - `terms`
