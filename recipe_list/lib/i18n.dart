@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'i18n/strings.g.dart';
+import 'web/browser_locale_stub.dart'
+  if (dart.library.js_interop) 'web/browser_locale_web.dart';
 
 /// Поддерживаемые языки UI. Совпадают с языками платформы
 /// mahallem_ist (см. `routes/post-job.js` — `phrase_<code>` в БД):
@@ -45,6 +47,27 @@ final ValueNotifier<AppLang> appLang = ValueNotifier<AppLang>(AppLang.en);
 /// из системной локали. Если локаль не входит в [AppLang.values],
 /// возвращает [AppLang.en].
 AppLang detectDeviceAppLang() {
+  // Web first: inspect full browser preference list (navigator.languages),
+  // not just a single resolved locale.
+  final browserCodes = browserPreferredLanguages();
+  if (browserCodes.isNotEmpty) {
+    final mapped = <AppLang>[];
+    for (final code in browserCodes) {
+      final lang = appLangFromLanguageCode(code);
+      if (lang != null && !mapped.contains(lang)) mapped.add(lang);
+    }
+    if (mapped.isNotEmpty) {
+      final first = mapped.first;
+      // Heuristic for devices where Chrome UI language is EN but device
+      // language preferences still include a supported non-EN locale.
+      if (first == AppLang.en) {
+        final nonEn = mapped.where((l) => l != AppLang.en).firstOrNull;
+        if (nonEn != null) return nonEn;
+      }
+      return first;
+    }
+  }
+
   try {
     final deviceLocale = AppLocaleUtils.findDeviceLocale();
     final byLanguageCode = appLangFromLanguageCode(deviceLocale.languageCode);
