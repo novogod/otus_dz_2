@@ -6,6 +6,7 @@
 // [name] is null — that's the signal "no creator info, don't show
 // the row at all".
 
+import 'package:country_flags/country_flags.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -47,6 +48,14 @@ class AddedByRow extends StatelessWidget {
       parts.add(name);
     }
     return parts.join('/');
+  }
+
+  /// Returns the alpha-2 country code in upper-case, or null when
+  /// the value is missing / not a valid 2-letter ISO code.
+  String? _countryFlagCode() {
+    final co = country?.trim();
+    if (co == null || co.length != 2) return null;
+    return co.toUpperCase();
   }
 
   @override
@@ -105,17 +114,31 @@ class AddedByRow extends StatelessWidget {
                 // city/country without brackets. Hidden when both
                 // are missing.
                 if (_locationLabel(context).isNotEmpty)
-                  Text(
-                    _locationLabel(context),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14,
-                      height: 20 / 14,
-                      color: AppColors.textSecondary,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_countryFlagCode() != null) ...[
+                        CountryFlag.fromCountryCode(
+                          _countryFlagCode()!,
+                          theme: const ImageTheme(width: 18, height: 13),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Flexible(
+                        child: Text(
+                          _locationLabel(context),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14,
+                            height: 20 / 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),

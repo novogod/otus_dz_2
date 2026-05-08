@@ -1,3 +1,4 @@
+import 'package:country_flags/country_flags.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -1047,23 +1048,46 @@ class _AuthorChip extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (_locationLabel(context).isNotEmpty)
-                Text(
-                  _locationLabel(context),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: AppTextStyles.fontFamily,
-                    fontWeight: FontWeight.w400,
-                    fontSize: 13,
-                    height: 18 / 13,
-                    color: AppColors.textSecondary,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_countryFlagCode() != null) ...[
+                      CountryFlag.fromCountryCode(
+                        _countryFlagCode()!,
+                        theme: const ImageTheme(width: 16, height: 12),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Flexible(
+                      child: Text(
+                        _locationLabel(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 13,
+                          height: 18 / 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
         ),
       ],
     );
+  }
+
+  /// Returns the alpha-2 country code in upper-case, or null when
+  /// the value is missing / not a valid 2-letter ISO code. Used
+  /// to drive the SVG flag rendered next to the city/country line.
+  String? _countryFlagCode() {
+    final co = country?.trim();
+    if (co == null || co.length != 2) return null;
+    return co.toUpperCase();
   }
 
   /// Joins non-empty city / country with a `/` separator. Returns
