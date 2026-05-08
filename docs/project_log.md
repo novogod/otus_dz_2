@@ -1,5 +1,69 @@
 # Project Log
 
+## Admin kicked-out on rating tap (post-Chunks-1-19 regression)
+
+**Date:** 2026-05-08 (afternoon)
+
+**Commit:** `otus_dz_2@3c57ff9` — fix(auth): gate rating pill on
+user token, not login state.
+
+**Symptoms (web, after yesterday's full deploy):**
+
+- Logged in as admin, tapped a star on a recipe card.
+- `GET https://recipies.mahallem.ist/recipes/users/me` → 401.
+- `POST https://recipies.mahallem.ist/recipes/53220/rating` → 401.
+- Admin session got dropped immediately (the rating pill's 401
+  catch calls `logoutAdmin`).
+
+**Root cause:**
+
+Admin-only sessions hold a `Authorization: Bearer <admin>` token
+in `currentRecipeAdminTokenNotifier` but no `x-recipes-user-token`
+in `currentUserTokenNotifier` (recipe admins live in
+`recipe_app_admins` and intentionally have no `recipe_app_users`
+row). The rating endpoint and `/users/me` are gated by
+`recipesUserAuthMiddleware` in `local_user_portal/routes/recipes.js`,
+which only honours `x-recipes-user-token` — the admin Bearer is
+ignored, server returns 401, our friendly-401 catch in the
+rating pill calls `logoutAdmin(...)` and the admin gets kicked
+out. Not a backend bug, not a token-rotation issue: a client-side
+identity-model gap.
+
+**Fix (client-side, two files):**
+
+- [recipe_list/lib/ui/recipe_card.dart](recipe_list/lib/ui/recipe_card.dart#L468-L483)
+  — gate the rating pill on `currentUserTokenNotifier.value` being
+  non-empty instead of on `userLoggedInNotifier`. Admin-only
+  sessions now see the same "register/log in to rate" snackbar as
+  fully-anonymous users; no network call, no 401, no kick-out.
+- [recipe_list/lib/data/api/recipe_api.dart](recipe_list/lib/data/api/recipe_api.dart#L346-L360)
+  — `RecipeApi.fetchMyProfile` short-circuits to `null` when no
+  user token is present (silences the recurring 401 on
+  `/users/me` for admin-only sessions).
+
+**Not changed:**
+
+- `_setSessionState` still flips `userLoggedInNotifier=true` for
+  admin-only sessions (admin needs that to navigate the app).
+- The pill's 401 catch is unchanged — still useful when a real
+  user's token actually expires.
+- Backend untouched.
+
+**Verification:**
+
+- `curl -sI https://recipies.mahallem.ist/` → `HTTP/2 200`.
+- `recipies.mahallem.ist` now serves
+  `otus_dz_2@3c57ff9` (re-built and re-deployed via
+  `docker compose -f docker-compose.web.yml up -d --build flutter-web`).
+- Manual browser check pending: hard-reload, log in as admin,
+  tap a star — should show the "register/log in to rate"
+  snackbar and not kick the admin out.
+
+**Refs:** [docs/auth-session-401-recurrence-2026-05-08.md](auth-session-401-recurrence-2026-05-08.md)
+(Chunk 20), [todo/auth-session-401-recurrence-2026-05-08.md](../todo/auth-session-401-recurrence-2026-05-08.md).
+
+---
+
 ## Auth: 401-on-rating recurrence + biometric wipe
 
 **Date:** 2026-05-08
