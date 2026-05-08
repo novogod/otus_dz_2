@@ -157,5 +157,22 @@
   "profileBiometricSaved": "Inicio biométrico guardado. Usa Face ID o huella dactilar la próxima vez.",
   "profileBiometricSaveFailed": "No se pudo guardar el inicio biométrico. Asegúrate de que la biometría esté configurada en este dispositivo.",
   "profilePasskeySignInFirst": "Inicia sesión primero y luego añade una clave de acceso.",
-  "profilePasskeyNotSupported": "Las claves de acceso no son compatibles con este navegador."
+  "profilePasskeyNotSupported": "Las claves de acceso no son compatibles con este navegador.",
+
+  "consentTitle": "Se requiere consentimiento legal",
+  "consentCountry": "País: ${country} (${code}) · ${law}",
+  "consentOpenDoc": "Abrir documento",
+  "consentAgree": "Acepto",
+  "consentSaving": "Guardando...",
+  "consentCheckAll": "Por favor, confirme todos los consentimientos",
+  "consentDocUrlInvalid": "URL de documento legal no válida",
+  "consentDocOpenFailed": "No se pudo abrir el documento legal",
+  "consentLabelTerms": "Acepto los términos de uso",
+  "consentLabelPersonalDataGdpr": "Acepto el tratamiento de datos personales (RGPD)",
+  "consentLabelPersonalData152Fz": "Acepto el tratamiento de datos personales (152-FZ)",
+  "consentLabelPersonalDataKvkk": "Acepto el tratamiento de datos personales (KVKK)",
+  "consentLabelPersonalDataPdpl": "Acepto el tratamiento de datos personales (PDPL)",
+  "consentLabelPersonalDataGeneral": "Acepto el tratamiento de datos personales",
+  "consentLabelCookies": "Acepto la política de cookies",
+  "consentLabelStorage": "Acepto la política de almacenamiento local"
 }

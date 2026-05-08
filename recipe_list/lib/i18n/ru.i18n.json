@@ -163,5 +163,22 @@
   "profileBiometricSaved": "Биометрический вход сохранён. Используйте Face ID или отпечаток пальца.",
   "profileBiometricSaveFailed": "Не удалось сохранить биометрический вход. Убедитесь, что биометрия настроена на устройстве.",
   "profilePasskeySignInFirst": "Сначала войдите в аккаунт, а затем добавьте ключ доступа.",
-  "profilePasskeyNotSupported": "Ключи доступа не поддерживаются в этом браузере."
+  "profilePasskeyNotSupported": "Ключи доступа не поддерживаются в этом браузере.",
+
+  "consentTitle": "Требуется согласие",
+  "consentCountry": "Страна: ${country} (${code}) · ${law}",
+  "consentOpenDoc": "Открыть документ",
+  "consentAgree": "Принимаю",
+  "consentSaving": "Сохранение...",
+  "consentCheckAll": "Подтвердите все согласия",
+  "consentDocUrlInvalid": "Неверная ссылка на юридический документ",
+  "consentDocOpenFailed": "Не удалось открыть документ",
+  "consentLabelTerms": "Принимаю условия использования",
+  "consentLabelPersonalDataGdpr": "Принимаю обработку персональных данных (GDPR)",
+  "consentLabelPersonalData152Fz": "Принимаю обработку персональных данных (152-ФЗ)",
+  "consentLabelPersonalDataKvkk": "Принимаю обработку персональных данных (KVKK)",
+  "consentLabelPersonalDataPdpl": "Принимаю обработку персональных данных (PDPL)",
+  "consentLabelPersonalDataGeneral": "Принимаю обработку персональных данных",
+  "consentLabelCookies": "Принимаю политику использования cookie",
+  "consentLabelStorage": "Принимаю политику локального хранилища"
 }

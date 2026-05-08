@@ -157,5 +157,22 @@
   "profileBiometricSaved": "ورود بیومتریک ذخیره شد. دفعه بعد از Face ID یا اثر انگشت استفاده کنید.",
   "profileBiometricSaveFailed": "ذخیره ورود بیومتریک ممکن نشد. مطمئن شوید بیومتریک روی این دستگاه تنظیم شده است.",
   "profilePasskeySignInFirst": "ابتدا وارد شوید، سپس کلید عبور اضافه کنید.",
-  "profilePasskeyNotSupported": "کلیدهای عبور در این مرورگر پشتیبانی نمی‌شوند."
+  "profilePasskeyNotSupported": "کلیدهای عبور در این مرورگر پشتیبانی نمی‌شوند.",
+
+  "consentTitle": "رضایت قانونی لازم است",
+  "consentCountry": "کشور: ${country} (${code}) · ${law}",
+  "consentOpenDoc": "باز کردن سند",
+  "consentAgree": "موافقم",
+  "consentSaving": "در حال ذخیره...",
+  "consentCheckAll": "لطفاً همه رضایت‌ها را تأیید کنید",
+  "consentDocUrlInvalid": "آدرس سند قانونی نامعتبر است",
+  "consentDocOpenFailed": "باز کردن سند قانونی ناموفق بود",
+  "consentLabelTerms": "شرایط استفاده را می‌پذیرم",
+  "consentLabelPersonalDataGdpr": "پردازش داده‌های شخصی را می‌پذیرم (GDPR)",
+  "consentLabelPersonalData152Fz": "پردازش داده‌های شخصی را می‌پذیرم (152-FZ)",
+  "consentLabelPersonalDataKvkk": "پردازش داده‌های شخصی را می‌پذیرم (KVKK)",
+  "consentLabelPersonalDataPdpl": "پردازش داده‌های شخصی را می‌پذیرم (PDPL)",
+  "consentLabelPersonalDataGeneral": "پردازش داده‌های شخصی را می‌پذیرم",
+  "consentLabelCookies": "سیاست کوکی را می‌پذیرم",
+  "consentLabelStorage": "سیاست ذخیره‌سازی محلی را می‌پذیرم"
 }

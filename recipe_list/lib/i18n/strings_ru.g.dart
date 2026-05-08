@@ -193,6 +193,22 @@ class TranslationsRu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get profileBiometricSaveFailed => 'Не удалось сохранить биометрический вход. Убедитесь, что биометрия настроена на устройстве.';
 	@override String get profilePasskeySignInFirst => 'Сначала войдите в аккаунт, а затем добавьте ключ доступа.';
 	@override String get profilePasskeyNotSupported => 'Ключи доступа не поддерживаются в этом браузере.';
+	@override String get consentTitle => 'Требуется согласие';
+	@override String consentCountry({required Object country, required Object code, required Object law}) => 'Страна: ${country} (${code}) · ${law}';
+	@override String get consentOpenDoc => 'Открыть документ';
+	@override String get consentAgree => 'Принимаю';
+	@override String get consentSaving => 'Сохранение...';
+	@override String get consentCheckAll => 'Подтвердите все согласия';
+	@override String get consentDocUrlInvalid => 'Неверная ссылка на юридический документ';
+	@override String get consentDocOpenFailed => 'Не удалось открыть документ';
+	@override String get consentLabelTerms => 'Принимаю условия использования';
+	@override String get consentLabelPersonalDataGdpr => 'Принимаю обработку персональных данных (GDPR)';
+	@override String get consentLabelPersonalData152Fz => 'Принимаю обработку персональных данных (152-ФЗ)';
+	@override String get consentLabelPersonalDataKvkk => 'Принимаю обработку персональных данных (KVKK)';
+	@override String get consentLabelPersonalDataPdpl => 'Принимаю обработку персональных данных (PDPL)';
+	@override String get consentLabelPersonalDataGeneral => 'Принимаю обработку персональных данных';
+	@override String get consentLabelCookies => 'Принимаю политику использования cookie';
+	@override String get consentLabelStorage => 'Принимаю политику локального хранилища';
 }
 
 // Path: a11y
@@ -368,6 +384,22 @@ extension on TranslationsRu {
 			'profileBiometricSaveFailed' => 'Не удалось сохранить биометрический вход. Убедитесь, что биометрия настроена на устройстве.',
 			'profilePasskeySignInFirst' => 'Сначала войдите в аккаунт, а затем добавьте ключ доступа.',
 			'profilePasskeyNotSupported' => 'Ключи доступа не поддерживаются в этом браузере.',
+			'consentTitle' => 'Требуется согласие',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'Страна: ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'Открыть документ',
+			'consentAgree' => 'Принимаю',
+			'consentSaving' => 'Сохранение...',
+			'consentCheckAll' => 'Подтвердите все согласия',
+			'consentDocUrlInvalid' => 'Неверная ссылка на юридический документ',
+			'consentDocOpenFailed' => 'Не удалось открыть документ',
+			'consentLabelTerms' => 'Принимаю условия использования',
+			'consentLabelPersonalDataGdpr' => 'Принимаю обработку персональных данных (GDPR)',
+			'consentLabelPersonalData152Fz' => 'Принимаю обработку персональных данных (152-ФЗ)',
+			'consentLabelPersonalDataKvkk' => 'Принимаю обработку персональных данных (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'Принимаю обработку персональных данных (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'Принимаю обработку персональных данных',
+			'consentLabelCookies' => 'Принимаю политику использования cookie',
+			'consentLabelStorage' => 'Принимаю политику локального хранилища',
 			_ => null,
 		};
 	}

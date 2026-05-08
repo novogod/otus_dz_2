@@ -187,6 +187,22 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get profileBiometricSaveFailed => 'Impossible d\'enregistrer la connexion biométrique. Vérifiez que la biométrie est configurée sur cet appareil.';
 	@override String get profilePasskeySignInFirst => 'Connectez-vous d\'abord, puis ajoutez une clé d\'accès.';
 	@override String get profilePasskeyNotSupported => 'Les clés d\'accès ne sont pas prises en charge par ce navigateur.';
+	@override String get consentTitle => 'Consentement légal requis';
+	@override String consentCountry({required Object country, required Object code, required Object law}) => 'Pays : ${country} (${code}) · ${law}';
+	@override String get consentOpenDoc => 'Ouvrir le document';
+	@override String get consentAgree => 'J\'accepte';
+	@override String get consentSaving => 'Enregistrement...';
+	@override String get consentCheckAll => 'Veuillez confirmer tous les consentements';
+	@override String get consentDocUrlInvalid => 'URL du document légal invalide';
+	@override String get consentDocOpenFailed => 'Impossible d\'ouvrir le document légal';
+	@override String get consentLabelTerms => 'J\'accepte les conditions d\'utilisation';
+	@override String get consentLabelPersonalDataGdpr => 'J\'accepte le traitement des données personnelles (RGPD)';
+	@override String get consentLabelPersonalData152Fz => 'J\'accepte le traitement des données personnelles (152-FZ)';
+	@override String get consentLabelPersonalDataKvkk => 'J\'accepte le traitement des données personnelles (KVKK)';
+	@override String get consentLabelPersonalDataPdpl => 'J\'accepte le traitement des données personnelles (PDPL)';
+	@override String get consentLabelPersonalDataGeneral => 'J\'accepte le traitement des données personnelles';
+	@override String get consentLabelCookies => 'J\'accepte la politique des cookies';
+	@override String get consentLabelStorage => 'J\'accepte la politique de stockage local';
 }
 
 // Path: a11y
@@ -362,6 +378,22 @@ extension on TranslationsFr {
 			'profileBiometricSaveFailed' => 'Impossible d\'enregistrer la connexion biométrique. Vérifiez que la biométrie est configurée sur cet appareil.',
 			'profilePasskeySignInFirst' => 'Connectez-vous d\'abord, puis ajoutez une clé d\'accès.',
 			'profilePasskeyNotSupported' => 'Les clés d\'accès ne sont pas prises en charge par ce navigateur.',
+			'consentTitle' => 'Consentement légal requis',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'Pays : ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'Ouvrir le document',
+			'consentAgree' => 'J\'accepte',
+			'consentSaving' => 'Enregistrement...',
+			'consentCheckAll' => 'Veuillez confirmer tous les consentements',
+			'consentDocUrlInvalid' => 'URL du document légal invalide',
+			'consentDocOpenFailed' => 'Impossible d\'ouvrir le document légal',
+			'consentLabelTerms' => 'J\'accepte les conditions d\'utilisation',
+			'consentLabelPersonalDataGdpr' => 'J\'accepte le traitement des données personnelles (RGPD)',
+			'consentLabelPersonalData152Fz' => 'J\'accepte le traitement des données personnelles (152-FZ)',
+			'consentLabelPersonalDataKvkk' => 'J\'accepte le traitement des données personnelles (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'J\'accepte le traitement des données personnelles (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'J\'accepte le traitement des données personnelles',
+			'consentLabelCookies' => 'J\'accepte la politique des cookies',
+			'consentLabelStorage' => 'J\'accepte la politique de stockage local',
 			_ => null,
 		};
 	}

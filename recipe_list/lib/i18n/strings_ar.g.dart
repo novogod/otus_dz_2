@@ -195,6 +195,22 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get profileBiometricSaveFailed => 'تعذّر حفظ تسجيل الدخول البيومتري. تأكد من إعداد البيومترية على هذا الجهاز.';
 	@override String get profilePasskeySignInFirst => 'سجّل الدخول أولاً ثم أضف مفتاح المرور.';
 	@override String get profilePasskeyNotSupported => 'مفاتيح المرور غير مدعومة في هذا المتصفح.';
+	@override String get consentTitle => 'مطلوب موافقة قانونية';
+	@override String consentCountry({required Object country, required Object code, required Object law}) => 'البلد: ${country} (${code}) · ${law}';
+	@override String get consentOpenDoc => 'فتح المستند';
+	@override String get consentAgree => 'أوافق';
+	@override String get consentSaving => 'جارٍ الحفظ...';
+	@override String get consentCheckAll => 'يرجى تأكيد جميع الموافقات';
+	@override String get consentDocUrlInvalid => 'رابط المستند القانوني غير صالح';
+	@override String get consentDocOpenFailed => 'تعذّر فتح المستند القانوني';
+	@override String get consentLabelTerms => 'أوافق على شروط الاستخدام';
+	@override String get consentLabelPersonalDataGdpr => 'أوافق على معالجة البيانات الشخصية (GDPR)';
+	@override String get consentLabelPersonalData152Fz => 'أوافق على معالجة البيانات الشخصية (152-FZ)';
+	@override String get consentLabelPersonalDataKvkk => 'أوافق على معالجة البيانات الشخصية (KVKK)';
+	@override String get consentLabelPersonalDataPdpl => 'أوافق على معالجة البيانات الشخصية (PDPL)';
+	@override String get consentLabelPersonalDataGeneral => 'أوافق على معالجة البيانات الشخصية';
+	@override String get consentLabelCookies => 'أوافق على سياسة ملفات تعريف الارتباط';
+	@override String get consentLabelStorage => 'أوافق على سياسة التخزين المحلي';
 }
 
 // Path: a11y
@@ -370,6 +386,22 @@ extension on TranslationsAr {
 			'profileBiometricSaveFailed' => 'تعذّر حفظ تسجيل الدخول البيومتري. تأكد من إعداد البيومترية على هذا الجهاز.',
 			'profilePasskeySignInFirst' => 'سجّل الدخول أولاً ثم أضف مفتاح المرور.',
 			'profilePasskeyNotSupported' => 'مفاتيح المرور غير مدعومة في هذا المتصفح.',
+			'consentTitle' => 'مطلوب موافقة قانونية',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'البلد: ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'فتح المستند',
+			'consentAgree' => 'أوافق',
+			'consentSaving' => 'جارٍ الحفظ...',
+			'consentCheckAll' => 'يرجى تأكيد جميع الموافقات',
+			'consentDocUrlInvalid' => 'رابط المستند القانوني غير صالح',
+			'consentDocOpenFailed' => 'تعذّر فتح المستند القانوني',
+			'consentLabelTerms' => 'أوافق على شروط الاستخدام',
+			'consentLabelPersonalDataGdpr' => 'أوافق على معالجة البيانات الشخصية (GDPR)',
+			'consentLabelPersonalData152Fz' => 'أوافق على معالجة البيانات الشخصية (152-FZ)',
+			'consentLabelPersonalDataKvkk' => 'أوافق على معالجة البيانات الشخصية (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'أوافق على معالجة البيانات الشخصية (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'أوافق على معالجة البيانات الشخصية',
+			'consentLabelCookies' => 'أوافق على سياسة ملفات تعريف الارتباط',
+			'consentLabelStorage' => 'أوافق على سياسة التخزين المحلي',
 			_ => null,
 		};
 	}

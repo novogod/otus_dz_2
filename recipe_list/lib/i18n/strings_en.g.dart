@@ -471,6 +471,54 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// en: 'Passkeys are not supported in this browser.'
 	String get profilePasskeyNotSupported => 'Passkeys are not supported in this browser.';
+
+	/// en: 'Legal consent required'
+	String get consentTitle => 'Legal consent required';
+
+	/// en: 'Country: ${country} (${code}) · ${law}'
+	String consentCountry({required Object country, required Object code, required Object law}) => 'Country: ${country} (${code}) · ${law}';
+
+	/// en: 'Open document'
+	String get consentOpenDoc => 'Open document';
+
+	/// en: 'I agree'
+	String get consentAgree => 'I agree';
+
+	/// en: 'Saving...'
+	String get consentSaving => 'Saving...';
+
+	/// en: 'Please check all required consents'
+	String get consentCheckAll => 'Please check all required consents';
+
+	/// en: 'Legal document URL is invalid'
+	String get consentDocUrlInvalid => 'Legal document URL is invalid';
+
+	/// en: 'Failed to open legal document'
+	String get consentDocOpenFailed => 'Failed to open legal document';
+
+	/// en: 'I accept the Terms of Use'
+	String get consentLabelTerms => 'I accept the Terms of Use';
+
+	/// en: 'I accept personal data processing (GDPR)'
+	String get consentLabelPersonalDataGdpr => 'I accept personal data processing (GDPR)';
+
+	/// en: 'I accept personal data processing (152-FZ)'
+	String get consentLabelPersonalData152Fz => 'I accept personal data processing (152-FZ)';
+
+	/// en: 'I accept personal data processing (KVKK)'
+	String get consentLabelPersonalDataKvkk => 'I accept personal data processing (KVKK)';
+
+	/// en: 'I accept personal data processing (PDPL)'
+	String get consentLabelPersonalDataPdpl => 'I accept personal data processing (PDPL)';
+
+	/// en: 'I accept personal data processing'
+	String get consentLabelPersonalDataGeneral => 'I accept personal data processing';
+
+	/// en: 'I accept cookies policy'
+	String get consentLabelCookies => 'I accept cookies policy';
+
+	/// en: 'I accept local storage policy'
+	String get consentLabelStorage => 'I accept local storage policy';
 }
 
 // Path: a11y
@@ -662,6 +710,22 @@ extension on Translations {
 			'profileBiometricSaveFailed' => 'Could not save biometric login. Make sure biometrics are set up on this device.',
 			'profilePasskeySignInFirst' => 'Sign in first, then add a passkey.',
 			'profilePasskeyNotSupported' => 'Passkeys are not supported in this browser.',
+			'consentTitle' => 'Legal consent required',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'Country: ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'Open document',
+			'consentAgree' => 'I agree',
+			'consentSaving' => 'Saving...',
+			'consentCheckAll' => 'Please check all required consents',
+			'consentDocUrlInvalid' => 'Legal document URL is invalid',
+			'consentDocOpenFailed' => 'Failed to open legal document',
+			'consentLabelTerms' => 'I accept the Terms of Use',
+			'consentLabelPersonalDataGdpr' => 'I accept personal data processing (GDPR)',
+			'consentLabelPersonalData152Fz' => 'I accept personal data processing (152-FZ)',
+			'consentLabelPersonalDataKvkk' => 'I accept personal data processing (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'I accept personal data processing (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'I accept personal data processing',
+			'consentLabelCookies' => 'I accept cookies policy',
+			'consentLabelStorage' => 'I accept local storage policy',
 			_ => null,
 		};
 	}

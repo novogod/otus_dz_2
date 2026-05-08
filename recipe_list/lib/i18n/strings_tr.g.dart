@@ -187,6 +187,22 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	@override String get profileBiometricSaveFailed => 'Biyometrik giriş kaydedilemedi. Cihazda biyometrik ayarlandığından emin olun.';
 	@override String get profilePasskeySignInFirst => 'Önce giriş yapın, ardından geçiş anahtarı ekleyin.';
 	@override String get profilePasskeyNotSupported => 'Bu tarayıcıda geçiş anahtarları desteklenmiyor.';
+	@override String get consentTitle => 'Yasal onay gerekli';
+	@override String consentCountry({required Object country, required Object code, required Object law}) => 'Ülke: ${country} (${code}) · ${law}';
+	@override String get consentOpenDoc => 'Belgeyi aç';
+	@override String get consentAgree => 'Kabul ediyorum';
+	@override String get consentSaving => 'Kaydediliyor...';
+	@override String get consentCheckAll => 'Lütfen tüm onayları işaretleyin';
+	@override String get consentDocUrlInvalid => 'Yasal belge URL\'si geçersiz';
+	@override String get consentDocOpenFailed => 'Yasal belge açılamadı';
+	@override String get consentLabelTerms => 'Kullanım koşullarını kabul ediyorum';
+	@override String get consentLabelPersonalDataGdpr => 'Kişisel veri işlemeyi kabul ediyorum (KVKK/GDPR)';
+	@override String get consentLabelPersonalData152Fz => 'Kişisel veri işlemeyi kabul ediyorum (152-FZ)';
+	@override String get consentLabelPersonalDataKvkk => 'Kişisel veri işlemeyi kabul ediyorum (KVKK)';
+	@override String get consentLabelPersonalDataPdpl => 'Kişisel veri işlemeyi kabul ediyorum (PDPL)';
+	@override String get consentLabelPersonalDataGeneral => 'Kişisel veri işlemeyi kabul ediyorum';
+	@override String get consentLabelCookies => 'Çerez politikasını kabul ediyorum';
+	@override String get consentLabelStorage => 'Yerel depolama politikasını kabul ediyorum';
 }
 
 // Path: a11y
@@ -362,6 +378,22 @@ extension on TranslationsTr {
 			'profileBiometricSaveFailed' => 'Biyometrik giriş kaydedilemedi. Cihazda biyometrik ayarlandığından emin olun.',
 			'profilePasskeySignInFirst' => 'Önce giriş yapın, ardından geçiş anahtarı ekleyin.',
 			'profilePasskeyNotSupported' => 'Bu tarayıcıda geçiş anahtarları desteklenmiyor.',
+			'consentTitle' => 'Yasal onay gerekli',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'Ülke: ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'Belgeyi aç',
+			'consentAgree' => 'Kabul ediyorum',
+			'consentSaving' => 'Kaydediliyor...',
+			'consentCheckAll' => 'Lütfen tüm onayları işaretleyin',
+			'consentDocUrlInvalid' => 'Yasal belge URL\'si geçersiz',
+			'consentDocOpenFailed' => 'Yasal belge açılamadı',
+			'consentLabelTerms' => 'Kullanım koşullarını kabul ediyorum',
+			'consentLabelPersonalDataGdpr' => 'Kişisel veri işlemeyi kabul ediyorum (KVKK/GDPR)',
+			'consentLabelPersonalData152Fz' => 'Kişisel veri işlemeyi kabul ediyorum (152-FZ)',
+			'consentLabelPersonalDataKvkk' => 'Kişisel veri işlemeyi kabul ediyorum (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'Kişisel veri işlemeyi kabul ediyorum (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'Kişisel veri işlemeyi kabul ediyorum',
+			'consentLabelCookies' => 'Çerez politikasını kabul ediyorum',
+			'consentLabelStorage' => 'Yerel depolama politikasını kabul ediyorum',
 			_ => null,
 		};
 	}

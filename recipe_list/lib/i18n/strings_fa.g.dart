@@ -187,6 +187,22 @@ class TranslationsFa with BaseTranslations<AppLocale, Translations> implements T
 	@override String get profileBiometricSaveFailed => 'ذخیره ورود بیومتریک ممکن نشد. مطمئن شوید بیومتریک روی این دستگاه تنظیم شده است.';
 	@override String get profilePasskeySignInFirst => 'ابتدا وارد شوید، سپس کلید عبور اضافه کنید.';
 	@override String get profilePasskeyNotSupported => 'کلیدهای عبور در این مرورگر پشتیبانی نمی‌شوند.';
+	@override String get consentTitle => 'رضایت قانونی لازم است';
+	@override String consentCountry({required Object country, required Object code, required Object law}) => 'کشور: ${country} (${code}) · ${law}';
+	@override String get consentOpenDoc => 'باز کردن سند';
+	@override String get consentAgree => 'موافقم';
+	@override String get consentSaving => 'در حال ذخیره...';
+	@override String get consentCheckAll => 'لطفاً همه رضایت‌ها را تأیید کنید';
+	@override String get consentDocUrlInvalid => 'آدرس سند قانونی نامعتبر است';
+	@override String get consentDocOpenFailed => 'باز کردن سند قانونی ناموفق بود';
+	@override String get consentLabelTerms => 'شرایط استفاده را می‌پذیرم';
+	@override String get consentLabelPersonalDataGdpr => 'پردازش داده‌های شخصی را می‌پذیرم (GDPR)';
+	@override String get consentLabelPersonalData152Fz => 'پردازش داده‌های شخصی را می‌پذیرم (152-FZ)';
+	@override String get consentLabelPersonalDataKvkk => 'پردازش داده‌های شخصی را می‌پذیرم (KVKK)';
+	@override String get consentLabelPersonalDataPdpl => 'پردازش داده‌های شخصی را می‌پذیرم (PDPL)';
+	@override String get consentLabelPersonalDataGeneral => 'پردازش داده‌های شخصی را می‌پذیرم';
+	@override String get consentLabelCookies => 'سیاست کوکی را می‌پذیرم';
+	@override String get consentLabelStorage => 'سیاست ذخیره‌سازی محلی را می‌پذیرم';
 }
 
 // Path: a11y
@@ -362,6 +378,22 @@ extension on TranslationsFa {
 			'profileBiometricSaveFailed' => 'ذخیره ورود بیومتریک ممکن نشد. مطمئن شوید بیومتریک روی این دستگاه تنظیم شده است.',
 			'profilePasskeySignInFirst' => 'ابتدا وارد شوید، سپس کلید عبور اضافه کنید.',
 			'profilePasskeyNotSupported' => 'کلیدهای عبور در این مرورگر پشتیبانی نمی‌شوند.',
+			'consentTitle' => 'رضایت قانونی لازم است',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'کشور: ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'باز کردن سند',
+			'consentAgree' => 'موافقم',
+			'consentSaving' => 'در حال ذخیره...',
+			'consentCheckAll' => 'لطفاً همه رضایت‌ها را تأیید کنید',
+			'consentDocUrlInvalid' => 'آدرس سند قانونی نامعتبر است',
+			'consentDocOpenFailed' => 'باز کردن سند قانونی ناموفق بود',
+			'consentLabelTerms' => 'شرایط استفاده را می‌پذیرم',
+			'consentLabelPersonalDataGdpr' => 'پردازش داده‌های شخصی را می‌پذیرم (GDPR)',
+			'consentLabelPersonalData152Fz' => 'پردازش داده‌های شخصی را می‌پذیرم (152-FZ)',
+			'consentLabelPersonalDataKvkk' => 'پردازش داده‌های شخصی را می‌پذیرم (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'پردازش داده‌های شخصی را می‌پذیرم (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'پردازش داده‌های شخصی را می‌پذیرم',
+			'consentLabelCookies' => 'سیاست کوکی را می‌پذیرم',
+			'consentLabelStorage' => 'سیاست ذخیره‌سازی محلی را می‌پذیرم',
 			_ => null,
 		};
 	}

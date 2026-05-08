@@ -157,5 +157,22 @@
   "profileBiometricSaved": "Accesso biometrico salvato. Usa Face ID o l'impronta la prossima volta.",
   "profileBiometricSaveFailed": "Impossibile salvare l'accesso biometrico. Assicurati che la biometria sia configurata su questo dispositivo.",
   "profilePasskeySignInFirst": "Accedi prima, poi aggiungi una passkey.",
-  "profilePasskeyNotSupported": "Le passkey non sono supportate in questo browser."
+  "profilePasskeyNotSupported": "Le passkey non sono supportate da questo browser.",
+
+  "consentTitle": "Consenso legale richiesto",
+  "consentCountry": "Paese: ${country} (${code}) · ${law}",
+  "consentOpenDoc": "Apri documento",
+  "consentAgree": "Accetto",
+  "consentSaving": "Salvataggio...",
+  "consentCheckAll": "Conferma tutti i consensi",
+  "consentDocUrlInvalid": "URL del documento legale non valido",
+  "consentDocOpenFailed": "Impossibile aprire il documento legale",
+  "consentLabelTerms": "Accetto i termini di utilizzo",
+  "consentLabelPersonalDataGdpr": "Accetto il trattamento dei dati personali (GDPR)",
+  "consentLabelPersonalData152Fz": "Accetto il trattamento dei dati personali (152-FZ)",
+  "consentLabelPersonalDataKvkk": "Accetto il trattamento dei dati personali (KVKK)",
+  "consentLabelPersonalDataPdpl": "Accetto il trattamento dei dati personali (PDPL)",
+  "consentLabelPersonalDataGeneral": "Accetto il trattamento dei dati personali",
+  "consentLabelCookies": "Accetto la politica sui cookie",
+  "consentLabelStorage": "Accetto la politica di archiviazione locale"
 }

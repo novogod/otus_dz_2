@@ -157,5 +157,22 @@
   "profileBiometricSaved": "Connexion biométrique enregistrée. Utilisez Face ID ou l'empreinte la prochaine fois.",
   "profileBiometricSaveFailed": "Impossible d'enregistrer la connexion biométrique. Vérifiez que la biométrie est configurée sur cet appareil.",
   "profilePasskeySignInFirst": "Connectez-vous d'abord, puis ajoutez une clé d'accès.",
-  "profilePasskeyNotSupported": "Les clés d'accès ne sont pas prises en charge par ce navigateur."
+  "profilePasskeyNotSupported": "Les clés d'accès ne sont pas prises en charge par ce navigateur.",
+
+  "consentTitle": "Consentement légal requis",
+  "consentCountry": "Pays : ${country} (${code}) · ${law}",
+  "consentOpenDoc": "Ouvrir le document",
+  "consentAgree": "J'accepte",
+  "consentSaving": "Enregistrement...",
+  "consentCheckAll": "Veuillez confirmer tous les consentements",
+  "consentDocUrlInvalid": "URL du document légal invalide",
+  "consentDocOpenFailed": "Impossible d'ouvrir le document légal",
+  "consentLabelTerms": "J'accepte les conditions d'utilisation",
+  "consentLabelPersonalDataGdpr": "J'accepte le traitement des données personnelles (RGPD)",
+  "consentLabelPersonalData152Fz": "J'accepte le traitement des données personnelles (152-FZ)",
+  "consentLabelPersonalDataKvkk": "J'accepte le traitement des données personnelles (KVKK)",
+  "consentLabelPersonalDataPdpl": "J'accepte le traitement des données personnelles (PDPL)",
+  "consentLabelPersonalDataGeneral": "J'accepte le traitement des données personnelles",
+  "consentLabelCookies": "J'accepte la politique des cookies",
+  "consentLabelStorage": "J'accepte la politique de stockage local"
 }

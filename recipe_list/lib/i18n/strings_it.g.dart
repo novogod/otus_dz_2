@@ -186,7 +186,23 @@ class TranslationsIt with BaseTranslations<AppLocale, Translations> implements T
 	@override String get profileBiometricSaved => 'Accesso biometrico salvato. Usa Face ID o l\'impronta la prossima volta.';
 	@override String get profileBiometricSaveFailed => 'Impossibile salvare l\'accesso biometrico. Assicurati che la biometria sia configurata su questo dispositivo.';
 	@override String get profilePasskeySignInFirst => 'Accedi prima, poi aggiungi una passkey.';
-	@override String get profilePasskeyNotSupported => 'Le passkey non sono supportate in questo browser.';
+	@override String get profilePasskeyNotSupported => 'Le passkey non sono supportate da questo browser.';
+	@override String get consentTitle => 'Consenso legale richiesto';
+	@override String consentCountry({required Object country, required Object code, required Object law}) => 'Paese: ${country} (${code}) · ${law}';
+	@override String get consentOpenDoc => 'Apri documento';
+	@override String get consentAgree => 'Accetto';
+	@override String get consentSaving => 'Salvataggio...';
+	@override String get consentCheckAll => 'Conferma tutti i consensi';
+	@override String get consentDocUrlInvalid => 'URL del documento legale non valido';
+	@override String get consentDocOpenFailed => 'Impossibile aprire il documento legale';
+	@override String get consentLabelTerms => 'Accetto i termini di utilizzo';
+	@override String get consentLabelPersonalDataGdpr => 'Accetto il trattamento dei dati personali (GDPR)';
+	@override String get consentLabelPersonalData152Fz => 'Accetto il trattamento dei dati personali (152-FZ)';
+	@override String get consentLabelPersonalDataKvkk => 'Accetto il trattamento dei dati personali (KVKK)';
+	@override String get consentLabelPersonalDataPdpl => 'Accetto il trattamento dei dati personali (PDPL)';
+	@override String get consentLabelPersonalDataGeneral => 'Accetto il trattamento dei dati personali';
+	@override String get consentLabelCookies => 'Accetto la politica sui cookie';
+	@override String get consentLabelStorage => 'Accetto la politica di archiviazione locale';
 }
 
 // Path: a11y
@@ -361,7 +377,23 @@ extension on TranslationsIt {
 			'profileBiometricSaved' => 'Accesso biometrico salvato. Usa Face ID o l\'impronta la prossima volta.',
 			'profileBiometricSaveFailed' => 'Impossibile salvare l\'accesso biometrico. Assicurati che la biometria sia configurata su questo dispositivo.',
 			'profilePasskeySignInFirst' => 'Accedi prima, poi aggiungi una passkey.',
-			'profilePasskeyNotSupported' => 'Le passkey non sono supportate in questo browser.',
+			'profilePasskeyNotSupported' => 'Le passkey non sono supportate da questo browser.',
+			'consentTitle' => 'Consenso legale richiesto',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'Paese: ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'Apri documento',
+			'consentAgree' => 'Accetto',
+			'consentSaving' => 'Salvataggio...',
+			'consentCheckAll' => 'Conferma tutti i consensi',
+			'consentDocUrlInvalid' => 'URL del documento legale non valido',
+			'consentDocOpenFailed' => 'Impossibile aprire il documento legale',
+			'consentLabelTerms' => 'Accetto i termini di utilizzo',
+			'consentLabelPersonalDataGdpr' => 'Accetto il trattamento dei dati personali (GDPR)',
+			'consentLabelPersonalData152Fz' => 'Accetto il trattamento dei dati personali (152-FZ)',
+			'consentLabelPersonalDataKvkk' => 'Accetto il trattamento dei dati personali (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'Accetto il trattamento dei dati personali (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'Accetto il trattamento dei dati personali',
+			'consentLabelCookies' => 'Accetto la politica sui cookie',
+			'consentLabelStorage' => 'Accetto la politica di archiviazione locale',
 			_ => null,
 		};
 	}

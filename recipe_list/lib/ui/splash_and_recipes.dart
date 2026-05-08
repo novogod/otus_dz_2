@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../consent/startup_consent.dart';
 import '../i18n.dart';
+import '../i18n/strings.g.dart';
 import '../main.dart' show bottomNavVisibleNotifier;
 import 'app_theme.dart';
 import 'recipe_list_loader.dart';
@@ -96,15 +97,17 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     final uri = Uri.tryParse(rawUrl);
     if (uri == null) {
       if (!mounted) return;
+      final t = Translations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Legal document URL is invalid')),
+        SnackBar(content: Text(t.consentDocUrlInvalid)),
       );
       return;
     }
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
+      final t = Translations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to open legal document')),
+        SnackBar(content: Text(t.consentDocOpenFailed)),
       );
     }
   }
@@ -114,8 +117,9 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     final allChecked =
         _consentChecks.isNotEmpty && _consentChecks.every((checked) => checked);
     if (!allChecked) {
+      final t = Translations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please check all required consents')),
+        SnackBar(content: Text(t.consentCheckAll)),
       );
       return;
     }
@@ -221,6 +225,7 @@ class _StartupConsentPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = Translations.of(context);
     return ColoredBox(
       color: Colors.black.withValues(alpha: 0.5),
       child: Center(
@@ -235,24 +240,28 @@ class _StartupConsentPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Legal consent required',
-                      style: TextStyle(
+                    Text(
+                      t.consentTitle,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Country: ${spec.countryName} (${spec.countryCode}) · ${spec.legislationLabel}',
+                      t.consentCountry(
+                        country: spec.countryName,
+                        code: spec.countryCode,
+                        law: spec.legislationLabel,
+                      ),
                       style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     for (var i = 0; i < spec.requiredItems.length; i++)
                       _ConsentRow(
                         checked: checks[i],
-                        label: startupConsentLabel(spec.requiredItems[i]),
-                        linkTitle: spec.requiredItems[i].docTitle,
+                        label: startupConsentLabel(spec.requiredItems[i], t),
+                        linkTitle: t.consentOpenDoc,
                         onChanged: (v) => onToggle(i, v ?? false),
                         onOpen: () => onOpenDoc(spec.requiredItems[i].docUrl),
                       ),
@@ -261,7 +270,7 @@ class _StartupConsentPanel extends StatelessWidget {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: saving ? null : onAgree,
-                        child: Text(saving ? 'Saving...' : 'I agree'),
+                        child: Text(saving ? t.consentSaving : t.consentAgree),
                       ),
                     ),
                   ],

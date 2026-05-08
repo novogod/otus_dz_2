@@ -187,6 +187,22 @@ class TranslationsDe with BaseTranslations<AppLocale, Translations> implements T
 	@override String get profileBiometricSaveFailed => 'Biometrischer Login konnte nicht gespeichert werden. Stellen Sie sicher, dass Biometrie auf diesem Gerät eingerichtet ist.';
 	@override String get profilePasskeySignInFirst => 'Bitte zuerst anmelden, dann einen Passkey hinzufügen.';
 	@override String get profilePasskeyNotSupported => 'Passkeys werden in diesem Browser nicht unterstützt.';
+	@override String get consentTitle => 'Rechtliche Zustimmung erforderlich';
+	@override String consentCountry({required Object country, required Object code, required Object law}) => 'Land: ${country} (${code}) · ${law}';
+	@override String get consentOpenDoc => 'Dokument öffnen';
+	@override String get consentAgree => 'Zustimmen';
+	@override String get consentSaving => 'Speichern...';
+	@override String get consentCheckAll => 'Bitte alle Zustimmungen bestätigen';
+	@override String get consentDocUrlInvalid => 'Ungültige URL für das Rechtsdokument';
+	@override String get consentDocOpenFailed => 'Rechtsdokument konnte nicht geöffnet werden';
+	@override String get consentLabelTerms => 'Ich akzeptiere die Nutzungsbedingungen';
+	@override String get consentLabelPersonalDataGdpr => 'Ich akzeptiere die Verarbeitung personenbezogener Daten (DSGVO)';
+	@override String get consentLabelPersonalData152Fz => 'Ich akzeptiere die Verarbeitung personenbezogener Daten (152-FZ)';
+	@override String get consentLabelPersonalDataKvkk => 'Ich akzeptiere die Verarbeitung personenbezogener Daten (KVKK)';
+	@override String get consentLabelPersonalDataPdpl => 'Ich akzeptiere die Verarbeitung personenbezogener Daten (PDPL)';
+	@override String get consentLabelPersonalDataGeneral => 'Ich akzeptiere die Verarbeitung personenbezogener Daten';
+	@override String get consentLabelCookies => 'Ich akzeptiere die Cookie-Richtlinie';
+	@override String get consentLabelStorage => 'Ich akzeptiere die lokale Speicherrichtlinie';
 }
 
 // Path: a11y
@@ -362,6 +378,22 @@ extension on TranslationsDe {
 			'profileBiometricSaveFailed' => 'Biometrischer Login konnte nicht gespeichert werden. Stellen Sie sicher, dass Biometrie auf diesem Gerät eingerichtet ist.',
 			'profilePasskeySignInFirst' => 'Bitte zuerst anmelden, dann einen Passkey hinzufügen.',
 			'profilePasskeyNotSupported' => 'Passkeys werden in diesem Browser nicht unterstützt.',
+			'consentTitle' => 'Rechtliche Zustimmung erforderlich',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'Land: ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'Dokument öffnen',
+			'consentAgree' => 'Zustimmen',
+			'consentSaving' => 'Speichern...',
+			'consentCheckAll' => 'Bitte alle Zustimmungen bestätigen',
+			'consentDocUrlInvalid' => 'Ungültige URL für das Rechtsdokument',
+			'consentDocOpenFailed' => 'Rechtsdokument konnte nicht geöffnet werden',
+			'consentLabelTerms' => 'Ich akzeptiere die Nutzungsbedingungen',
+			'consentLabelPersonalDataGdpr' => 'Ich akzeptiere die Verarbeitung personenbezogener Daten (DSGVO)',
+			'consentLabelPersonalData152Fz' => 'Ich akzeptiere die Verarbeitung personenbezogener Daten (152-FZ)',
+			'consentLabelPersonalDataKvkk' => 'Ich akzeptiere die Verarbeitung personenbezogener Daten (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'Ich akzeptiere die Verarbeitung personenbezogener Daten (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'Ich akzeptiere die Verarbeitung personenbezogener Daten',
+			'consentLabelCookies' => 'Ich akzeptiere die Cookie-Richtlinie',
+			'consentLabelStorage' => 'Ich akzeptiere die lokale Speicherrichtlinie',
 			_ => null,
 		};
 	}

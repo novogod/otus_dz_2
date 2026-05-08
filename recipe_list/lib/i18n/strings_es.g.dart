@@ -187,6 +187,22 @@ class TranslationsEs with BaseTranslations<AppLocale, Translations> implements T
 	@override String get profileBiometricSaveFailed => 'No se pudo guardar el inicio biométrico. Asegúrate de que la biometría esté configurada en este dispositivo.';
 	@override String get profilePasskeySignInFirst => 'Inicia sesión primero y luego añade una clave de acceso.';
 	@override String get profilePasskeyNotSupported => 'Las claves de acceso no son compatibles con este navegador.';
+	@override String get consentTitle => 'Se requiere consentimiento legal';
+	@override String consentCountry({required Object country, required Object code, required Object law}) => 'País: ${country} (${code}) · ${law}';
+	@override String get consentOpenDoc => 'Abrir documento';
+	@override String get consentAgree => 'Acepto';
+	@override String get consentSaving => 'Guardando...';
+	@override String get consentCheckAll => 'Por favor, confirme todos los consentimientos';
+	@override String get consentDocUrlInvalid => 'URL de documento legal no válida';
+	@override String get consentDocOpenFailed => 'No se pudo abrir el documento legal';
+	@override String get consentLabelTerms => 'Acepto los términos de uso';
+	@override String get consentLabelPersonalDataGdpr => 'Acepto el tratamiento de datos personales (RGPD)';
+	@override String get consentLabelPersonalData152Fz => 'Acepto el tratamiento de datos personales (152-FZ)';
+	@override String get consentLabelPersonalDataKvkk => 'Acepto el tratamiento de datos personales (KVKK)';
+	@override String get consentLabelPersonalDataPdpl => 'Acepto el tratamiento de datos personales (PDPL)';
+	@override String get consentLabelPersonalDataGeneral => 'Acepto el tratamiento de datos personales';
+	@override String get consentLabelCookies => 'Acepto la política de cookies';
+	@override String get consentLabelStorage => 'Acepto la política de almacenamiento local';
 }
 
 // Path: a11y
@@ -362,6 +378,22 @@ extension on TranslationsEs {
 			'profileBiometricSaveFailed' => 'No se pudo guardar el inicio biométrico. Asegúrate de que la biometría esté configurada en este dispositivo.',
 			'profilePasskeySignInFirst' => 'Inicia sesión primero y luego añade una clave de acceso.',
 			'profilePasskeyNotSupported' => 'Las claves de acceso no son compatibles con este navegador.',
+			'consentTitle' => 'Se requiere consentimiento legal',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'País: ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'Abrir documento',
+			'consentAgree' => 'Acepto',
+			'consentSaving' => 'Guardando...',
+			'consentCheckAll' => 'Por favor, confirme todos los consentimientos',
+			'consentDocUrlInvalid' => 'URL de documento legal no válida',
+			'consentDocOpenFailed' => 'No se pudo abrir el documento legal',
+			'consentLabelTerms' => 'Acepto los términos de uso',
+			'consentLabelPersonalDataGdpr' => 'Acepto el tratamiento de datos personales (RGPD)',
+			'consentLabelPersonalData152Fz' => 'Acepto el tratamiento de datos personales (152-FZ)',
+			'consentLabelPersonalDataKvkk' => 'Acepto el tratamiento de datos personales (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'Acepto el tratamiento de datos personales (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'Acepto el tratamiento de datos personales',
+			'consentLabelCookies' => 'Acepto la política de cookies',
+			'consentLabelStorage' => 'Acepto la política de almacenamiento local',
 			_ => null,
 		};
 	}

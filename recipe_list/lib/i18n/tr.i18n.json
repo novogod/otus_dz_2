@@ -157,5 +157,22 @@
   "profileBiometricSaved": "Biyometrik giriş kaydedildi. Bir sonraki girişte Face ID veya parmak izini kullanın.",
   "profileBiometricSaveFailed": "Biyometrik giriş kaydedilemedi. Cihazda biyometrik ayarlandığından emin olun.",
   "profilePasskeySignInFirst": "Önce giriş yapın, ardından geçiş anahtarı ekleyin.",
-  "profilePasskeyNotSupported": "Bu tarayıcıda geçiş anahtarları desteklenmiyor."
+  "profilePasskeyNotSupported": "Bu tarayıcıda geçiş anahtarları desteklenmiyor.",
+
+  "consentTitle": "Yasal onay gerekli",
+  "consentCountry": "Ülke: ${country} (${code}) · ${law}",
+  "consentOpenDoc": "Belgeyi aç",
+  "consentAgree": "Kabul ediyorum",
+  "consentSaving": "Kaydediliyor...",
+  "consentCheckAll": "Lütfen tüm onayları işaretleyin",
+  "consentDocUrlInvalid": "Yasal belge URL'si geçersiz",
+  "consentDocOpenFailed": "Yasal belge açılamadı",
+  "consentLabelTerms": "Kullanım koşullarını kabul ediyorum",
+  "consentLabelPersonalDataGdpr": "Kişisel veri işlemeyi kabul ediyorum (KVKK/GDPR)",
+  "consentLabelPersonalData152Fz": "Kişisel veri işlemeyi kabul ediyorum (152-FZ)",
+  "consentLabelPersonalDataKvkk": "Kişisel veri işlemeyi kabul ediyorum (KVKK)",
+  "consentLabelPersonalDataPdpl": "Kişisel veri işlemeyi kabul ediyorum (PDPL)",
+  "consentLabelPersonalDataGeneral": "Kişisel veri işlemeyi kabul ediyorum",
+  "consentLabelCookies": "Çerez politikasını kabul ediyorum",
+  "consentLabelStorage": "Yerel depolama politikasını kabul ediyorum"
 }

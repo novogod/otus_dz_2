@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
 import '../i18n.dart';
+import '../i18n/strings.g.dart';
 
 const String kStartupConsentCurrentVersion = '2026-05-08-v1';
 
@@ -269,27 +270,27 @@ StartupPrivacyVariant _privacyVariantForLang(AppLang lang) {
   }
 }
 
-String startupConsentLabel(StartupConsentItem item) {
+String startupConsentLabel(StartupConsentItem item, Translations t) {
   switch (item.kind) {
     case StartupConsentKind.terms:
-      return 'I accept the Terms of Use';
+      return t.consentLabelTerms;
     case StartupConsentKind.personalData:
       switch (item.privacyVariant) {
         case StartupPrivacyVariant.gdpr:
-          return 'I accept personal data processing (GDPR)';
+          return t.consentLabelPersonalDataGdpr;
         case StartupPrivacyVariant.russian152Fz:
-          return 'I accept personal data processing (152-FZ)';
+          return t.consentLabelPersonalData152Fz;
         case StartupPrivacyVariant.kvkk:
-          return 'I accept personal data processing (KVKK)';
+          return t.consentLabelPersonalDataKvkk;
         case StartupPrivacyVariant.pdpl:
-          return 'I accept personal data processing (PDPL)';
+          return t.consentLabelPersonalDataPdpl;
         case StartupPrivacyVariant.general:
-          return 'I accept personal data processing';
+          return t.consentLabelPersonalDataGeneral;
       }
     case StartupConsentKind.cookies:
-      return 'I accept cookies policy';
+      return t.consentLabelCookies;
     case StartupConsentKind.storage:
-      return 'I accept local storage policy';
+      return t.consentLabelStorage;
   }
 }
 

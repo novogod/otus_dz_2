@@ -157,5 +157,22 @@
   "profileBiometricSaved": "Biometrischer Login gespeichert. Beim nächsten Mal Face ID oder Fingerabdruck verwenden.",
   "profileBiometricSaveFailed": "Biometrischer Login konnte nicht gespeichert werden. Stellen Sie sicher, dass Biometrie auf diesem Gerät eingerichtet ist.",
   "profilePasskeySignInFirst": "Bitte zuerst anmelden, dann einen Passkey hinzufügen.",
-  "profilePasskeyNotSupported": "Passkeys werden in diesem Browser nicht unterstützt."
+  "profilePasskeyNotSupported": "Passkeys werden in diesem Browser nicht unterstützt.",
+
+  "consentTitle": "Rechtliche Zustimmung erforderlich",
+  "consentCountry": "Land: ${country} (${code}) · ${law}",
+  "consentOpenDoc": "Dokument öffnen",
+  "consentAgree": "Zustimmen",
+  "consentSaving": "Speichern...",
+  "consentCheckAll": "Bitte alle Zustimmungen bestätigen",
+  "consentDocUrlInvalid": "Ungültige URL für das Rechtsdokument",
+  "consentDocOpenFailed": "Rechtsdokument konnte nicht geöffnet werden",
+  "consentLabelTerms": "Ich akzeptiere die Nutzungsbedingungen",
+  "consentLabelPersonalDataGdpr": "Ich akzeptiere die Verarbeitung personenbezogener Daten (DSGVO)",
+  "consentLabelPersonalData152Fz": "Ich akzeptiere die Verarbeitung personenbezogener Daten (152-FZ)",
+  "consentLabelPersonalDataKvkk": "Ich akzeptiere die Verarbeitung personenbezogener Daten (KVKK)",
+  "consentLabelPersonalDataPdpl": "Ich akzeptiere die Verarbeitung personenbezogener Daten (PDPL)",
+  "consentLabelPersonalDataGeneral": "Ich akzeptiere die Verarbeitung personenbezogener Daten",
+  "consentLabelCookies": "Ich akzeptiere die Cookie-Richtlinie",
+  "consentLabelStorage": "Ich akzeptiere die lokale Speicherrichtlinie"
 }

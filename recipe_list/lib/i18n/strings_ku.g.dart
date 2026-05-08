@@ -187,6 +187,22 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	@override String get profileBiometricSaveFailed => 'Têketina biyometrîk nehat tomarkirin. Bişkîne ku biyometrîk li ser vê cîhazê hatibe sazlêdan.';
 	@override String get profilePasskeySignInFirst => 'Pêşî têkeve, paşê mifteya derbasbûnê zêde bike.';
 	@override String get profilePasskeyNotSupported => 'Mifteyên derbasbûnê di vê gerokê de nayên piştgirî kirin.';
+	@override String get consentTitle => 'Razîbûna yasayî pêwîst e';
+	@override String consentCountry({required Object country, required Object code, required Object law}) => 'Welat: ${country} (${code}) · ${law}';
+	@override String get consentOpenDoc => 'Belgeyê veke';
+	@override String get consentAgree => 'Qebûl dikim';
+	@override String get consentSaving => 'Tê hilanîn...';
+	@override String get consentCheckAll => 'Ji kerema xwe hemî razîbûnan piştrast bikin';
+	@override String get consentDocUrlInvalid => 'Girêdana belgeya yasayî nederbasdar e';
+	@override String get consentDocOpenFailed => 'Belgeya yasayî venebû';
+	@override String get consentLabelTerms => 'Şertên bikaranînê qebûl dikim';
+	@override String get consentLabelPersonalDataGdpr => 'Pêvajokirina daneyên kesane qebûl dikim (GDPR)';
+	@override String get consentLabelPersonalData152Fz => 'Pêvajokirina daneyên kesane qebûl dikim (152-FZ)';
+	@override String get consentLabelPersonalDataKvkk => 'Pêvajokirina daneyên kesane qebûl dikim (KVKK)';
+	@override String get consentLabelPersonalDataPdpl => 'Pêvajokirina daneyên kesane qebûl dikim (PDPL)';
+	@override String get consentLabelPersonalDataGeneral => 'Pêvajokirina daneyên kesane qebûl dikim';
+	@override String get consentLabelCookies => 'Siyaseta cookie qebûl dikim';
+	@override String get consentLabelStorage => 'Siyaseta hilanîna herêmî qebûl dikim';
 }
 
 // Path: a11y
@@ -362,6 +378,22 @@ extension on TranslationsKu {
 			'profileBiometricSaveFailed' => 'Têketina biyometrîk nehat tomarkirin. Bişkîne ku biyometrîk li ser vê cîhazê hatibe sazlêdan.',
 			'profilePasskeySignInFirst' => 'Pêşî têkeve, paşê mifteya derbasbûnê zêde bike.',
 			'profilePasskeyNotSupported' => 'Mifteyên derbasbûnê di vê gerokê de nayên piştgirî kirin.',
+			'consentTitle' => 'Razîbûna yasayî pêwîst e',
+			'consentCountry' => ({required Object country, required Object code, required Object law}) => 'Welat: ${country} (${code}) · ${law}',
+			'consentOpenDoc' => 'Belgeyê veke',
+			'consentAgree' => 'Qebûl dikim',
+			'consentSaving' => 'Tê hilanîn...',
+			'consentCheckAll' => 'Ji kerema xwe hemî razîbûnan piştrast bikin',
+			'consentDocUrlInvalid' => 'Girêdana belgeya yasayî nederbasdar e',
+			'consentDocOpenFailed' => 'Belgeya yasayî venebû',
+			'consentLabelTerms' => 'Şertên bikaranînê qebûl dikim',
+			'consentLabelPersonalDataGdpr' => 'Pêvajokirina daneyên kesane qebûl dikim (GDPR)',
+			'consentLabelPersonalData152Fz' => 'Pêvajokirina daneyên kesane qebûl dikim (152-FZ)',
+			'consentLabelPersonalDataKvkk' => 'Pêvajokirina daneyên kesane qebûl dikim (KVKK)',
+			'consentLabelPersonalDataPdpl' => 'Pêvajokirina daneyên kesane qebûl dikim (PDPL)',
+			'consentLabelPersonalDataGeneral' => 'Pêvajokirina daneyên kesane qebûl dikim',
+			'consentLabelCookies' => 'Siyaseta cookie qebûl dikim',
+			'consentLabelStorage' => 'Siyaseta hilanîna herêmî qebûl dikim',
 			_ => null,
 		};
 	}
