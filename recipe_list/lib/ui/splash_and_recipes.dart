@@ -1,7 +1,7 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 
 import '../consent/startup_consent.dart';
 import '../i18n.dart';
@@ -90,8 +90,11 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _consentAccepted = accepted;
     });
     if (mounted) {
-      final deviceInfoLine = await _readDeviceInfoLine();
-      ScaffoldMessenger.of(context).showSnackBar(
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+      final platform = Theme.of(context).platform;
+      final deviceInfoLine = await _readDeviceInfoLine(platform);
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text(
             'Device locale detected: ${appLang.value.name.toUpperCase()} '
@@ -107,14 +110,14 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     }
   }
 
-  Future<String> _readDeviceInfoLine() async {
+  Future<String> _readDeviceInfoLine(TargetPlatform platform) async {
     final plugin = DeviceInfoPlugin();
     try {
       if (kIsWeb) {
         final webInfo = await plugin.webBrowserInfo;
         return 'web/${webInfo.browserName.name}';
       }
-      switch (Theme.of(context).platform) {
+      switch (platform) {
         case TargetPlatform.android:
           final info = await plugin.androidInfo;
           return 'android/${info.model}';

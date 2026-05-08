@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:ui' show PlatformDispatcher;
+
+import 'package:flutter/material.dart';
 
 import 'i18n/strings.g.dart';
 import 'web/browser_locale_stub.dart'
