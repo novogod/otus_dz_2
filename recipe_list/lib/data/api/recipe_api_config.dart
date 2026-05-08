@@ -19,7 +19,8 @@ class RecipeApiConfig {
   static const String mealDbBaseUrl = 'https://www.themealdb.com/api/json/v1/1';
 
   /// Прод-эндпоинт mahallem по умолчанию.
-  static const String mahallemDefaultBaseUrl = 'https://recipies.mahallem.ist/recipes';
+  static const String mahallemDefaultBaseUrl =
+      'https://recipies.mahallem.ist/recipes';
 
   /// Значение из `--dart-define`. Sentinel `__unset__` означает «define
   /// не передан»; пустая строка — явное отключение mahallem.
