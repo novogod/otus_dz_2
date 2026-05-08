@@ -42,7 +42,11 @@ Status legend: ⬜ not started · 🟨 in working tree, not committed
 21. Backend — DB migration: `recipe_app_user_credentials`
     + `recipe_app_webauthn_challenges` (foundation for web biometric) [✅ `mahallem_ist@f52e135b`, applied to prod 2026-05-08]
 22. Backend — `/recipes/auth/passkey/{register,login}/{start,complete}`
-    + list/delete, JWT-bearer auth, mirrors `routes/auth-passkey.js` [⬜]
+    + list/delete, JWT-bearer auth, mirrors `routes/auth-passkey.js`
+    [✅ `mahallem_ist@2c6eb080`, deployed to prod 2026-05-08;
+    8/8 integration tests green; `GET /available` smoke 200,
+    `POST /register/start` no-bearer 401, `POST /login/start`
+    anon returns real challenge]
 23. Client web — `recipe_list/web/passkey_bridge.js`
     (`navigator.credentials.create / get`, base64url helpers) [⬜]
 24. Client dart — `recipe_list/lib/auth/passkey_web.dart`
@@ -659,7 +663,7 @@ container restarted (this is a pure DDL change).
 
 ---
 
-## Chunk 22 — Backend: `routes/auth-passkey-recipes.js` [⬜]
+## Chunk 22 — Backend: `routes/auth-passkey-recipes.js` [✅ `mahallem_ist@2c6eb080`, deployed 2026-05-08]
 _(was `## Chunk 21` — renumbered 2026-05-08 to align with index after
 the rating-pill gate became Chunk 20.)_
 **Why:** new namespace `/recipes/auth/passkey/*` so it is
