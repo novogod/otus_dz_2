@@ -225,9 +225,11 @@ class _StartupConsentPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Translations.of(context);
+    final s = S.of(context);
     // ignore: avoid_print
-    print('[splash] _StartupConsentPanel.build() locale=${LocaleSettings.currentLocale}, appLang=${appLang.value.name}, consentTitle=${t.consentTitle}');
+    print(
+      '[splash] _StartupConsentPanel.build() locale=${LocaleSettings.currentLocale}, appLang=${appLang.value.name}',
+    );
     return ColoredBox(
       color: Colors.black.withValues(alpha: 0.5),
       child: Center(
@@ -243,7 +245,7 @@ class _StartupConsentPanel extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      t.consentTitle,
+                      s.consentTitle,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -251,7 +253,7 @@ class _StartupConsentPanel extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      t.consentCountry(
+                      s.consentCountry(
                         country: spec.countryName,
                         code: spec.countryCode,
                         law: spec.legislationLabel,
@@ -262,8 +264,8 @@ class _StartupConsentPanel extends StatelessWidget {
                     for (var i = 0; i < spec.requiredItems.length; i++)
                       _ConsentRow(
                         checked: checks[i],
-                        label: startupConsentLabel(spec.requiredItems[i], t),
-                        linkTitle: t.consentOpenDoc,
+                        label: startupConsentLabel(spec.requiredItems[i], s),
+                        linkTitle: s.consentOpenDoc,
                         onChanged: (v) => onToggle(i, v ?? false),
                         onOpen: () => onOpenDoc(spec.requiredItems[i].docUrl),
                       ),
@@ -272,7 +274,7 @@ class _StartupConsentPanel extends StatelessWidget {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: saving ? null : onAgree,
-                        child: Text(saving ? t.consentSaving : t.consentAgree),
+                        child: Text(saving ? s.consentSaving : s.consentAgree),
                       ),
                     ),
                   ],

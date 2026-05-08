@@ -512,6 +512,29 @@ class S {
     return values[appLang.value] ?? values[AppLang.en] ?? values.values.first;
   }
 
+  // Startup consent splash (todo/21).
+  String get consentTitle => _t.consentTitle;
+  String consentCountry({
+    required Object country,
+    required Object code,
+    required Object law,
+  }) => _t.consentCountry(country: country, code: code, law: law);
+  String get consentOpenDoc => _t.consentOpenDoc;
+  String get consentAgree => _t.consentAgree;
+  String get consentSaving => _t.consentSaving;
+  String get consentCheckAll => _t.consentCheckAll;
+  String get consentDocUrlInvalid => _t.consentDocUrlInvalid;
+  String get consentDocOpenFailed => _t.consentDocOpenFailed;
+  String get consentLabelTerms => _t.consentLabelTerms;
+  String get consentLabelPersonalDataGdpr => _t.consentLabelPersonalDataGdpr;
+  String get consentLabelPersonalData152Fz => _t.consentLabelPersonalData152Fz;
+  String get consentLabelPersonalDataKvkk => _t.consentLabelPersonalDataKvkk;
+  String get consentLabelPersonalDataPdpl => _t.consentLabelPersonalDataPdpl;
+  String get consentLabelPersonalDataGeneral =>
+      _t.consentLabelPersonalDataGeneral;
+  String get consentLabelCookies => _t.consentLabelCookies;
+  String get consentLabelStorage => _t.consentLabelStorage;
+
   // FAB label — derives from current AppLang, not from translations.
   String get langLabel => appLang.value.label;
 

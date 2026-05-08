@@ -3,7 +3,6 @@ import 'package:sqflite/sqflite.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
 import '../i18n.dart';
-import '../i18n/strings.g.dart';
 
 const String kStartupConsentCurrentVersion = '2026-05-08-v1';
 
@@ -270,27 +269,27 @@ StartupPrivacyVariant _privacyVariantForLang(AppLang lang) {
   }
 }
 
-String startupConsentLabel(StartupConsentItem item, Translations t) {
+String startupConsentLabel(StartupConsentItem item, S s) {
   switch (item.kind) {
     case StartupConsentKind.terms:
-      return t.consentLabelTerms;
+      return s.consentLabelTerms;
     case StartupConsentKind.personalData:
       switch (item.privacyVariant) {
         case StartupPrivacyVariant.gdpr:
-          return t.consentLabelPersonalDataGdpr;
+          return s.consentLabelPersonalDataGdpr;
         case StartupPrivacyVariant.russian152Fz:
-          return t.consentLabelPersonalData152Fz;
+          return s.consentLabelPersonalData152Fz;
         case StartupPrivacyVariant.kvkk:
-          return t.consentLabelPersonalDataKvkk;
+          return s.consentLabelPersonalDataKvkk;
         case StartupPrivacyVariant.pdpl:
-          return t.consentLabelPersonalDataPdpl;
+          return s.consentLabelPersonalDataPdpl;
         case StartupPrivacyVariant.general:
-          return t.consentLabelPersonalDataGeneral;
+          return s.consentLabelPersonalDataGeneral;
       }
     case StartupConsentKind.cookies:
-      return t.consentLabelCookies;
+      return s.consentLabelCookies;
     case StartupConsentKind.storage:
-      return t.consentLabelStorage;
+      return s.consentLabelStorage;
   }
 }
 
