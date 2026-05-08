@@ -1,3 +1,4 @@
+import 'package:country_picker/country_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1019,9 +1020,9 @@ class _AuthorChip extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                if (_locationLabel().isNotEmpty)
+                if (_locationLabel(context).isNotEmpty)
                   TextSpan(
-                    text: ' (${_locationLabel()})',
+                    text: ' (${_locationLabel(context)})',
                     style: const TextStyle(
                       fontFamily: AppTextStyles.fontFamily,
                       fontWeight: FontWeight.w400,
@@ -1054,12 +1055,22 @@ class _AuthorChip extends StatelessWidget {
   /// Joins non-empty city / country with a `/` separator. Returns
   /// an empty string when both are missing — caller skips the
   /// `(...)` span entirely.
-  String _locationLabel() {
+  String _locationLabel(BuildContext context) {
     final parts = <String>[];
     final c = city?.trim();
-    final co = country?.trim();
     if (c != null && c.isNotEmpty) parts.add(c);
-    if (co != null && co.isNotEmpty) parts.add(co);
+    final co = country?.trim();
+    if (co != null && co.isNotEmpty) {
+      // Country is stored as an ISO 3166-1 alpha-2 code; translate
+      // it via [CountryLocalizations] so the displayed label
+      // follows the current UI language. Falls back to the raw
+      // code when the lookup fails (offline tests, future codes).
+      final loc = CountryLocalizations.of(context);
+      final name = (loc != null && co.length == 2)
+          ? (loc.countryName(countryCode: co.toUpperCase()) ?? co)
+          : co;
+      parts.add(name);
+    }
     return parts.join('/');
   }
 }

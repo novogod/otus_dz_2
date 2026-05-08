@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:country_picker/country_picker.dart';
 
 import 'auth/admin_session.dart';
 import 'data/local/recipe_db.dart';
@@ -129,7 +130,10 @@ class RecipeApp extends StatelessWidget {
         Locale('ar'),
         Locale('fa'),
       ],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      localizationsDelegates: <LocalizationsDelegate<Object?>>[
+        ...GlobalMaterialLocalizations.delegates,
+        CountryLocalizations.delegate,
+      ],
       routerConfig: appRouter,
       // AppLangScope раньше оборачивал `home:`. С `MaterialApp.router`
       // home недоступен — оборачиваем выдачу роутера через builder.

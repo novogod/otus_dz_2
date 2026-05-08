@@ -6,6 +6,7 @@
 // [name] is null — that's the signal "no creator info, don't show
 // the row at all".
 
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../i18n.dart';
@@ -33,12 +34,18 @@ class AddedByRow extends StatelessWidget {
   final String? city;
   final String? country;
 
-  String _locationLabel() {
+  String _locationLabel(BuildContext context) {
     final parts = <String>[];
     final c = city?.trim();
-    final co = country?.trim();
     if (c != null && c.isNotEmpty) parts.add(c);
-    if (co != null && co.isNotEmpty) parts.add(co);
+    final co = country?.trim();
+    if (co != null && co.isNotEmpty) {
+      final loc = CountryLocalizations.of(context);
+      final name = (loc != null && co.length == 2)
+          ? (loc.countryName(countryCode: co.toUpperCase()) ?? co)
+          : co;
+      parts.add(name);
+    }
     return parts.join('/');
   }
 
@@ -64,7 +71,7 @@ class AddedByRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${s.recipeAddedByPrefix} $n${_locationLabel().isEmpty ? '' : ' (${_locationLabel()})'}',
+                  '${s.recipeAddedByPrefix} $n${_locationLabel(context).isEmpty ? '' : ' (${_locationLabel(context)})'}',
                   style: const TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontWeight: FontWeight.w600,

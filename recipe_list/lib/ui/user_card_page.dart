@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, library_private_types_in_public_api
 
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -56,6 +57,11 @@ class _UserCardPageState extends State<UserCardPage> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _countryController = TextEditingController();
+  /// ISO 3166-1 alpha-2 country code currently selected by the
+  /// user. Stored separately from [_countryController] (which is
+  /// kept in sync with the picker for legacy reasons) so we can
+  /// render the localized country name in the picker tile.
+  String? _countryCode;
   late bool _editing;
   AppLang _selectedLang = appLang.value;
   bool _busy = false;
@@ -87,6 +93,9 @@ class _UserCardPageState extends State<UserCardPage> {
       if (!_editing) {
         _cityController.text = snap.city ?? '';
         _countryController.text = snap.country ?? '';
+        _countryCode = (snap.country ?? '').trim().isEmpty
+            ? null
+            : snap.country!.trim().toUpperCase();
       }
       final fromServer = AppLang.values
           .where((l) => l.name == (snap.language ?? ''))
@@ -135,7 +144,7 @@ class _UserCardPageState extends State<UserCardPage> {
           displayName: _nameController.text.trim(),
           language: _selectedLang.name,
           city: _cityController.text.trim(),
-          country: _countryController.text.trim(),
+          country: _countryCode ?? '',
         );
         if (mounted) {
           setState(
@@ -379,17 +388,92 @@ class _UserCardPageState extends State<UserCardPage> {
   }
 
   Widget _buildCountryField(S s) {
-    return TextField(
-      controller: _countryController,
-      enabled: _editing,
-      maxLength: 80,
-      style: const TextStyle(color: AppColors.textPrimary),
-      decoration: const InputDecoration(
-        labelText: 'Country',
-        border: OutlineInputBorder(),
-        counterText: '',
+    final code = _countryCode;
+    final loc = CountryLocalizations.of(context);
+    final name = (code != null && loc != null)
+        ? (loc.countryName(countryCode: code) ?? code)
+        : null;
+    final emoji = code != null ? _flagEmoji(code) : null;
+    final placeholder = TextStyle(
+      color: AppColors.textPrimary.withValues(
+        alpha: _editing ? 0.55 : 0.4,
       ),
     );
+    return InkWell(
+      onTap: _editing ? _openCountryPicker : null,
+      borderRadius: BorderRadius.circular(4),
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          labelText: 'Country',
+          border: OutlineInputBorder(),
+        ),
+        child: Row(
+          children: [
+            if (emoji != null) ...[
+              Text(emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: AppSpacing.sm),
+            ],
+            Expanded(
+              child: Text(
+                name ?? (_editing ? 'Select country' : '—'),
+                style: name != null
+                    ? const TextStyle(color: AppColors.textPrimary)
+                    : placeholder,
+              ),
+            ),
+            if (_editing && _countryCode != null)
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _countryCode = null;
+                    _countryController.text = '';
+                  });
+                },
+                child: const Padding(
+                  padding: EdgeInsets.only(left: AppSpacing.sm),
+                  child: Icon(
+                    Icons.close,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            if (_editing)
+              const Icon(
+                Icons.arrow_drop_down,
+                color: AppColors.textSecondary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openCountryPicker() {
+    showCountryPicker(
+      context: context,
+      showPhoneCode: false,
+      useSafeArea: true,
+      onSelect: (country) {
+        setState(() {
+          _countryCode = country.countryCode;
+          _countryController.text = country.countryCode;
+        });
+      },
+    );
+  }
+
+  /// Converts an ISO 3166-1 alpha-2 [code] to its regional indicator
+  /// flag emoji ("TR" → 🇹🇷). Pure offset arithmetic, no
+  /// network or asset lookup.
+  String? _flagEmoji(String code) {
+    if (code.length != 2) return null;
+    final base = 0x1F1E6 - 0x41;
+    final upper = code.toUpperCase();
+    final c0 = upper.codeUnitAt(0);
+    final c1 = upper.codeUnitAt(1);
+    if (c0 < 0x41 || c0 > 0x5A || c1 < 0x41 || c1 > 0x5A) return null;
+    return String.fromCharCodes([base + c0, base + c1]);
   }
 
   Widget _buildLanguagePicker(S s) {
