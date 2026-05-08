@@ -448,6 +448,24 @@ class RecipeApi {
     }
   }
 
+  /// mahallem-only: returns the live row-count of the `recipes`
+  /// table. Used by [SplashPage] to render a recipe-counter line
+  /// above the visitor counter. Returns null on any failure
+  /// (offline, non-mahallem backend, server error) so the splash
+  /// degrades gracefully without flashing an error.
+  Future<int?> fetchRecipesCount() async {
+    if (_client.backend != RecipeBackend.mahallem) return null;
+    try {
+      final res = await _client.dio.get<Map<String, dynamic>>('/count');
+      final count = res.data?['count'];
+      if (count is int) return count;
+      if (count is num) return count.toInt();
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<List<Recipe>> _filter(String key, String value) async {
     final mahallem = _client.backend == RecipeBackend.mahallem;
     final res = await _client.dio.get<Map<String, dynamic>>(

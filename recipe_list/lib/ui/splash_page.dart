@@ -28,12 +28,14 @@ class SplashPage extends StatefulWidget {
 class _SplashPageState extends State<SplashPage> {
   ui.Image? _foodImage;
   int? _visitorCount;
+  int? _recipesCount;
 
   @override
   void initState() {
     super.initState();
     _loadImage();
     _loadVisitorCount();
+    _loadRecipesCount();
   }
 
   Future<void> _loadVisitorCount() async {
@@ -41,6 +43,18 @@ class _SplashPageState extends State<SplashPage> {
     final count = await api.incrementVisitorCount();
     if (!mounted || count == null) return;
     setState(() => _visitorCount = count);
+  }
+
+  /// Pulls the live recipe row-count from the backend and renders
+  /// a counter line above the visitor counter on the splash. Fails
+  /// silently (line stays hidden) when the backend isn’t mahallem
+  /// or the network is down — same degradation rules as
+  /// [_loadVisitorCount].
+  Future<void> _loadRecipesCount() async {
+    final api = RecipeApi();
+    final count = await api.fetchRecipesCount();
+    if (!mounted || count == null) return;
+    setState(() => _recipesCount = count);
   }
 
   Future<void> _loadImage() async {
@@ -74,6 +88,10 @@ class _SplashPageState extends State<SplashPage> {
               children: [
                 SplashMaskedLogo(image: _foodImage),
                 const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  height: 28,
+                  child: SplashRecipesCounter(count: _recipesCount),
+                ),
                 SizedBox(
                   height: 28,
                   child: SplashVisitorCounter(count: _visitorCount),
@@ -142,6 +160,33 @@ class _SplashVisitorCounterState extends State<SplashVisitorCounter>
         'Visitors: $count',
         textAlign: TextAlign.center,
         style: textStyle,
+      ),
+    );
+  }
+}
+
+/// Static white "Recipes: N" line shown above [SplashVisitorCounter]
+/// on the splash. Doesn't blink — kept calm so the eye flows from
+/// recipes (steady, factual) → visitors (live, blinking). Uses
+/// the same Roboto-700/18 style for visual consistency.
+class SplashRecipesCounter extends StatelessWidget {
+  const SplashRecipesCounter({super.key, required this.count});
+
+  final int? count;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = count;
+    if (c == null) return const SizedBox.shrink();
+    return Text(
+      'Recipes: $c',
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontFamily: AppTextStyles.fontFamily,
+        fontWeight: FontWeight.w700,
+        fontSize: 18,
+        height: 23 / 18,
+        color: Colors.white,
       ),
     );
   }
