@@ -208,16 +208,19 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.pagePadding,
-            vertical: AppSpacing.xl,
-          ),
-          child: ValueListenableBuilder<bool>(
-            valueListenable: adminLoggedInNotifier,
-            builder: (context, isAdmin, _) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.pagePadding,
+                vertical: AppSpacing.xl,
+              ),
+              child: ValueListenableBuilder<bool>(
+                valueListenable: adminLoggedInNotifier,
+                builder: (context, isAdmin, _) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (isAdmin) ...[
                     FilledButton.icon(
@@ -339,6 +342,8 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
                 ],
               );
             },
+          ),
+            ),
           ),
         ),
       ),

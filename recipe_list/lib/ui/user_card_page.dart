@@ -337,14 +337,17 @@ class _UserCardPageState extends State<UserCardPage> {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.lg,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.lg,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
               Center(
                 child: _AvatarSlot(
                   avatarUrl: _profile?.avatarUrl,
@@ -370,6 +373,8 @@ class _UserCardPageState extends State<UserCardPage> {
               const SizedBox(height: AppSpacing.md),
               if (!widget.isPostSignup) _buildLogoutButton(s),
             ],
+          ),
+            ),
           ),
         ),
       ),
