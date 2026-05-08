@@ -244,6 +244,15 @@ class _StartupConsentPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // DEBUG: Show what locale was detected
+                    Text(
+                      '[DEBUG] appLang=${appLang.value.name}, locale=${LocaleSettings.currentLocale}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF999999),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Text(
                       s.consentTitle,
                       style: const TextStyle(
