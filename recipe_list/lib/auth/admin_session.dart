@@ -293,14 +293,16 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   final token = rows.first['token'] as String?;
   final storedLang = rows.first['preferred_language'] as String?;
   final storedIsAdmin = (rows.first['is_admin'] as int? ?? 0) == 1;
-  if (storedLang != null) {
-    final lang = AppLang.values.where((l) => l.name == storedLang).firstOrNull;
-    if (lang != null) cycleAppLangTo(lang);
-  }
   // Legacy admin fallback is allowed only for truly legacy sessions without
   // token. If a token exists, trust persisted is_admin instead of login alias.
   final hasToken = token != null && token.isNotEmpty;
   final isLegacyAdminSession = login == _legacyAdminLogin && !hasToken;
+  final hasRestorableSession =
+      login != null && login.isNotEmpty && (hasToken || isLegacyAdminSession);
+  if (hasRestorableSession && storedLang != null) {
+    final lang = AppLang.values.where((l) => l.name == storedLang).firstOrNull;
+    if (lang != null) cycleAppLangTo(lang);
+  }
   final isAdmin = storedIsAdmin || isLegacyAdminSession;
   _setSessionState(
     login: login,

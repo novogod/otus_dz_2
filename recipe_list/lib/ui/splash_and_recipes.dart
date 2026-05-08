@@ -93,15 +93,16 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       final scaffoldMessenger = ScaffoldMessenger.of(context);
       final platform = Theme.of(context).platform;
       final deviceInfoLine = await _readDeviceInfoLine(platform);
+      final localeDebug = localeDetectionDebugSummary();
       if (!mounted) return;
       scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text(
-            'Device locale detected: ${appLang.value.name.toUpperCase()} '
-            '(LocaleSettings=${LocaleSettings.currentLocale}) '
+            'Device locale detected: ${appLang.value.name.toUpperCase()}\n'
+            '$localeDebug\n'
             '[$deviceInfoLine]',
           ),
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 8),
         ),
       );
     }

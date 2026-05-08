@@ -94,6 +94,28 @@ AppLang detectDeviceAppLang() {
   return AppLang.en;
 }
 
+/// Debug helper for startup locale diagnostics.
+///
+/// Includes raw sources (platform locales + browser preferences on web)
+/// and final mapped app language. Useful for first-load investigations.
+String localeDetectionDebugSummary() {
+  final platformLocales = PlatformDispatcher.instance.locales
+      .map((l) => l.toLanguageTag())
+      .toList(growable: false);
+  final browserLocales = browserPreferredLanguages();
+  String slangDeviceLocale;
+  try {
+    slangDeviceLocale = AppLocaleUtils.findDeviceLocale().toString();
+  } catch (_) {
+    slangDeviceLocale = 'error';
+  }
+  return 'platformLocales=${platformLocales.join(',')} '
+      'browserLocales=${browserLocales.join(',')} '
+      'slangDeviceLocale=$slangDeviceLocale '
+      'appLang=${appLang.value.name} '
+      'slangCurrent=${LocaleSettings.currentLocale}';
+}
+
 /// Best-effort mapping from a raw locale language code (`en`, `ru`,
 /// `en-US`, `pt_BR`) to one of the supported app languages.
 /// Returns null for unsupported languages so callers can fall back.
