@@ -85,6 +85,7 @@ class _SplashPageState extends State<SplashPage> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SplashMaskedLogo(image: _foodImage),
                 const SizedBox(height: AppSpacing.lg),
@@ -92,6 +93,7 @@ class _SplashPageState extends State<SplashPage> {
                   height: 28,
                   child: SplashRecipesCounter(count: _recipesCount),
                 ),
+                const SizedBox(height: AppSpacing.lg),
                 SizedBox(
                   height: 28,
                   child: SplashVisitorCounter(count: _visitorCount),

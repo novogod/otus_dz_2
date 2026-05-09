@@ -233,9 +233,12 @@ class _StartupConsentPanel extends StatelessWidget {
         child: Align(
           alignment: Alignment.bottomCenter,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
+            constraints: const BoxConstraints(maxWidth: 340),
             child: Card(
               color: theme.colorScheme.surface.withValues(alpha: 0.9),
+              elevation: theme.cardTheme.elevation,
+              shadowColor: theme.cardTheme.shadowColor,
+              shape: theme.cardTheme.shape,
               margin: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,
                 AppSpacing.lg,
@@ -259,11 +262,22 @@ class _StartupConsentPanel extends StatelessWidget {
                           onOpen: () => onOpenDoc(spec.requiredItems[i].docUrl),
                         ),
                       const SizedBox(height: AppSpacing.md),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: saving ? null : onAgree,
-                          child: Text(saving ? s.consentSaving : s.consentAgree),
+                      Align(
+                        alignment: Alignment.center,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 220),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: saving ? null : onAgree,
+                              style: FilledButton.styleFrom(
+                                elevation: theme.cardTheme.elevation,
+                              ),
+                              child: Text(
+                                saving ? s.consentSaving : s.consentAgree,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
