@@ -276,21 +276,30 @@ class _StartupConsentPanel extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
+                      const SizedBox(height: AppSpacing.sm),
                       const SizedBox(height: AppSpacing.md),
                       for (var i = 0; i < spec.requiredItems.length; i++)
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 280),
-                          child: _ConsentRow(
-                            checked: checks[i],
-                            label: startupConsentLabel(
-                              spec.requiredItems[i],
-                              s,
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 280),
+                              child: _ConsentRow(
+                                checked: checks[i],
+                                label: startupConsentLabel(
+                                  spec.requiredItems[i],
+                                  s,
+                                ),
+                                onChanged: (v) => onToggle(i, v ?? false),
+                                onOpen: () =>
+                                    onOpenDoc(spec.requiredItems[i].docUrl),
+                              ),
                             ),
-                            onChanged: (v) => onToggle(i, v ?? false),
-                            onOpen: () =>
-                                onOpenDoc(spec.requiredItems[i].docUrl),
-                          ),
+                            if (i < spec.requiredItems.length - 1)
+                              const SizedBox(height: AppSpacing.sm),
+                          ],
                         ),
+                      const SizedBox(height: AppSpacing.sm),
                       const SizedBox(height: AppSpacing.md),
                       Align(
                         alignment: Alignment.center,
@@ -358,7 +367,6 @@ class _ConsentRow extends StatelessWidget {
                   color: Colors.black,
                 ),
                 children: [
-                  const TextSpan(text: 'I accept '),
                   WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: GestureDetector(
