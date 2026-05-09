@@ -230,7 +230,7 @@ class _StartupConsentPanel extends StatelessWidget {
       color: Colors.black.withValues(alpha: 0.5),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
+          constraints: const BoxConstraints(maxWidth: 500),
           child: Card(
             margin: const EdgeInsets.all(AppSpacing.lg),
             child: Padding(
@@ -246,15 +246,6 @@ class _StartupConsentPanel extends StatelessWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      s.consentCountry(
-                        country: spec.countryName,
-                        code: spec.countryCode,
-                        law: spec.legislationLabel,
-                      ),
-                      style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     for (var i = 0; i < spec.requiredItems.length; i++)
