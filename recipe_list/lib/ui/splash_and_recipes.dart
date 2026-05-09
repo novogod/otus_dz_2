@@ -1,8 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:math';
 
 import '../consent/startup_consent.dart';
 import '../i18n.dart';
@@ -564,50 +565,47 @@ class _PixelationPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (progress <= 0) return;
+    final t = Curves.easeOut.transform(progress.clamp(0.0, 1.0));
 
-    // Create pixelated disintegration effect
-    final pixelSize = 2.0 + (progress * 8.0);
-    final Random random = Random(42);
+    // IMPORTANT: keep workload bounded per frame to avoid web browser stalls.
+    final particleCount = kIsWeb ? 120 : 220;
+    for (int i = 0; i < particleCount; i++) {
+      final random = Random(9001 + i * 7919);
 
-    final pixelsPerRow = (size.width / pixelSize).toInt();
-    final pixelsPerCol = (size.height / pixelSize).toInt();
+      final baseX = random.nextDouble() * size.width;
+      final baseY = random.nextDouble() * size.height;
+      final appearChance = (t * 1.15 - (baseY / size.height) * 0.35).clamp(
+        0.0,
+        1.0,
+      );
+      if (random.nextDouble() > appearChance) continue;
 
-    for (int row = 0; row < pixelsPerCol; row++) {
-      for (int col = 0; col < pixelsPerRow; col++) {
-        // Only draw a fraction based on progress for gradual appearance
-        if (random.nextDouble() > (1.0 - progress * 0.9)) continue;
+      final scatterDistance = (18.0 + 110.0 * t) * (0.45 + random.nextDouble());
+      final dx = (random.nextDouble() * 2 - 1) * scatterDistance * 0.7;
+      final dy = -scatterDistance * (0.45 + random.nextDouble() * 0.75);
 
-        final x = col * pixelSize + pixelSize / 2;
-        final y = row * pixelSize + pixelSize / 2;
+      final x = (baseX + dx).clamp(0.0, size.width);
+      final y = (baseY + dy).clamp(0.0, size.height);
 
-        // Calculate scatter direction (upward bias)
-        final distance = 80.0 * progress;
-        final angle = random.nextDouble() * 2 * pi;
-        final scatterX = x + (distance * cos(angle));
-        final scatterY = y - (distance * sin(angle).abs());
+      final pixelSize = 1.5 + random.nextDouble() * 3.5 + t * 2.0;
+      final alpha = ((1.0 - t) * (0.35 + random.nextDouble() * 0.35)).clamp(
+        0.0,
+        0.85,
+      );
 
-        // Opacity decreases with progress
-        final opacity = max(0.0, (1.0 - progress) * 0.6);
-
-        // Draw pixel at scatter position
-        canvas.drawCircle(
-          Offset(
-            scatterX.clamp(0, size.width),
-            scatterY.clamp(0, size.height),
-          ),
-          pixelSize / 2.5,
-          Paint()
-            ..color = Colors.white.withValues(alpha: opacity)
-            ..blendMode = BlendMode.lighten,
-        );
-      }
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset(x, y), width: pixelSize, height: pixelSize),
+        Paint()
+          ..color = Colors.white.withValues(alpha: alpha)
+          ..blendMode = BlendMode.screen,
+      );
     }
 
     // Add glow fade effect
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()
-        ..color = Colors.white.withValues(alpha: progress * 0.15)
+        ..color = Colors.white.withValues(alpha: t * 0.12)
         ..blendMode = BlendMode.screen,
     );
   }
