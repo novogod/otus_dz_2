@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -220,6 +221,18 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
                 ),
               ),
             ),
+          // Language switcher FAB in top-right corner
+          Positioned(
+            top: 16,
+            right: 16,
+            child: SafeArea(
+              child: _LanguageSwitcherFab(
+                onLanguageSelected: (lang) {
+                  cycleAppLangTo(lang);
+                },
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -411,5 +424,167 @@ class _ConsentRow extends StatelessWidget {
           return '${part[0].toUpperCase()}${part.substring(1)}';
         })
         .join(' ');
+  }
+}
+
+/// Floating language switcher FAB with flag circles.
+/// Displays current language flag and opens a menu with all available languages.
+class _LanguageSwitcherFab extends StatefulWidget {
+  const _LanguageSwitcherFab({
+    required this.onLanguageSelected,
+  });
+
+  final void Function(AppLang lang) onLanguageSelected;
+
+  @override
+  State<_LanguageSwitcherFab> createState() => _LanguageSwitcherFabState();
+}
+
+class _LanguageSwitcherFabState extends State<_LanguageSwitcherFab> {
+  late final LayerLink _layerLink;
+
+  @override
+  void initState() {
+    super.initState();
+    _layerLink = LayerLink();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<AppLang>(
+      valueListenable: appLang,
+      builder: (context, currentLang, _) {
+        return CompositedTransformTarget(
+          link: _layerLink,
+          child: FloatingActionButton(
+            mini: true,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            onPressed: () => _showLanguageMenu(context, currentLang),
+            child: const Icon(Icons.language),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLanguageMenu(BuildContext context, AppLang currentLang) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Tap-outside detector to close menu
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () {
+                overlayEntry.remove();
+              },
+              child: const SizedBox(),
+            ),
+          ),
+          CompositedTransformFollower(
+            link: _layerLink,
+            offset: const Offset(0, 56),
+            showWhenUnlinked: false,
+            child: Material(
+              color: Colors.transparent,
+              child: Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 0, top: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final lang in AppLang.values)
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  overlayEntry.remove();
+                                  widget.onLanguageSelected(lang);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: SizedBox(
+                                    width: 140,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: currentLang == lang
+                                                ? Border.all(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    width: 2,
+                                                  )
+                                                : null,
+                                          ),
+                                          child: ClipOval(
+                                            child: Image.asset(
+                                              lang.flagAsset,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            lang.label,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelMedium
+                                                ?.copyWith(
+                                                  color: currentLang == lang
+                                                      ? Theme.of(context)
+                                                          .colorScheme
+                                                          .primary
+                                                      : Colors.black87,
+                                                  fontWeight: currentLang == lang
+                                                      ? FontWeight.w600
+                                                      : FontWeight.w500,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    overlay.insert(overlayEntry);
   }
 }
