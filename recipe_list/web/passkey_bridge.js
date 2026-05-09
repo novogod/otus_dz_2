@@ -85,13 +85,10 @@
   // PublicKeyCredential → JSON (registration / authentication).
   // ----------------------------------------------------------------
   function credentialToRegistrationJSON(cred) {
-    if (typeof cred.toJSON === 'function') {
-      // Chrome 124+, Safari 17+ implement toJSON() that produces
-      // exactly the shape @simplewebauthn/server expects.
-      return cred.toJSON();
-    }
+    // Always use manual conversion for registration - browser's toJSON() may include
+    // extra fields like authenticatorData or publicKey that @simplewebauthn doesn't expect.
     const r = cred.response;
-    return {
+    const json = {
       id: cred.id,
       rawId: bufferToB64url(cred.rawId),
       type: cred.type,
@@ -107,12 +104,14 @@
           ? cred.getClientExtensionResults()
           : {},
     };
+    return json;
   }
 
   function credentialToAuthenticationJSON(cred) {
-    if (typeof cred.toJSON === 'function') return cred.toJSON();
+    // Always use manual conversion for authentication - browser's toJSON() may include
+    // unexpected extra fields.
     const r = cred.response;
-    return {
+    const json = {
       id: cred.id,
       rawId: bufferToB64url(cred.rawId),
       type: cred.type,
@@ -128,6 +127,7 @@
           ? cred.getClientExtensionResults()
           : {},
     };
+    return json;
   }
 
   // ----------------------------------------------------------------
