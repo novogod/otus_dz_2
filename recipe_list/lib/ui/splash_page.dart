@@ -19,7 +19,9 @@ import 'app_theme.dart';
 /// `Text` задаёт форму, а `ImageShader` из `assets/images/splash_food.jpg`
 /// заполняет эту форму содержимым фотографии.
 class SplashPage extends StatefulWidget {
-  const SplashPage({super.key});
+  const SplashPage({super.key, this.topRightOverlay});
+
+  final Widget? topRightOverlay;
 
   @override
   State<SplashPage> createState() => _SplashPageState();
@@ -80,27 +82,33 @@ class _SplashPageState extends State<SplashPage> {
     return DecoratedBox(
       decoration: const BoxDecoration(gradient: kSplashGradient),
       child: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SplashMaskedLogo(image: _foodImage),
-                const SizedBox(height: AppSpacing.lg),
-                SizedBox(
-                  height: 28,
-                  child: SplashRecipesCounter(count: _recipesCount),
+        child: Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SplashMaskedLogo(image: _foodImage),
+                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(
+                      height: 28,
+                      child: SplashRecipesCounter(count: _recipesCount),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(
+                      height: 28,
+                      child: SplashVisitorCounter(count: _visitorCount),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                SizedBox(
-                  height: 28,
-                  child: SplashVisitorCounter(count: _visitorCount),
-                ),
-              ],
+              ),
             ),
-          ),
+            if (widget.topRightOverlay != null)
+              Positioned(top: 16, right: 16, child: widget.topRightOverlay!),
+          ],
         ),
       ),
     );

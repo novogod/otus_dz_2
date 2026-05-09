@@ -46,9 +46,12 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
   List<bool> _consentChecks = const [];
   bool _checkingConsent = true;
   bool _consentAccepted = false;
+  bool _consentVisible = false;
   bool _savingConsent = false;
   bool _isDissolving = false;
   bool _showSplash = true;
+  bool _showRecipes = false;
+  int _flowTicket = 0;
 
   /// Ключ для `RecipeListLoader`, чтобы при перезапуске
   /// последовательности (см. [restart]) Flutter создал новый
@@ -99,33 +102,30 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
 
   Future<void> _bootstrapConsentAndStart() async {
     final spec = startupConsentSpecFor(appLang.value, isWeb: kIsWeb);
-    bool accepted = false;
-    try {
-      accepted = await hasAcceptedStartupConsent(
-        lang: appLang.value,
-        isWeb: kIsWeb,
-      );
-    } catch (_) {
-      accepted = false;
-    }
     if (!mounted) return;
+    final int flowTicket = ++_flowTicket;
     setState(() {
       _consentSpec = spec;
       _consentChecks = List<bool>.filled(spec.requiredItems.length, false);
       _checkingConsent = false;
-      _consentAccepted = accepted;
+      _consentAccepted = false;
+      _consentVisible = false;
       _isDissolving = false;
+      _showRecipes = false;
       _showSplash = true;
     });
-    if (!accepted) {
-      _dissolveController.reset();
-      _consentController
-        ..reset()
-        ..forward();
-    }
-    if (accepted && mounted) {
-      _controller.forward();
-    }
+    _controller.reset();
+    _consentController.reset();
+    _dissolveController.reset();
+    bottomNavVisibleNotifier.value = false;
+    await Future.delayed(AppDurations.splash);
+    if (!mounted || flowTicket != _flowTicket) return;
+    setState(() {
+      _consentVisible = true;
+    });
+    _consentController
+      ..reset()
+      ..forward();
   }
 
   Future<void> _openDoc(String rawUrl) async {
@@ -162,18 +162,18 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     try {
       await acceptStartupConsent(lang: appLang.value, isWeb: kIsWeb);
       if (!mounted) return;
-      // Start dissolve animation and wait for it to complete
       setState(() => _isDissolving = true);
       _dissolveController.reset();
-      _dissolveController.forward();
-      // Wait for the 2-second dissolve animation to complete
-      await Future.delayed(const Duration(seconds: 2));
+      await _dissolveController.forward();
       if (!mounted) return;
-      // Only now transition to next screen
       setState(() {
         _consentAccepted = true;
+        _consentVisible = false;
+        _showRecipes = true;
       });
-      _controller.forward();
+      _controller
+        ..reset()
+        ..forward();
     } finally {
       if (mounted) setState(() => _savingConsent = false);
     }
@@ -191,12 +191,15 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     setState(() {
       _loaderKey = UniqueKey();
       _consentAccepted = false;
+      _consentVisible = false;
       _checkingConsent = true;
       _isDissolving = false;
       _showSplash = true;
+      _showRecipes = false;
     });
     _consentController.reset();
     _dissolveController.reset();
+    _flowTicket++;
     _bootstrapConsentAndStart();
   }
 
@@ -210,7 +213,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
 
   @override
   Widget build(BuildContext context) {
-    final showConsent = !_checkingConsent && !_consentAccepted;
+    final showConsent = !_checkingConsent && _consentVisible && !_consentAccepted;
     // Material нужен, чтобы Text внутри splash/list получил
     // DefaultTextStyle темы вместо debug-fallback (жёлтое
     // подчёркивание, неверный вес).
@@ -220,10 +223,23 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
         children: [
           // Сплеш всегда внизу стека — он не двигается во время
           // перехода MOVE_IN, его лишь перекрывает поверх список.
-          if (_showSplash) const Positioned.fill(child: SplashPage()),
+          if (_showSplash)
+            Positioned.fill(
+              child: SplashPage(
+                topRightOverlay: !_consentAccepted
+                    ? SafeArea(
+                        child: _LanguageSwitcherCircles(
+                          onLanguageSelected: (lang) {
+                            cycleAppLangTo(lang);
+                          },
+                        ),
+                      )
+                    : null,
+              ),
+            ),
           // Список «въезжает» снизу, заслоняя splash. Переключатель
           // языка живёт в его AppBar — пока splash, кнопки нет.
-          if (_consentAccepted)
+          if (_showRecipes)
             Positioned.fill(
               child: SlideTransition(
                 position: _slide,
@@ -269,19 +285,6 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
                     onOpenDoc: _openDoc,
                     onAgree: _agreeAndContinue,
                   ),
-                ),
-              ),
-            ),
-          // Language switcher is only for splash/consent.
-          if (!_consentAccepted)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: SafeArea(
-                child: _LanguageSwitcherCircles(
-                  onLanguageSelected: (lang) {
-                    cycleAppLangTo(lang);
-                  },
                 ),
               ),
             ),
@@ -521,7 +524,6 @@ class _LanguageSwitcherCircles extends StatelessWidget {
                   customBorder: const CircleBorder(),
                   onTap: () {
                     onLanguageSelected(next);
-                    cycleAppLang();
                   },
                   child: SizedBox(
                     width: 40,
