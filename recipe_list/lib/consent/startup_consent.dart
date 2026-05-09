@@ -4,7 +4,7 @@ import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
 import '../i18n.dart';
 
-const String kStartupConsentCurrentVersion = '2026-05-08-v1';
+const String kStartupConsentCurrentVersion = '2026-05-09-v2';
 
 const String _kConsentPlatformWeb = 'web';
 const String _kConsentPlatformNative = 'native';
