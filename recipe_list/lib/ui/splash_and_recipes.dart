@@ -1,8 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:glow_effects/glow_effects.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../consent/startup_consent.dart';
@@ -236,19 +235,18 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
                 child: AnimatedBuilder(
                   animation: _dissolveOpacity,
                   builder: (context, child) {
+                    final dissolveProgress = _isDissolving
+                        ? (1.0 - _dissolveOpacity.value).clamp(0.0, 1.0)
+                        : 0.0;
                     return Opacity(
                       opacity: _dissolveOpacity.value,
-                      child: Stack(
-                        children: [
-                          child!,
-                          // Scanline effect that intensifies during dissolve
-                          if (_isDissolving)
-                            Positioned.fill(
-                              child: _ScanlineDissolveOverlay(
-                                progress: 1.0 - _dissolveOpacity.value,
-                              ),
-                            ),
-                        ],
+                      child: GKWidget(
+                        effect: DissolveEffect(
+                          progress: dissolveProgress,
+                          noiseScale: 4.0,
+                          edgeSoftness: 0.1,
+                        ),
+                        child: child!,
                       ),
                     );
                   },
@@ -539,79 +537,5 @@ class _LanguageSwitcherCircles extends StatelessWidget {
         );
       },
     );
-  }
-}
-
-/// Pixelation dissolve effect that makes modal disappear as scattered pixels.
-class _ScanlineDissolveOverlay extends StatelessWidget {
-  const _ScanlineDissolveOverlay({required this.progress});
-
-  final double progress; // 0.0 to 1.0, where 1.0 is fully dissolved
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _PixelationPainter(progress: progress),
-      child: const SizedBox.expand(),
-    );
-  }
-}
-
-class _PixelationPainter extends CustomPainter {
-  _PixelationPainter({required this.progress});
-
-  final double progress; // 0.0 to 1.0
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress <= 0) return;
-    final t = Curves.easeOut.transform(progress.clamp(0.0, 1.0));
-
-    // IMPORTANT: keep workload bounded per frame to avoid web browser stalls.
-    final particleCount = kIsWeb ? 120 : 220;
-    for (int i = 0; i < particleCount; i++) {
-      final random = Random(9001 + i * 7919);
-
-      final baseX = random.nextDouble() * size.width;
-      final baseY = random.nextDouble() * size.height;
-      final appearChance = (t * 1.15 - (baseY / size.height) * 0.35).clamp(
-        0.0,
-        1.0,
-      );
-      if (random.nextDouble() > appearChance) continue;
-
-      final scatterDistance = (18.0 + 110.0 * t) * (0.45 + random.nextDouble());
-      final dx = (random.nextDouble() * 2 - 1) * scatterDistance * 0.7;
-      final dy = -scatterDistance * (0.45 + random.nextDouble() * 0.75);
-
-      final x = (baseX + dx).clamp(0.0, size.width);
-      final y = (baseY + dy).clamp(0.0, size.height);
-
-      final pixelSize = 1.5 + random.nextDouble() * 3.5 + t * 2.0;
-      final alpha = ((1.0 - t) * (0.35 + random.nextDouble() * 0.35)).clamp(
-        0.0,
-        0.85,
-      );
-
-      canvas.drawRect(
-        Rect.fromCenter(center: Offset(x, y), width: pixelSize, height: pixelSize),
-        Paint()
-          ..color = Colors.white.withValues(alpha: alpha)
-          ..blendMode = BlendMode.screen,
-      );
-    }
-
-    // Add glow fade effect
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()
-        ..color = Colors.white.withValues(alpha: t * 0.12)
-        ..blendMode = BlendMode.screen,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_PixelationPainter oldDelegate) {
-    return oldDelegate.progress != progress;
   }
 }
