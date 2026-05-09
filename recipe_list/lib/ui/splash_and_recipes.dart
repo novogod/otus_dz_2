@@ -46,6 +46,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
   bool _checkingConsent = true;
   bool _consentAccepted = false;
   bool _savingConsent = false;
+  bool _isDissolving = false;
 
   /// Ключ для `RecipeListLoader`, чтобы при перезапуске
   /// последовательности (см. [restart]) Flutter создал новый
@@ -153,8 +154,13 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     try {
       await acceptStartupConsent(lang: appLang.value, isWeb: kIsWeb);
       if (!mounted) return;
-      // Start dissolve animation (fade to 4% opacity)
+      // Start dissolve animation and wait for it to complete
+      setState(() => _isDissolving = true);
       _dissolveController.forward();
+      // Wait for the 2-second dissolve animation to complete
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      // Only now transition to next screen
       setState(() {
         _consentAccepted = true;
       });
@@ -225,7 +231,18 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
                   builder: (context, child) {
                     return Opacity(
                       opacity: _dissolveOpacity.value,
-                      child: child,
+                      child: Stack(
+                        children: [
+                          child!,
+                          // Scanline effect that intensifies during dissolve
+                          if (_isDissolving)
+                            Positioned.fill(
+                              child: _ScanlineDissolveOverlay(
+                                progress: 1.0 - _dissolveOpacity.value,
+                              ),
+                            ),
+                        ],
+                      ),
                     );
                   },
                   child: _StartupConsentPanel(
@@ -608,5 +625,86 @@ class _LanguageSwitcherFabState extends State<_LanguageSwitcherFab> {
     );
 
     overlay.insert(overlayEntry);
+  }
+}
+
+/// Scanline dissolve effect that shows horizontal lines sweeping during modal dissolution.
+class _ScanlineDissolveOverlay extends StatelessWidget {
+  const _ScanlineDissolveOverlay({
+    required this.progress,
+  });
+
+  final double progress; // 0.0 to 1.0, where 1.0 is fully dissolved
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _ScanlinePainter(progress: progress),
+      child: const SizedBox.expand(),
+    );
+  }
+}
+
+class _ScanlinePainter extends CustomPainter {
+  _ScanlinePainter({required this.progress});
+
+  final double progress; // 0.0 to 1.0
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+
+    // Create scanlines that sweep down from top
+    final scanlineHeight = 4.0;
+    final scanlineSpacing = 8.0;
+    const scanlineOpacityBase = 0.3;
+
+    // Paint horizontal scanlines moving downward
+    final sweepPosition = size.height * progress;
+
+    // Draw scanlines
+    for (double y = -scanlineSpacing;
+        y < size.height + scanlineSpacing;
+        y += scanlineSpacing) {
+      final distanceFromSweep = (y - sweepPosition).abs();
+      final fade = 1.0 -
+          (distanceFromSweep / (scanlineSpacing * 3)).clamp(0.0, 1.0);
+      final opacity = (scanlineOpacityBase * fade * progress).clamp(0.0, 1.0);
+
+      if (opacity > 0.01) {
+        canvas.drawRect(
+          Rect.fromLTWH(0, y, size.width, scanlineHeight),
+          Paint()
+            ..color = Colors.black.withValues(alpha: opacity)
+            ..blendMode = BlendMode.multiply,
+        );
+      }
+    }
+
+    // Add horizontal glitch lines at random positions intensifying with progress
+    final glitchCount = (progress * 8).toInt();
+    for (int i = 0; i < glitchCount; i++) {
+      final seed = (progress * 1000 + i) as int;
+      final random = seed % 100;
+      final glitchY =
+          (random / 100.0) * size.height + (progress * size.height * 0.2);
+      final glitchHeight = 2.0 + (progress * 6.0);
+      final glitchOpacity =
+          (0.2 * progress * (1.0 - (i / glitchCount))).clamp(0.0, 1.0);
+
+      if (glitchOpacity > 0.01) {
+        canvas.drawRect(
+          Rect.fromLTWH(0, glitchY % size.height, size.width, glitchHeight),
+          Paint()
+            ..color = Colors.white.withValues(alpha: glitchOpacity)
+            ..blendMode = BlendMode.screen,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ScanlinePainter oldDelegate) {
+    return oldDelegate.progress != progress;
   }
 }
