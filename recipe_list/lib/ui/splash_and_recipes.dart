@@ -235,25 +235,21 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
                 child: AnimatedBuilder(
                   animation: _dissolveOpacity,
                   builder: (context, child) {
-                    final rawProgress = _isDissolving
-                        ? (1.0 - _dissolveOpacity.value).clamp(0.0, 1.0)
+                    final dissolveProgress = _isDissolving
+                        ? Curves.easeInOutCubic.transform(
+                            (1.0 - _dissolveOpacity.value).clamp(0.0, 1.0),
+                          )
                         : 0.0;
-                    final dissolveProgress = Curves.easeInOutCubic.transform(
-                      rawProgress,
-                    );
-                    return Opacity(
-                      opacity: _dissolveOpacity.value,
-                      child: _isDissolving
-                          ? GKWidget(
-                              effect: DissolveEffect(
-                                progress: dissolveProgress,
-                                noiseScale: kIsWeb ? 3.2 : 4.2,
-                                edgeSoftness: 0.14,
-                              ),
-                              child: child!,
-                            )
-                          : child!,
-                    );
+                    return _isDissolving
+                        ? GKWidget(
+                            effect: DissolveEffect(
+                              progress: dissolveProgress,
+                              noiseScale: kIsWeb ? 3.2 : 4.2,
+                              edgeSoftness: 0.14,
+                            ),
+                            child: child!,
+                          )
+                        : child!;
                   },
                   child: _StartupConsentPanel(
                     spec: _consentSpec!,
