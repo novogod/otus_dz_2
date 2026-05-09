@@ -1,10 +1,12 @@
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
+import '../auth/passkey_api.dart' as passkey_api;
 import '../i18n.dart';
 import '../router/routes.dart';
 import 'admin_added_recipes_page.dart';
@@ -170,6 +172,68 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
   Future<void> _saveForBiometric() async {
     if (_busy) return;
     setState(() => _busy = true);
+
+    if (kIsWeb) {
+      // Web: register a WebAuthn passkey for the admin token so that
+      // the browser's platform authenticator can sign subsequent logins.
+      // Same mechanism as user_card_page._addPasskey().
+      final token = currentRecipeAdminTokenNotifier.value;
+      if (token == null || token.isEmpty) {
+        if (!mounted) return;
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Could not save passkey: no admin token available.',
+              ),
+            ),
+          );
+        return;
+      }
+      if (!passkey_api.isPasskeySupported) {
+        if (!mounted) return;
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Passkeys are not supported in this browser.'),
+            ),
+          );
+        return;
+      }
+      try {
+        await passkey_api.registerPasskey(token: token);
+        if (!mounted) return;
+        setState(() {
+          _busy = false;
+          _biometricSaved = true;
+        });
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Passkey registered. Sign in with Face ID / Fingerprint next time.',
+              ),
+            ),
+          );
+      } catch (e) {
+        debugPrint('[AdminAfterLoginPage] registerPasskey failed: $e');
+        if (!mounted) return;
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(content: Text('Could not register passkey: $e')),
+          );
+      }
+      return;
+    }
+
+    // Native (iOS / Android): persist token to local SQLite credential store.
     bool ok = false;
     try {
       ok = await saveCurrentSessionForBiometricLogin();

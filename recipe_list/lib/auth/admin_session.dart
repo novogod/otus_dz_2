@@ -510,7 +510,9 @@ Future<bool> loginWithSavedTokenSession() async {
   final rows = await db.query(
     'auth_credentials',
     columns: ['login', 'token', 'preferred_language', 'is_admin'],
-    where: 'token IS NOT NULL AND token <> ""',
+    // SQLite: double quotes are identifiers, not string literals.
+    // Must use single quotes for the empty-string comparison.
+    where: "token IS NOT NULL AND token <> ''",
     orderBy: 'updated_at DESC',
     limit: 1,
   );
@@ -595,7 +597,10 @@ Future<bool> ensureRecipesUserTokenForActiveSession() async {
   }
 }
 
-Future<String?> _loginUserTokenOnlineBridge(String login, String password) async {
+Future<String?> _loginUserTokenOnlineBridge(
+  String login,
+  String password,
+) async {
   if (RecipeApiConfig.backend != RecipeBackend.mahallem) return null;
   if (login.isEmpty || password.isEmpty) return null;
 
