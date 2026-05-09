@@ -239,17 +239,13 @@ class _UserCardPageState extends State<UserCardPage> {
       if (token == null || token.isEmpty) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(content: Text(s.profilePasskeySignInFirst)),
-          );
+          ..showSnackBar(SnackBar(content: Text(s.profilePasskeySignInFirst)));
         return;
       }
       if (!passkey_api.isPasskeySupported) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(content: Text(s.profilePasskeyNotSupported)),
-          );
+          ..showSnackBar(SnackBar(content: Text(s.profilePasskeyNotSupported)));
         return;
       }
       setState(() => _passkeyBusy = true);
@@ -258,9 +254,7 @@ class _UserCardPageState extends State<UserCardPage> {
         if (!mounted) return;
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(content: Text(s.profilePasskeyAdded)),
-          );
+          ..showSnackBar(SnackBar(content: Text(s.profilePasskeyAdded)));
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context)
@@ -864,7 +858,9 @@ class _UserCardPageState extends State<UserCardPage> {
   Widget _buildPasskeyButton() {
     if (!userLoggedInNotifier.value) return const SizedBox.shrink();
     final s = S.of(context);
-    final label = kIsWeb ? s.profileAddPasskeyButton : s.profileSaveBiometricButton;
+    final label = kIsWeb
+        ? s.profileAddPasskeyButton
+        : s.profileSaveBiometricButton;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

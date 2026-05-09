@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:math';
 
 import '../consent/startup_consent.dart';
 import '../i18n.dart';
@@ -471,9 +471,7 @@ class _ConsentRow extends StatelessWidget {
 /// Circle 1 (left): SVG flag of current language (40×40, clipped oval)
 /// Circle 2 (right): Label button showing next language (40×40, material circle)
 class _LanguageSwitcherCircles extends StatelessWidget {
-  const _LanguageSwitcherCircles({
-    required this.onLanguageSelected,
-  });
+  const _LanguageSwitcherCircles({required this.onLanguageSelected});
 
   final void Function(AppLang lang) onLanguageSelected;
 
@@ -519,11 +517,12 @@ class _LanguageSwitcherCircles extends StatelessWidget {
                     child: Center(
                       child: Text(
                         next.label,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
                       ),
                     ),
                   ),
@@ -537,25 +536,23 @@ class _LanguageSwitcherCircles extends StatelessWidget {
   }
 }
 
-/// Scanline dissolve effect that shows horizontal lines sweeping during modal dissolution.
+/// Pixelation dissolve effect that makes modal disappear as scattered pixels.
 class _ScanlineDissolveOverlay extends StatelessWidget {
-  const _ScanlineDissolveOverlay({
-    required this.progress,
-  });
+  const _ScanlineDissolveOverlay({required this.progress});
 
   final double progress; // 0.0 to 1.0, where 1.0 is fully dissolved
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _ScanlinePainter(progress: progress),
+      painter: _PixelationPainter(progress: progress),
       child: const SizedBox.expand(),
     );
   }
 }
 
-class _ScanlinePainter extends CustomPainter {
-  _ScanlinePainter({required this.progress});
+class _PixelationPainter extends CustomPainter {
+  _PixelationPainter({required this.progress});
 
   final double progress; // 0.0 to 1.0
 
@@ -563,57 +560,55 @@ class _ScanlinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (progress <= 0) return;
 
-    // Create scanlines that sweep down from top
-    final scanlineHeight = 4.0;
-    final scanlineSpacing = 8.0;
-    const scanlineOpacityBase = 0.3;
+    // Create pixelated disintegration effect
+    final pixelSize = 2.0 + (progress * 8.0);
+    final Random random = Random(42);
 
-    // Paint horizontal scanlines moving downward
-    final sweepPosition = size.height * progress;
+    final pixelsPerRow = (size.width / pixelSize).toInt();
+    final pixelsPerCol = (size.height / pixelSize).toInt();
 
-    // Draw scanlines
-    for (double y = -scanlineSpacing;
-        y < size.height + scanlineSpacing;
-        y += scanlineSpacing) {
-      final distanceFromSweep = (y - sweepPosition).abs();
-      final fade = 1.0 -
-          (distanceFromSweep / (scanlineSpacing * 3)).clamp(0.0, 1.0);
-      final opacity = (scanlineOpacityBase * fade * progress).clamp(0.0, 1.0);
+    for (int row = 0; row < pixelsPerCol; row++) {
+      for (int col = 0; col < pixelsPerRow; col++) {
+        // Only draw a fraction based on progress for gradual appearance
+        if (random.nextDouble() > (1.0 - progress * 0.9)) continue;
 
-      if (opacity > 0.01) {
-        canvas.drawRect(
-          Rect.fromLTWH(0, y, size.width, scanlineHeight),
+        final x = col * pixelSize + pixelSize / 2;
+        final y = row * pixelSize + pixelSize / 2;
+
+        // Calculate scatter direction (upward bias)
+        final distance = 80.0 * progress;
+        final angle = random.nextDouble() * 2 * pi;
+        final scatterX = x + (distance * cos(angle));
+        final scatterY = y - (distance * sin(angle).abs());
+
+        // Opacity decreases with progress
+        final opacity = max(0.0, (1.0 - progress) * 0.6);
+
+        // Draw pixel at scatter position
+        canvas.drawCircle(
+          Offset(
+            scatterX.clamp(0, size.width),
+            scatterY.clamp(0, size.height),
+          ),
+          pixelSize / 2.5,
           Paint()
-            ..color = Colors.black.withValues(alpha: opacity)
-            ..blendMode = BlendMode.multiply,
+            ..color = Colors.white.withValues(alpha: opacity)
+            ..blendMode = BlendMode.lighten,
         );
       }
     }
 
-    // Add horizontal glitch lines at random positions intensifying with progress
-    final glitchCount = (progress * 8).toInt();
-    for (int i = 0; i < glitchCount; i++) {
-      final seed = (progress * 1000 + i) as int;
-      final random = seed % 100;
-      final glitchY =
-          (random / 100.0) * size.height + (progress * size.height * 0.2);
-      final glitchHeight = 2.0 + (progress * 6.0);
-      final glitchOpacity =
-          (0.2 * progress * (1.0 - (i / glitchCount))).clamp(0.0, 1.0);
-
-      if (glitchOpacity > 0.01) {
-        canvas.drawRect(
-          Rect.fromLTWH(0, glitchY % size.height, size.width, glitchHeight),
-          Paint()
-            ..color = Colors.white.withValues(alpha: glitchOpacity)
-            ..blendMode = BlendMode.screen,
-        );
-      }
-    }
+    // Add glow fade effect
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()
+        ..color = Colors.white.withValues(alpha: progress * 0.15)
+        ..blendMode = BlendMode.screen,
+    );
   }
 
   @override
-  bool shouldRepaint(_ScanlinePainter oldDelegate) {
+  bool shouldRepaint(_PixelationPainter oldDelegate) {
     return oldDelegate.progress != progress;
   }
 }
