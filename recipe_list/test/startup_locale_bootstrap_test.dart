@@ -19,10 +19,15 @@ void main() {
       ).readAsStringSync();
 
       expect(src, contains('Future<void> main() async'));
+      expect(src, contains('final detected = detectDeviceAppLang();'));
+      expect(src, contains('appLang.value = detected;'));
       expect(src, contains('final db = await openRecipeDatabase();'));
       expect(src, contains('await bootstrapAdminSession(db: db);'));
 
-      final detectIndex = src.indexOf('appLang.value = detectDeviceAppLang();');
+      final detectIndex = src.indexOf(
+        'final detected = detectDeviceAppLang();',
+      );
+      final assignIndex = src.indexOf('appLang.value = detected;');
       final bootstrapIndex = src.indexOf(
         'final db = await openRecipeDatabase();',
       );
@@ -31,7 +36,8 @@ void main() {
       );
 
       expect(detectIndex, greaterThanOrEqualTo(0));
-      expect(bootstrapIndex, greaterThan(detectIndex));
+      expect(assignIndex, greaterThan(detectIndex));
+      expect(bootstrapIndex, greaterThan(assignIndex));
       expect(runAppIndex, greaterThan(bootstrapIndex));
     });
   });

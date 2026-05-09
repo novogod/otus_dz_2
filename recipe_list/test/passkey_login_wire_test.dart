@@ -68,6 +68,16 @@ void main() {
       },
     );
 
+    test('_loginWithBiometrics routes admin passkey sessions via /profile', () {
+      expect(
+        loginPageSrc,
+        contains('context.go(Routes.profile);'),
+        reason:
+            'Admin passkey login should hand control back to the routed '
+            'profile branch instead of pushing a separate admin overlay',
+      );
+    });
+
     test('admin_session.dart defines applyPasskeyLoginResult', () {
       expect(
         adminSessionSrc,

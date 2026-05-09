@@ -922,7 +922,23 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       // их в sqflite — только плодить рассинхрон. См.
       // [docs/user-card-and-social-signals.md].
       ratingStoreNotifier.value ??= RatingStore(api: api);
-      await bootstrapAdminSession(db: db);
+      // Session bootstrap already runs during app startup in main().
+      // Re-applying it while the recipes branch mounts can clobber a
+      // freshly established in-memory admin/passkey session with a
+      // stale or not-yet-visible DB snapshot, which on web looks like
+      // an immediate kick-out on the first route switch. Only fall
+      // back to DB rehydration here when the app truly has no live
+      // session state yet (e.g. isolated tests or nonstandard entry
+      // points that bypass main()).
+      final hasLiveSession =
+          userLoggedInNotifier.value ||
+          adminLoggedInNotifier.value ||
+          (currentUserLoginNotifier.value?.trim().isNotEmpty ?? false) ||
+          (currentUserTokenNotifier.value?.isNotEmpty ?? false) ||
+          (currentRecipeAdminTokenNotifier.value?.isNotEmpty ?? false);
+      if (!hasLiveSession) {
+        await bootstrapAdminSession(db: db);
+      }
       // Прогреваем избранное для текущего языка, иначе сразу после
       // старта `FavoriteBadge` слушает пустой нотифаер и рисует
       // контурное сердце для уже сохранённых рецептов до тех пор,

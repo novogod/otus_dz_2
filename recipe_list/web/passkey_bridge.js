@@ -205,10 +205,15 @@
     const cred = await navigator.credentials.create({ publicKey });
     if (!cred) throw new Error('User cancelled passkey registration');
 
+    const credJSON = credentialToRegistrationJSON(cred);
+    console.log('[PASSKEY_BRIDGE] credentialToRegistrationJSON returned response keys:', Object.keys(credJSON.response));
+    
     const completeBody = {
-      ...credentialToRegistrationJSON(cred),
+      ...credJSON,
       deviceInfo: detectDeviceInfo(),
     };
+    
+    console.log('[PASSKEY_BRIDGE] Final completeBody.response keys:', Object.keys(completeBody.response));
 
     const completeResp = await fetch('/recipes/auth/passkey/register/complete', {
       method: 'POST',

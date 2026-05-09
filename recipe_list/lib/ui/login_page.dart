@@ -10,7 +10,6 @@ import '../auth/admin_session.dart';
 import '../auth/passkey_api.dart' as passkey_api;
 import '../i18n.dart';
 import '../router/routes.dart';
-import 'admin_after_login_page.dart';
 import 'app_theme.dart';
 import 'password_recovery_page.dart';
 import 'signup_page.dart';
@@ -321,11 +320,13 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
         setState(() => _authBusy = false);
         if (adminLoggedInNotifier.value) {
-          await openAdminAfterLoginPage(
-            context,
-            adminLogin: result.email,
-            adminPassword: '',
-          );
+          // Route admin sessions back through the normal `/profile`
+          // branch instead of stacking a separate full-screen admin
+          // page on top. The profile branch already renders
+          // `AdminAfterLoginPage` from auth notifiers, and keeping a
+          // single routed admin surface avoids overlay/navigation
+          // desyncs when the user then switches to `/recipes`.
+          context.go(Routes.profile);
           return;
         }
         if (widget.popOnSuccess && Navigator.of(context).canPop()) {
@@ -395,11 +396,7 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       if (adminLoggedInNotifier.value) {
-        await openAdminAfterLoginPage(
-          context,
-          adminLogin: currentUserLoginNotifier.value?.trim() ?? '',
-          adminPassword: '',
-        );
+        context.go(Routes.profile);
         return;
       }
       if (widget.popOnSuccess && Navigator.of(context).canPop()) {
