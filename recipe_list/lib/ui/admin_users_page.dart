@@ -388,91 +388,100 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                       : ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 480),
                           child: ListView.separated(
-                            padding: const EdgeInsets.all(AppSpacing.pagePadding),
-                          itemBuilder: (context, index) {
-                            final user = _users[index];
-                            final selected = _selectedIds.contains(user.id);
-                            return DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: AppRadii.cardAll,
-                                boxShadow: AppShadows.card,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(AppSpacing.md),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Checkbox(
-                                      value: selected,
-                                      activeColor: AppColors.primaryDark,
-                                      onChanged: _busy
-                                          ? null
-                                          : (v) {
-                                              setState(() {
-                                                if (v == true) {
-                                                  _selectedIds.add(user.id);
-                                                } else {
-                                                  _selectedIds.remove(user.id);
-                                                }
-                                              });
-                                            },
-                                    ),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            user.email,
-                                            style: const TextStyle(
-                                              fontFamily:
-                                                  AppTextStyles.fontFamily,
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 16,
-                                              height: 23 / 16,
-                                              color: AppColors.primaryDark,
-                                            ),
-                                          ),
-                                          const SizedBox(height: AppSpacing.xs),
-                                          Text(user.fullName),
-                                          const SizedBox(height: AppSpacing.xs),
-                                          Text(
-                                            s.adminLangAndStatus(
-                                              user.preferredLanguage,
-                                              user.status,
-                                            ),
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    IconButton(
-                                      tooltip: s.adminEditAction,
-                                      onPressed: _busy
-                                          ? null
-                                          : () => _editUser(user),
-                                      icon: const Icon(Icons.edit),
-                                    ),
-                                    IconButton(
-                                      tooltip: s.adminDeleteAction,
-                                      onPressed: _busy
-                                          ? null
-                                          : () => _deleteOne(user),
-                                      icon: const Icon(Icons.delete_outline),
-                                    ),
-                                  ],
+                            padding: const EdgeInsets.all(
+                              AppSpacing.pagePadding,
+                            ),
+                            itemBuilder: (context, index) {
+                              final user = _users[index];
+                              final selected = _selectedIds.contains(user.id);
+                              return DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: AppRadii.cardAll,
+                                  boxShadow: AppShadows.card,
                                 ),
-                              ),
-                            );
-                          },
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: AppSpacing.sm),
-                          itemCount: _users.length,
-                        ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Checkbox(
+                                        value: selected,
+                                        activeColor: AppColors.primaryDark,
+                                        onChanged: _busy
+                                            ? null
+                                            : (v) {
+                                                setState(() {
+                                                  if (v == true) {
+                                                    _selectedIds.add(user.id);
+                                                  } else {
+                                                    _selectedIds.remove(
+                                                      user.id,
+                                                    );
+                                                  }
+                                                });
+                                              },
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              user.email,
+                                              style: const TextStyle(
+                                                fontFamily:
+                                                    AppTextStyles.fontFamily,
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 16,
+                                                height: 23 / 16,
+                                                color: AppColors.primaryDark,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              height: AppSpacing.xs,
+                                            ),
+                                            Text(user.fullName),
+                                            const SizedBox(
+                                              height: AppSpacing.xs,
+                                            ),
+                                            Text(
+                                              s.adminLangAndStatus(
+                                                user.preferredLanguage,
+                                                user.status,
+                                              ),
+                                              style: const TextStyle(
+                                                color: AppColors.textSecondary,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        tooltip: s.adminEditAction,
+                                        onPressed: _busy
+                                            ? null
+                                            : () => _editUser(user),
+                                        icon: const Icon(Icons.edit),
+                                      ),
+                                      IconButton(
+                                        tooltip: s.adminDeleteAction,
+                                        onPressed: _busy
+                                            ? null
+                                            : () => _deleteOne(user),
+                                        icon: const Icon(Icons.delete_outline),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: AppSpacing.sm),
+                            itemCount: _users.length,
+                          ),
                         ),
                 ),
               ],

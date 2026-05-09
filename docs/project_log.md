@@ -1,5 +1,31 @@
 # Project Log
 
+## Recent production updates (2026-05-09)
+
+**Environment:** `https://recipies.mahallem.ist`  
+**Deployment model:** `git pull` + `docker compose -f docker-compose.web.yml up -d --build`
+
+### UI/layout fixes
+
+- `7c395c7` — constrain admin users-list cards to mobile-like max width.
+- `f0bca66` — enforce width cap around users `ListView` as well.
+- `501dbd6` — fix admin user-edit modal CTA label from **"Сохранить рецепт"** to **"Сохранить"**.
+
+### Rating/auth fixes
+
+- `fa593cf` — allow rating taps for authenticated admin sessions (don’t treat admin as anonymous at tap gate).
+
+### Biometric/passkey stability fix
+
+- `5bfd7ea` — guard **Save Face ID/Fingerprint** handlers with `try/catch` in:
+  - `recipe_list/lib/ui/admin_after_login_page.dart`
+  - `recipe_list/lib/ui/user_card_page.dart`
+
+### Notes
+
+- Prerender cache was cleared after deploys (`recipe_list_prerender`) to avoid stale rendered responses.
+- Live production revision currently points to `5bfd7ea`.
+
 ## Admin kicked-out on rating tap (post-Chunks-1-19 regression)
 
 **Date:** 2026-05-08 (afternoon)

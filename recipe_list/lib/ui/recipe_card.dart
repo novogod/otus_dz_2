@@ -509,10 +509,12 @@ class PhotoRatingPill extends StatelessWidget {
                               await logoutAdmin(
                                 clearSavedSession: false,
                                 lossEvent: AdminSessionLossEvent(
-                                  reason: 'Rating pill received $status from backend',
+                                  reason:
+                                      'Rating pill received $status from backend',
                                   statusCode: status,
                                   requestMethod: dioErr?.requestOptions.method,
-                                  requestPath: dioErr?.requestOptions.uri.toString(),
+                                  requestPath: dioErr?.requestOptions.uri
+                                      .toString(),
                                   responseBody: body?.toString(),
                                   errorType: e.runtimeType.toString(),
                                   errorMessage: e.toString(),
