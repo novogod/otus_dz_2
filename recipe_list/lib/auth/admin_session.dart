@@ -108,6 +108,11 @@ String? get currentSessionAdminPassword => _sessionAdminPassword;
 
 Database? _db;
 
+// Bridge state: when an admin session tries to obtain a
+// recipes-user token for rating/favorites, attempt at most once
+// per active session to avoid repeated 401 bursts in web console.
+bool _userTokenBridgeAttempted = false;
+
 const String _kAuthBaseEnv = String.fromEnvironment(
   'MAHALLEM_AUTH_BASE',
   defaultValue: '__unset__',
@@ -477,12 +482,11 @@ Future<void> logoutAdmin({
       if (clearSavedSession) {
         // Explicit logout must destroy all persisted token sessions so
         // no biometric/trusted auto-resume survives it.
+        await txn.update('auth_credentials', {'active': 0, 'token': null});
+      } else {
         await txn.update('auth_credentials', {
           'active': 0,
-          'token': null,
-        });
-      } else {
-        await txn.update('auth_credentials', {'active': 0}, where: 'active = 1');
+        }, where: 'active = 1');
       }
     });
   }
@@ -571,22 +575,68 @@ Future<bool> ensureRecipesUserTokenForActiveSession() async {
   if (existing != null && existing.isNotEmpty) return true;
   if (RecipeApiConfig.backend != RecipeBackend.mahallem) return false;
   if (!adminLoggedInNotifier.value) return false;
+  if (_userTokenBridgeAttempted) return false;
 
   final login = currentUserLoginNotifier.value?.trim();
   final password = _sessionAdminPassword;
   if (login == null || login.isEmpty || password == null || password.isEmpty) {
+    _userTokenBridgeAttempted = true;
     return false;
   }
 
+  _userTokenBridgeAttempted = true;
   try {
-    final online = await _loginOnline(login, password);
-    final token = online?.token;
+    final token = await _loginUserTokenOnlineBridge(login, password);
     if (token == null || token.isEmpty) return false;
     currentUserTokenNotifier.value = token;
     return true;
   } catch (_) {
     return false;
   }
+}
+
+Future<String?> _loginUserTokenOnlineBridge(String login, String password) async {
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) return null;
+  if (login.isEmpty || password.isEmpty) return null;
+
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: _kAuthBase,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      validateStatus: (_) => true,
+    ),
+  );
+
+  // Keep this intentionally narrow: one path + two payload shapes.
+  // Avoids noisy /auth/login,/login probing for every star tap.
+  final path = _normalizePath(_kAuthLoginPath);
+  final payloads = <Map<String, String>>[
+    {'login': login, 'password': password},
+    {'email': login, 'password': password},
+  ];
+
+  for (final payload in payloads) {
+    try {
+      final res = await dio.post<Object>(path, data: payload);
+      final status = res.statusCode ?? 0;
+      if (status >= 200 && status < 300) {
+        final body = res.data;
+        final token = body is Map<String, dynamic>
+            ? body['token'] as String?
+            : null;
+        if (token != null && token.isNotEmpty) return token;
+      }
+      if (status == 400 || status == 401 || status == 403 || status == 422) {
+        continue;
+      }
+      return null;
+    } on DioException {
+      return null;
+    }
+  }
+  return null;
 }
 
 Future<bool> saveCurrentSessionForBiometricLogin() async {
@@ -699,6 +749,7 @@ void _setSessionState({
       login.isNotEmpty &&
       (isAdmin || (token != null && token.isNotEmpty));
   adminLoggedInNotifier.value = userLoggedInNotifier.value && isAdmin;
+  _userTokenBridgeAttempted = false;
   if (!adminLoggedInNotifier.value) {
     _sessionAdminPassword = null;
     currentRecipeAdminTokenNotifier.value = null;
