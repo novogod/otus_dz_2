@@ -94,6 +94,26 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
   /// доехала, последний результат не должен перезаписать новый.
   int _translateSeq = 0;
 
+  bool _needsTranslationBackfill(List<Recipe> recipes, AppLang lang) {
+    if (recipes.isEmpty || lang == AppLang.en) return false;
+    // Heuristic for the reported production issue: RU UI with many
+    // English card titles from /recipes/page. If a title has Latin
+    // letters and no Cyrillic, treat it as untranslated and trigger
+    // lookup-based backfill for this batch.
+    if (lang == AppLang.ru) {
+      final latin = RegExp(r'[A-Za-z]');
+      final cyrillic = RegExp(r'[А-Яа-яЁё]');
+      for (final r in recipes) {
+        final name = r.name.trim();
+        if (name.isEmpty) continue;
+        if (latin.hasMatch(name) && !cyrillic.hasMatch(name)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   /// Язык, на который надо будет перевести ленту, как только
   /// пользователь вернётся со страницы деталей. Если пользователь
   /// сменил язык, сидя в деталях, мы НЕ запускаем `_retranslate`
@@ -689,7 +709,15 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
           );
           if (page.recipes.isNotEmpty) {
             await _persist(repo, page.recipes, lang);
-            return _LoadResult(recipes: page.recipes, repository: repo);
+            var result = _LoadResult(recipes: page.recipes, repository: repo);
+            if (_needsTranslationBackfill(result.recipes, lang)) {
+              debugPrint(
+                '[recipe-list] backfill translations for lang=$lang '
+                '(bulk page has untranslated titles)',
+              );
+              result = await _retranslate(result, lang);
+            }
+            return result;
           }
           // Empty page — log so we don't silently drop into the slow
           // 14-category fan-out fallback for languages that secretly
@@ -725,7 +753,15 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         lang,
         onPartial: (partial) => _publishPartialFeed(partial, repo),
       );
-      return _LoadResult(recipes: recipes, repository: repo);
+      var result = _LoadResult(recipes: recipes, repository: repo);
+      if (_needsTranslationBackfill(result.recipes, lang)) {
+        debugPrint(
+          '[recipe-list] backfill translations for lang=$lang '
+          '(category seed has untranslated titles)',
+        );
+        result = await _retranslate(result, lang);
+      }
+      return result;
     }
 
     // Cache-first для не-mahallem бэкендов: если в локальной БД уже
