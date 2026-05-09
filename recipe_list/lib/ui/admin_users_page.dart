@@ -312,48 +312,51 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             constraints: const BoxConstraints(maxWidth: 480),
             child: Column(
               children: [
-                ColoredBox(
-                  color: AppColors.surface,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.pagePadding,
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: _allSelected,
-                          activeColor: AppColors.primaryDark,
-                          onChanged: _busy
-                              ? null
-                              : (v) => _toggleSelectAll(v ?? false),
-                        ),
-                        Text(
-                          s.adminSelectAll,
-                          style: const TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 16,
-                            height: 23 / 16,
-                            color: AppColors.primaryDark,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: ColoredBox(
+                    color: AppColors.surface,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.pagePadding,
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: Row(
+                        children: [
+                          Checkbox(
+                            value: _allSelected,
+                            activeColor: AppColors.primaryDark,
+                            onChanged: _busy
+                                ? null
+                                : (v) => _toggleSelectAll(v ?? false),
                           ),
-                        ),
-                        const Spacer(),
-                        FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primaryDark,
-                            foregroundColor: AppColors.surface,
-                            textStyle: AppTextStyles.buttonLabel,
+                          Text(
+                            s.adminSelectAll,
+                            style: const TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontWeight: FontWeight.w400,
+                              fontSize: 16,
+                              height: 23 / 16,
+                              color: AppColors.primaryDark,
+                            ),
                           ),
-                          onPressed: _busy || _selectedIds.isEmpty
-                              ? null
-                              : _bulkDeleteSelected,
-                          icon: const Icon(Icons.delete_outline),
-                          label: Text(
-                            s.adminDeleteSelectedButton(_selectedIds.length),
+                          const Spacer(),
+                          FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primaryDark,
+                              foregroundColor: AppColors.surface,
+                              textStyle: AppTextStyles.buttonLabel,
+                            ),
+                            onPressed: _busy || _selectedIds.isEmpty
+                                ? null
+                                : _bulkDeleteSelected,
+                            icon: const Icon(Icons.delete_outline),
+                            label: Text(
+                              s.adminDeleteSelectedButton(_selectedIds.length),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -382,8 +385,10 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                         )
                       : _users.isEmpty
                       ? Center(child: Text(s.adminNoUsersFound))
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(AppSpacing.pagePadding),
+                      : ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 480),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.all(AppSpacing.pagePadding),
                           itemBuilder: (context, index) {
                             final user = _users[index];
                             final selected = _selectedIds.contains(user.id);
@@ -467,6 +472,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                           separatorBuilder: (_, __) =>
                               const SizedBox(height: AppSpacing.sm),
                           itemCount: _users.length,
+                        ),
                         ),
                 ),
               ],
