@@ -13,6 +13,8 @@ import 'app_theme.dart';
 class LangIconButton extends StatelessWidget {
   const LangIconButton({super.key});
 
+  static const double _kControlSize = 40;
+
   @override
   Widget build(BuildContext context) {
     // Подписываемся на appLang явно: AppLangScope живёт в `home`,
@@ -31,16 +33,21 @@ class LangIconButton extends StatelessWidget {
           child: Semantics(
             button: true,
             label: s.switchLanguageTo(next.label),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Флаг слева от кнопки.
-                  ClipOval(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Флаг слева от кнопки.
+                Container(
+                  width: _kControlSize,
+                  height: _kControlSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(width: 1, color: Colors.black),
+                  ),
+                  child: ClipOval(
                     child: SizedBox(
-                      width: 28,
-                      height: 28,
+                      width: _kControlSize,
+                      height: _kControlSize,
                       child: SvgPicture.asset(
                         current.flagAsset,
                         fit: BoxFit.cover,
@@ -48,32 +55,36 @@ class LangIconButton extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Material(
-                    color: AppColors.primary,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: cycleAppLang,
-                      child: SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: Center(
-                          child: Text(
-                            next.label,
-                            style: const TextStyle(
-                              fontFamily: AppTextStyles.fontFamily,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 11,
-                              color: AppColors.surface,
-                            ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Material(
+                  color: AppColors.primary,
+                  shape: const CircleBorder(
+                    side: BorderSide(width: 1, color: Colors.black),
+                  ),
+                  child: InkWell(
+                    customBorder: const CircleBorder(
+                      side: BorderSide(width: 1, color: Colors.black),
+                    ),
+                    onTap: cycleAppLang,
+                    child: SizedBox(
+                      width: _kControlSize,
+                      height: _kControlSize,
+                      child: Center(
+                        child: Text(
+                          next.label,
+                          style: const TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: AppColors.surface,
                           ),
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
