@@ -5,8 +5,9 @@ import '../i18n.dart';
 import 'app_theme.dart';
 
 /// Кнопка переключения языка для размещения в `AppBar.actions`.
-/// Состоит из двух элементов: SVG-флаг текущего языка (24×16) и
-/// круг 40×40 с двухбуквенной подписью («RU/EN/ES/…»). Тап
+/// Состоит из двух элементов: SVG-флаг текущего языка и
+/// круглая кнопка-переключатель с двухбуквенной подписью («RU/EN/ES/…»).
+/// Тап
 /// циклически переключает [appLang] по всему списку поддерживаемых
 /// языков mahallem_ist (см. [AppLang]).
 class LangIconButton extends StatelessWidget {
@@ -30,50 +31,49 @@ class LangIconButton extends StatelessWidget {
           child: Semantics(
             button: true,
             label: s.switchLanguageTo(next.label),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Флаг слева от кнопки. Круглая 40×40-обрезка SVG
-                // под cover, чтобы заполнить тот же круг, что и
-                // соседняя кнопка-«RU/EN/…» — флаг и кнопка
-                // зрительно выровнены как пара одинаковых
-                // кружков.
-                ClipOval(
-                  child: SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: SvgPicture.asset(
-                      current.flagAsset,
-                      fit: BoxFit.cover,
-                      semanticsLabel: s.flagOf(current.label),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Флаг слева от кнопки.
+                  ClipOval(
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: SvgPicture.asset(
+                        current.flagAsset,
+                        fit: BoxFit.cover,
+                        semanticsLabel: s.flagOf(current.label),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Material(
-                  color: AppColors.primary,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: cycleAppLang,
-                    child: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Center(
-                        child: Text(
-                          next.label,
-                          style: const TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: AppColors.surface,
+                  const SizedBox(width: AppSpacing.sm),
+                  Material(
+                    color: AppColors.primary,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: cycleAppLang,
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: Center(
+                          child: Text(
+                            next.label,
+                            style: const TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                              color: AppColors.surface,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
