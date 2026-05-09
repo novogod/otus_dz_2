@@ -105,21 +105,49 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     if (!mounted) return;
     final int flowTicket = ++_flowTicket;
     setState(() {
+      _checkingConsent = true;
       _consentSpec = spec;
       _consentChecks = List<bool>.filled(spec.requiredItems.length, false);
-      _checkingConsent = false;
       _consentAccepted = false;
       _consentVisible = false;
       _isDissolving = false;
       _showRecipes = false;
       _showSplash = true;
     });
+
+    var accepted = false;
+    try {
+      accepted = await hasAcceptedStartupConsent(
+        lang: appLang.value,
+        isWeb: kIsWeb,
+      );
+    } catch (_) {
+      accepted = false;
+    }
+    if (!mounted || flowTicket != _flowTicket) return;
+
+    setState(() {
+      _checkingConsent = false;
+      _consentAccepted = accepted;
+    });
+
     _controller.reset();
     _consentController.reset();
     _dissolveController.reset();
     bottomNavVisibleNotifier.value = false;
     await Future.delayed(AppDurations.splash);
     if (!mounted || flowTicket != _flowTicket) return;
+
+    if (accepted) {
+      setState(() {
+        _showRecipes = true;
+      });
+      _controller
+        ..reset()
+        ..forward();
+      return;
+    }
+
     setState(() {
       _consentVisible = true;
     });
