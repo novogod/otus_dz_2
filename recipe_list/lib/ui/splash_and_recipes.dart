@@ -179,6 +179,32 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     }
   }
 
+  void _onSplashLanguageSelected(AppLang lang) {
+    cycleAppLangTo(lang);
+    if (!mounted || _consentAccepted) return;
+
+    final nextSpec = startupConsentSpecFor(appLang.value, isWeb: kIsWeb);
+    final previousSpec = _consentSpec;
+    final previousChecks = _consentChecks;
+    final checksByKind = <StartupConsentKind, bool>{
+      if (previousSpec != null)
+        for (
+          var i = 0;
+          i < previousSpec.requiredItems.length && i < previousChecks.length;
+          i++
+        )
+          previousSpec.requiredItems[i].kind: previousChecks[i],
+    };
+
+    setState(() {
+      _consentSpec = nextSpec;
+      _consentChecks = List<bool>.generate(
+        nextSpec.requiredItems.length,
+        (i) => checksByKind[nextSpec.requiredItems[i].kind] ?? false,
+      );
+    });
+  }
+
   /// Перезапускает splash-последовательность. Сбрасывает
   /// SlideTransition в начало, пересоздаёт [RecipeListLoader]
   /// через новый ключ и снова ждёт `AppDurations.splash`,
@@ -229,9 +255,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
                 topRightOverlay: !_consentAccepted
                     ? SafeArea(
                         child: _LanguageSwitcherCircles(
-                          onLanguageSelected: (lang) {
-                            cycleAppLangTo(lang);
-                          },
+                          onLanguageSelected: _onSplashLanguageSelected,
                         ),
                       )
                     : null,
