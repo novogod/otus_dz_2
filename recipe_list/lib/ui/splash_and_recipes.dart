@@ -34,11 +34,13 @@ class SplashAndRecipes extends StatefulWidget {
 }
 
 class SplashAndRecipesState extends State<SplashAndRecipes>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<Offset> _slide;
   late final AnimationController _consentController;
   late final Animation<Offset> _consentSlide;
+  late final AnimationController _dissolveController;
+  late final Animation<double> _dissolveOpacity;
   StartupConsentSpec? _consentSpec;
   List<bool> _consentChecks = const [];
   bool _checkingConsent = true;
@@ -69,6 +71,14 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
         .animate(
           CurvedAnimation(parent: _consentController, curve: Curves.easeInOut),
         );
+    // Dissolve animation: fade consent modal to transparent over 2 seconds
+    _dissolveController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    _dissolveOpacity = Tween<double>(begin: 0.95, end: 0.0).animate(
+      CurvedAnimation(parent: _dissolveController, curve: Curves.easeInOut),
+    );
     // Навбар скрыт во время splash — иначе он перекрывал бы
     // нижний край «въезжающего» списка. Открываем его, как
     // только slide-up закончился.
@@ -143,6 +153,8 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     try {
       await acceptStartupConsent(lang: appLang.value, isWeb: kIsWeb);
       if (!mounted) return;
+      // Start dissolve animation (fade to 4% opacity)
+      _dissolveController.forward();
       setState(() {
         _consentAccepted = true;
       });
@@ -174,6 +186,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
   void dispose() {
     _controller.dispose();
     _consentController.dispose();
+    _dissolveController.dispose();
     super.dispose();
   }
 
@@ -207,17 +220,26 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
             Positioned.fill(
               child: SlideTransition(
                 position: _consentSlide,
-                child: _StartupConsentPanel(
-                  spec: _consentSpec!,
-                  checks: _consentChecks,
-                  saving: _savingConsent,
-                  onToggle: (index, value) {
-                    setState(() {
-                      _consentChecks[index] = value;
-                    });
+                child: AnimatedBuilder(
+                  animation: _dissolveOpacity,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _dissolveOpacity.value,
+                      child: child,
+                    );
                   },
-                  onOpenDoc: _openDoc,
-                  onAgree: _agreeAndContinue,
+                  child: _StartupConsentPanel(
+                    spec: _consentSpec!,
+                    checks: _consentChecks,
+                    saving: _savingConsent,
+                    onToggle: (index, value) {
+                      setState(() {
+                        _consentChecks[index] = value;
+                      });
+                    },
+                    onOpenDoc: _openDoc,
+                    onAgree: _agreeAndContinue,
+                  ),
                 ),
               ),
             ),
@@ -267,7 +289,7 @@ class _StartupConsentPanel extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 380),
             child: Card(
-              color: Colors.white.withValues(alpha: 0.82),
+              color: Colors.white.withValues(alpha: 0.95),
               elevation: 12,
               shadowColor: theme.cardTheme.shadowColor,
               shape: RoundedRectangleBorder(
