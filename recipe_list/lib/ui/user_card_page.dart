@@ -150,6 +150,9 @@ class _UserCardPageState extends State<UserCardPage> {
     // and updates all visible UI (`AppLangScope` listens).
     if (_selectedLang != appLang.value) {
       cycleAppLangTo(_selectedLang);
+      // Keep local mirrored session language in sync with explicit
+      // profile language choice so trusted-session startup restores it.
+      await persistActiveSessionPreferredLanguage(_selectedLang);
     }
     // Push display name + language to the server. Failures are
     // surfaced as a snackbar but don't block the local change —

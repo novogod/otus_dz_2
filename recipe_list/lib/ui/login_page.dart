@@ -419,12 +419,8 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _logout() async {
     if (_authBusy) return;
     setState(() => _authBusy = true);
-    // For regular users we keep an explicitly saved biometric session token,
-    // so "Logout" returns to login screen but still allows Face ID/
-    // fingerprint sign-in later. Admin logout remains full-clear.
-    final preserveBiometric = !adminLoggedInNotifier.value && _biometricSaved;
     await logoutAdmin(
-      clearSavedSession: !preserveBiometric,
+      clearSavedSession: true,
       lossEvent: AdminSessionLossEvent(
         reason: 'User tapped Logout in LoginPage',
       ),
@@ -432,7 +428,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
     setState(() {
       _authBusy = false;
-      _biometricSaved = preserveBiometric;
+      _biometricSaved = false;
     });
     // После logout уводим пользователя на ленту рецептов,
     // а не оставляем на LoginPage. Если страница была пушнута

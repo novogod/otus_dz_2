@@ -202,3 +202,39 @@ Total: 40 files, ~371 KB
 ### Git
 - **Commit:** `df8d67e`
 - **Message:** `Backfill RU translations on initial feed load`
+
+---
+
+## Session + Preferred Language Policy Fix (Trust Device)
+
+**Issue Date:** May 9, 2026  
+**Environment:** Production (`recipies.mahallem.ist`)  
+**Requested Behavior:**
+- "Trust this device" login session must persist until explicit logout.
+- Explicit logout must destroy session.
+- Preferred language must be stored from login/profile edit and restored on next login/startup before UI/feed load.
+
+### Root Causes
+- Logout path in login UI could preserve biometric/token session for regular users.
+- Preferred language selected in profile edit was not immediately mirrored to the active local session row.
+- Post-login language could depend on login payload only; if backend payload lacked `preferredLanguage`, startup/login could drift to default/device language.
+
+### Implemented Changes
+- **`recipe_list/lib/auth/admin_session.dart`**
+	- `logoutAdmin(clearSavedSession: true)` now clears persisted token sessions across mirrored credentials (not only active row), enforcing explicit-logout destruction.
+	- Added `persistActiveSessionPreferredLanguage(AppLang lang)` to mirror explicit profile language changes into `auth_credentials.preferred_language`.
+	- After successful token-based login and passkey/biometric restore, runs `reconcilePreferredLanguageFromServer()` to read `/recipes/users/me.language`, apply UI language, and persist it locally.
+- **`recipe_list/lib/ui/user_card_page.dart`**
+	- On profile language change/save, now persists chosen language into active mirrored session (`persistActiveSessionPreferredLanguage`).
+- **`recipe_list/lib/ui/login_page.dart`**
+	- Logout now always calls `logoutAdmin(clearSavedSession: true)` and resets saved-biometric state in UI.
+
+### Verification
+- Analyzer passed for changed files:
+	- `lib/auth/admin_session.dart`
+	- `lib/ui/user_card_page.dart`
+	- `lib/ui/login_page.dart`
+
+### Git
+- **Commit:** `12d71fa`
+- **Message:** `Restore language from server profile on session bootstrap`

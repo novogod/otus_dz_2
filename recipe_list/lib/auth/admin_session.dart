@@ -422,6 +422,10 @@ Future<bool> loginAsAdmin({
       isAdmin: online.isAdmin,
     );
     _sessionAdminPassword = online.isAdmin ? password : null;
+    // If backend login payload omitted/lagged preferred language,
+    // reconcile from authoritative `/recipes/users/me` and persist
+    // to active mirrored session row.
+    await reconcilePreferredLanguageFromServer();
     return true;
   }
 
@@ -470,11 +474,16 @@ Future<void> logoutAdmin({
   final db = _db;
   if (db != null) {
     await db.transaction((txn) async {
-      final values = <String, Object?>{'active': 0};
       if (clearSavedSession) {
-        values['token'] = null;
+        // Explicit logout must destroy all persisted token sessions so
+        // no biometric/trusted auto-resume survives it.
+        await txn.update('auth_credentials', {
+          'active': 0,
+          'token': null,
+        });
+      } else {
+        await txn.update('auth_credentials', {'active': 0}, where: 'active = 1');
       }
-      await txn.update('auth_credentials', values, where: 'active = 1');
     });
   }
   _setSessionState(login: null, token: null, isAdmin: false);
@@ -529,6 +538,7 @@ Future<bool> loginWithSavedTokenSession() async {
     currentRecipeAdminTokenNotifier.value = token;
   }
   _sessionAdminPassword = null;
+  await reconcilePreferredLanguageFromServer();
   return true;
 }
 
@@ -714,6 +724,16 @@ Future<void> applyPasskeyLoginResult({
     currentRecipeAdminTokenNotifier.value = token;
   }
   _sessionAdminPassword = null;
+  await reconcilePreferredLanguageFromServer();
+}
+
+/// Persists the active session's preferred language in local mirrored
+/// credentials (`auth_credentials.preferred_language`).
+///
+/// Called when user explicitly changes language in profile edit so the
+/// next trusted-session startup restores the same choice immediately.
+Future<void> persistActiveSessionPreferredLanguage(AppLang lang) async {
+  await _persistActivePreferredLanguage(lang.name);
 }
 
 Future<SignUpResult> signUpUser({
@@ -1567,14 +1587,10 @@ Future<void> _setActiveLogin(Database db, String login) async {
 Future<void> _persistActivePreferredLanguage(String langCode) async {
   final db = _db;
   if (db == null) return;
-  await db.update(
-    'auth_credentials',
-    {
-      'preferred_language': langCode,
-      'updated_at': DateTime.now().millisecondsSinceEpoch,
-    },
-    where: 'active = 1',
-  );
+  await db.update('auth_credentials', {
+    'preferred_language': langCode,
+    'updated_at': DateTime.now().millisecondsSinceEpoch,
+  }, where: 'active = 1');
 }
 
 String _normalizePath(String raw) {
