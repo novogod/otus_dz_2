@@ -474,7 +474,8 @@ class PhotoRatingPill extends StatelessWidget {
                     // Admin sessions should be able to rate too.
                     // Accept either regular user token or admin
                     // bearer token as a valid authenticated state.
-                    var hasUserToken = userToken != null && userToken.isNotEmpty;
+                    var hasUserToken =
+                        userToken != null && userToken.isNotEmpty;
                     final hasAdminToken =
                         adminToken != null && adminToken.isNotEmpty;
                     final canRate = hasUserToken || hasAdminToken;
@@ -486,26 +487,6 @@ class PhotoRatingPill extends StatelessWidget {
                         if (!canRate) {
                           showRegistrationRequiredSnackBar(context);
                           return;
-                        }
-                        // Rating endpoint is user-token gated; when we only
-                        // have an admin bearer, try to mint a user token from
-                        // the active admin credentials (best effort).
-                        if (!hasUserToken && hasAdminToken) {
-                          final bridged =
-                              await ensureRecipesUserTokenForActiveSession();
-                          hasUserToken = bridged;
-                          if (!bridged) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Rating is unavailable for this admin session.',
-                                ),
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                            return;
-                          }
                         }
                         final messenger = ScaffoldMessenger.maybeOf(context);
                         try {
