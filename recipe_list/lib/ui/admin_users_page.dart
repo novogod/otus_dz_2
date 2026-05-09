@@ -252,7 +252,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                   foregroundColor: AppColors.surface,
                 ),
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text(s.addRecipeSubmit),
+                child: Text(s.profileSave),
               ),
             ],
           ),
