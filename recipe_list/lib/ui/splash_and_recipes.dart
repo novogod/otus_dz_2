@@ -64,12 +64,10 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _consentSlide = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _consentController, curve: Curves.easeInOut),
-    );
+    _consentSlide = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _consentController, curve: Curves.easeInOut),
+        );
     // Навбар скрыт во время splash — иначе он перекрывал бы
     // нижний край «въезжающего» списка. Открываем его, как
     // только slide-up закончился.
@@ -250,13 +248,13 @@ class _StartupConsentPanel extends StatelessWidget {
     final s = S.of(context);
     final theme = Theme.of(context);
     return ColoredBox(
-      color: Colors.black.withValues(alpha: 0.8),
+      color: Colors.transparent,
       child: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 340),
             child: Card(
-              color: theme.colorScheme.surface.withValues(alpha: 0.8),
+              color: Colors.white.withValues(alpha: 0.82),
               elevation: 12,
               shadowColor: theme.cardTheme.shadowColor,
               shape: RoundedRectangleBorder(
@@ -307,8 +305,11 @@ class _StartupConsentPanel extends StatelessWidget {
                               onPressed: saving ? null : onAgree,
                               style: FilledButton.styleFrom(
                                 elevation: theme.cardTheme.elevation,
-                                backgroundColor: theme.colorScheme.surface,
-                                foregroundColor: Colors.black,
+                                backgroundColor: theme.colorScheme.secondary,
+                                foregroundColor: Colors.white,
+                                minimumSize: Size.fromHeight(
+                                  kMinInteractiveDimension * 1.2,
+                                ),
                               ),
                               child: Text(
                                 saving ? s.consentSaving : s.consentAgree,
