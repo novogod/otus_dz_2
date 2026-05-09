@@ -110,8 +110,10 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _consentChecks = List<bool>.filled(spec.requiredItems.length, false);
       _checkingConsent = false;
       _consentAccepted = accepted;
+      _isDissolving = false;
     });
     if (!accepted) {
+      _dissolveController.reset();
       _consentController
         ..reset()
         ..forward();
@@ -157,6 +159,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       if (!mounted) return;
       // Start dissolve animation and wait for it to complete
       setState(() => _isDissolving = true);
+      _dissolveController.reset();
       _dissolveController.forward();
       // Wait for the 2-second dissolve animation to complete
       await Future.delayed(const Duration(seconds: 2));
@@ -184,8 +187,10 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _loaderKey = UniqueKey();
       _consentAccepted = false;
       _checkingConsent = true;
+      _isDissolving = false;
     });
     _consentController.reset();
+    _dissolveController.reset();
     _bootstrapConsentAndStart();
   }
 
