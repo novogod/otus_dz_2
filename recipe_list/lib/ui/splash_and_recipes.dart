@@ -48,6 +48,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
   bool _consentAccepted = false;
   bool _savingConsent = false;
   bool _isDissolving = false;
+  bool _showSplash = true;
 
   /// Ключ для `RecipeListLoader`, чтобы при перезапуске
   /// последовательности (см. [restart]) Flutter создал новый
@@ -88,6 +89,9 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         bottomNavVisibleNotifier.value = true;
+        if (_consentAccepted && mounted && _showSplash) {
+          setState(() => _showSplash = false);
+        }
       }
     });
     _bootstrapConsentAndStart();
@@ -111,6 +115,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _checkingConsent = false;
       _consentAccepted = accepted;
       _isDissolving = false;
+      _showSplash = true;
     });
     if (!accepted) {
       _dissolveController.reset();
@@ -188,6 +193,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _consentAccepted = false;
       _checkingConsent = true;
       _isDissolving = false;
+      _showSplash = true;
     });
     _consentController.reset();
     _dissolveController.reset();
@@ -214,7 +220,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
         children: [
           // Сплеш всегда внизу стека — он не двигается во время
           // перехода MOVE_IN, его лишь перекрывает поверх список.
-          const Positioned.fill(child: SplashPage()),
+          if (_showSplash) const Positioned.fill(child: SplashPage()),
           // Список «въезжает» снизу, заслоняя splash. Переключатель
           // языка живёт в его AppBar — пока splash, кнопки нет.
           if (_consentAccepted)
@@ -266,18 +272,19 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
                 ),
               ),
             ),
-          // Language switcher circles in top-right corner
-          Positioned(
-            top: 16,
-            right: 16,
-            child: SafeArea(
-              child: _LanguageSwitcherCircles(
-                onLanguageSelected: (lang) {
-                  cycleAppLangTo(lang);
-                },
+          // Language switcher is only for splash/consent.
+          if (!_consentAccepted)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: SafeArea(
+                child: _LanguageSwitcherCircles(
+                  onLanguageSelected: (lang) {
+                    cycleAppLangTo(lang);
+                  },
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
