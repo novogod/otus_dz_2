@@ -36,6 +36,8 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<Offset> _slide;
+  late final AnimationController _consentController;
+  late final Animation<Offset> _consentSlide;
   StartupConsentSpec? _consentSpec;
   List<bool> _consentChecks = const [];
   bool _checkingConsent = true;
@@ -58,6 +60,16 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       begin: const Offset(0, 1), // въезд снизу (Figma MOVE_IN/BOTTOM)
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _consentController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    _consentSlide = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _consentController, curve: Curves.easeInOut),
+    );
     // Навбар скрыт во время splash — иначе он перекрывал бы
     // нижний край «въезжающего» списка. Открываем его, как
     // только slide-up закончился.
@@ -88,6 +100,11 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _checkingConsent = false;
       _consentAccepted = accepted;
     });
+    if (!accepted) {
+      _consentController
+        ..reset()
+        ..forward();
+    }
     if (accepted && mounted) {
       _controller.forward();
     }
@@ -150,12 +167,14 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _consentAccepted = false;
       _checkingConsent = true;
     });
+    _consentController.reset();
     _bootstrapConsentAndStart();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _consentController.dispose();
     super.dispose();
   }
 
@@ -187,17 +206,20 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
             ),
           if (showConsent)
             Positioned.fill(
-              child: _StartupConsentPanel(
-                spec: _consentSpec!,
-                checks: _consentChecks,
-                saving: _savingConsent,
-                onToggle: (index, value) {
-                  setState(() {
-                    _consentChecks[index] = value;
-                  });
-                },
-                onOpenDoc: _openDoc,
-                onAgree: _agreeAndContinue,
+              child: SlideTransition(
+                position: _consentSlide,
+                child: _StartupConsentPanel(
+                  spec: _consentSpec!,
+                  checks: _consentChecks,
+                  saving: _savingConsent,
+                  onToggle: (index, value) {
+                    setState(() {
+                      _consentChecks[index] = value;
+                    });
+                  },
+                  onOpenDoc: _openDoc,
+                  onAgree: _agreeAndContinue,
+                ),
               ),
             ),
         ],
@@ -228,38 +250,51 @@ class _StartupConsentPanel extends StatelessWidget {
     final s = S.of(context);
     final theme = Theme.of(context);
     return ColoredBox(
-      color: Colors.black.withValues(alpha: 0.2),
+      color: Colors.black.withValues(alpha: 0.8),
       child: SafeArea(
-        child: Align(
-          alignment: Alignment.bottomCenter,
+        child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 340),
             child: Card(
-              color: theme.colorScheme.surface.withValues(alpha: 0.9),
-              elevation: theme.cardTheme.elevation,
+              color: theme.colorScheme.surface.withValues(alpha: 0.8),
+              elevation: 12,
               shadowColor: theme.cardTheme.shadowColor,
-              shape: theme.cardTheme.shape,
-              margin: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.xl,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
               ),
+              margin: const EdgeInsets.all(AppSpacing.lg),
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.xl,
+                ),
                 child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(s.consentTitle, style: theme.textTheme.titleMedium),
+                      Text(
+                        s.consentTitle,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       const SizedBox(height: AppSpacing.md),
                       for (var i = 0; i < spec.requiredItems.length; i++)
-                        _ConsentRow(
-                          checked: checks[i],
-                          label: startupConsentLabel(spec.requiredItems[i], s),
-                          onChanged: (v) => onToggle(i, v ?? false),
-                          onOpen: () => onOpenDoc(spec.requiredItems[i].docUrl),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 280),
+                          child: _ConsentRow(
+                            checked: checks[i],
+                            label: startupConsentLabel(
+                              spec.requiredItems[i],
+                              s,
+                            ),
+                            onChanged: (v) => onToggle(i, v ?? false),
+                            onOpen: () =>
+                                onOpenDoc(spec.requiredItems[i].docUrl),
+                          ),
                         ),
                       const SizedBox(height: AppSpacing.md),
                       Align(
@@ -272,6 +307,8 @@ class _StartupConsentPanel extends StatelessWidget {
                               onPressed: saving ? null : onAgree,
                               style: FilledButton.styleFrom(
                                 elevation: theme.cardTheme.elevation,
+                                backgroundColor: theme.colorScheme.surface,
+                                foregroundColor: Colors.black,
                               ),
                               child: Text(
                                 saving ? s.consentSaving : s.consentAgree,
@@ -319,8 +356,9 @@ class _ConsentRow extends StatelessWidget {
               onTap: onOpen,
               child: Text(
                 label,
+                textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.primary,
+                  color: Colors.black,
                   decoration: TextDecoration.underline,
                 ),
               ),
