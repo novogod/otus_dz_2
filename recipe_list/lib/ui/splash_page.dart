@@ -93,7 +93,7 @@ class _SplashPageState extends State<SplashPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SplashMaskedLogo(image: _foodImage),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.xxl),
                     SizedBox(
                       height: 28,
                       child: SplashRecipesCounter(count: _recipesCount),
