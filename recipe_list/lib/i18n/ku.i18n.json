@@ -167,12 +167,12 @@
   "consentCheckAll": "Ji kerema xwe hemî razîbûnan piştrast bikin",
   "consentDocUrlInvalid": "Girêdana belgeya yasayî nederbasdar e",
   "consentDocOpenFailed": "Belgeya yasayî venebû",
-  "consentLabelTerms": "Şertên bikaranînê qebûl dikim",
-  "consentLabelPersonalDataGdpr": "Pêvajokirina daneyên kesane qebûl dikim (GDPR)",
-  "consentLabelPersonalData152Fz": "Pêvajokirina daneyên kesane qebûl dikim (152-FZ)",
-  "consentLabelPersonalDataKvkk": "Pêvajokirina daneyên kesane qebûl dikim (KVKK)",
-  "consentLabelPersonalDataPdpl": "Pêvajokirina daneyên kesane qebûl dikim (PDPL)",
-  "consentLabelPersonalDataGeneral": "Pêvajokirina daneyên kesane qebûl dikim",
-  "consentLabelCookies": "Siyaseta cookie qebûl dikim",
-  "consentLabelStorage": "Siyaseta hilanîna herêmî qebûl dikim"
+  "consentLabelTerms": "Şertên Bikaranînê",
+  "consentLabelPersonalDataGdpr": "Pêvajokirina Daneyên Kesane (GDPR)",
+  "consentLabelPersonalData152Fz": "Pêvajokirina Daneyên Kesane (152-FZ)",
+  "consentLabelPersonalDataKvkk": "Pêvajokirina Daneyên Kesane (KVKK)",
+  "consentLabelPersonalDataPdpl": "Pêvajokirina Daneyên Kesane (PDPL)",
+  "consentLabelPersonalDataGeneral": "Pêvajokirina Daneyên Kesane",
+  "consentLabelCookies": "Siyaseta Cookie",
+  "consentLabelStorage": "Siyaseta Hilanîna Herêmî"
 }

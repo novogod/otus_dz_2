@@ -261,7 +261,6 @@ class _StartupConsentPanel extends StatelessWidget {
                       _ConsentRow(
                         checked: checks[i],
                         label: startupConsentLabel(spec.requiredItems[i], s),
-                        linkTitle: s.consentOpenDoc,
                         onChanged: (v) => onToggle(i, v ?? false),
                         onOpen: () => onOpenDoc(spec.requiredItems[i].docUrl),
                       ),
@@ -288,14 +287,12 @@ class _ConsentRow extends StatelessWidget {
   const _ConsentRow({
     required this.checked,
     required this.label,
-    required this.linkTitle,
     required this.onChanged,
     required this.onOpen,
   });
 
   final bool checked;
   final String label;
-  final String linkTitle;
   final ValueChanged<bool?> onChanged;
   final VoidCallback onOpen;
 
@@ -310,10 +307,18 @@ class _ConsentRow extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text(label),
+              child: GestureDetector(
+                onTap: onOpen,
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
             ),
           ),
-          TextButton(onPressed: onOpen, child: Text(linkTitle)),
         ],
       ),
     );

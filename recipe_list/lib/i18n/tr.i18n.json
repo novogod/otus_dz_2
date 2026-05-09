@@ -167,12 +167,12 @@
   "consentCheckAll": "Lütfen tüm onayları işaretleyin",
   "consentDocUrlInvalid": "Yasal belge URL'si geçersiz",
   "consentDocOpenFailed": "Yasal belge açılamadı",
-  "consentLabelTerms": "Kullanım koşullarını kabul ediyorum",
-  "consentLabelPersonalDataGdpr": "Kişisel veri işlemeyi kabul ediyorum (KVKK/GDPR)",
-  "consentLabelPersonalData152Fz": "Kişisel veri işlemeyi kabul ediyorum (152-FZ)",
-  "consentLabelPersonalDataKvkk": "Kişisel veri işlemeyi kabul ediyorum (KVKK)",
-  "consentLabelPersonalDataPdpl": "Kişisel veri işlemeyi kabul ediyorum (PDPL)",
-  "consentLabelPersonalDataGeneral": "Kişisel veri işlemeyi kabul ediyorum",
-  "consentLabelCookies": "Çerez politikasını kabul ediyorum",
-  "consentLabelStorage": "Yerel depolama politikasını kabul ediyorum"
+  "consentLabelTerms": "Kullanım Koşulları",
+  "consentLabelPersonalDataGdpr": "Kişisel Veri İşleme (KVKK/GDPR)",
+  "consentLabelPersonalData152Fz": "Kişisel Veri İşleme (152-FZ)",
+  "consentLabelPersonalDataKvkk": "Kişisel Veri İşleme (KVKK)",
+  "consentLabelPersonalDataPdpl": "Kişisel Veri İşleme (PDPL)",
+  "consentLabelPersonalDataGeneral": "Kişisel Veri İşleme",
+  "consentLabelCookies": "Çerez Politikası",
+  "consentLabelStorage": "Yerel Depolama Politikası"
 }

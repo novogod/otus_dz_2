@@ -167,12 +167,12 @@
   "consentCheckAll": "Bitte alle Zustimmungen bestätigen",
   "consentDocUrlInvalid": "Ungültige URL für das Rechtsdokument",
   "consentDocOpenFailed": "Rechtsdokument konnte nicht geöffnet werden",
-  "consentLabelTerms": "Ich akzeptiere die Nutzungsbedingungen",
-  "consentLabelPersonalDataGdpr": "Ich akzeptiere die Verarbeitung personenbezogener Daten (DSGVO)",
-  "consentLabelPersonalData152Fz": "Ich akzeptiere die Verarbeitung personenbezogener Daten (152-FZ)",
-  "consentLabelPersonalDataKvkk": "Ich akzeptiere die Verarbeitung personenbezogener Daten (KVKK)",
-  "consentLabelPersonalDataPdpl": "Ich akzeptiere die Verarbeitung personenbezogener Daten (PDPL)",
-  "consentLabelPersonalDataGeneral": "Ich akzeptiere die Verarbeitung personenbezogener Daten",
-  "consentLabelCookies": "Ich akzeptiere die Cookie-Richtlinie",
-  "consentLabelStorage": "Ich akzeptiere die lokale Speicherrichtlinie"
+  "consentLabelTerms": "Nutzungsbedingungen",
+  "consentLabelPersonalDataGdpr": "Verarbeitung personenbezogener Daten (DSGVO)",
+  "consentLabelPersonalData152Fz": "Verarbeitung personenbezogener Daten (152-FZ)",
+  "consentLabelPersonalDataKvkk": "Verarbeitung personenbezogener Daten (KVKK)",
+  "consentLabelPersonalDataPdpl": "Verarbeitung personenbezogener Daten (PDPL)",
+  "consentLabelPersonalDataGeneral": "Verarbeitung personenbezogener Daten",
+  "consentLabelCookies": "Cookie-Richtlinie",
+  "consentLabelStorage": "Lokale Speicherrichtlinie"
 }

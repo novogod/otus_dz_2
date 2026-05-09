@@ -173,12 +173,12 @@
   "consentCheckAll": "Подтвердите все согласия",
   "consentDocUrlInvalid": "Неверная ссылка на юридический документ",
   "consentDocOpenFailed": "Не удалось открыть документ",
-  "consentLabelTerms": "Принимаю условия использования",
-  "consentLabelPersonalDataGdpr": "Принимаю обработку персональных данных (GDPR)",
-  "consentLabelPersonalData152Fz": "Принимаю обработку персональных данных (152-ФЗ)",
-  "consentLabelPersonalDataKvkk": "Принимаю обработку персональных данных (KVKK)",
-  "consentLabelPersonalDataPdpl": "Принимаю обработку персональных данных (PDPL)",
-  "consentLabelPersonalDataGeneral": "Принимаю обработку персональных данных",
-  "consentLabelCookies": "Принимаю политику использования cookie",
-  "consentLabelStorage": "Принимаю политику локального хранилища"
+  "consentLabelTerms": "Условия использования",
+  "consentLabelPersonalDataGdpr": "Обработка персональных данных (GDPR)",
+  "consentLabelPersonalData152Fz": "Обработка персональных данных (152-ФЗ)",
+  "consentLabelPersonalDataKvkk": "Обработка персональных данных (KVKK)",
+  "consentLabelPersonalDataPdpl": "Обработка персональных данных (PDPL)",
+  "consentLabelPersonalDataGeneral": "Обработка персональных данных",
+  "consentLabelCookies": "Политика cookies",
+  "consentLabelStorage": "Политика локального хранилища"
 }

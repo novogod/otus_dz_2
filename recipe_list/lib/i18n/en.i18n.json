@@ -167,12 +167,12 @@
   "consentCheckAll": "Please check all required consents",
   "consentDocUrlInvalid": "Legal document URL is invalid",
   "consentDocOpenFailed": "Failed to open legal document",
-  "consentLabelTerms": "I accept the Terms of Use",
-  "consentLabelPersonalDataGdpr": "I accept personal data processing (GDPR)",
-  "consentLabelPersonalData152Fz": "I accept personal data processing (152-FZ)",
-  "consentLabelPersonalDataKvkk": "I accept personal data processing (KVKK)",
-  "consentLabelPersonalDataPdpl": "I accept personal data processing (PDPL)",
-  "consentLabelPersonalDataGeneral": "I accept personal data processing",
-  "consentLabelCookies": "I accept cookies policy",
-  "consentLabelStorage": "I accept local storage policy"
+  "consentLabelTerms": "Terms of Use",
+  "consentLabelPersonalDataGdpr": "Personal Data Processing (GDPR)",
+  "consentLabelPersonalData152Fz": "Personal Data Processing (152-FZ)",
+  "consentLabelPersonalDataKvkk": "Personal Data Processing (KVKK)",
+  "consentLabelPersonalDataPdpl": "Personal Data Processing (PDPL)",
+  "consentLabelPersonalDataGeneral": "Personal Data Processing",
+  "consentLabelCookies": "Cookies Policy",
+  "consentLabelStorage": "Local Storage Policy"
 }

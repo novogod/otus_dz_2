@@ -175,12 +175,12 @@
   "consentCheckAll": "يرجى تأكيد جميع الموافقات",
   "consentDocUrlInvalid": "رابط المستند القانوني غير صالح",
   "consentDocOpenFailed": "تعذّر فتح المستند القانوني",
-  "consentLabelTerms": "أوافق على شروط الاستخدام",
-  "consentLabelPersonalDataGdpr": "أوافق على معالجة البيانات الشخصية (GDPR)",
-  "consentLabelPersonalData152Fz": "أوافق على معالجة البيانات الشخصية (152-FZ)",
-  "consentLabelPersonalDataKvkk": "أوافق على معالجة البيانات الشخصية (KVKK)",
-  "consentLabelPersonalDataPdpl": "أوافق على معالجة البيانات الشخصية (PDPL)",
-  "consentLabelPersonalDataGeneral": "أوافق على معالجة البيانات الشخصية",
-  "consentLabelCookies": "أوافق على سياسة ملفات تعريف الارتباط",
-  "consentLabelStorage": "أوافق على سياسة التخزين المحلي"
+  "consentLabelTerms": "شروط الاستخدام",
+  "consentLabelPersonalDataGdpr": "معالجة البيانات الشخصية (GDPR)",
+  "consentLabelPersonalData152Fz": "معالجة البيانات الشخصية (152-FZ)",
+  "consentLabelPersonalDataKvkk": "معالجة البيانات الشخصية (KVKK)",
+  "consentLabelPersonalDataPdpl": "معالجة البيانات الشخصية (PDPL)",
+  "consentLabelPersonalDataGeneral": "معالجة البيانات الشخصية",
+  "consentLabelCookies": "سياسة ملفات تعريف الارتباط",
+  "consentLabelStorage": "سياسة التخزين المحلي"
 }
