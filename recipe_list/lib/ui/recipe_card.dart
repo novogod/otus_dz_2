@@ -468,85 +468,81 @@ class PhotoRatingPill extends StatelessWidget {
             return ValueListenableBuilder<String?>(
               valueListenable: currentUserTokenNotifier,
               builder: (context, userToken, _) {
-                // Rating is a per-user action and the backend
-                // endpoint (`POST /recipes/:id/rating`) is gated
-                // by `recipesUserAuthMiddleware`, which only
-                // accepts the `x-recipes-user-token` header.
-                // Admin-only sessions hold a `Bearer <admin>`
-                // token but no user token, so attempting the
-                // request returns 401 and our 401 catch below
-                // would kick the admin out (recurrence of
-                // 2026-05-08). Treat "no user token" as
-                // "not logged in for rating purposes" and short
-                // circuit before any network call. See
-                // docs/auth-session-401-recurrence-2026-05-08.md.
-                final canRate = userToken != null && userToken.isNotEmpty;
-                return _PhotoRatingPillView(
-                  count: snap.count,
-                  sum: snap.sum,
-                  my: snap.my,
-                  onTap: (stars) async {
-                    if (!canRate) {
-                      showRegistrationRequiredSnackBar(context);
-                      return;
-                    }
-                    final messenger = ScaffoldMessenger.maybeOf(context);
-                    try {
-                      if (snap.my == stars) {
-                        await store.clearMyRating(recipe.id);
-                      } else {
-                        await store.setMyRating(recipe.id, stars);
-                      }
-                    } catch (e, st) {
-                      // Token expired / cleared server-side. Surface a
-                      // friendly "log in to rate" prompt instead of the
-                      // raw DioException, and drop the stale session so
-                      // the next tap routes through the login flow.
-                      final dioErr = e is DioException ? e : null;
-                      final status = dioErr?.response?.statusCode;
-                      if (status == 401 || status == 403) {
-                        // Drop the active session so the next tap
-                        // routes through the login flow, but keep
-                        // the saved-session row intact so biometric
-                        // login still works after the user
-                        // re-authenticates. clearSavedSession=true
-                        // (the default) wiped the token blob and
-                        // produced "no biometric data for this
-                        // session" on the next app start.
-                        // See docs/auth-session-401-recurrence-2026-05-08.md.
-                        //
-                        // Publish a diagnostic record so any active
-                        // session-loss listener (e.g.
-                        // AdminAfterLoginPage) can surface the full
-                        // server response + stack trace. This is what
-                        // we want captured next time an admin gets
-                        // kicked out in the wild.
-                        final body = dioErr?.response?.data;
-                        await logoutAdmin(
-                          clearSavedSession: false,
-                          lossEvent: AdminSessionLossEvent(
-                            reason: 'Rating pill received $status from backend',
-                            statusCode: status,
-                            requestMethod: dioErr?.requestOptions.method,
-                            requestPath: dioErr?.requestOptions.uri.toString(),
-                            responseBody: body?.toString(),
-                            errorType: e.runtimeType.toString(),
-                            errorMessage: e.toString(),
-                            stackTrace: st.toString(),
-                          ),
-                        );
-                        if (context.mounted) {
+                return ValueListenableBuilder<String?>(
+                  valueListenable: currentRecipeAdminTokenNotifier,
+                  builder: (context, adminToken, __) {
+                    // Admin sessions should be able to rate too.
+                    // Accept either regular user token or admin
+                    // bearer token as a valid authenticated state.
+                    final hasUserToken =
+                        userToken != null && userToken.isNotEmpty;
+                    final hasAdminToken =
+                        adminToken != null && adminToken.isNotEmpty;
+                    final canRate = hasUserToken || hasAdminToken;
+                    return _PhotoRatingPillView(
+                      count: snap.count,
+                      sum: snap.sum,
+                      my: snap.my,
+                      onTap: (stars) async {
+                        if (!canRate) {
                           showRegistrationRequiredSnackBar(context);
+                          return;
                         }
-                        return;
-                      }
-                      messenger?.showSnackBar(
-                        SnackBar(
-                          content: Text('Rating failed: $e'),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
-                    }
+                        final messenger = ScaffoldMessenger.maybeOf(context);
+                        try {
+                          if (snap.my == stars) {
+                            await store.clearMyRating(recipe.id);
+                          } else {
+                            await store.setMyRating(recipe.id, stars);
+                          }
+                        } catch (e, st) {
+                          // Token expired / cleared server-side. For regular
+                          // user sessions we keep the previous behaviour:
+                          // drop stale session and route through login flow.
+                          // For admin-only sessions keep the admin logged in
+                          // (rating auth can be stricter than admin auth).
+                          final dioErr = e is DioException ? e : null;
+                          final status = dioErr?.response?.statusCode;
+                          if (status == 401 || status == 403) {
+                            if (hasUserToken) {
+                              final body = dioErr?.response?.data;
+                              await logoutAdmin(
+                                clearSavedSession: false,
+                                lossEvent: AdminSessionLossEvent(
+                                  reason: 'Rating pill received $status from backend',
+                                  statusCode: status,
+                                  requestMethod: dioErr?.requestOptions.method,
+                                  requestPath: dioErr?.requestOptions.uri.toString(),
+                                  responseBody: body?.toString(),
+                                  errorType: e.runtimeType.toString(),
+                                  errorMessage: e.toString(),
+                                  stackTrace: st.toString(),
+                                ),
+                              );
+                              if (context.mounted) {
+                                showRegistrationRequiredSnackBar(context);
+                              }
+                              return;
+                            }
+                            messenger?.showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Rating is unavailable for this admin session.',
+                                ),
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                            return;
+                          }
+                          messenger?.showSnackBar(
+                            SnackBar(
+                              content: Text('Rating failed: $e'),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      },
+                    );
                   },
                 );
               },
