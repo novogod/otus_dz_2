@@ -252,7 +252,7 @@ class _StartupConsentPanel extends StatelessWidget {
       child: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 340),
+            constraints: const BoxConstraints(maxWidth: 380),
             child: Card(
               color: Colors.white.withValues(alpha: 0.82),
               elevation: 12,
@@ -262,10 +262,7 @@ class _StartupConsentPanel extends StatelessWidget {
               ),
               margin: const EdgeInsets.all(AppSpacing.lg),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                  vertical: AppSpacing.xl,
-                ),
+                padding: const EdgeInsets.all(20),
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -346,6 +343,7 @@ class _ConsentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final linkedText = _capitalizeWords(_extractLinkedText(label));
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -353,20 +351,57 @@ class _ConsentRow extends StatelessWidget {
         children: [
           Checkbox(value: checked, onChanged: onChanged),
           Expanded(
-            child: GestureDetector(
-              onTap: onOpen,
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.black,
-                  decoration: TextDecoration.underline,
                 ),
+                children: [
+                  const TextSpan(text: 'I accept '),
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.middle,
+                    child: GestureDetector(
+                      onTap: onOpen,
+                      child: Text(
+                        linkedText,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF2D2D2D),
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _extractLinkedText(String value) {
+    final normalized = value.trim();
+    final lowered = normalized.toLowerCase();
+    const prefixes = ['i accept the ', 'i accept '];
+    for (final prefix in prefixes) {
+      if (lowered.startsWith(prefix)) {
+        return normalized.substring(prefix.length).trim();
+      }
+    }
+    return normalized;
+  }
+
+  String _capitalizeWords(String value) {
+    return value
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .map((part) {
+          if (part.length == 1) return part.toUpperCase();
+          return '${part[0].toUpperCase()}${part.substring(1)}';
+        })
+        .join(' ');
   }
 }
