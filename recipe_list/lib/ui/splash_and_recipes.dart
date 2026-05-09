@@ -505,10 +505,15 @@ class _ConsentRow extends StatelessWidget {
 }
 
 /// Language switcher for splash screen: shows 2 circles like in the app bar.
-/// Circle 1 (left): SVG flag of current language (40×40, clipped oval)
-/// Circle 2 (right): Label button showing next language (40×40, material circle)
+/// Circle 1 (left): SVG flag of current language.
+/// Circle 2 (right): Label button showing next language.
+///
+/// Диаметр обоих кругов равен высоте кнопки согласия в модалке:
+/// `kMinInteractiveDimension * 1.2`.
 class _LanguageSwitcherCircles extends StatelessWidget {
   const _LanguageSwitcherCircles({required this.onLanguageSelected});
+
+  static const double _kDiameter = kMinInteractiveDimension * 1.2;
 
   final void Function(AppLang lang) onLanguageSelected;
 
@@ -525,18 +530,18 @@ class _LanguageSwitcherCircles extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Current language flag circle (40×40)
+              // Current language flag circle (same diameter as consent button)
               Container(
-                width: 40,
-                height: 40,
+                width: _kDiameter,
+                height: _kDiameter,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(width: 1, color: Colors.black),
                 ),
                 child: ClipOval(
                   child: SizedBox(
-                    width: 40,
-                    height: 40,
+                    width: _kDiameter,
+                    height: _kDiameter,
                     child: SvgPicture.asset(
                       current.flagAsset,
                       fit: BoxFit.cover,
@@ -546,7 +551,7 @@ class _LanguageSwitcherCircles extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              // Next language cycle button (40×40 circle)
+              // Next language cycle button (same diameter as consent button)
               Material(
                 color: Theme.of(context).colorScheme.primary,
                 shape: const CircleBorder(
@@ -560,8 +565,8 @@ class _LanguageSwitcherCircles extends StatelessWidget {
                     onLanguageSelected(next);
                   },
                   child: SizedBox(
-                    width: 40,
-                    height: 40,
+                    width: _kDiameter,
+                    height: _kDiameter,
                     child: Center(
                       child: Text(
                         next.label,
