@@ -154,18 +154,36 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
   }
 
   Future<void> _refreshBiometricSaved() async {
-    final saved = await hasSavedBiometricSession(login: widget.adminLogin);
-    if (!mounted) return;
-    setState(() => _biometricSaved = saved);
+    try {
+      final saved = await hasSavedBiometricSession(login: widget.adminLogin);
+      if (!mounted) return;
+      setState(() => _biometricSaved = saved);
+    } catch (e) {
+      // Best-effort check only — never crash the admin page because of
+      // local credential-store read issues.
+      debugPrint('[AdminAfterLoginPage] _refreshBiometricSaved failed: $e');
+      if (!mounted) return;
+      setState(() => _biometricSaved = false);
+    }
   }
 
   Future<void> _saveForBiometric() async {
     if (_busy) return;
     setState(() => _busy = true);
-    final ok = await saveCurrentSessionForBiometricLogin();
+    bool ok = false;
+    try {
+      ok = await saveCurrentSessionForBiometricLogin();
+    } catch (e) {
+      debugPrint('[AdminAfterLoginPage] _saveForBiometric failed: $e');
+      ok = false;
+    }
     if (!mounted) return;
     setState(() => _busy = false);
-    await _refreshBiometricSaved();
+    try {
+      await _refreshBiometricSaved();
+    } catch (_) {
+      // _refreshBiometricSaved is already guarded; keep flow resilient.
+    }
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()

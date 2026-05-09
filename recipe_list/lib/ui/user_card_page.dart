@@ -272,7 +272,15 @@ class _UserCardPageState extends State<UserCardPage> {
     }
     // Native (iOS / Android): save current session for biometric login.
     setState(() => _passkeyBusy = true);
-    final ok = await saveCurrentSessionForBiometricLogin();
+    bool ok = false;
+    try {
+      ok = await saveCurrentSessionForBiometricLogin();
+    } catch (e) {
+      // Keep the profile screen stable even if local credential-store
+      // persistence fails unexpectedly.
+      debugPrint('[UserCardPage] saveCurrentSessionForBiometricLogin failed: $e');
+      ok = false;
+    }
     if (!mounted) return;
     setState(() => _passkeyBusy = false);
     ScaffoldMessenger.of(context)
