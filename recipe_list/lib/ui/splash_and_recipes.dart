@@ -1,4 +1,3 @@
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -89,56 +88,8 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _checkingConsent = false;
       _consentAccepted = accepted;
     });
-    if (mounted) {
-      final scaffoldMessenger = ScaffoldMessenger.of(context);
-      final platform = Theme.of(context).platform;
-      final deviceInfoLine = await _readDeviceInfoLine(platform);
-      final localeDebug = localeDetectionDebugSummary();
-      if (!mounted) return;
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Device locale detected: ${appLang.value.name.toUpperCase()}\n'
-            '$localeDebug\n'
-            '[$deviceInfoLine]',
-          ),
-          duration: const Duration(seconds: 8),
-        ),
-      );
-    }
     if (accepted && mounted) {
       _controller.forward();
-    }
-  }
-
-  Future<String> _readDeviceInfoLine(TargetPlatform platform) async {
-    final plugin = DeviceInfoPlugin();
-    try {
-      if (kIsWeb) {
-        final webInfo = await plugin.webBrowserInfo;
-        return 'web/${webInfo.browserName.name}';
-      }
-      switch (platform) {
-        case TargetPlatform.android:
-          final info = await plugin.androidInfo;
-          return 'android/${info.model}';
-        case TargetPlatform.iOS:
-          final info = await plugin.iosInfo;
-          return 'ios/${info.utsname.machine}';
-        case TargetPlatform.macOS:
-          final info = await plugin.macOsInfo;
-          return 'macos/${info.model}';
-        case TargetPlatform.windows:
-          final info = await plugin.windowsInfo;
-          return 'windows/${info.computerName}';
-        case TargetPlatform.linux:
-          final info = await plugin.linuxInfo;
-          return 'linux/${info.prettyName}';
-        case TargetPlatform.fuchsia:
-          return 'fuchsia';
-      }
-    } catch (_) {
-      return 'device-info-unavailable';
     }
   }
 
@@ -275,10 +226,6 @@ class _StartupConsentPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    // ignore: avoid_print
-    print(
-      '[splash] _StartupConsentPanel.build() locale=${LocaleSettings.currentLocale}, appLang=${appLang.value.name}',
-    );
     return ColoredBox(
       color: Colors.black.withValues(alpha: 0.5),
       child: Center(
@@ -293,15 +240,6 @@ class _StartupConsentPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // DEBUG: Show what locale was detected
-                    Text(
-                      '[DEBUG] appLang=${appLang.value.name}, locale=${LocaleSettings.currentLocale}',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF999999),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     Text(
                       s.consentTitle,
                       style: const TextStyle(
