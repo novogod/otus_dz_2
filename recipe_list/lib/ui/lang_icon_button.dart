@@ -39,8 +39,8 @@ class LangIconButton extends StatelessWidget {
                   // Флаг слева от кнопки.
                   ClipOval(
                     child: SizedBox(
-                      width: 32,
-                      height: 32,
+                      width: 28,
+                      height: 28,
                       child: SvgPicture.asset(
                         current.flagAsset,
                         fit: BoxFit.cover,
@@ -48,7 +48,7 @@ class LangIconButton extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.xs),
                   Material(
                     color: AppColors.primary,
                     shape: const CircleBorder(),
@@ -56,15 +56,15 @@ class LangIconButton extends StatelessWidget {
                       customBorder: const CircleBorder(),
                       onTap: cycleAppLang,
                       child: SizedBox(
-                        width: 32,
-                        height: 32,
+                        width: 28,
+                        height: 28,
                         child: Center(
                           child: Text(
                             next.label,
                             style: const TextStyle(
                               fontFamily: AppTextStyles.fontFamily,
                               fontWeight: FontWeight.w800,
-                              fontSize: 12,
+                              fontSize: 11,
                               color: AppColors.surface,
                             ),
                           ),
