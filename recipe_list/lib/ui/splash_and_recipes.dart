@@ -504,14 +504,22 @@ class _LanguageSwitcherCircles extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Current language flag circle (40×40)
-              ClipOval(
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: SvgPicture.asset(
-                    current.flagAsset,
-                    fit: BoxFit.cover,
-                    semanticsLabel: '${current.label} flag',
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(width: 1, color: Colors.black),
+                ),
+                child: ClipOval(
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: SvgPicture.asset(
+                      current.flagAsset,
+                      fit: BoxFit.cover,
+                      semanticsLabel: '${current.label} flag',
+                    ),
                   ),
                 ),
               ),
@@ -519,9 +527,13 @@ class _LanguageSwitcherCircles extends StatelessWidget {
               // Next language cycle button (40×40 circle)
               Material(
                 color: Theme.of(context).colorScheme.primary,
-                shape: const CircleBorder(),
+                shape: const CircleBorder(
+                  side: BorderSide(width: 1, color: Colors.black),
+                ),
                 child: InkWell(
-                  customBorder: const CircleBorder(),
+                  customBorder: const CircleBorder(
+                    side: BorderSide(width: 1, color: Colors.black),
+                  ),
                   onTap: () {
                     onLanguageSelected(next);
                   },
