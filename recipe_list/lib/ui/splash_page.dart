@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../data/api/recipe_api.dart';
+import '../i18n.dart';
 import 'app_theme.dart';
 
 /// Splash-экран по дизайну Figma (frame `135:691`).
@@ -161,13 +162,14 @@ class _SplashVisitorCounterState extends State<SplashVisitorCounter>
       height: 23 / 18,
       color: Colors.white,
     );
+    final s = S.of(context);
     return FadeTransition(
       opacity: Tween<double>(
         begin: 0.35,
         end: 1.0,
       ).animate(CurvedAnimation(parent: _blink, curve: Curves.easeInOut)),
       child: Text(
-        'Visitors: $count',
+        s.splashVisitorsCount(count),
         textAlign: TextAlign.center,
         style: textStyle,
       ),
@@ -188,8 +190,9 @@ class SplashRecipesCounter extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = count;
     if (c == null) return const SizedBox.shrink();
+    final s = S.of(context);
     return Text(
-      'Recipes: $c',
+      s.splashRecipesCount(c),
       textAlign: TextAlign.center,
       style: const TextStyle(
         fontFamily: AppTextStyles.fontFamily,
@@ -216,9 +219,11 @@ class SplashMaskedLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     // Набор стилей берём из бандлового Roboto Black (assets/fonts/Roboto-Black.ttf)
     // через fontFamily 'Roboto' — см. pubspec.yaml.
+    final s = S.of(context);
+    final logoText = '${s.splashBrandTop}\n${s.splashBrandBottom}';
     final textStyle = AppTextStyles.splashLogo.copyWith(color: Colors.white);
     final textWidget = Text(
-      'OTUS\nFOOD',
+      logoText,
       textAlign: TextAlign.center,
       style: textStyle,
     );
@@ -228,7 +233,7 @@ class SplashMaskedLogo extends StatelessWidget {
       return FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(
-          'OTUS\nFOOD',
+          logoText,
           textAlign: TextAlign.center,
           style: textStyle.copyWith(color: AppColors.textPrimary),
         ),

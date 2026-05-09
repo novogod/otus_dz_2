@@ -342,6 +342,56 @@ class S {
   String recipeVotesCount({required int n}) => _t.recipeVotesCount(n: n);
   String get recipeRatedToast => _t.recipeRatedToast;
 
+  // Splash page labels.
+  String get splashBrandTop => _byLang({
+    AppLang.en: 'OTUS',
+    AppLang.ru: 'ОТУС',
+    AppLang.es: 'OTUS',
+    AppLang.fr: 'OTUS',
+    AppLang.de: 'OTUS',
+    AppLang.it: 'OTUS',
+    AppLang.tr: 'OTUS',
+    AppLang.ar: 'أوتوس',
+    AppLang.fa: 'اوتوس',
+    AppLang.ku: 'ئۆتوس',
+  });
+  String get splashBrandBottom => _byLang({
+    AppLang.en: 'FOOD',
+    AppLang.ru: 'ЕДА',
+    AppLang.es: 'COMIDA',
+    AppLang.fr: 'CUISINE',
+    AppLang.de: 'ESSEN',
+    AppLang.it: 'CIBO',
+    AppLang.tr: 'YEMEK',
+    AppLang.ar: 'طعام',
+    AppLang.fa: 'غذا',
+    AppLang.ku: 'خواردن',
+  });
+  String splashRecipesCount(int n) => _byLang({
+    AppLang.en: 'Recipes: $n',
+    AppLang.ru: 'Рецепты: $n',
+    AppLang.es: 'Recetas: $n',
+    AppLang.fr: 'Recettes : $n',
+    AppLang.de: 'Rezepte: $n',
+    AppLang.it: 'Ricette: $n',
+    AppLang.tr: 'Tarifler: $n',
+    AppLang.ar: 'الوصفات: $n',
+    AppLang.fa: 'دستورها: $n',
+    AppLang.ku: 'ڕێسەکان: $n',
+  });
+  String splashVisitorsCount(int n) => _byLang({
+    AppLang.en: 'Visitors: $n',
+    AppLang.ru: 'Посетители: $n',
+    AppLang.es: 'Visitantes: $n',
+    AppLang.fr: 'Visiteurs : $n',
+    AppLang.de: 'Besucher: $n',
+    AppLang.it: 'Visitatori: $n',
+    AppLang.tr: 'Ziyaretçiler: $n',
+    AppLang.ar: 'الزوار: $n',
+    AppLang.fa: 'بازدیدکنندگان: $n',
+    AppLang.ku: 'سەردانکەرەکان: $n',
+  });
+
   // User card page (chunk D of user-card-and-social-signals).
   String get profileDisplayName => _t.profileDisplayName;
   String get profileLanguage => _t.profileLanguage;
