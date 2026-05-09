@@ -226,44 +226,48 @@ class _StartupConsentPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final theme = Theme.of(context);
     return ColoredBox(
-      color: Colors.black.withValues(alpha: 0.5),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Card(
-            margin: const EdgeInsets.all(AppSpacing.lg),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      s.consentTitle,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+      color: Colors.black.withValues(alpha: 0.2),
+      child: SafeArea(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Card(
+              color: theme.colorScheme.surface.withValues(alpha: 0.9),
+              margin: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.xl,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(s.consentTitle, style: theme.textTheme.titleMedium),
+                      const SizedBox(height: AppSpacing.md),
+                      for (var i = 0; i < spec.requiredItems.length; i++)
+                        _ConsentRow(
+                          checked: checks[i],
+                          label: startupConsentLabel(spec.requiredItems[i], s),
+                          onChanged: (v) => onToggle(i, v ?? false),
+                          onOpen: () => onOpenDoc(spec.requiredItems[i].docUrl),
+                        ),
+                      const SizedBox(height: AppSpacing.md),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: saving ? null : onAgree,
+                          child: Text(saving ? s.consentSaving : s.consentAgree),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    for (var i = 0; i < spec.requiredItems.length; i++)
-                      _ConsentRow(
-                        checked: checks[i],
-                        label: startupConsentLabel(spec.requiredItems[i], s),
-                        onChanged: (v) => onToggle(i, v ?? false),
-                        onOpen: () => onOpenDoc(spec.requiredItems[i].docUrl),
-                      ),
-                    const SizedBox(height: AppSpacing.md),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: saving ? null : onAgree,
-                        child: Text(saving ? s.consentSaving : s.consentAgree),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -289,23 +293,21 @@ class _ConsentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Checkbox(value: checked, onChanged: onChanged),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: GestureDetector(
-                onTap: onOpen,
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
-                  ),
+            child: GestureDetector(
+              onTap: onOpen,
+              child: Text(
+                label,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  decoration: TextDecoration.underline,
                 ),
               ),
             ),
