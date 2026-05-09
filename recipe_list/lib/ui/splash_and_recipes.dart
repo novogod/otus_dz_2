@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../consent/startup_consent.dart';
@@ -466,8 +467,9 @@ class _ConsentRow extends StatelessWidget {
   }
 }
 
-/// Simple language switcher showing 2 circular flag buttons.
-/// Displays current and next language for quick switching.
+/// Language switcher for splash screen: shows 2 circles like in the app bar.
+/// Circle 1 (left): SVG flag of current language (40×40, clipped oval)
+/// Circle 2 (right): Label button showing next language (40×40, material circle)
 class _LanguageSwitcherCircles extends StatelessWidget {
   const _LanguageSwitcherCircles({
     required this.onLanguageSelected,
@@ -479,59 +481,56 @@ class _LanguageSwitcherCircles extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<AppLang>(
       valueListenable: appLang,
-      builder: (context, currentLang, _) {
-        // Get current and next language
-        final currentIndex = AppLang.values.indexOf(currentLang);
-        final nextLang = AppLang
-            .values[(currentIndex + 1) % AppLang.values.length];
-
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Current language circle
-            GestureDetector(
-              onTap: () => onLanguageSelected(currentLang),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 2,
-                  ),
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    currentLang.flagAsset,
+      builder: (context, current, _) {
+        final next =
+            AppLang.values[(current.index + 1) % AppLang.values.length];
+        return Semantics(
+          button: true,
+          label: 'Switch language to ${next.label}',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Current language flag circle (40×40)
+              ClipOval(
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: SvgPicture.asset(
+                    current.flagAsset,
                     fit: BoxFit.cover,
+                    semanticsLabel: '${current.label} flag',
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            // Next language circle
-            GestureDetector(
-              onTap: () => onLanguageSelected(nextLang),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.grey.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    nextLang.flagAsset,
-                    fit: BoxFit.cover,
+              const SizedBox(width: AppSpacing.sm),
+              // Next language cycle button (40×40 circle)
+              Material(
+                color: Theme.of(context).colorScheme.primary,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    onLanguageSelected(next);
+                    cycleAppLang();
+                  },
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Center(
+                      child: Text(
+                        next.label,
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
