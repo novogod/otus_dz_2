@@ -239,7 +239,8 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
 
   @override
   Widget build(BuildContext context) {
-    final showConsent = !_checkingConsent && _consentVisible && !_consentAccepted;
+    final showConsent =
+        !_checkingConsent && _consentVisible && !_consentAccepted;
     // Material нужен, чтобы Text внутри splash/list получил
     // DefaultTextStyle темы вместо debug-fallback (жёлтое
     // подчёркивание, неверный вес).
@@ -339,85 +340,82 @@ class _StartupConsentPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = S.of(context);
     final theme = Theme.of(context);
-    return ColoredBox(
-      color: Colors.transparent,
-      child: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Card(
-              color: Colors.white.withValues(alpha: 0.95),
-              elevation: 12,
-              shadowColor: theme.cardTheme.shadowColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              margin: const EdgeInsets.all(AppSpacing.lg),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        s.consentTitle,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w700,
-                        ),
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Card(
+            color: Colors.white.withValues(alpha: 0.95),
+            elevation: 12,
+            shadowColor: theme.cardTheme.shadowColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            margin: const EdgeInsets.all(AppSpacing.lg),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      s.consentTitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      const SizedBox(height: AppSpacing.md),
-                      for (var i = 0; i < spec.requiredItems.length; i++)
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 280),
-                              child: _ConsentRow(
-                                checked: checks[i],
-                                label: startupConsentLabel(
-                                  spec.requiredItems[i],
-                                  s,
-                                ),
-                                onChanged: (v) => onToggle(i, v ?? false),
-                                onOpen: () =>
-                                    onOpenDoc(spec.requiredItems[i].docUrl),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.md),
+                    for (var i = 0; i < spec.requiredItems.length; i++)
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 280),
+                            child: _ConsentRow(
+                              checked: checks[i],
+                              label: startupConsentLabel(
+                                spec.requiredItems[i],
+                                s,
+                              ),
+                              onChanged: (v) => onToggle(i, v ?? false),
+                              onOpen: () =>
+                                  onOpenDoc(spec.requiredItems[i].docUrl),
+                            ),
+                          ),
+                          if (i < spec.requiredItems.length - 1)
+                            const SizedBox(height: AppSpacing.sm),
+                        ],
+                      ),
+                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.md),
+                    Align(
+                      alignment: Alignment.center,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 220),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: saving ? null : onAgree,
+                            style: FilledButton.styleFrom(
+                              elevation: theme.cardTheme.elevation,
+                              backgroundColor: theme.colorScheme.secondary,
+                              foregroundColor: Colors.white,
+                              minimumSize: Size.fromHeight(
+                                kMinInteractiveDimension * 1.2,
                               ),
                             ),
-                            if (i < spec.requiredItems.length - 1)
-                              const SizedBox(height: AppSpacing.sm),
-                          ],
-                        ),
-                      const SizedBox(height: AppSpacing.sm),
-                      const SizedBox(height: AppSpacing.md),
-                      Align(
-                        alignment: Alignment.center,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 220),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              onPressed: saving ? null : onAgree,
-                              style: FilledButton.styleFrom(
-                                elevation: theme.cardTheme.elevation,
-                                backgroundColor: theme.colorScheme.secondary,
-                                foregroundColor: Colors.white,
-                                minimumSize: Size.fromHeight(
-                                  kMinInteractiveDimension * 1.2,
-                                ),
-                              ),
-                              child: Text(
-                                saving ? s.consentSaving : s.consentAgree,
-                              ),
+                            child: Text(
+                              saving ? s.consentSaving : s.consentAgree,
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
