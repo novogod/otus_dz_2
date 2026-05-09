@@ -170,3 +170,35 @@ Total: 40 files, ~371 KB
 ---
 **Last Updated:** May 8, 2026
 **Status:** 91.7% Complete (11/12 chunks)
+
+---
+
+## Production Incident Log — RU Recipe Cards Partially Untranslated
+
+**Incident Date:** May 9, 2026  
+**Environment:** Production (`recipies.mahallem.ist`)  
+**Reported Symptom:** In Russian UI, many recipe cards still displayed English titles.
+
+### Findings
+- Production `GET /recipes/page?lang=ru` returned mixed-language payloads (both RU and EN titles).
+- Per-item translation path was confirmed to work:
+	- `GET /recipes/lookup/<id>?lang=ru` returned RU title.
+	- `GET /recipes/lookup/<id>?lang=en` returned EN title for the same recipe.
+- Root cause in frontend loader: initial list load from bulk page/category seed could accept mixed payload as-is, without forcing lookup-based backfill on startup.
+
+### Fix Implemented
+- Updated `recipe_list/lib/ui/recipe_list_loader.dart`.
+- Added startup translation backfill trigger for non-EN languages when feed appears untranslated.
+- RU heuristic: if a card title contains Latin letters and no Cyrillic, run `_retranslate(...)` to fetch localized entries via lookup and refresh list.
+- Applied to both startup paths:
+	- bulk page load (`/recipes/page`)
+	- category seed fallback
+
+### Verification
+- Local analyzer check passed for modified file (`No issues found`).
+- Deployed to production and verified active revision on server: `df8d67e`.
+- Containers healthy after deploy (`recipe_list_web`, `recipe_list_prerender` up).
+
+### Git
+- **Commit:** `df8d67e`
+- **Message:** `Backfill RU translations on initial feed load`
