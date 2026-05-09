@@ -59,6 +59,7 @@ Future<void> main() async {
   try {
     final db = await openRecipeDatabase();
     await bootstrapAdminSession(db: db);
+    await reconcilePreferredLanguageFromServer();
   } catch (e) {
     // ignore: avoid_print
     print('[main] auth bootstrap failed: $e');

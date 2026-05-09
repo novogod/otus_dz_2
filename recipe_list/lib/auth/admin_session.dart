@@ -321,6 +321,48 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   // session alive across splash/restart until explicit logout.
 }
 
+/// Best-effort startup reconciliation of UI language with the
+/// server-side user profile (`/recipes/users/me.language`).
+///
+/// Why this exists:
+/// - `bootstrapAdminSession()` restores `preferred_language` from the local
+///   `auth_credentials` mirror when present.
+/// - That local value may be stale (or missing) after server-side profile
+///   edits from another device/session.
+///
+/// This method runs after token/session restore and before the first frame,
+/// so the app starts in the user's actual persisted profile language rather
+/// than briefly flashing device/default EN.
+Future<void> reconcilePreferredLanguageFromServer() async {
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) return;
+  if (!userLoggedInNotifier.value || adminLoggedInNotifier.value) return;
+  final token = currentUserTokenNotifier.value;
+  if (token == null || token.isEmpty) return;
+
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: RecipeApiConfig.activeBaseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      responseType: ResponseType.json,
+      headers: {'x-recipes-user-token': token},
+    ),
+  );
+
+  try {
+    final res = await dio.get<Map<String, dynamic>>('/users/me');
+    final raw = res.data?['language'];
+    final fromServer = appLangFromLanguageCode(raw?.toString());
+    if (fromServer == null) return;
+    if (appLang.value != fromServer) {
+      cycleAppLangTo(fromServer);
+    }
+    await _persistActivePreferredLanguage(fromServer.name);
+  } catch (_) {
+    // Best-effort only: keep whatever language bootstrap already restored.
+  }
+}
+
 Future<bool> loginAsAdmin({
   required String login,
   required String password,
@@ -1520,6 +1562,19 @@ Future<void> _setActiveLogin(Database db, String login) async {
       whereArgs: [login],
     );
   });
+}
+
+Future<void> _persistActivePreferredLanguage(String langCode) async {
+  final db = _db;
+  if (db == null) return;
+  await db.update(
+    'auth_credentials',
+    {
+      'preferred_language': langCode,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    },
+    where: 'active = 1',
+  );
 }
 
 String _normalizePath(String raw) {
