@@ -13,7 +13,6 @@ import 'package:image_picker/image_picker.dart';
 import '../auth/admin_session.dart';
 import '../auth/passkey_api.dart' as passkey_api;
 import '../data/api/recipe_api.dart';
-import '../data/api/recipe_api_config.dart';
 import '../data/app_services.dart';
 import '../i18n.dart';
 import '../router/routes.dart';
@@ -925,25 +924,29 @@ class _AvatarSlot extends StatelessWidget {
     // 300-700 KB JPEG written to the bucket. Recipe-card author chip
     // does the same via [imgproxyUrl] (see recipe_card.dart:851).
     String? fullUrl;
+    String? fallbackUrl;
     if (hasAvatar) {
-      String absolute;
+      String sourceForProxy;
       if (url.startsWith('http')) {
-        absolute = url;
-      } else {
-        final base = RecipeApiConfig.mahallemBaseUrl;
-        final origin = Uri.tryParse(base);
-        if (origin != null) {
-          absolute =
-              '${origin.scheme}://${origin.host}'
-              '${origin.hasPort ? ":${origin.port}" : ""}'
-              '${url.startsWith('/') ? url : '/$url'}';
+        final uri = Uri.tryParse(url);
+        if (uri != null &&
+            uri.host == 'recipies.mahallem.ist' &&
+            uri.path.startsWith('/storage/')) {
+          final canonical = uri.replace(host: 'mahallem.ist').toString();
+          sourceForProxy = canonical;
+          fallbackUrl = canonical;
         } else {
-          absolute = url;
+          sourceForProxy = url;
+          fallbackUrl = url;
         }
+      } else {
+        final normalized = url.startsWith('/') ? url : '/$url';
+        sourceForProxy = normalized;
+        fallbackUrl = 'https://mahallem.ist$normalized';
       }
       // 240 dp slot @ ~3x DPR ≈ 720 px — keep imgproxy resize at 480
       // (it serves WebP, browser/iOS scales final 120-dp slot).
-      fullUrl = imgproxyUrl(absolute, 480, 480);
+      fullUrl = imgproxyUrl(sourceForProxy, 480, 480);
     }
     return Stack(
       clipBehavior: Clip.none,
@@ -964,11 +967,22 @@ class _AvatarSlot extends StatelessWidget {
                 ? Image.network(
                     fullUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.person,
-                      size: 64,
-                      color: AppColors.textSecondary,
-                    ),
+                    errorBuilder: (_, __, ___) =>
+                        (fallbackUrl != null && fallbackUrl != fullUrl)
+                        ? Image.network(
+                            fallbackUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.person,
+                              size: 64,
+                              color: AppColors.textSecondary,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.person,
+                            size: 64,
+                            color: AppColors.textSecondary,
+                          ),
                   )
                 : (onTap != null
                       ? const SizedBox.shrink()

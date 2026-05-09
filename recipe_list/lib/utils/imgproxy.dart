@@ -36,9 +36,27 @@ String imgproxyUrl(String src, int w, int h) {
 
   const origin = 'https://mahallem.ist';
 
+  // Already proxied URL — don't wrap again.
+  if (src.contains('/imgproxy/')) return src;
+
+  final uri = Uri.tryParse(src);
+  final isAbsolute = uri != null && uri.hasScheme && uri.host.isNotEmpty;
+
   // Превращаем относительный storage-URL в абсолютный — imgproxy
   // не умеет в `host`-relative пути.
-  final absoluteSrc = src.startsWith('/') ? '$origin$src' : src;
+  String absoluteSrc;
+  if (!isAbsolute && src.startsWith('/')) {
+    absoluteSrc = '$origin$src';
+    } else if (isAbsolute &&
+      uri.host == 'recipies.mahallem.ist' &&
+      uri.path.startsWith('/storage/')) {
+    // После массового rename ссылок источники могли указывать на
+    // `recipies.mahallem.ist`, тогда как storage/imgproxy обслуживается
+    // с `mahallem.ist`.
+    absoluteSrc = uri.replace(host: 'mahallem.ist').toString();
+  } else {
+    absoluteSrc = src;
+  }
 
   final encoded = base64Url.encode(utf8.encode(absoluteSrc));
   // Без padding — imgproxy не ожидает `=`-хвостов в URL-safe base64.
