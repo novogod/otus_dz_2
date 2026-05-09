@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:glow_effects/glow_effects.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../auth/admin_session.dart';
 import '../consent/startup_consent.dart';
 import '../i18n.dart';
 import '../i18n/strings.g.dart';
@@ -52,6 +53,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
   bool _showSplash = true;
   bool _showRecipes = false;
   int _flowTicket = 0;
+  bool _lastHasSavedSession = false;
 
   /// Ключ для `RecipeListLoader`, чтобы при перезапуске
   /// последовательности (см. [restart]) Flutter создал новый
@@ -61,6 +63,8 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
   @override
   void initState() {
     super.initState();
+    _lastHasSavedSession = _hasSavedSession;
+    userLoggedInNotifier.addListener(_onSessionStateChanged);
     _controller = AnimationController(
       vsync: this,
       duration: AppDurations.splashTransition,
@@ -100,6 +104,19 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
     _bootstrapConsentAndStart();
   }
 
+  bool get _hasSavedSession => userLoggedInNotifier.value;
+
+  void _onSessionStateChanged() {
+    final hasSavedSession = _hasSavedSession;
+    if (hasSavedSession == _lastHasSavedSession) return;
+    _lastHasSavedSession = hasSavedSession;
+    // User explicitly logged out (or session was dropped): rerun
+    // startup flow so consent appears again per product policy.
+    if (!hasSavedSession && mounted) {
+      restart();
+    }
+  }
+
   Future<void> _bootstrapConsentAndStart() async {
     final spec = startupConsentSpecFor(appLang.value, isWeb: kIsWeb);
     if (!mounted) return;
@@ -115,15 +132,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
       _showSplash = true;
     });
 
-    var accepted = false;
-    try {
-      accepted = await hasAcceptedStartupConsent(
-        lang: appLang.value,
-        isWeb: kIsWeb,
-      );
-    } catch (_) {
-      accepted = false;
-    }
+    final accepted = _hasSavedSession;
     if (!mounted || flowTicket != _flowTicket) return;
 
     setState(() {
@@ -259,6 +268,7 @@ class SplashAndRecipesState extends State<SplashAndRecipes>
 
   @override
   void dispose() {
+    userLoggedInNotifier.removeListener(_onSessionStateChanged);
     _controller.dispose();
     _consentController.dispose();
     _dissolveController.dispose();
