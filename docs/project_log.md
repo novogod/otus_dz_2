@@ -1,5 +1,58 @@
 # Project Log
 
+## Splash localization + passkey/biometric fixes (2026-05-09)
+
+**Environment:** `https://recipies.mahallem.ist`
+
+### Splash screen i18n
+
+- `6f6da0a` — localize splash brand logo, recipes and visitors counter labels for all 10 supported languages (en, ru, es, fr, de, it, tr, ar, fa, ku).
+- `f1e2420` — increase spacing between splash logo and counters (32 px instead of 16 px).
+
+### Passkey/biometric restore and web passkey save
+
+- `3fbaca7` — **fix(passkey)**: two critical bugs:
+  1. `admin_session.loginWithSavedTokenSession`: SQLite query used double-quotes in `token <> ""` — in SQLite, double quotes are identifiers (column names), not string literals. Changed to `token <> ''` (single quotes). This bug silently prevented native biometric login from ever restoring a saved session.
+  2. `admin_after_login_page._saveForBiometric`: on web, now correctly calls `passkey_api.registerPasskey(token: adminToken)` instead of the SQLite path. Login page already uses WebAuthn passkeys; admin panel now mirrors that for consistency and actual functionality.
+
+### Service worker startup timeout
+
+- `f1f3794` — remove `serviceWorkerSettings` from `flutter_bootstrap.js`. Flutter's loader was waiting 4000ms for `flutter_service_worker.js` (which doesn't exist) on every page load, printing "prepareServiceWorker took more than 4000ms" warning. App uses its own `pwa_sw.js` registered in `index.html` — removed unnecessary Flutter-managed SW setup.
+
+### Live revisions
+
+- **Production commit:** `f1f3794` (web + service worker fix)
+- **Backend commit:** `aa86fcef` (rating endpoints accept admin bearer; see earlier notes)
+
+---
+
+## Recent production updates (2026-05-09)
+
+**Environment:** `https://recipies.mahallem.ist`  
+**Deployment model:** `git pull` + `docker compose -f docker-compose.web.yml up -d --build`
+
+### UI/layout fixes
+
+- `7c395c7` — constrain admin users-list cards to mobile-like max width.
+- `f0bca66` — enforce width cap around users `ListView` as well.
+- `501dbd6` — fix admin user-edit modal CTA label from **"Сохранить рецепт"** to **"Сохранить"**.
+
+### Rating/auth fixes
+
+- `fa593cf` — allow rating taps for authenticated admin sessions (don't treat admin as anonymous at tap gate).
+- `855d4d8` — remove admin→user login bridge from star-tap flow; rely on backend admin bearer support.
+- `aa86fcef` (backend) — allow admin bearer on rating endpoints via write auth middleware + stable actor id mapping.
+
+### Biometric/passkey stability fix
+
+- `5bfd7ea` — guard **Save Face ID/Fingerprint** handlers with `try/catch` in:
+  - `recipe_list/lib/ui/admin_after_login_page.dart`
+  - `recipe_list/lib/ui/user_card_page.dart`
+
+### Notes
+
+- Prerender cache was cleared after deploys (`recipe_list_prerender`) to avoid stale rendered responses.
+
 ## Recent production updates (2026-05-09)
 
 **Environment:** `https://recipies.mahallem.ist`  
