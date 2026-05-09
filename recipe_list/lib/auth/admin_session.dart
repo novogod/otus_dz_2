@@ -551,11 +551,42 @@ Future<bool> hasSavedBiometricSession({String? login}) async {
   final rows = await db.query(
     'auth_credentials',
     columns: ['token'],
-    where: 'login = ? AND token IS NOT NULL AND token <> ""',
+    // SQLite string literals must use single quotes. Double quotes are
+    // parsed as identifiers and can trigger "no such column: ''".
+    where: "login = ? AND token IS NOT NULL AND token <> ''",
     whereArgs: [targetLogin],
     limit: 1,
   );
   return rows.isNotEmpty;
+}
+
+/// Best-effort bridge for admin sessions that need a
+/// `x-recipes-user-token` (e.g. rating/favorites endpoints guarded by
+/// `recipesUserAuthMiddleware`).
+///
+/// Returns true when a non-empty user token is available after this call.
+/// Never logs the admin out; on failure leaves current admin session intact.
+Future<bool> ensureRecipesUserTokenForActiveSession() async {
+  final existing = currentUserTokenNotifier.value;
+  if (existing != null && existing.isNotEmpty) return true;
+  if (RecipeApiConfig.backend != RecipeBackend.mahallem) return false;
+  if (!adminLoggedInNotifier.value) return false;
+
+  final login = currentUserLoginNotifier.value?.trim();
+  final password = _sessionAdminPassword;
+  if (login == null || login.isEmpty || password == null || password.isEmpty) {
+    return false;
+  }
+
+  try {
+    final online = await _loginOnline(login, password);
+    final token = online?.token;
+    if (token == null || token.isEmpty) return false;
+    currentUserTokenNotifier.value = token;
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 Future<bool> saveCurrentSessionForBiometricLogin() async {
