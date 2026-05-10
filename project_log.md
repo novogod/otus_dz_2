@@ -1,5 +1,54 @@
 # Legal Documents Implementation - Project Log
 
+## Biometric session preservation fix (logout consistency) — 2026-05-10
+
+**Environment:** Android app, UserCardPage profile logout
+
+### Problem
+- User enrolled biometric authentication on profile (showed "Biometric login saved" snackbar)
+- On next app restart, biometric login failed with "No saved biometric session found"
+- Session token was lost despite successful save
+
+### Root Cause
+- `UserCardPage._handleLogout()` was calling `logoutAdmin(clearSavedSession: true)` unconditionally
+- This deleted ALL auth_credentials rows where `token IS NOT NULL` 
+- Biometric session token was destroyed immediately after being saved
+- Pattern inconsistency: `AdminAfterLoginPage._logout()` was correct with `clearSavedSession: !preserveBiometric`
+
+### Fix shipped
+- **Files modified:**
+  - `recipe_list/lib/ui/user_card_page.dart`: Line 299-312 now checks `hasSavedBiometricSession()` before deciding to clear
+  - `recipe_list/lib/ui/login_page.dart`: Line 415-427 updated for consistency
+  - `recipe_list/test/user_card_passkey_test.dart`: Added regression test "logout preserves saved biometric sessions when present"
+
+- **Pattern applied:**
+  ```dart
+  final preserveBiometric = await hasSavedBiometricSession();
+  await logoutAdmin(
+    clearSavedSession: !preserveBiometric,  // Only clear if NO biometric session exists
+    lossEvent: AdminSessionLossEvent(...),
+  );
+  ```
+
+- **All logout call sites verified:**
+  - `UserCardPage._handleLogout`: ✅ Conditional preservation
+  - `AdminAfterLoginPage._logout`: ✅ Conditional preservation  
+  - `LoginPage._logout`: ✅ Conditional preservation
+  - `RecipeCard 401/403 handler`: ✅ Explicit `clearSavedSession: false` for retry
+
+### Git / Testing
+- **Commit:** `6328c6d`
+- **Message:** `Ensure consistent biometric session preservation across all logout call sites`
+- **Regression tests:** 17/17 passed (user_card_passkey_test.dart + user_card_page_test.dart)
+- **Code validation:** `flutter analyze` returns "No issues found!"
+
+### Verification
+- Biometric session now persists through logout/login cycles
+- All four logout call sites follow consistent preservation pattern
+- No test regressions
+
+---
+
 ## Shared deep-link production fix (`/ru/recipes/:id`) — 2026-05-10
 
 **Environment:** `https://recipies.mahallem.ist`
