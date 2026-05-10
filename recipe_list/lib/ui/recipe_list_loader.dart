@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
@@ -20,6 +21,10 @@ import '../models/recipe.dart';
 import 'app_theme.dart';
 import 'recipe_details_page.dart' show activeDetailsCount;
 import 'recipe_list_page.dart';
+
+void _logRecipeListLoader(String message) {
+  developer.log(message, name: 'recipe_list_loader', level: 800);
+}
 
 /// Загружает список рецептов и поднимает локальный кэш.
 ///
@@ -239,8 +244,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
             if (seq != _translateSeq || !mounted) {
               throw e;
             }
-            // ignore: avoid_print
-            print('[reload] _runLoad failed: $e');
+            _logRecipeListLoader('[reload] _runLoad failed: $e');
             // Keep previous feed on screen instead of crashing the page.
             // Surface the offline / busy state via a SnackBar.
             if (previous != null) {
@@ -307,8 +311,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         final seedTarget = widget.config.seedTarget;
         final maxOffset = total > seedTarget ? total - seedTarget : 0;
         final offset = maxOffset > 0 ? math.Random().nextInt(maxOffset + 1) : 0;
-        // ignore: avoid_print
-        print(
+        _logRecipeListLoader(
           '[reload] /recipes/page total=$total, picking offset=$offset '
           '(limit=$seedTarget)',
         );
@@ -323,8 +326,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
           return _LoadResult(recipes: shuffled, repository: repo);
         }
       } on Object catch (e) {
-        // ignore: avoid_print
-        print('[reload] /recipes/page failed, falling back: $e');
+        _logRecipeListLoader('[reload] /recipes/page failed, falling back: $e');
       }
     }
     return _runLoad(forceReseed: true);
@@ -385,8 +387,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     if (!mounted) return;
     final last = _lastResult;
     final seq = ++_translateSeq;
-    // ignore: avoid_print
-    print(
+    _logRecipeListLoader(
       '[lang] _onLangChanged -> ${appLang.value.name} '
       '(last=${last == null ? "null" : "${last.recipes.length} recipes"})',
     );
@@ -398,8 +399,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         last != null &&
         last.recipes.isNotEmpty) {
       _pendingBackgroundLang = appLang.value;
-      // ignore: avoid_print
-      print(
+      _logRecipeListLoader(
         '[lang] _onLangChanged deferred — details page on top '
         '(activeDetailsCount=${activeDetailsCount.value})',
       );
@@ -420,8 +420,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
               if (seq != _translateSeq || !mounted) {
                 throw e;
               }
-              // ignore: avoid_print
-              print('[lang] _runLoad failed: $e');
+              _logRecipeListLoader('[lang] _runLoad failed: $e');
               setState(() => _translating = false);
               throw e;
             });
@@ -437,8 +436,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
               if (seq != _translateSeq || !mounted) {
                 throw e;
               }
-              // ignore: avoid_print
-              print('[lang] _retranslate failed: $e');
+              _logRecipeListLoader('[lang] _retranslate failed: $e');
               // Doc rule: "If `/lookup` fails, the previous-language copy
               // stays on screen". Drop the loader and keep _lastResult.
               setState(() => _translating = false);
@@ -653,8 +651,9 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       // re-fetch recipes from the network. Cache loss is
       // acceptable here — the user explicitly hit reload or the
       // app just cold-started.
-      // ignore: avoid_print
-      print('[recipe-list] sqlite corruption at runtime — wiping cache: $e');
+      _logRecipeListLoader(
+        '[recipe-list] sqlite corruption at runtime — wiping cache: $e',
+      );
       await deleteRecipeDatabaseWebOnly();
       // The previously-cached Database instance is now invalid;
       // null out the global notifiers so the next _runLoadImpl
@@ -963,16 +962,16 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
           (currentUserLoginNotifier.value?.trim().isNotEmpty ?? false) ||
           (currentUserTokenNotifier.value?.isNotEmpty ?? false) ||
           (currentRecipeAdminTokenNotifier.value?.isNotEmpty ?? false);
-      print(
+      _logRecipeListLoader(
         '[RecipeListLoader] _defaultRepoBuilder: userLoggedInNotifier=${userLoggedInNotifier.value}, adminLoggedInNotifier=${adminLoggedInNotifier.value}, currentUserLoginNotifier=${currentUserLoginNotifier.value}, currentUserTokenNotifier=${currentUserTokenNotifier.value?.isNotEmpty}, currentRecipeAdminTokenNotifier=${currentRecipeAdminTokenNotifier.value?.isNotEmpty}, hasLiveSession=$hasLiveSession',
       );
       if (!hasLiveSession) {
-        print(
+        _logRecipeListLoader(
           '[RecipeListLoader] Calling bootstrapAdminSession (no live session)',
         );
         await bootstrapAdminSession(db: db);
       } else {
-        print(
+        _logRecipeListLoader(
           '[RecipeListLoader] Skipping bootstrapAdminSession (live session exists)',
         );
       }
@@ -997,8 +996,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       }
       return RecipeRepository(db: db, api: api);
     } on Object catch (e) {
-      // ignore: avoid_print
-      print('[repo] local db bootstrap failed: $e');
+      _logRecipeListLoader('[repo] local db bootstrap failed: $e');
       return null;
     }
   }
