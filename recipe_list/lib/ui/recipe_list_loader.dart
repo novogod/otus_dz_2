@@ -936,8 +936,18 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
           (currentUserLoginNotifier.value?.trim().isNotEmpty ?? false) ||
           (currentUserTokenNotifier.value?.isNotEmpty ?? false) ||
           (currentRecipeAdminTokenNotifier.value?.isNotEmpty ?? false);
+      print(
+        '[RecipeListLoader] _defaultRepoBuilder: userLoggedInNotifier=${userLoggedInNotifier.value}, adminLoggedInNotifier=${adminLoggedInNotifier.value}, currentUserLoginNotifier=${currentUserLoginNotifier.value}, currentUserTokenNotifier=${currentUserTokenNotifier.value?.isNotEmpty}, currentRecipeAdminTokenNotifier=${currentRecipeAdminTokenNotifier.value?.isNotEmpty}, hasLiveSession=$hasLiveSession',
+      );
       if (!hasLiveSession) {
+        print(
+          '[RecipeListLoader] Calling bootstrapAdminSession (no live session)',
+        );
         await bootstrapAdminSession(db: db);
+      } else {
+        print(
+          '[RecipeListLoader] Skipping bootstrapAdminSession (live session exists)',
+        );
       }
       // Прогреваем избранное для текущего языка, иначе сразу после
       // старта `FavoriteBadge` слушает пустой нотифаер и рисует

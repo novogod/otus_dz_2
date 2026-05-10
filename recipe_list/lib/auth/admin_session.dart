@@ -282,6 +282,7 @@ class AdminAddedRecipeItem {
 }
 
 Future<void> bootstrapAdminSession({required Database db}) async {
+  print('[admin_session] bootstrapAdminSession: starting');
   _db = db;
   _sessionAdminPassword = null;
   final rows = await db.query(
@@ -290,7 +291,9 @@ Future<void> bootstrapAdminSession({required Database db}) async {
     where: 'active = 1',
     limit: 1,
   );
+  print('[admin_session] bootstrapAdminSession: found ${rows.length} active rows');
   if (rows.isEmpty) {
+    print('[admin_session] bootstrapAdminSession: no active rows, clearing session');
     _setSessionState(login: null, token: null, isAdmin: false);
     return;
   }
@@ -298,6 +301,7 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   final token = rows.first['token'] as String?;
   final storedLang = rows.first['preferred_language'] as String?;
   final storedIsAdmin = (rows.first['is_admin'] as int? ?? 0) == 1;
+  print('[admin_session] bootstrapAdminSession: login=$login, token=${token?.isNotEmpty}, storedIsAdmin=$storedIsAdmin');
   // Legacy admin fallback is allowed only for truly legacy sessions without
   // token. If a token exists, trust persisted is_admin instead of login alias.
   final hasToken = token != null && token.isNotEmpty;
@@ -316,6 +320,7 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   );
   if (isAdmin && hasToken) {
     currentRecipeAdminTokenNotifier.value = token;
+    print('[admin_session] bootstrapAdminSession: set currentRecipeAdminTokenNotifier');
   }
   // Restore in-memory session password for the legacy admin so that
   // openProfilePage can reopen the admin panel after an app restart.
@@ -741,6 +746,9 @@ void _setSessionState({
   required String? token,
   required bool isAdmin,
 }) {
+  print(
+    '[admin_session] _setSessionState: login=$login, token=${token?.isNotEmpty}, isAdmin=$isAdmin',
+  );
   currentUserLoginNotifier.value = login;
   currentUserTokenNotifier.value = token;
   // A session is "logged in" only when we have credentials backing it: a
@@ -754,6 +762,9 @@ void _setSessionState({
       login.isNotEmpty &&
       (isAdmin || (token != null && token.isNotEmpty));
   adminLoggedInNotifier.value = userLoggedInNotifier.value && isAdmin;
+  print(
+    '[admin_session] After _setSessionState: userLoggedInNotifier=${userLoggedInNotifier.value}, adminLoggedInNotifier=${adminLoggedInNotifier.value}',
+  );
   _userTokenBridgeAttempted = false;
   if (!adminLoggedInNotifier.value) {
     _sessionAdminPassword = null;
