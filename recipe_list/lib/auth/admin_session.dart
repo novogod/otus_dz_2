@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../data/api/recipe_api_config.dart';
@@ -670,6 +671,39 @@ Future<bool> saveCurrentSessionForBiometricLogin() async {
       : currentUserTokenNotifier.value;
   if (token == null || token.isEmpty) return false;
 
+  // Prompt user to scan biometric (fingerprint / face) to enroll this device.
+  // This is necessary so the device's biometric auth system recognizes this
+  // credential for future authentication attempts.
+  final localAuth = LocalAuthentication();
+  try {
+    final canCheck = await localAuth.canCheckBiometrics ||
+        await localAuth.isDeviceSupported();
+    if (!canCheck) {
+      // Device does not support biometric authentication.
+      return false;
+    }
+
+    final authenticated = await localAuth.authenticate(
+      localizedReason:
+          'Scan your fingerprint or face to enable biometric login',
+      options: const AuthenticationOptions(
+        biometricOnly: true,
+        stickyAuth: true,
+      ),
+    );
+
+    if (!authenticated) {
+      // User cancelled or failed biometric verification.
+      return false;
+    }
+  } catch (e) {
+    // Biometric prompt failed unexpectedly (e.g., not set up on device).
+    debugPrint(
+        '[saveCurrentSessionForBiometricLogin] authenticate error: $e');
+    return false;
+  }
+
+  // User successfully verified with biometric; now persist the session.
   await _persistTrustedSession(
     db: db,
     login: login,
