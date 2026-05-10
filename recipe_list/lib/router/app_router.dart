@@ -7,8 +7,8 @@ import '../i18n.dart';
 import '../main.dart' show splashAndRecipesKey;
 import '../models/recipe.dart';
 import '../ui/add_recipe_page.dart';
-import '../ui/admin_after_login_page.dart';
 import '../ui/admin_added_recipes_page.dart';
+import '../ui/admin_after_login_page.dart';
 import '../ui/admin_users_page.dart';
 import '../ui/app_shell.dart';
 import '../ui/app_theme.dart' show AppDurations;
@@ -193,8 +193,8 @@ final GoRouter appRouter = GoRouter(
                     if (loginTrim.isEmpty || !adminLoggedInNotifier.value) {
                       return const _ProfileBranchRoot();
                     }
-                    final focusUserId =
-                        state.uri.queryParameters['focusUserId']?.trim();
+                    final focusUserId = state.uri.queryParameters['focusUserId']
+                        ?.trim();
                     return AdminUsersPage(
                       adminLogin: loginTrim,
                       adminPassword: currentSessionAdminPassword ?? '',
