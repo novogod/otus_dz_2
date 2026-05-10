@@ -416,8 +416,9 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _logout() async {
     if (_authBusy) return;
     setState(() => _authBusy = true);
+    final preserveBiometric = await hasSavedBiometricSession();
     await logoutAdmin(
-      clearSavedSession: true,
+      clearSavedSession: !preserveBiometric,
       lossEvent: AdminSessionLossEvent(
         reason: 'User tapped Logout in LoginPage',
       ),
