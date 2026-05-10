@@ -1,5 +1,35 @@
 # Project Log
 
+## Agentic logging rules (mandatory)
+
+1. **Every new record must start with date/time in Atlantic timezone (UTC-4).**
+  - Format: `YYYY-MM-DD HH:mm (Atlantic UTC-4)`
+2. **Newest record must always be placed at the top of this file** (reverse-chronological order).
+
+## 2026-05-09 20:28 (Atlantic UTC-4) — Passkey/admin logout + Profile routing fixes
+
+**Environment:** `https://recipies.mahallem.ist`
+
+### Included fixes
+
+- `9a708e0` — fix dead profile admin surface after logout (prevents orphan 3-button screen).
+- `10bbce3` — route admin pages through `/profile` branch (`/profile/users`, `/profile/recipes-added`) so tapping bottom-nav **Profile** returns to profile root.
+- `7c6c38c` — apply pending routing file updates (formatting/alignment follow-up).
+- `7a8ab89` — format admin session bootstrap debug logs.
+
+### Deploy
+
+- Full server-side redeploy executed from `/var/www/recipie/otus_dz_2`:
+  - `git pull --ff-only`
+  - `docker compose -f docker-compose.web.yml build flutter-web`
+  - `docker compose -f docker-compose.web.yml up -d flutter-web`
+- Health checks passed:
+  - `recipe_list_web` container: **Up**
+  - `http://127.0.0.1:8088/`: **200 OK**
+  - `https://recipies.mahallem.ist/`: **200 OK**
+
+---
+
 ## Splash localization + passkey/biometric fixes (2026-05-09)
 
 **Environment:** `https://recipies.mahallem.ist`
