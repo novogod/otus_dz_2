@@ -1,5 +1,27 @@
 # Legal Documents Implementation - Project Log
 
+## Shared deep-link production fix (`/ru/recipes/:id`) — 2026-05-10
+
+**Environment:** `https://recipies.mahallem.ist`
+
+### Problem
+- Shared recipe URLs such as `https://recipies.mahallem.ist/ru/recipes/1000015` could fail to open recipe details reliably on cold startup paths.
+
+### Fix shipped
+- `recipe_list/lib/router/app_router.dart`
+	- `_DeepLinkDetailsLoaderState` now includes a fallback `RecipeApi`.
+	- Details fetch now uses `services?.api ?? _fallbackApi`, so deep-link loading does not block on delayed app-services initialization.
+
+### Git / deploy
+- **Commit:** `a409f25`
+- **Message:** `Fix shared deep links before appServices init`
+- Deployed from `/var/www/recipie/otus_dz_2` with full rebuild/restart of `flutter-web` container.
+
+### Verification
+- Container `recipe_list_web`: **Up**
+- `http://127.0.0.1:8088/`: **200 OK**
+- `https://recipies.mahallem.ist/ru/recipes/1000015`: **200 OK**
+
 **Project Date:** May 8, 2026
 
 ## Overview

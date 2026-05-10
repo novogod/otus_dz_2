@@ -6,6 +6,43 @@
   - Format: `YYYY-MM-DD HH:mm (Atlantic UTC-4)`
 2. **Newest record must always be placed at the top of this file** (reverse-chronological order).
 
+## 2026-05-09 20:57 (Atlantic UTC-4) — Shared `/ru/recipes/:id` deep-link bootstrap fix
+
+**Environment:** `https://recipies.mahallem.ist`
+
+### Issue
+
+- Shared links like `https://recipies.mahallem.ist/ru/recipes/1000015` opened the shell but recipe details could stall before render on cold startup.
+
+### Root cause
+
+- Deep-link details loader depended on `appServicesNotifier` hydration timing. On slow bootstrap paths, loader could wait too long for services and not fetch details immediately.
+
+### Fix
+
+- `recipe_list/lib/router/app_router.dart`
+  - In `_DeepLinkDetailsLoaderState`, added fallback API path:
+    - `final RecipeApi _fallbackApi = RecipeApi();`
+    - `_fetch()` now uses `services?.api ?? _fallbackApi`.
+- This guarantees deep-link details fetch can proceed even before app services are fully initialized.
+
+### Validation
+
+- `flutter analyze lib/router/app_router.dart` — passed.
+- `flutter test test/router_locale_prefix_test.dart test/router_smoke_test.dart` — passed.
+
+### Deploy
+
+- Commit pushed: `a409f25` — **Fix shared deep links before appServices init**.
+- Production redeploy from `/var/www/recipie/otus_dz_2`:
+  - `git pull --ff-only`
+  - `docker compose -f docker-compose.web.yml build flutter-web`
+  - `docker compose -f docker-compose.web.yml up -d flutter-web`
+- Health checks:
+  - `recipe_list_web`: **Up**
+  - `http://127.0.0.1:8088/`: **200 OK**
+  - `https://recipies.mahallem.ist/ru/recipes/1000015`: **200 OK**
+
 ## 2026-05-09 20:28 (Atlantic UTC-4) — Passkey/admin logout + Profile routing fixes
 
 **Environment:** `https://recipies.mahallem.ist`
