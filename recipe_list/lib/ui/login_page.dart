@@ -195,15 +195,10 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.of(context).pop(true);
       return;
     }
-    // Non-admin users: после успешного логина уводим на ленту
-    // рецептов. На ветке /profile иначе остался бы тот же
-    // LoginPage (в logout-режиме) — пользователю выглядит как
-    // «логин не сработал». Admin уйдёт через openAdminAfterLoginPage,
-    // но _submit для admin её не открывает — её открывает только
-    // _loginWithBiometrics; для admin-логина по паролю шлём на
-    // ленту тоже (попасть в админ-панель он сможет через
-    // Profile-таб, который покажет AdminAfterLoginPage).
-    context.go(Routes.recipes);
+    // Routed profile branch is now auth-aware and resolves to
+    // AdminAfterLoginPage (admin) or UserCardPage (regular user),
+    // so successful sign-in should land on `/profile`.
+    context.go(Routes.profile);
   }
 
   Future<void> _saveCurrentSessionForBiometric() async {
@@ -332,7 +327,7 @@ class _LoginPageState extends State<LoginPage> {
         if (widget.popOnSuccess && Navigator.of(context).canPop()) {
           Navigator.of(context).pop(true);
         } else {
-          context.go(Routes.recipes);
+          context.go(Routes.profile);
         }
       } catch (e) {
         if (!mounted) return;
@@ -401,7 +396,9 @@ class _LoginPageState extends State<LoginPage> {
       }
       if (widget.popOnSuccess && Navigator.of(context).canPop()) {
         Navigator.of(context).pop(true);
+        return;
       }
+      context.go(Routes.profile);
     } catch (_) {
       if (!mounted) return;
       setState(() => _authBusy = false);
