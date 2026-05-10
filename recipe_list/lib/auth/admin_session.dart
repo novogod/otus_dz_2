@@ -103,6 +103,10 @@ void _publishAdminSessionLoss(AdminSessionLossEvent event) {
   adminSessionLossNotifier.value = event;
 }
 
+void _logAdminSession(String message) {
+  developer.log(message, name: 'admin_session', level: 800);
+}
+
 String? _sessionAdminPassword;
 
 String? get currentSessionAdminPassword => _sessionAdminPassword;
@@ -283,7 +287,7 @@ class AdminAddedRecipeItem {
 }
 
 Future<void> bootstrapAdminSession({required Database db}) async {
-  print('[admin_session] bootstrapAdminSession: starting');
+  _logAdminSession('[admin_session] bootstrapAdminSession: starting');
   _db = db;
   _sessionAdminPassword = null;
   final rows = await db.query(
@@ -292,11 +296,11 @@ Future<void> bootstrapAdminSession({required Database db}) async {
     where: 'active = 1',
     limit: 1,
   );
-  print(
+  _logAdminSession(
     '[admin_session] bootstrapAdminSession: found ${rows.length} active rows',
   );
   if (rows.isEmpty) {
-    print(
+    _logAdminSession(
       '[admin_session] bootstrapAdminSession: no active rows, clearing session',
     );
     _setSessionState(login: null, token: null, isAdmin: false);
@@ -306,7 +310,7 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   final token = rows.first['token'] as String?;
   final storedLang = rows.first['preferred_language'] as String?;
   final storedIsAdmin = (rows.first['is_admin'] as int? ?? 0) == 1;
-  print(
+  _logAdminSession(
     '[admin_session] bootstrapAdminSession: login=$login, token=${token?.isNotEmpty}, storedIsAdmin=$storedIsAdmin',
   );
   // Legacy admin fallback is allowed only for truly legacy sessions without
@@ -327,7 +331,7 @@ Future<void> bootstrapAdminSession({required Database db}) async {
   );
   if (isAdmin && hasToken) {
     currentRecipeAdminTokenNotifier.value = token;
-    print(
+    _logAdminSession(
       '[admin_session] bootstrapAdminSession: set currentRecipeAdminTokenNotifier',
     );
   }
@@ -676,7 +680,8 @@ Future<bool> saveCurrentSessionForBiometricLogin() async {
   // credential for future authentication attempts.
   final localAuth = LocalAuthentication();
   try {
-    final canCheck = await localAuth.canCheckBiometrics ||
+    final canCheck =
+        await localAuth.canCheckBiometrics ||
         await localAuth.isDeviceSupported();
     if (!canCheck) {
       // Device does not support biometric authentication.
@@ -698,8 +703,7 @@ Future<bool> saveCurrentSessionForBiometricLogin() async {
     }
   } catch (e) {
     // Biometric prompt failed unexpectedly (e.g., not set up on device).
-    debugPrint(
-        '[saveCurrentSessionForBiometricLogin] authenticate error: $e');
+    debugPrint('[saveCurrentSessionForBiometricLogin] authenticate error: $e');
     return false;
   }
 
@@ -788,7 +792,7 @@ void _setSessionState({
   required String? token,
   required bool isAdmin,
 }) {
-  print(
+  _logAdminSession(
     '[admin_session] _setSessionState: login=$login, token=${token?.isNotEmpty}, isAdmin=$isAdmin',
   );
   currentUserLoginNotifier.value = login;
@@ -804,7 +808,7 @@ void _setSessionState({
       login.isNotEmpty &&
       (isAdmin || (token != null && token.isNotEmpty));
   adminLoggedInNotifier.value = userLoggedInNotifier.value && isAdmin;
-  print(
+  _logAdminSession(
     '[admin_session] After _setSessionState: userLoggedInNotifier=${userLoggedInNotifier.value}, adminLoggedInNotifier=${adminLoggedInNotifier.value}',
   );
   _userTokenBridgeAttempted = false;
