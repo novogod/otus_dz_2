@@ -278,7 +278,9 @@ class _UserCardPageState extends State<UserCardPage> {
     } catch (e) {
       // Keep the profile screen stable even if local credential-store
       // persistence fails unexpectedly.
-      debugPrint('[UserCardPage] saveCurrentSessionForBiometricLogin failed: $e');
+      debugPrint(
+        '[UserCardPage] saveCurrentSessionForBiometricLogin failed: $e',
+      );
       ok = false;
     }
     if (!mounted) return;

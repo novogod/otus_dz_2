@@ -91,7 +91,8 @@ void main() {
       expect(
         src,
         contains('s.profileAddPasskeyButton'),
-        reason: 'button label must use the translated string, not a hardcoded literal',
+        reason:
+            'button label must use the translated string, not a hardcoded literal',
       );
     });
 
@@ -104,17 +105,11 @@ void main() {
     });
 
     test('passkey added snackbar uses i18n profilePasskeyAdded', () {
-      expect(
-        src,
-        contains('s.profilePasskeyAdded'),
-      );
+      expect(src, contains('s.profilePasskeyAdded'));
     });
 
     test('passkey error snackbar uses i18n profilePasskeyAddFailed', () {
-      expect(
-        src,
-        contains('s.profilePasskeyAddFailed'),
-      );
+      expect(src, contains('s.profilePasskeyAddFailed'));
     });
 
     test('logout preserves saved biometric sessions when present', () {
@@ -127,8 +122,7 @@ void main() {
       expect(
         src,
         contains('clearSavedSession: !preserveBiometric'),
-        reason:
-            'logout should keep biometric data when a saved session exists',
+        reason: 'logout should keep biometric data when a saved session exists',
       );
     });
 
