@@ -238,3 +238,58 @@ Total: 40 files, ~371 KB
 ### Git
 - **Commit:** `12d71fa`
 - **Message:** `Restore language from server profile on session bootstrap`
+
+---
+
+## Profile Branch Navigation + Admin Logout Surface Fix
+
+**Change Date:** May 10, 2026  
+**Environment:** Production (`recipies.mahallem.ist`)
+
+### Reported Symptoms
+- After admin passkey login/logout, Profile could show a dead surface with 3 buttons (`Save admin login`, `Edit recipes`, `Logout`) and inconsistent navigation.
+- From admin subpages (`Edit users list`, `Recipes added`), tapping bottom-navbar **Profile** did not always return to Profile root; users had to use back arrow.
+
+### Root Causes
+- `AdminAfterLoginPage` could remain mounted/rendered when admin context was dropped.
+- Admin subpages were opened via imperative `Navigator.push(...)`, so they were outside predictable profile branch-root reset behavior.
+
+### Implemented Changes
+- **`recipe_list/lib/ui/admin_after_login_page.dart`**
+	- Added guard to avoid non-admin rendering on admin-only page.
+	- On admin-session loss/logout, route via go_router (`Routes.profile` / `Routes.recipes`) with Navigator fallback.
+- **`recipe_list/lib/router/routes.dart`**
+	- Added profile branch subroutes:
+		- `/profile/users`
+		- `/profile/recipes-added`
+	- Added helper builders (`Routes.profileUsers(...)`, `Routes.profileRecipesAdded`).
+- **`recipe_list/lib/router/app_router.dart`**
+	- Registered nested admin subroutes under `/profile` with admin-session guards/redirects.
+- **`recipe_list/lib/ui/admin_added_recipes_page.dart`**
+	- Switched creator-card navigation to route-based `context.push(Routes.profileUsers(...))`.
+
+### Tests / Validation
+- Analyzer passed on changed routing/UI files.
+- Tests passed:
+	- `test/router_profile_branch_test.dart`
+	- `test/router_branches_test.dart`
+	- `test/admin_after_login_page_test.dart` (new regression test)
+
+### Production Deployment
+- Full server-side redeploy sequence executed from repo path:
+	- `/var/www/recipie/otus_dz_2`
+	- `git pull --ff-only`
+	- `docker compose -f docker-compose.web.yml build flutter-web`
+	- `docker compose -f docker-compose.web.yml up -d flutter-web`
+- Health checks:
+	- `recipe_list_web` container: **Up**
+	- `http://127.0.0.1:8088/`: **200 OK**
+	- `https://recipies.mahallem.ist/`: **200 OK**
+
+### Git
+- **Commit:** `9a708e0`
+- **Message:** `Fix dead profile admin surface after logout`
+- **Commit:** `7a8ab89`
+- **Message:** `Format admin session bootstrap debug logs`
+- **Commit:** `10bbce3`
+- **Message:** `Route admin profile pages through /profile branch`
