@@ -39,14 +39,8 @@ Future<void> main() async {
   // their preferred language BEFORE runApp, so the first recipe
   // load already happens in the final startup locale.
   final detected = detectDeviceAppLang();
-  // ignore: avoid_print
-  print('[main] detectDeviceAppLang() => ${detected.name}');
   appLang.value = detected;
   initI18n();
-  // ignore: avoid_print
-  print(
-    '[main] after initI18n, LocaleSettings.currentLocale = ${LocaleSettings.currentLocale}',
-  );
   // Web-only: start polling the JS shim that captured
   // `beforeinstallprompt` so the Install-PWA button knows when to
   // surface itself. No-op on iOS/Android/desktop (stub).

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
+import '../data/api/recipe_api.dart';
 import '../data/app_services.dart';
 import '../i18n.dart';
 import '../main.dart' show splashAndRecipesKey;
@@ -424,6 +425,7 @@ class _DeepLinkDetailsLoader extends StatefulWidget {
 }
 
 class _DeepLinkDetailsLoaderState extends State<_DeepLinkDetailsLoader> {
+  final RecipeApi _fallbackApi = RecipeApi();
   Recipe? _recipe;
   bool _failed = false;
 
@@ -446,8 +448,11 @@ class _DeepLinkDetailsLoaderState extends State<_DeepLinkDetailsLoader> {
 
   Future<void> _fetch() async {
     final services = appServicesNotifier.value;
-    final api = services?.api;
-    if (api == null) return; // wait for splash → services
+    // Shared/deep links can be opened before RecipeListLoader has had
+    // a chance to publish AppServices (e.g. splash consent gate still
+    // visible). In that case, use a direct API instance instead of
+    // waiting indefinitely for notifier hydration.
+    final api = services?.api ?? _fallbackApi;
     try {
       final fetched = await api.lookup(
         widget.id,
