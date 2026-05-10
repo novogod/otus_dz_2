@@ -29,6 +29,23 @@ abstract final class Routes {
   /// Вкладка «Профиль» (чанк C).
   static const String profile = '/profile';
 
+  /// Подмаршрут списка пользователей админки в профильной ветке.
+  static const String profileUsersSubpath = 'users';
+
+  /// Подмаршрут списка «Recipes added» в профильной ветке.
+  static const String profileRecipesAddedSubpath = 'recipes-added';
+
+  /// Полный путь страницы пользователей админки.
+  static String profileUsers({String? focusUserId}) {
+    if (focusUserId == null || focusUserId.trim().isEmpty) {
+      return '/profile/users';
+    }
+    return '/profile/users?focusUserId=${Uri.encodeQueryComponent(focusUserId)}';
+  }
+
+  /// Полный путь страницы «Recipes added».
+  static const String profileRecipesAdded = '/profile/recipes-added';
+
   /// Экран входа в профильной ветке. Открывается с slide-up
   /// анимацией через `CustomTransitionPage`.
   static const String profileLogin = '/profile/login';

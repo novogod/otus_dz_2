@@ -8,6 +8,8 @@ import '../main.dart' show splashAndRecipesKey;
 import '../models/recipe.dart';
 import '../ui/add_recipe_page.dart';
 import '../ui/admin_after_login_page.dart';
+import '../ui/admin_added_recipes_page.dart';
+import '../ui/admin_users_page.dart';
 import '../ui/app_shell.dart';
 import '../ui/app_theme.dart' show AppDurations;
 import '../ui/favorites_page.dart';
@@ -174,6 +176,57 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: Routes.profile,
               builder: (context, state) => const _ProfileBranchRoot(),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: Routes.profileUsersSubpath,
+                  redirect: (context, state) {
+                    final loginTrim =
+                        currentUserLoginNotifier.value?.trim() ?? '';
+                    if (!adminLoggedInNotifier.value || loginTrim.isEmpty) {
+                      return Routes.profile;
+                    }
+                    return null;
+                  },
+                  builder: (context, state) {
+                    final loginTrim =
+                        currentUserLoginNotifier.value?.trim() ?? '';
+                    if (loginTrim.isEmpty || !adminLoggedInNotifier.value) {
+                      return const _ProfileBranchRoot();
+                    }
+                    final focusUserId =
+                        state.uri.queryParameters['focusUserId']?.trim();
+                    return AdminUsersPage(
+                      adminLogin: loginTrim,
+                      adminPassword: currentSessionAdminPassword ?? '',
+                      focusUserId: (focusUserId == null || focusUserId.isEmpty)
+                          ? null
+                          : focusUserId,
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: Routes.profileRecipesAddedSubpath,
+                  redirect: (context, state) {
+                    final loginTrim =
+                        currentUserLoginNotifier.value?.trim() ?? '';
+                    if (!adminLoggedInNotifier.value || loginTrim.isEmpty) {
+                      return Routes.profile;
+                    }
+                    return null;
+                  },
+                  builder: (context, state) {
+                    final loginTrim =
+                        currentUserLoginNotifier.value?.trim() ?? '';
+                    if (loginTrim.isEmpty || !adminLoggedInNotifier.value) {
+                      return const _ProfileBranchRoot();
+                    }
+                    return AdminAddedRecipesPage(
+                      adminLogin: loginTrim,
+                      adminPassword: currentSessionAdminPassword ?? '',
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),

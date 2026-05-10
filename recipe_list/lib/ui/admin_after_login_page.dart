@@ -9,8 +9,6 @@ import '../auth/admin_session.dart';
 import '../auth/passkey_api.dart' as passkey_api;
 import '../i18n.dart';
 import '../router/routes.dart';
-import 'admin_added_recipes_page.dart';
-import 'admin_users_page.dart';
 import 'app_theme.dart';
 
 Future<void> openAdminAfterLoginPage(
@@ -330,14 +328,7 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
                       FilledButton.icon(
                         style: _primaryButtonStyle,
                         onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => AdminUsersPage(
-                                adminLogin: widget.adminLogin,
-                                adminPassword: widget.adminPassword,
-                              ),
-                            ),
-                          );
+                          context.push(Routes.profileUsers());
                         },
                         icon: const Icon(Icons.people_alt_outlined),
                         label: Text(s.adminEditUsersList),
@@ -346,14 +337,7 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
                       FilledButton.icon(
                         style: _primaryButtonStyle,
                         onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => AdminAddedRecipesPage(
-                                adminLogin: widget.adminLogin,
-                                adminPassword: widget.adminPassword,
-                              ),
-                            ),
-                          );
+                          context.push(Routes.profileRecipesAdded);
                         },
                         icon: const Icon(Icons.library_books_outlined),
                         label: const Text('Recipes added'),

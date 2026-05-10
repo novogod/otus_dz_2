@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart';
 import '../data/api/recipe_api.dart';
 import '../i18n.dart';
-import 'admin_users_page.dart';
+import '../router/routes.dart';
 import 'app_theme.dart';
 import 'recipe_details_page.dart';
 
@@ -108,15 +109,8 @@ class _AdminAddedRecipesPageState extends State<AdminAddedRecipesPage> {
         );
       return;
     }
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => AdminUsersPage(
-          adminLogin: widget.adminLogin,
-          adminPassword: widget.adminPassword,
-          focusUserId: item.creatorUserId,
-        ),
-      ),
-    );
+    if (!mounted) return;
+    context.push(Routes.profileUsers(focusUserId: item.creatorUserId));
   }
 
   @override
