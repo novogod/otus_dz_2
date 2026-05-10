@@ -448,7 +448,11 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     });
   }
 
-  Future<_LoadResult> _retranslate(_LoadResult prev, AppLang lang) async {
+  Future<_LoadResult> _retranslate(
+    _LoadResult prev,
+    AppLang lang, {
+    bool bypassCache = false,
+  }) async {
     final repo = prev.repository;
     final ids = prev.recipes.map((r) => r.id).toList(growable: false);
 
@@ -457,7 +461,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     // `_lastResult` + `_future` уже-переведённой лентой. UI перерисуется
     // практически без задержки, если этот язык хоть раз посещался ранее.
     Map<int, Recipe> cached = const {};
-    if (repo != null) {
+    if (repo != null && !bypassCache) {
       try {
         cached = await repo.lookupManyCached(ids, lang);
       } on Object {
@@ -526,7 +530,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         final original = prev.recipes[idx];
         Recipe? got;
         try {
-          got = repo != null
+          got = (repo != null && !bypassCache)
               ? await repo.lookup(original.id, lang, timeout: perCallTimeout)
               : await widget.api.lookup(
                   original.id,
@@ -543,7 +547,7 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
         // covered server-side, so this lookup almost never fails.
         if (got == null && lang != AppLang.en) {
           try {
-            got = repo != null
+            got = (repo != null && !bypassCache)
                 ? await repo.lookup(
                     original.id,
                     AppLang.en,
@@ -588,6 +592,9 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
     // brand names that would loop forever. Once every recipe has
     // returned from `/lookup` (whether translated, echoed, or fell
     // back to the previous-language copy), the loader resolves.
+    if (bypassCache) {
+      await _persist(repo, translated, lang);
+    }
     return _LoadResult(recipes: translated, repository: repo);
   }
 
@@ -703,19 +710,39 @@ class _RecipeListLoaderState extends State<RecipeListLoader> {
       // uses categories so the user sees a fresh random shuffle.
       if (widget.config.useBulkPage && !forceReseed) {
         try {
+          // Randomize cold-start slice, not just reload. Using
+          // offset=0 on every launch pins the feed to the same first
+          // card (e.g. "kabse").
+          final probe = await widget.api.fetchPage(
+            lang: lang,
+            limit: 1,
+            offset: 0,
+          );
+          final maxOffset = probe.total > widget.config.seedTarget
+              ? probe.total - widget.config.seedTarget
+              : 0;
+          final offset = maxOffset > 0
+              ? math.Random().nextInt(maxOffset + 1)
+              : 0;
           final page = await widget.api.fetchPage(
             lang: lang,
             limit: widget.config.seedTarget,
+            offset: offset,
           );
           if (page.recipes.isNotEmpty) {
-            await _persist(repo, page.recipes, lang);
-            var result = _LoadResult(recipes: page.recipes, repository: repo);
+            final shuffled = List<Recipe>.from(page.recipes)..shuffle();
+            await _persist(repo, shuffled, lang);
+            var result = _LoadResult(recipes: shuffled, repository: repo);
             if (_needsTranslationBackfill(result.recipes, lang)) {
               debugPrint(
                 '[recipe-list] backfill translations for lang=$lang '
                 '(bulk page has untranslated titles)',
               );
-              result = await _retranslate(result, lang);
+              // `/recipes/page` rows are cached as full objects. If a
+              // row is untranslated there, repo.lookup() would return the
+              // same stale cached copy and never hit `/lookup/:id`.
+              // Force network lookups for this backfill pass.
+              result = await _retranslate(result, lang, bypassCache: true);
             }
             return result;
           }
