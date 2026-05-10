@@ -106,10 +106,16 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
       // we can collect it from the field next time.
       final loss = adminSessionLossNotifier.value;
       _showSessionLossSnackBar(loss);
-      // Drop back to whatever was below us in the Navigator stack;
-      // _ProfileBranchRoot will then route to LoginPage / UserCardPage
-      // based on the current notifiers.
-      Navigator.of(context).popUntil((r) => r.isFirst);
+      // This page can be rendered both by go_router (`/profile` branch)
+      // and by legacy imperative Navigator pushes. `popUntil(isFirst)`
+      // is a no-op for the routed branch root, leaving a dead non-admin
+      // surface behind. Prefer canonical go_router relocation and keep
+      // Navigator fallback for legacy callers.
+      if (GoRouter.maybeOf(context) != null) {
+        context.go(Routes.profile);
+      } else {
+        Navigator.of(context).popUntil((r) => r.isFirst);
+      }
     }
   }
 
@@ -278,7 +284,12 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(s.logoutButton)));
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    if (!mounted) return;
+    if (GoRouter.maybeOf(context) != null) {
+      context.go(Routes.recipes);
+    } else {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 
   @override
@@ -307,43 +318,47 @@ class _AdminAfterLoginPageState extends State<AdminAfterLoginPage> {
               child: ValueListenableBuilder<bool>(
                 valueListenable: adminLoggedInNotifier,
                 builder: (context, isAdmin, _) {
+                  if (!isAdmin) {
+                    // Non-admin rendering of this page is unsupported.
+                    // `_handleAdminLoggedInChanged` schedules navigation
+                    // away; keep the intermediate frame inert.
+                    return const SizedBox.shrink();
+                  }
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (isAdmin) ...[
-                        FilledButton.icon(
-                          style: _primaryButtonStyle,
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => AdminUsersPage(
-                                  adminLogin: widget.adminLogin,
-                                  adminPassword: widget.adminPassword,
-                                ),
+                      FilledButton.icon(
+                        style: _primaryButtonStyle,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => AdminUsersPage(
+                                adminLogin: widget.adminLogin,
+                                adminPassword: widget.adminPassword,
                               ),
-                            );
-                          },
-                          icon: const Icon(Icons.people_alt_outlined),
-                          label: Text(s.adminEditUsersList),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        FilledButton.icon(
-                          style: _primaryButtonStyle,
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => AdminAddedRecipesPage(
-                                  adminLogin: widget.adminLogin,
-                                  adminPassword: widget.adminPassword,
-                                ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.people_alt_outlined),
+                        label: Text(s.adminEditUsersList),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      FilledButton.icon(
+                        style: _primaryButtonStyle,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => AdminAddedRecipesPage(
+                                adminLogin: widget.adminLogin,
+                                adminPassword: widget.adminPassword,
                               ),
-                            );
-                          },
-                          icon: const Icon(Icons.library_books_outlined),
-                          label: const Text('Recipes added'),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.library_books_outlined),
+                        label: const Text('Recipes added'),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
                       OutlinedButton.icon(
                         onPressed: _busy ? null : _saveForBiometric,
                         icon: Icon(
