@@ -183,6 +183,18 @@ class RecipeApi {
     return Options(headers: headers, contentType: contentType);
   }
 
+  /// Options for endpoints protected by `recipesUserAuthMiddleware` on the
+  /// backend — those only accept `x-recipes-user-token`, never admin Bearer.
+  /// Use this for all user-profile operations (avatar, /users/me).
+  Options _userAuthOptions({String? contentType}) {
+    final userToken = currentUserTokenNotifier.value;
+    final headers = <String, dynamic>{};
+    if (userToken != null && userToken.isNotEmpty) {
+      headers['x-recipes-user-token'] = userToken;
+    }
+    return Options(headers: headers, contentType: contentType);
+  }
+
   /// Сериализация черновика в TheMealDB-shape JSON, общая для
   /// JSON- и multipart-вариантов `POST /recipes`.
   Map<String, dynamic> _mealToJson(Recipe draft) => <String, dynamic>{
@@ -362,7 +374,7 @@ class RecipeApi {
     try {
       final res = await _client.dio.get<Map<String, dynamic>>(
         '/users/me',
-        options: _authOptions(),
+        options: _userAuthOptions(),
       );
       final data = res.data;
       if (data == null) return null;
@@ -398,7 +410,7 @@ class RecipeApi {
     final res = await _client.dio.put<Map<String, dynamic>>(
       '/users/me',
       data: body,
-      options: _authOptions(),
+      options: _userAuthOptions(),
     );
     final data = res.data ?? const <String, dynamic>{};
     return UserProfileSnapshot.fromJson(data);
@@ -420,7 +432,7 @@ class RecipeApi {
     final res = await _client.dio.post<Map<String, dynamic>>(
       '/users/avatar',
       data: form,
-      options: _authOptions(contentType: 'multipart/form-data'),
+      options: _userAuthOptions(contentType: 'multipart/form-data'),
     );
     final url = (res.data?['avatarUrl'] ?? res.data?['avatarPath']);
     if (url is! String || url.isEmpty) {
@@ -435,7 +447,7 @@ class RecipeApi {
     if (_client.backend != RecipeBackend.mahallem) return;
     await _client.dio.delete<Map<String, dynamic>>(
       '/users/avatar',
-      options: _authOptions(),
+      options: _userAuthOptions(),
     );
   }
 
