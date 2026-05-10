@@ -117,6 +117,21 @@ void main() {
       );
     });
 
+    test('logout preserves saved biometric sessions when present', () {
+      expect(
+        src,
+        contains('final preserveBiometric = await hasSavedBiometricSession();'),
+        reason:
+            'profile logout must preserve a previously saved biometric session',
+      );
+      expect(
+        src,
+        contains('clearSavedSession: !preserveBiometric'),
+        reason:
+            'logout should keep biometric data when a saved session exists',
+      );
+    });
+
     test('no hardcoded English passkey strings remain', () {
       expect(src, isNot(contains("'Add passkey (Touch ID")));
       expect(src, isNot(contains("'Save biometric login'")));

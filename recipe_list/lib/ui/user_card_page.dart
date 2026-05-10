@@ -297,8 +297,9 @@ class _UserCardPageState extends State<UserCardPage> {
   Future<void> _handleLogout() async {
     if (_busy) return;
     setState(() => _busy = true);
+    final preserveBiometric = await hasSavedBiometricSession();
     await logoutAdmin(
-      clearSavedSession: true,
+      clearSavedSession: !preserveBiometric,
       lossEvent: AdminSessionLossEvent(
         reason: 'User tapped Logout in profile (UserCardPage)',
       ),
