@@ -291,10 +291,21 @@ class RecipeRepository {
     if (recipes.isEmpty) return;
     final ts = _now().millisecondsSinceEpoch;
     final batch = _db.batch();
-    for (final r in recipes) {
+    // Stamp each row with `ts - i` (descending) so that
+    // `listCached` (ORDER BY last_used_at DESC) returns rows in
+    // the exact same order they were passed in. Без сдвига все
+    // строки одной пачки получают одинаковый ts, и SQLite ломает
+    // ничью по rowid — это значит, что на cold-start пользователь
+    // всегда видит один и тот же первый рецепт, даже если мы
+    // сейчас передали уже перетасованную ленту (см. todo/05 и
+    // docs/categories.md §9.5). Сдвиг на индекс сохраняет порядок
+    // shuffle/offset-window, не ломая LRU-вытеснение (свежая
+    // пачка всё равно «новее» предыдущей).
+    for (var i = 0; i < recipes.length; i++) {
+      final r = recipes[i];
       batch.insert(
         'recipes',
-        writeRecipe(r, lang: lang.name, lastUsedAt: ts),
+        writeRecipe(r, lang: lang.name, lastUsedAt: ts - i),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
       // todo/12: persist heavy `instructions` blob in a sibling
