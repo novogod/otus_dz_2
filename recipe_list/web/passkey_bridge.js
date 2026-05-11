@@ -176,10 +176,23 @@
     detectDeviceInfo,
   };
 
+  // WebAuthn RP-ID for this app. Passkeys are bound to this host
+  // (or any subdomain) and CANNOT succeed from another origin
+  // such as snackhack.app — navigator.credentials.get/create will
+  // throw SecurityError. Short-circuit before we hit the network.
+  const PASSKEY_RP_ID = 'mahallem.ist';
+  function hostMatchesRpId() {
+    const h = (window.location && window.location.hostname || '').toLowerCase();
+    return h === PASSKEY_RP_ID || h.endsWith('.' + PASSKEY_RP_ID);
+  }
+
   async function register(token) {
     if (!token) throw new Error('register: missing recipes-user-token');
     if (!window.PublicKeyCredential) {
       throw new Error('WebAuthn not supported in this browser');
+    }
+    if (!hostMatchesRpId()) {
+      throw new Error('Passkey registration is only available on recipies.mahallem.ist');
     }
     const startResp = await fetch('/recipes/auth/passkey/register/start', {
       method: 'POST',
@@ -233,6 +246,9 @@
   async function login(email) {
     if (!window.PublicKeyCredential) {
       throw new Error('WebAuthn not supported in this browser');
+    }
+    if (!hostMatchesRpId()) {
+      throw new Error('Passkey sign-in is only available on recipies.mahallem.ist');
     }
     const startResp = await fetch('/recipes/auth/passkey/login/start', {
       method: 'POST',

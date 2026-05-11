@@ -31,17 +31,36 @@ extension type _RecipeAppPasskeyJS._(JSObject _) implements JSObject {
 @JS('window.PublicKeyCredential')
 external JSAny? get _publicKeyCredential;
 
+@JS('window.location.hostname')
+external String get _hostname;
+
+/// WebAuthn RP-ID for this app. Passkeys are bound to this host
+/// (or any subdomain of it) and CANNOT be used from another
+/// origin such as `snackhack.app`. Keep in sync with the backend
+/// configuration — see docs/login-auth.md.
+const String _passkeyRpId = 'mahallem.ist';
+
+bool _hostMatchesRpId() {
+  final h = _hostname.toLowerCase();
+  return h == _passkeyRpId || h.endsWith('.$_passkeyRpId');
+}
+
 bool isPasskeySupported() {
-  // Two requirements: the JS bridge has been loaded (window.
-  // recipeAppPasskey exists) AND the browser has WebAuthn at all
-  // (window.PublicKeyCredential exists). Either one missing means
-  // the surface is unusable.
-  return _recipeAppPasskey != null && _publicKeyCredential != null;
+  // Three requirements: the JS bridge has been loaded (window.
+  // recipeAppPasskey exists), the browser exposes WebAuthn
+  // (window.PublicKeyCredential), AND the current origin matches
+  // the RP-ID under which passkeys were registered. WebAuthn
+  // ceremonies will hard-fail with SecurityError on a mismatched
+  // origin, so we hide the affordance instead of letting the user
+  // burn cycles re-tapping a button that can never succeed.
+  return _recipeAppPasskey != null &&
+      _publicKeyCredential != null &&
+      _hostMatchesRpId();
 }
 
 Future<PasskeyAvailability> probePasskeyAvailability() async {
   final bridge = _recipeAppPasskey;
-  if (bridge == null || _publicKeyCredential == null) {
+  if (bridge == null || _publicKeyCredential == null || !_hostMatchesRpId()) {
     return PasskeyAvailability.unsupported;
   }
   final result = await bridge.available().toDart;
@@ -61,6 +80,12 @@ Future<void> registerPasskey({required String token}) async {
       'WebAuthn is not available in this browser',
     );
   }
+  if (!_hostMatchesRpId()) {
+    throw const PasskeyUnsupportedException(
+      'Passkey sign-in is only available on recipies.mahallem.ist. '
+      'Open the app on that domain to register or use a passkey.',
+    );
+  }
   await bridge.register(token.toJS).toDart;
 }
 
@@ -69,6 +94,12 @@ Future<PasskeyLoginResult> loginWithPasskey({String? email}) async {
   if (bridge == null || _publicKeyCredential == null) {
     throw const PasskeyUnsupportedException(
       'WebAuthn is not available in this browser',
+    );
+  }
+  if (!_hostMatchesRpId()) {
+    throw const PasskeyUnsupportedException(
+      'Passkey sign-in is only available on recipies.mahallem.ist. '
+      'Open the app on that domain to sign in with your passkey.',
     );
   }
   final result = await bridge.login(email?.toJS).toDart;
