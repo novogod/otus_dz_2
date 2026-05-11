@@ -6,6 +6,47 @@
   - Format: `YYYY-MM-DD HH:mm (Atlantic UTC-4)`
 2. **Newest record must always be placed at the top of this file** (reverse-chronological order).
 
+## 2026-05-11 12:20 (Atlantic UTC-4) — Feed reshuffle fix: preserve shuffle order in cached rows
+
+**Environment:** `https://snackhack.app` (production), Flutter web SPA.
+
+### Issue
+
+- Each cold start / hard reload showed the **same first recipe card** (e.g. always "kabse"), even though the loader picks a random `offset` window over the 619-row catalog and shuffles in memory before persisting.
+- User-visible symptom: "each load takes the same recipes."
+
+### Root cause
+
+- `_upsertAll` in `recipe_list/lib/data/repository/recipe_repository.dart` stamped every row of one batch with the same `last_used_at = _now()`.
+- `listCached` (used as the instant-paint preview on cold start) orders by `last_used_at DESC`. With identical timestamps SQLite breaks the tie by rowid (insertion order), so the cached preview always painted in the **server's original order**, defeating the in-memory shuffle.
+- The random network slice did arrive ~1–2 s later and replace the feed, but by then the user had already perceived the list as "the same as last time."
+
+### Fix shipped
+
+- `recipe_list/lib/data/repository/recipe_repository.dart` (`_upsertAll`)
+  - Stamp each row with `ts - i` (descending) during the batch insert, where `i` is the row's position in the input list.
+  - `listCached` now returns rows in the exact order they were passed in, preserving the shuffle / random-offset window.
+  - LRU eviction remains correct: a newer batch is still strictly newer than any older batch.
+
+### Validation
+
+- `flutter analyze` — clean (1 pre-existing info on `recipe_api_config.dart` library doc comment, unrelated).
+- `flutter test test/recipe_bodies_test.dart test/data/repository/` — all green (10 tests).
+
+### Deploy
+
+- Commit pushed: `533c039` — **fix(feed): preserve shuffle order in cached feed**.
+- Production redeploy from `/var/www/recipie/otus_dz_2`:
+  - `git pull --ff-only origin main`
+  - `docker compose -f docker-compose.web.yml build flutter-web`
+  - `docker compose -f docker-compose.web.yml up -d flutter-web`
+- Health: `recipe_list_web` **Up**.
+
+### Notes
+
+- 14 categories total in `_allCategories` (`recipe_list_loader.dart`); `FeedConfig.seedPickCount = 10` per pass, excluding last picked set.
+- Effect on existing browser sessions is delayed: pre-existing IndexedDB rows still share equal timestamps. New rotation is observed after either (a) clearing site data on `snackhack.app`, or (b) tapping the in-app reload button (which calls `_runReload(forceReseed: true)` and overwrites the cached batch with the new per-row timestamps).
+
 ## 2026-05-09 20:57 (Atlantic UTC-4) — Shared `/ru/recipes/:id` deep-link bootstrap fix
 
 **Environment:** `https://recipies.mahallem.ist`
