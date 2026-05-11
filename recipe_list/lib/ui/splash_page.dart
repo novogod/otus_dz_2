@@ -232,7 +232,7 @@ class SplashMaskedLogo extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(brandTop, textAlign: TextAlign.center, style: style),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           Text(brandBottom, textAlign: TextAlign.center, style: style),
         ],
       );
