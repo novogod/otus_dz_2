@@ -22,7 +22,7 @@
 set -euo pipefail
 
 API_HOST="${RECIPES_API_HOST:-http://172.25.0.41:4000}"
-PUBLIC_HOST="${RECIPES_PUBLIC_HOST:-https://recipies.mahallem.ist}"
+PUBLIC_HOST="${RECIPES_PUBLIC_HOST:-https://snackhack.app}"
 CONTAINER="${RECIPES_WEB_CONTAINER:-recipe_list_web}"
 NGINX_PATH="${RECIPES_NGINX_PATH:-/usr/share/nginx/html/sitemap.xml}"
 LOG_FILE="${RECIPES_SITEMAP_LOG:-/var/log/recipes_sitemap.log}"
