@@ -20,7 +20,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Web-only: switch from the default hash-URL strategy (`/#/foo`) to
   // path-URL strategy (`/foo`). Without this, share-links that point
-  // at canonical paths like `https://recipies.mahallem.ist/en/recipes/
+  // at canonical paths like `https://snackhack.app/en/recipes/
   // <id>` open the SPA shell, GoRouter sees no hash, and the recipes
   // tab — `initialLocation: Routes.recipes` — wins. Calling
   // `usePathUrlStrategy()` makes go_router read the real `pathname`,

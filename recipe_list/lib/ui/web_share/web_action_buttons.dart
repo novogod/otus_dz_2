@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../config/web_origin.dart';
 import '../../i18n.dart';
 import '../../models/recipe.dart';
 import '../app_theme.dart';
@@ -12,8 +13,8 @@ import 'pwa_install.dart';
 /// Public-facing share URL. We always share the production landing
 /// page, even when the app is opened on `localhost` for dev — sending
 /// a localhost link to a friend is useless.
-const String _kShareBaseUrl = 'https://recipies.mahallem.ist/';
-const String _kShareOrigin = 'https://recipies.mahallem.ist';
+const String _kShareBaseUrl = '${WebOrigin.origin}/';
+const String _kShareOrigin = WebOrigin.origin;
 
 const String _kShareTitle = 'Snack Hack';
 const String _kShareText =
@@ -48,9 +49,9 @@ String _shareText([_ShareContent? c]) =>
     (c?.text?.isNotEmpty ?? false) ? c!.text! : _kShareText;
 
 /// Build a per-recipe share URL on the public production origin.
-/// Always uses `https://recipies.mahallem.ist` (never localhost),
-/// and includes the current app language so the receiver lands on
-/// the same translation the sender saw.
+/// Always uses [WebOrigin.origin] (never localhost), and includes the
+/// current app language so the receiver lands on the same translation
+/// the sender saw.
 String _recipeShareUrl(int id, String langCode) =>
     '$_kShareOrigin/$langCode/recipes/$id';
 
@@ -580,14 +581,16 @@ class _CircleButton extends StatelessWidget {
 /// Mirrors the behaviour of the AppBar share button (system share
 /// sheet on iOS/Android, social-network dropdown on web), but the
 /// payload is a deep-link to the recipe's details page on the
-/// public production origin (`https://recipies.mahallem.ist`) in
+/// public production origin ([WebOrigin.origin]) in
 /// the current app language.
 Future<void> shareRecipe(BuildContext context, Recipe recipe) {
   final langCode = appLang.value.name;
   final url = _recipeShareUrl(recipe.id, langCode);
   final name = recipe.name;
   final title = name.isNotEmpty ? '$name — $_kShareTitle' : _kShareTitle;
-  final text = name.isNotEmpty ? 'Check out "$name" on Snack Hack' : _kShareText;
+  final text = name.isNotEmpty
+      ? 'Check out "$name" on Snack Hack'
+      : _kShareText;
   return _onShareTap(
     context,
     content: _ShareContent(url: url, title: title, text: text),

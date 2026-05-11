@@ -15,7 +15,7 @@ void main() {
       locale: 'en',
       title: 'Pasta',
       description: 'Boil water; add pasta.',
-      image: 'https://recipies.mahallem.ist/img/pasta.jpg',
+      image: 'https://snackhack.app/img/pasta.jpg',
       category: 'Italian',
       area: 'Italian',
       ingredients: ['100g pasta', '1L water'],
@@ -26,7 +26,7 @@ void main() {
     expect(m['locale'], 'en');
     expect(m['title'], 'Pasta');
     expect(m['description'], 'Boil water; add pasta.');
-    expect(m['image'], 'https://recipies.mahallem.ist/img/pasta.jpg');
+    expect(m['image'], 'https://snackhack.app/img/pasta.jpg');
     expect(m['category'], 'Italian');
     expect(m['area'], 'Italian');
     expect(m['ingredients'], ['100g pasta', '1L water']);

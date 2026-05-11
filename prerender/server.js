@@ -1,4 +1,4 @@
-// Pre-render service for recipies.mahallem.ist (todo/20 chunk E).
+// Pre-render service for snackhack.app (todo/20 chunk E).
 //
 // Express server on port 8089. Receives `GET /<locale>/recipes/<id>`
 // (proxied here by the host nginx UA-split — only bots reach this
@@ -130,7 +130,7 @@ async function renderHtml({ locale, id }) {
   const url = buildSpaUrl({ origin: SPA_ORIGIN, locale, id });
   const page = await browser.newPage();
   try {
-    await page.setUserAgent('RecipeListPrerender/1.0 (+https://recipies.mahallem.ist)');
+    await page.setUserAgent('SnackHackPrerender/1.0 (+https://snackhack.app)');
     await page.setViewport({ width: 1200, height: 1800, deviceScaleFactor: 1 });
     await page.goto(url, {
       // domcontentloaded fires as soon as the SPA shell is parsed; we

@@ -1,7 +1,9 @@
-# Pre-render service for recipies.mahallem.ist (todo/20 chunk E).
+# Pre-render service for snackhack.app (todo/20 chunk E).
 #
 # Headless-Chromium snapshot of the Flutter SPA, served only to bots
-# via the host-nginx UA-split (see ops/nginx-recipies.mahallem.ist.conf).
+# via the host-nginx UA-split (see ops/nginx-snackhack.app.conf;
+# ops/nginx-recipies.mahallem.ist.conf stays in place serving 301s
+# during the migration overlap).
 # Cache key is `${locale}:${id}:${updatedAt}` — invalidated by the
 # /recipes/sitemap endpoint (chunk A) whenever a recipe row is bumped.
 FROM node:20-alpine

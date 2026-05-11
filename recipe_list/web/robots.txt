@@ -32,4 +32,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://recipies.mahallem.ist/sitemap.xml
+Sitemap: https://snackhack.app/sitemap.xml

@@ -15,7 +15,8 @@
 // клеим хост mahallem перед base64-кодированием.
 //
 // Важно: imgproxy и storage живут ТОЛЬКО на `mahallem.ist`.
-// `recipies.mahallem.ist` nginx-а их не проксирует.
+// SPA-origin (`snackhack.app`, исторически также `recipies.mahallem.ist`)
+// nginx-а storage/imgproxy не проксирует.
 // Поэтому origin здесь всегда `https://mahallem.ist`, независимо
 // от значения `RecipeApiConfig.mahallemBaseUrl`.
 
@@ -39,10 +40,14 @@ String imgproxyUrl(String src, int w, int h) {
   // После массового rename могли остаться ссылки на
   // `recipies.mahallem.ist` (и для storage, и для imgproxy).
   // Канонизируем их на `mahallem.ist` до любой дальнейшей логики.
+  // `snackhack.app` тоже матчим defensively — storage там не живёт,
+  // но в БД могут осесть URL после миграции SPA-origin.
   final initialUri = Uri.tryParse(src);
   final hasAbsoluteSource =
       initialUri != null && initialUri.hasScheme && initialUri.host.isNotEmpty;
-  if (hasAbsoluteSource && initialUri.host == 'recipies.mahallem.ist') {
+  if (hasAbsoluteSource &&
+      (initialUri.host == 'recipies.mahallem.ist' ||
+          initialUri.host == 'snackhack.app')) {
     final path = initialUri.path;
     if (path.startsWith('/storage/') || path.startsWith('/imgproxy/')) {
       src = initialUri.replace(host: 'mahallem.ist').toString();
@@ -61,11 +66,11 @@ String imgproxyUrl(String src, int w, int h) {
   if (!isAbsolute && src.startsWith('/')) {
     absoluteSrc = '$origin$src';
   } else if (isAbsolute &&
-      uri.host == 'recipies.mahallem.ist' &&
+      (uri.host == 'recipies.mahallem.ist' || uri.host == 'snackhack.app') &&
       uri.path.startsWith('/storage/')) {
     // После массового rename ссылок источники могли указывать на
-    // `recipies.mahallem.ist`, тогда как storage/imgproxy обслуживается
-    // с `mahallem.ist`.
+    // `recipies.mahallem.ist`/`snackhack.app`, тогда как storage/imgproxy
+    // обслуживается с `mahallem.ist`.
     absoluteSrc = uri.replace(host: 'mahallem.ist').toString();
   } else {
     absoluteSrc = src;

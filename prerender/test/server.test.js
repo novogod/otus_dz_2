@@ -117,7 +117,7 @@ test('scrubFlutterShell preserves SEO landmarks (title, og, canonical, JSON-LD)'
   const input = `
 <!doctype html><html><head>
 <title>Pasta — Otus Food</title>
-<link rel="canonical" href="https://recipies.mahallem.ist/en/recipes/52772">
+<link rel="canonical" href="https://snackhack.app/en/recipes/52772">
 <meta property="og:title" content="Pasta">
 <script type="application/ld+json">{"@type":"Recipe","name":"Pasta"}</script>
 </head><body>
@@ -350,7 +350,7 @@ test('buildRecipeSeoHead emits title, hreflang ring and JSON-LD', () => {
   // <title>
   assert.match(head, /<title data-recipe-seo="1">Курица — Otus Food<\/title>/);
   // canonical
-  assert.match(head, /<link[^>]+rel="canonical"[^>]+href="https:\/\/recipies\.mahallem\.ist\/ru\/recipes\/52772"/);
+  assert.match(head, /<link[^>]+rel="canonical"[^>]+href="https:\/\/snackhack\.app\/ru\/recipes\/52772"/);
   // 10 hreflangs + x-default
   const hreflangs = head.match(/<link[^>]+hreflang="[a-z-]+"/g) || [];
   assert.equal(hreflangs.length, 11);
@@ -384,7 +384,7 @@ test('buildRecipeSeoHead returns "" for invalid input', () => {
 test('buildRecipeSeoHead absolutizes relative og:image paths', () => {
   // Recipe payloads from the user-portal ship a relative storage path
   // (e.g. /storage/v1/object/public/recipe-photos/...) which resolves
-  // against mahallem.ist, not recipies.mahallem.ist (which only
+  // against mahallem.ist, not the SPA host (which only
   // proxies the SPA + prerender). Telegram and Facebook silently drop
   // the unfurl card if og:image isn't a fully-qualified URL — prefix
   // the storage host when no scheme is present.
@@ -417,7 +417,7 @@ test('injectRecipeSeo replaces the static <title> and inserts before </head>', (
     '<!doctype html><html><head>' +
     '<meta charset="UTF-8">' +
     '<title>Otus Food</title>' +
-    '<link rel="canonical" href="https://recipies.mahallem.ist/">' +
+    '<link rel="canonical" href="https://snackhack.app/">' +
     '</head><body>BODY</body></html>';
   const out = injectRecipeSeo(spaHtml, {
     id: 52772,
@@ -467,12 +467,12 @@ test('injectRecipeSeo strips static og:* / twitter:* / description landmarks', (
     '<meta name="description" content="Static landing description.">' +
     '<meta property="og:title" content="Otus Food">' +
     '<meta property="og:description" content="Browse, search and cook.">' +
-    '<meta property="og:image" content="https://recipies.mahallem.ist/og-image.jpg">' +
+    '<meta property="og:image" content="https://snackhack.app/og-image.jpg">' +
     '<meta property="og:image:width" content="1024">' +
-    '<meta property="og:url" content="https://recipies.mahallem.ist/">' +
+    '<meta property="og:url" content="https://snackhack.app/">' +
     '<meta name="twitter:card" content="summary_large_image">' +
     '<meta name="twitter:title" content="Otus Food">' +
-    '<meta name="twitter:image" content="https://recipies.mahallem.ist/og-image.jpg">' +
+    '<meta name="twitter:image" content="https://snackhack.app/og-image.jpg">' +
     '</head><body></body></html>';
   const out = injectRecipeSeo(spaHtml, {
     id: 1000012,

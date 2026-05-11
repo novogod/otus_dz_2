@@ -1,4 +1,4 @@
-// Pre-render service for recipies.mahallem.ist (todo/20 chunk E).
+// Pre-render service for snackhack.app (todo/20 chunk E).
 //
 // Pure helper module exporting:
 //   * SUPPORTED_LOCALES — alphabetical list of the 10 SPA locales.
@@ -142,11 +142,12 @@ export function buildSpaUrl({ origin, locale, id }) {
 // for human visitors who land on `/<lang>/recipes/<id>` directly,
 // which keeps the share-link unfurl correct.
 
-const PUBLIC_HOST = 'https://recipies.mahallem.ist';
+const PUBLIC_HOST =
+  (process.env && process.env.PUBLIC_HOST) || 'https://snackhack.app';
 // Recipe / avatar images live on the mahallem.ist host — the user-
 // portal API ships them as host-relative storage paths
 // (`/storage/v1/object/public/recipe-photos/...`) which only resolve
-// against that origin, NOT against `recipies.mahallem.ist` (which only
+// against that origin, NOT against `snackhack.app` (which only
 // proxies the SPA + the prerender). Used to absolutize og:image /
 // twitter:image / JSON-LD image so OG scrapers can fetch the unfurl
 // thumbnail.
@@ -234,8 +235,8 @@ export function buildRecipeSeoHead(recipe) {
   // the value starts with `/`. Recipe payloads from the user-portal
   // ship a relative storage path (e.g.
   // `/storage/v1/object/public/recipe-photos/...`) which resolves
-  // against `mahallem.ist`, not `recipies.mahallem.ist`. Already-
-  // absolute URLs (themealdb CDN) are passed through untouched.
+  // against `mahallem.ist`, not the SPA host. Already-absolute URLs
+  // (themealdb CDN) are passed through untouched.
   const imageAbs = /^https?:\/\//i.test(image)
     ? image
     : `${STORAGE_HOST}${image.startsWith('/') ? '' : '/'}${image}`;

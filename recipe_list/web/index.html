@@ -122,7 +122,7 @@
 
   <!-- ─── SEO: core meta ──────────────────────────────────────────
        Distinct property from mahallem.ist (the parent portal). This
-       host (recipies.mahallem.ist) is its own SEO surface; Google
+       host (snackhack.app) is its own SEO surface; Google
        Search Console / Bing Webmaster / Yandex Webmaster all need
        to be registered against THIS hostname separately. See
        docs/seo.md.
@@ -143,16 +143,16 @@
 
   <!-- Canonical: keep this in sync with og:url so social scrapers
        and search engines agree on the primary URL. -->
-  <link rel="canonical" href="https://recipies.mahallem.ist/">
+  <link rel="canonical" href="https://snackhack.app/">
 
   <!-- Open Graph (Facebook, WhatsApp, VK, Telegram, LinkedIn, …) -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Snack Hack">
   <meta property="og:title" content="Snack Hack — recipes from around the world">
   <meta property="og:description" content="Browse, search and cook recipes from around the world. Step-by-step instructions, ingredients, comments — works as a PWA.">
-  <meta property="og:url" content="https://recipies.mahallem.ist/">
-  <meta property="og:image" content="https://recipies.mahallem.ist/og-image.jpg">
-  <meta property="og:image:secure_url" content="https://recipies.mahallem.ist/og-image.jpg">
+  <meta property="og:url" content="https://snackhack.app/">
+  <meta property="og:image" content="https://snackhack.app/og-image.jpg">
+  <meta property="og:image:secure_url" content="https://snackhack.app/og-image.jpg">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1024">
   <meta property="og:image:height" content="1024">
@@ -173,7 +173,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Snack Hack — recipes from around the world">
   <meta name="twitter:description" content="Browse, search and cook recipes from around the world. Step-by-step instructions, ingredients, comments.">
-  <meta name="twitter:image" content="https://recipies.mahallem.ist/og-image.jpg">
+  <meta name="twitter:image" content="https://snackhack.app/og-image.jpg">
   <meta name="twitter:image:alt" content="Jerk chicken with rice and peas — Snack Hack">
 
   <!-- iOS meta tags & icons -->
@@ -203,21 +203,21 @@
     "@graph": [
       {
         "@type": "WebSite",
-        "@id": "https://recipies.mahallem.ist/#website",
-        "url": "https://recipies.mahallem.ist/",
+        "@id": "https://snackhack.app/#website",
+        "url": "https://snackhack.app/",
         "name": "Snack Hack",
         "description": "Free recipes from around the world — browse, search, save and cook with step-by-step instructions.",
         "inLanguage": ["en", "ru", "de", "es", "fr", "it", "tr", "ar", "fa", "ku"],
-        "publisher": { "@id": "https://recipies.mahallem.ist/#organization" }
+        "publisher": { "@id": "https://snackhack.app/#organization" }
       },
       {
         "@type": "Organization",
-        "@id": "https://recipies.mahallem.ist/#organization",
+        "@id": "https://snackhack.app/#organization",
         "name": "Snack Hack",
-        "url": "https://recipies.mahallem.ist/",
+        "url": "https://snackhack.app/",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://recipies.mahallem.ist/icons/Icon-512.png",
+          "url": "https://snackhack.app/icons/Icon-512.png",
           "width": 512,
           "height": 512
         }
@@ -315,7 +315,7 @@
     // appending them.
     (function () {
       var SUPPORTED = ['ar','de','en','es','fa','fr','it','ku','ru','tr'];
-      var ORIGIN = 'https://recipies.mahallem.ist';
+      var ORIGIN = 'https://snackhack.app';
       function clearTagged() {
         var nodes = document.head.querySelectorAll('[data-recipe-seo="1"]');
         for (var i = 0; i < nodes.length; i++) nodes[i].remove();

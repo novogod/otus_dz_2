@@ -939,8 +939,13 @@ class _AvatarSlot extends StatelessWidget {
       String sourceForProxy;
       if (url.startsWith('http')) {
         final uri = Uri.tryParse(url);
+        // Storage lives on the parent host `mahallem.ist`. Historical
+        // image rows may carry `recipies.mahallem.ist`; new rows
+        // shouldn't, but `snackhack.app` is matched defensively in case
+        // a future writer paths through the new SPA origin.
         if (uri != null &&
-            uri.host == 'recipies.mahallem.ist' &&
+            (uri.host == 'recipies.mahallem.ist' ||
+                uri.host == 'snackhack.app') &&
             uri.path.startsWith('/storage/')) {
           final canonical = uri.replace(host: 'mahallem.ist').toString();
           sourceForProxy = canonical;

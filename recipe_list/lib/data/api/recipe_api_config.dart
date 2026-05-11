@@ -1,7 +1,7 @@
 /// Конфигурация бэкенда `RecipeApi`.
 ///
 /// По умолчанию приложение работает с собственным сервером mahallem
-/// (`https://recipies.mahallem.ist/recipes`), который отдаёт переведённый
+/// (`${WebOrigin.origin}/recipes`), который отдаёт переведённый
 /// контент по `?lang=`. Это поведение единое для всех платформ
 /// (iOS / Android / desktop) — никакого `--dart-define` для запуска
 /// не требуется.
@@ -14,13 +14,17 @@
 /// Чтобы вернуться к прямому TheMealDB (только английский, без
 /// переводов), запустите с `--dart-define=MAHALLEM_RECIPES_BASE=` —
 /// пустая строка форсит fallback на TheMealDB.
+import '../../config/web_origin.dart';
+
 class RecipeApiConfig {
   /// База TheMealDB — fallback, если mahallem явно отключён.
   static const String mealDbBaseUrl = 'https://www.themealdb.com/api/json/v1/1';
 
   /// Прод-эндпоинт mahallem по умолчанию.
-  static const String mahallemDefaultBaseUrl =
-      'https://recipies.mahallem.ist/recipes';
+  /// Derived from [WebOrigin.origin]; override via
+  /// `--dart-define=RECIPES_WEB_ORIGIN=https://example.test` to retarget
+  /// the entire app to a different host.
+  static const String mahallemDefaultBaseUrl = '${WebOrigin.origin}/recipes';
 
   /// Значение из `--dart-define`. Sentinel `__unset__` означает «define
   /// не передан»; пустая строка — явное отключение mahallem.
@@ -56,6 +60,6 @@ enum RecipeBackend {
   /// Прямой `https://www.themealdb.com/api/json/v1/1`. Только английский.
   mealDb,
 
-  /// `https://recipies.mahallem.ist/recipes`, прокидываем `lang=ru|en|...`.
+  /// `${WebOrigin.origin}/recipes`, прокидываем `lang=ru|en|...`.
   mahallem,
 }

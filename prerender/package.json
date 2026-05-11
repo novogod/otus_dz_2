@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
-  "description": "Bot-only headless-Chromium pre-render service for recipies.mahallem.ist (todo/20 chunk E).",
+  "description": "Bot-only headless-Chromium pre-render service for snackhack.app (todo/20 chunk E).",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/"
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "express": "^4.21.0",

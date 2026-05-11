@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../config/web_origin.dart';
 import '../data/api/recipe_api_config.dart';
 import '../data/local/recipe_db.dart';
 import '../i18n.dart';
@@ -163,10 +164,10 @@ String _docUrl(String langCode, String slug) {
 }
 
 String _originFromBase(String base) {
-  if (base.isEmpty) return 'https://recipies.mahallem.ist';
+  if (base.isEmpty) return WebOrigin.origin;
   final uri = Uri.tryParse(base);
   if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
-    return 'https://recipies.mahallem.ist';
+    return WebOrigin.origin;
   }
   final port = uri.hasPort ? ':${uri.port}' : '';
   return '${uri.scheme}://${uri.host}$port';

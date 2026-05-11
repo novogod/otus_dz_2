@@ -7,7 +7,7 @@
 // pre-renderer (todo/20 chunk E) waits for.
 //
 // On mobile / desktop (anything that's not web) it's a no-op — the
-// search-engine surface lives at recipies.mahallem.ist only.
+// search-engine surface lives at snackhack.app only.
 //
 // Conditional import based on Flutter's standard pattern: stub
 // implementation in `seo_head_stub.dart`, web implementation in
