@@ -553,10 +553,15 @@ class _UserCardPageState extends State<UserCardPage> {
       final cc = _countryCode?.toLowerCase();
       final dio = Dio(
         BaseOptions(
-          headers: {
-            // Nominatim usage policy requires an identifying UA.
-            'User-Agent': 'mahallem-recipes/1.0 (https://mahallem.com)',
-          },
+          // Browsers forbid setting User-Agent from JS and emit a
+          // noisy "Refused to set unsafe header" console warning.
+          // Native targets keep the Nominatim-policy UA.
+          headers: kIsWeb
+              ? const <String, String>{}
+              : const <String, String>{
+                  'User-Agent':
+                      'mahallem-recipes/1.0 (https://mahallem.com)',
+                },
           connectTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 5),
         ),

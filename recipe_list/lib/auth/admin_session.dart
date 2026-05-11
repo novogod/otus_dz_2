@@ -397,30 +397,19 @@ Future<bool> loginAsAdmin({
   final normalizedLogin = login.trim();
   if (normalizedLogin.isEmpty || password.isEmpty) return false;
 
-  final recipeAdminToken = await _loginRecipeAdminOnline(
-    normalizedLogin,
-    password,
-  );
-  if (recipeAdminToken != null) {
-    if (trustDevice) {
-      await _persistTrustedSession(
-        db: db,
-        login: normalizedLogin,
-        passwordHash: _passwordHash(password),
-        token: recipeAdminToken,
-        isAdmin: true,
-      );
-    } else {
-      await _clearPersistedSession(db: db, login: normalizedLogin);
-    }
-    _setSessionState(login: normalizedLogin, token: null, isAdmin: true);
-    currentRecipeAdminTokenNotifier.value = recipeAdminToken;
-    _sessionAdminPassword = password;
-    return true;
-  }
-
+  // Regular user-portal login first. The admin-only endpoint
+  // (`/api/recipe-admin/login`) is probed *only* when the regular
+  // payload says this account has admin role — otherwise every
+  // normal user would see a 401 logged in the browser console.
   final online = await _loginOnline(normalizedLogin, password);
   if (online != null) {
+    String? recipeAdminToken;
+    if (online.isAdmin) {
+      recipeAdminToken = await _loginRecipeAdminOnline(
+        normalizedLogin,
+        password,
+      );
+    }
     if (online.preferredLang != null) {
       final lang = AppLang.values
           .where((l) => l.name == online.preferredLang)
@@ -432,7 +421,7 @@ Future<bool> loginAsAdmin({
         db: db,
         login: normalizedLogin,
         passwordHash: _passwordHash(password),
-        token: online.token,
+        token: recipeAdminToken ?? online.token,
         preferredLang: online.preferredLang,
         isAdmin: online.isAdmin,
       );
@@ -444,6 +433,9 @@ Future<bool> loginAsAdmin({
       token: online.token,
       isAdmin: online.isAdmin,
     );
+    if (recipeAdminToken != null) {
+      currentRecipeAdminTokenNotifier.value = recipeAdminToken;
+    }
     _sessionAdminPassword = online.isAdmin ? password : null;
     // If backend login payload omitted/lagged preferred language,
     // reconcile from authoritative `/recipes/users/me` and persist
