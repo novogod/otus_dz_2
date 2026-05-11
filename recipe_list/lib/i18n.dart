@@ -345,27 +345,27 @@ class S {
   // Splash page labels.
   String get splashBrandTop => _byLang({
     AppLang.en: 'SNACK',
-    AppLang.ru: 'СНЕК',
+    AppLang.ru: 'SNACK',
     AppLang.es: 'SNACK',
     AppLang.fr: 'SNACK',
     AppLang.de: 'SNACK',
     AppLang.it: 'SNACK',
     AppLang.tr: 'SNACK',
-    AppLang.ar: 'سناك',
-    AppLang.fa: 'اسنک',
-    AppLang.ku: 'سناک',
+    AppLang.ar: 'SNACK',
+    AppLang.fa: 'SNACK',
+    AppLang.ku: 'SNACK',
   });
   String get splashBrandBottom => _byLang({
     AppLang.en: 'HACK',
-    AppLang.ru: 'ХАК',
+    AppLang.ru: 'HACK',
     AppLang.es: 'HACK',
     AppLang.fr: 'HACK',
     AppLang.de: 'HACK',
     AppLang.it: 'HACK',
     AppLang.tr: 'HACK',
-    AppLang.ar: 'هاك',
-    AppLang.fa: 'هک',
-    AppLang.ku: 'هاک',
+    AppLang.ar: 'HACK',
+    AppLang.fa: 'HACK',
+    AppLang.ku: 'HACK',
   });
   String splashRecipesCount(int n) => _byLang({
     AppLang.en: 'Recipes: $n',
