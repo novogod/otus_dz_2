@@ -173,12 +173,13 @@ class _StartupConsentBottomBarState extends State<StartupConsentBottomBar> {
                       child: FilledButton(
                         onPressed: _saving ? null : () => _agree(spec),
                         style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.secondary,
-                          foregroundColor: Colors.white,
+                          // Light green pops on the dark translucent
+                          // bar — `secondary` was muted and disappeared
+                          // against `inverseSurface`.
+                          backgroundColor: const Color(0xFFA5D6A7),
+                          foregroundColor: const Color(0xFF1B5E20),
                         ),
-                        child: Text(
-                          _saving ? s.consentSaving : s.consentAgree,
-                        ),
+                        child: Text(_saving ? s.consentSaving : s.consentAgree),
                       ),
                     ),
                   ],
