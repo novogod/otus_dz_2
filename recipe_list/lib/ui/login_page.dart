@@ -683,37 +683,41 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                   if (loggedIn) ...[
                                     const SizedBox(height: AppSpacing.sm),
-                                    OutlinedButton.icon(
-                                      onPressed: _authBusy
-                                          ? null
-                                          : _saveCurrentSessionForBiometric,
-                                      icon: Icon(
-                                        _biometricSaved
-                                            ? Icons.verified_user
-                                            : Icons.fingerprint,
-                                        size: 72,
+                                    if (!kIsWeb ||
+                                        passkey_api.isPasskeySupported)
+                                      OutlinedButton.icon(
+                                        onPressed: _authBusy
+                                            ? null
+                                            : _saveCurrentSessionForBiometric,
+                                        icon: Icon(
+                                          _biometricSaved
+                                              ? Icons.verified_user
+                                              : Icons.fingerprint,
+                                          size: 72,
+                                        ),
+                                        label: Text(
+                                          _biometricSaved
+                                              ? 'Face ID / Fingerprint is saved for login'
+                                              : 'Save this login for Face ID / Fingerprint',
+                                        ),
                                       ),
-                                      label: Text(
-                                        _biometricSaved
-                                            ? 'Face ID / Fingerprint is saved for login'
-                                            : 'Save this login for Face ID / Fingerprint',
-                                      ),
-                                    ),
                                   ],
                                   if (!loggedIn) ...[
                                     const SizedBox(height: AppSpacing.sm),
-                                    OutlinedButton.icon(
-                                      onPressed: _authBusy
-                                          ? null
-                                          : _loginWithBiometrics,
-                                      icon: const Icon(
-                                        Icons.fingerprint,
-                                        size: 72,
+                                    if (!kIsWeb ||
+                                        passkey_api.isPasskeySupported)
+                                      OutlinedButton.icon(
+                                        onPressed: _authBusy
+                                            ? null
+                                            : _loginWithBiometrics,
+                                        icon: const Icon(
+                                          Icons.fingerprint,
+                                          size: 72,
+                                        ),
+                                        label: const Text(
+                                          'Sign in with Face ID / Fingerprint',
+                                        ),
                                       ),
-                                      label: const Text(
-                                        'Sign in with Face ID / Fingerprint',
-                                      ),
-                                    ),
                                     const SizedBox(height: AppSpacing.sm),
                                     TextButton(
                                       onPressed: _authBusy
