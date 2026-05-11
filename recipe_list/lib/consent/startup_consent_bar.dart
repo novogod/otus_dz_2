@@ -110,6 +110,8 @@ class _StartupConsentBottomBarState extends State<StartupConsentBottomBar> {
     // Стилизуем под floating SnackBar: тёмный фон Material 3
     // `inverseSurface`, скруглённые углы, тень. Лежит внутри
     // SafeArea, чтобы не наехать на жестовую полосу iOS.
+    // 14% прозрачности по запросу — фон сквозит, чтобы лента
+    // под баром оставалась читаемой.
     return SafeArea(
       top: false,
       child: Padding(
@@ -120,46 +122,68 @@ class _StartupConsentBottomBarState extends State<StartupConsentBottomBar> {
           AppSpacing.sm,
         ),
         child: Material(
-          color: theme.colorScheme.inverseSurface,
+          color: theme.colorScheme.inverseSurface.withValues(alpha: 0.86),
           elevation: 6,
           borderRadius: BorderRadius.circular(12),
           clipBehavior: Clip.antiAlias,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  s.consentTitle,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: theme.colorScheme.onInverseSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                for (final item in spec.requiredItems)
-                  _ConsentRow(
-                    checked: _checksByKind[item.kind] ?? false,
-                    label: startupConsentLabel(item, s),
-                    onChanged: (v) => setState(() {
-                      _checksByKind[item.kind] = v ?? false;
-                    }),
-                    onOpen: () => _openDoc(item.docUrl),
-                  ),
-                const SizedBox(height: AppSpacing.xs),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: FilledButton(
-                    onPressed: _saving ? null : () => _agree(spec),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: theme.colorScheme.secondary,
-                      foregroundColor: Colors.white,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // На широких экранах (>= 720px) кладём чекбоксы
+                // в одну строку через Wrap, чтобы бар не съедал
+                // вертикальное пространство ленты.
+                final wide = constraints.maxWidth >= 720;
+                final rows = [
+                  for (final item in spec.requiredItems)
+                    _ConsentRow(
+                      checked: _checksByKind[item.kind] ?? false,
+                      label: startupConsentLabel(item, s),
+                      onChanged: (v) => setState(() {
+                        _checksByKind[item.kind] = v ?? false;
+                      }),
+                      onOpen: () => _openDoc(item.docUrl),
+                      inline: wide,
                     ),
-                    child: Text(_saving ? s.consentSaving : s.consentAgree),
-                  ),
-                ),
-              ],
+                ];
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      s.consentTitle,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.onInverseSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    if (wide)
+                      Wrap(
+                        spacing: AppSpacing.lg,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: rows,
+                      )
+                    else
+                      for (final r in rows) r,
+                    const SizedBox(height: AppSpacing.xs),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FilledButton(
+                        onPressed: _saving ? null : () => _agree(spec),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.secondary,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(
+                          _saving ? s.consentSaving : s.consentAgree,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -174,6 +198,7 @@ class _ConsentRow extends StatelessWidget {
     required this.label,
     required this.onChanged,
     required this.onOpen,
+    this.inline = false,
   });
 
   final bool checked;
@@ -181,15 +206,31 @@ class _ConsentRow extends StatelessWidget {
   final ValueChanged<bool?> onChanged;
   final VoidCallback onOpen;
 
+  /// When true, the row sizes to its content (no `Expanded`) so it
+  /// can sit inside a horizontal `Wrap` on wide layouts.
+  final bool inline;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final linkedText = _capitalizeWords(_extractLinkedText(label));
+    final labelWidget = GestureDetector(
+      onTap: onOpen,
+      child: Text(
+        linkedText,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onInverseSurface,
+          decoration: TextDecoration.underline,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
     return InkWell(
       onTap: () => onChanged(!checked),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Row(
+          mainAxisSize: inline ? MainAxisSize.min : MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
@@ -212,19 +253,7 @@ class _ConsentRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Expanded(
-              child: GestureDetector(
-                onTap: onOpen,
-                child: Text(
-                  linkedText,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onInverseSurface,
-                    decoration: TextDecoration.underline,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ),
+            if (inline) labelWidget else Expanded(child: labelWidget),
           ],
         ),
       ),
