@@ -1,6 +1,6 @@
 {
-    "name": "Otus Food — recipes from around the world",
-    "short_name": "Otus Food",
+    "name": "Snack Hack — recipes from around the world",
+    "short_name": "Snack Hack",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",

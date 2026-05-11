@@ -41,8 +41,8 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	// Translations
 
-	/// en: 'Otus Food'
-	String get appTitle => 'Otus Food';
+	/// en: 'Snack Hack'
+	String get appTitle => 'Snack Hack';
 
 	/// en: 'Back'
 	String get back => 'Back';
@@ -53,8 +53,8 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Install as app'
 	String get pwaInstallTooltip => 'Install as app';
 
-	/// en: 'Install Otus Food on your iPhone or iPad'
-	String get pwaInstallTitle => 'Install Otus Food on your iPhone or iPad';
+	/// en: 'Install Snack Hack on your iPhone or iPad'
+	String get pwaInstallTitle => 'Install Snack Hack on your iPhone or iPad';
 
 	/// en: 'Safari'
 	String get pwaInstallSafariTitle => 'Safari';
@@ -562,11 +562,11 @@ class TranslationsA11yEn {
 extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
-			'appTitle' => 'Otus Food',
+			'appTitle' => 'Snack Hack',
 			'back' => 'Back',
 			'dismiss' => 'Dismiss',
 			'pwaInstallTooltip' => 'Install as app',
-			'pwaInstallTitle' => 'Install Otus Food on your iPhone or iPad',
+			'pwaInstallTitle' => 'Install Snack Hack on your iPhone or iPad',
 			'pwaInstallSafariTitle' => 'Safari',
 			'pwaInstallSafariStep1' => 'Tap the Share button at the bottom of the screen',
 			'pwaInstallSafariStep2' => 'Scroll down and tap «Add to Home Screen»',

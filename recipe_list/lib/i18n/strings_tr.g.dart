@@ -37,9 +37,9 @@ class TranslationsTr with BaseTranslations<AppLocale, Translations> implements T
 	TranslationsTr $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsTr(meta: meta ?? this.$meta);
 
 	// Translations
-	@override String get appTitle => 'Otus Food';
+	@override String get appTitle => 'Snack Hack';
 	@override String get pwaInstallTooltip => 'Uygulama olarak yükle';
-	@override String get pwaInstallTitle => 'Otus Food\'u iPhone veya iPad\'inize yükleyin';
+	@override String get pwaInstallTitle => 'Snack Hack\'u iPhone veya iPad\'inize yükleyin';
 	@override String get pwaInstallSafariTitle => 'Safari';
 	@override String get pwaInstallSafariStep1 => 'Ekranın altındaki Paylaş düğmesine dokunun';
 	@override String get pwaInstallSafariStep2 => 'Aşağı kaydırın ve «Ana Ekrana Ekle»\'ye dokunun';
@@ -230,9 +230,9 @@ class _TranslationsA11yTr implements TranslationsA11yEn {
 extension on TranslationsTr {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
-			'appTitle' => 'Otus Food',
+			'appTitle' => 'Snack Hack',
 			'pwaInstallTooltip' => 'Uygulama olarak yükle',
-			'pwaInstallTitle' => 'Otus Food\'u iPhone veya iPad\'inize yükleyin',
+			'pwaInstallTitle' => 'Snack Hack\'u iPhone veya iPad\'inize yükleyin',
 			'pwaInstallSafariTitle' => 'Safari',
 			'pwaInstallSafariStep1' => 'Ekranın altındaki Paylaş düğmesine dokunun',
 			'pwaInstallSafariStep2' => 'Aşağı kaydırın ve «Ana Ekrana Ekle»\'ye dokunun',

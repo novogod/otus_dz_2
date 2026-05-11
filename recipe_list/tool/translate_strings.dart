@@ -120,7 +120,7 @@ Strict rules:
 - For plural blocks (objects with keys like "one"/"few"/"many"/"other"/"two"/"zero"),
   emit the CLDR plural categories required by the target language and remove
   unused ones. The "${'\$'}{n}" placeholder must remain.
-- "appTitle" stays "Otus Food" (brand name).
+- "appTitle" stays "Snack Hack" (brand name).
 - "youtube" stays "YouTube" (brand name).
 - Use natural, idiomatic register for a cooking app. No transliteration.
 

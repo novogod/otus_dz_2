@@ -37,9 +37,9 @@ class TranslationsFr with BaseTranslations<AppLocale, Translations> implements T
 	TranslationsFr $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsFr(meta: meta ?? this.$meta);
 
 	// Translations
-	@override String get appTitle => 'Otus Food';
+	@override String get appTitle => 'Snack Hack';
 	@override String get pwaInstallTooltip => 'Installer comme application';
-	@override String get pwaInstallTitle => 'Installer Otus Food sur votre iPhone ou iPad';
+	@override String get pwaInstallTitle => 'Installer Snack Hack sur votre iPhone ou iPad';
 	@override String get pwaInstallSafariTitle => 'Safari';
 	@override String get pwaInstallSafariStep1 => 'Appuyez sur le bouton Partager en bas de l\'écran';
 	@override String get pwaInstallSafariStep2 => 'Faites défiler et appuyez sur «Sur l\'écran d\'accueil»';
@@ -230,9 +230,9 @@ class _TranslationsA11yFr implements TranslationsA11yEn {
 extension on TranslationsFr {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
-			'appTitle' => 'Otus Food',
+			'appTitle' => 'Snack Hack',
 			'pwaInstallTooltip' => 'Installer comme application',
-			'pwaInstallTitle' => 'Installer Otus Food sur votre iPhone ou iPad',
+			'pwaInstallTitle' => 'Installer Snack Hack sur votre iPhone ou iPad',
 			'pwaInstallSafariTitle' => 'Safari',
 			'pwaInstallSafariStep1' => 'Appuyez sur le bouton Partager en bas de l\'écran',
 			'pwaInstallSafariStep2' => 'Faites défiler et appuyez sur «Sur l\'écran d\'accueil»',

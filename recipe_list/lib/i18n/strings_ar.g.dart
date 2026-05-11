@@ -37,9 +37,9 @@ class TranslationsAr with BaseTranslations<AppLocale, Translations> implements T
 	TranslationsAr $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsAr(meta: meta ?? this.$meta);
 
 	// Translations
-	@override String get appTitle => 'Otus Food';
+	@override String get appTitle => 'Snack Hack';
 	@override String get pwaInstallTooltip => 'تثبيت كتطبيق';
-	@override String get pwaInstallTitle => 'ثبّت Otus Food على iPhone أو iPad';
+	@override String get pwaInstallTitle => 'ثبّت Snack Hack على iPhone أو iPad';
 	@override String get pwaInstallSafariTitle => 'Safari';
 	@override String get pwaInstallSafariStep1 => 'اضغط على زر المشاركة في أسفل الشاشة';
 	@override String get pwaInstallSafariStep2 => 'مرّر واضغط «إضافة إلى الشاشة الرئيسية»';
@@ -238,9 +238,9 @@ class _TranslationsA11yAr implements TranslationsA11yEn {
 extension on TranslationsAr {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
-			'appTitle' => 'Otus Food',
+			'appTitle' => 'Snack Hack',
 			'pwaInstallTooltip' => 'تثبيت كتطبيق',
-			'pwaInstallTitle' => 'ثبّت Otus Food على iPhone أو iPad',
+			'pwaInstallTitle' => 'ثبّت Snack Hack على iPhone أو iPad',
 			'pwaInstallSafariTitle' => 'Safari',
 			'pwaInstallSafariStep1' => 'اضغط على زر المشاركة في أسفل الشاشة',
 			'pwaInstallSafariStep2' => 'مرّر واضغط «إضافة إلى الشاشة الرئيسية»',

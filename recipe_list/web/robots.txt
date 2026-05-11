@@ -1,4 +1,4 @@
-# Otus Food — public recipe listing site.
+# Snack Hack — public recipe listing site.
 # All paths are public; no admin surface lives on this origin.
 # Explicitly allow the social-network link-preview crawlers so
 # Facebook / WhatsApp / Telegram / X show og:image + og:title

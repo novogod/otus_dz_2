@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Дизайн-система Otus Food App, выгруженная из Figma
+/// Дизайн-система Snack Hack App, выгруженная из Figma
 /// (file `alUTMeT3w9XlbNf3orwyFA`). Подробности и ссылки на узлы —
 /// в `docs/design_system.md`.
 ///

@@ -127,11 +127,11 @@
        to be registered against THIS hostname separately. See
        docs/seo.md.
   -->
-  <title>Otus Food — recipes from around the world</title>
-  <meta name="description" content="Otus Food — free recipes from around the world. Browse, search, save and cook with step-by-step instructions, ingredient lists and a built-in shopping list. Available as a PWA.">
-  <meta name="keywords" content="recipes, cooking, food, world cuisine, step by step recipes, free recipes, meal ideas, otus food, recipies mahallem, mahallem food">
-  <meta name="author" content="Otus Food">
-  <meta name="application-name" content="Otus Food">
+  <title>Snack Hack — recipes from around the world</title>
+  <meta name="description" content="Snack Hack — free recipes from around the world. Browse, search, save and cook with step-by-step instructions, ingredient lists and a built-in shopping list. Available as a PWA.">
+  <meta name="keywords" content="recipes, cooking, food, world cuisine, step by step recipes, free recipes, meal ideas, snack hack, recipies mahallem, mahallem food">
+  <meta name="author" content="Snack Hack">
+  <meta name="application-name" content="Snack Hack">
   <meta name="theme-color" content="#2ECC71">
   <meta name="color-scheme" content="light">
 
@@ -147,8 +147,8 @@
 
   <!-- Open Graph (Facebook, WhatsApp, VK, Telegram, LinkedIn, …) -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Otus Food">
-  <meta property="og:title" content="Otus Food — recipes from around the world">
+  <meta property="og:site_name" content="Snack Hack">
+  <meta property="og:title" content="Snack Hack — recipes from around the world">
   <meta property="og:description" content="Browse, search and cook recipes from around the world. Step-by-step instructions, ingredients, comments — works as a PWA.">
   <meta property="og:url" content="https://recipies.mahallem.ist/">
   <meta property="og:image" content="https://recipies.mahallem.ist/og-image.jpg">
@@ -156,7 +156,7 @@
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1024">
   <meta property="og:image:height" content="1024">
-  <meta property="og:image:alt" content="Jerk chicken with rice and peas — Otus Food">
+  <meta property="og:image:alt" content="Jerk chicken with rice and peas — Snack Hack">
   <meta property="og:locale" content="en_US">
   <meta property="og:locale:alternate" content="ru_RU">
   <meta property="og:locale:alternate" content="de_DE">
@@ -171,16 +171,16 @@
        summary_large_image renders the 1024×1024 og-image as a
        hero card on X / Mastodon / Slack-link unfurl. -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Otus Food — recipes from around the world">
+  <meta name="twitter:title" content="Snack Hack — recipes from around the world">
   <meta name="twitter:description" content="Browse, search and cook recipes from around the world. Step-by-step instructions, ingredients, comments.">
   <meta name="twitter:image" content="https://recipies.mahallem.ist/og-image.jpg">
-  <meta name="twitter:image:alt" content="Jerk chicken with rice and peas — Otus Food">
+  <meta name="twitter:image:alt" content="Jerk chicken with rice and peas — Snack Hack">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Otus Food">
+  <meta name="apple-mobile-web-app-title" content="Snack Hack">
   <!-- iOS prefers 180x180; older devices fall back to Icon-192. -->
   <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-apple-180.png">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -205,7 +205,7 @@
         "@type": "WebSite",
         "@id": "https://recipies.mahallem.ist/#website",
         "url": "https://recipies.mahallem.ist/",
-        "name": "Otus Food",
+        "name": "Snack Hack",
         "description": "Free recipes from around the world — browse, search, save and cook with step-by-step instructions.",
         "inLanguage": ["en", "ru", "de", "es", "fr", "it", "tr", "ar", "fa", "ku"],
         "publisher": { "@id": "https://recipies.mahallem.ist/#organization" }
@@ -213,7 +213,7 @@
       {
         "@type": "Organization",
         "@id": "https://recipies.mahallem.ist/#organization",
-        "name": "Otus Food",
+        "name": "Snack Hack",
         "url": "https://recipies.mahallem.ist/",
         "logo": {
           "@type": "ImageObject",
@@ -343,7 +343,7 @@
             ? data.locale : 'en';
           var id = Number(data.id);
           if (!Number.isFinite(id) || id <= 0) return;
-          var title = (data.title || 'Otus Food').toString();
+          var title = (data.title || 'Snack Hack').toString();
           var description = (data.description || '').toString().slice(0, 320);
           var image = (data.image || ORIGIN + '/og-image.jpg').toString();
           var canonical = ORIGIN + '/' + locale + '/recipes/' + id;
@@ -352,8 +352,8 @@
           // singleton element). We update its text and tag the element
           // by setting the marker on it after, so the next clear sweep
           // finds it.
-          if (document.title !== title + ' — Otus Food') {
-            document.title = title + ' — Otus Food';
+          if (document.title !== title + ' — Snack Hack') {
+            document.title = title + ' — Snack Hack';
           }
           var head = document.head;
           if (description) {
@@ -397,7 +397,7 @@
             inLanguage: locale,
             url: canonical,
             image: [image],
-            author: { '@type': 'Organization', name: 'Otus Food' },
+            author: { '@type': 'Organization', name: 'Snack Hack' },
           };
           if (description) jsonld.description = description;
           if (Array.isArray(data.ingredients) && data.ingredients.length > 0) {
@@ -447,7 +447,7 @@
 <body>
   <!-- HTML splash, removed once Flutter renders the first frame.
        See <style> block for design-token rationale. -->
-  <div id="boot-splash" role="status" aria-live="polite" aria-label="Loading Otus Food">
+  <div id="boot-splash" role="status" aria-live="polite" aria-label="Loading Snack Hack">
     <img src="icons/Icon-192.png" alt="" decoding="async" fetchpriority="high">
     <svg class="spinner" viewBox="0 0 48 48" aria-hidden="true">
       <circle cx="24" cy="24" r="20"></circle>

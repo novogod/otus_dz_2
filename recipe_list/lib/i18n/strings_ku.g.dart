@@ -37,9 +37,9 @@ class TranslationsKu with BaseTranslations<AppLocale, Translations> implements T
 	TranslationsKu $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsKu(meta: meta ?? this.$meta);
 
 	// Translations
-	@override String get appTitle => 'Otus Food';
+	@override String get appTitle => 'Snack Hack';
 	@override String get pwaInstallTooltip => 'وەک بەرنامە دایبمەزرێنە';
-	@override String get pwaInstallTitle => 'Otus Food لەسەر iPhone یان iPad دایبمەزرێنە';
+	@override String get pwaInstallTitle => 'Snack Hack لەسەر iPhone یان iPad دایبمەزرێنە';
 	@override String get pwaInstallSafariTitle => 'Safari';
 	@override String get pwaInstallSafariStep1 => 'دوگمەی هاوبەشکردن لە خوارەوەی شاشە دابگرە';
 	@override String get pwaInstallSafariStep2 => 'بشلێنە و «زیادکردن بۆ شاشەی سەرەکی» دابگرە';
@@ -230,9 +230,9 @@ class _TranslationsA11yKu implements TranslationsA11yEn {
 extension on TranslationsKu {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
-			'appTitle' => 'Otus Food',
+			'appTitle' => 'Snack Hack',
 			'pwaInstallTooltip' => 'وەک بەرنامە دایبمەزرێنە',
-			'pwaInstallTitle' => 'Otus Food لەسەر iPhone یان iPad دایبمەزرێنە',
+			'pwaInstallTitle' => 'Snack Hack لەسەر iPhone یان iPad دایبمەزرێنە',
 			'pwaInstallSafariTitle' => 'Safari',
 			'pwaInstallSafariStep1' => 'دوگمەی هاوبەشکردن لە خوارەوەی شاشە دابگرە',
 			'pwaInstallSafariStep2' => 'بشلێنە و «زیادکردن بۆ شاشەی سەرەکی» دابگرە',

@@ -15,9 +15,9 @@ import 'pwa_install.dart';
 const String _kShareBaseUrl = 'https://recipies.mahallem.ist/';
 const String _kShareOrigin = 'https://recipies.mahallem.ist';
 
-const String _kShareTitle = 'Otus Food';
+const String _kShareTitle = 'Snack Hack';
 const String _kShareText =
-    'Check out Otus Food — recipes from around the world!';
+    'Check out Snack Hack — recipes from around the world!';
 
 /// Bag of overrides that lets a single share entry-point deliver
 /// either the app-level landing page (used by the AppBar share
@@ -587,7 +587,7 @@ Future<void> shareRecipe(BuildContext context, Recipe recipe) {
   final url = _recipeShareUrl(recipe.id, langCode);
   final name = recipe.name;
   final title = name.isNotEmpty ? '$name — $_kShareTitle' : _kShareTitle;
-  final text = name.isNotEmpty ? 'Check out "$name" on Otus Food' : _kShareText;
+  final text = name.isNotEmpty ? 'Check out "$name" on Snack Hack' : _kShareText;
   return _onShareTap(
     context,
     content: _ShareContent(url: url, title: title, text: text),

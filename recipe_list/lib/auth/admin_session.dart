@@ -957,7 +957,7 @@ Future<PasswordRecoveryStartResponse> requestPasswordRecovery({
   try {
     final res = await dio.post<Map<String, dynamic>>(
       _normalizePath(_kAuthForgotPasswordPath),
-      data: {'email': normalizedEmail, 'app_name': 'Otus Food'},
+      data: {'email': normalizedEmail, 'app_name': 'Snack Hack'},
       options: Options(headers: {'Accept-Language': langCode}),
     );
 
@@ -1506,10 +1506,10 @@ Future<bool> _sendCredentialsEmail({
     '/mailer/send',
   };
 
-  final subject = 'Otus Food credentials';
+  final subject = 'Snack Hack credentials';
   final text =
       'Hello $name!\n\n'
-      'Your Otus Food account is ready.\n'
+      'Your Snack Hack account is ready.\n'
       'Login: $email\n'
       'Password: $password\n\n'
       'You can sign in in the app Profile section.';
