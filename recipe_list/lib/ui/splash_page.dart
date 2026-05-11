@@ -220,23 +220,31 @@ class SplashMaskedLogo extends StatelessWidget {
     // Набор стилей берём из бандлового Roboto Black (assets/fonts/Roboto-Black.ttf)
     // через fontFamily 'Roboto' — см. pubspec.yaml.
     final s = S.of(context);
-    final logoText = '${s.splashBrandTop}\n${s.splashBrandBottom}';
     final textStyle = AppTextStyles.splashLogo.copyWith(color: Colors.white);
-    final textWidget = Text(
-      logoText,
-      textAlign: TextAlign.center,
-      style: textStyle,
-    );
+    final brandTop = s.splashBrandTop;
+    final brandBottom = s.splashBrandBottom;
+    // Логотип «SNACK / HACK» — две строки с явным 20px-зазором.
+    // Используем Column вместо `\n`, чтобы независимо
+    // контролировать межстрочный интервал и сжатие букв.
+    Widget buildLogoColumn(Color color) {
+      final style = textStyle.copyWith(color: color);
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(brandTop, textAlign: TextAlign.center, style: style),
+          const SizedBox(height: 20),
+          Text(brandBottom, textAlign: TextAlign.center, style: style),
+        ],
+      );
+    }
+
+    final textWidget = buildLogoColumn(Colors.white);
 
     final img = image;
     if (img == null) {
       return FittedBox(
         fit: BoxFit.scaleDown,
-        child: Text(
-          logoText,
-          textAlign: TextAlign.center,
-          style: textStyle.copyWith(color: AppColors.textPrimary),
-        ),
+        child: buildLogoColumn(AppColors.textPrimary),
       );
     }
 

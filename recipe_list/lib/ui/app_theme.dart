@@ -188,12 +188,13 @@ class AppTextStyles {
 
   static const String fontFamily = 'Roboto';
 
-  /// Splash-логотип «OTUS FOOD».
+  /// Splash-логотип «SNACK HACK».
   static const TextStyle splashLogo = TextStyle(
     fontFamily: fontFamily,
     fontWeight: FontWeight.w900,
     fontSize: 95,
-    height: 82 / 95,
+    height: 1.0,
+    letterSpacing: -4,
     color: AppColors.textPrimary,
   );
 
