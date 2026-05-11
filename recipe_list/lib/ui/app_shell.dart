@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/admin_session.dart'
     show adminLoggedInNotifier, userLoggedInNotifier;
+import '../consent/startup_consent_bar.dart';
 import '../main.dart' show bottomNavVisibleNotifier;
 import 'app_bottom_nav_bar.dart';
 import 'registration_required_snackbar.dart';
@@ -36,7 +37,30 @@ class AppShell extends StatelessWidget {
     // после успешного логина без перерисовки сверху.
     final onProfileBranch = tab == AppNavTab.profile;
     return Scaffold(
-      body: navShell,
+      body: Stack(
+        children: [
+          Positioned.fill(child: navShell),
+          // Persistent consent banner: sits over `body` content
+          // and just above the bottomNavigationBar. Не блокирует
+          // загрузку ленты — рецепты грузятся под ним. Виден на
+          // любом табе, пока пользователь не подтвердит все
+          // галочки и не нажмёт «Agree». См. todo/21 →
+          // docs/consent-splash-i18n.md и
+          // consent/startup_consent_bar.dart.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: startupConsentPendingNotifier,
+              builder: (context, pending, _) {
+                if (!pending) return const SizedBox.shrink();
+                return const StartupConsentBottomBar();
+              },
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: ValueListenableBuilder<bool>(
         valueListenable: bottomNavVisibleNotifier,
         builder: (context, visible, _) {
