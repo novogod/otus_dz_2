@@ -14,6 +14,8 @@
 /// Чтобы вернуться к прямому TheMealDB (только английский, без
 /// переводов), запустите с `--dart-define=MAHALLEM_RECIPES_BASE=` —
 /// пустая строка форсит fallback на TheMealDB.
+library;
+
 import '../../config/web_origin.dart';
 
 class RecipeApiConfig {
