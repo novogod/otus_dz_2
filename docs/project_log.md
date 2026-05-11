@@ -6,6 +6,31 @@
   - Format: `YYYY-MM-DD HH:mm (Atlantic UTC-4)`
 2. **Newest record must always be placed at the top of this file** (reverse-chronological order).
 
+## 2026-05-11 12:45 (Atlantic UTC-4) — Consent UX: persistent bottom bar replaces blocking modal
+
+**Environment:** `https://snackhack.app` / `https://recipies.mahallem.ist`, Flutter web SPA. Commit `e35ce28`.
+
+### Change
+
+- Startup-consent modal that previously covered the splash and blocked recipe loading is replaced by a **persistent snackbar-style bottom bar** rendered above the bottom navbar.
+- Recipes now load immediately; the consent bar stays visible until all required checkboxes are confirmed and "I agree" is tapped.
+- Consent state is per (locale, platform) and survives language cycles (checkbox state is preserved when `appLang` changes).
+- Logged-in users are treated as having accepted; the bar does not appear.
+
+### Files
+
+- `recipe_list/lib/consent/startup_consent_bar.dart` (new) — exports `StartupConsentBottomBar` widget + `startupConsentPendingNotifier` (ValueNotifier<bool>).
+- `recipe_list/lib/ui/app_shell.dart` — body wrapped in a `Stack` that overlays the bar at the bottom when `startupConsentPendingNotifier.value == true`.
+- `recipe_list/lib/ui/splash_and_recipes.dart` — bootstrap parallelises splash delay + `hasAcceptedStartupConsent`; consent panel + lang-switcher-on-consent state machine removed; orphaned `_StartupConsentPanel` / `_ConsentRow` classes deleted.
+
+### Verification
+
+- `flutter analyze` clean (1 pre-existing info note in `recipe_api_config.dart`).
+- `flutter test` — 201 pass, 5 pre-existing failures unrelated to consent/splash (DB migration v12, favorites detail badge, social rows, rating row).
+- Deployed to prod VPS; container `recipe_list_web` recreated successfully.
+
+---
+
 ## 2026-05-11 12:20 (Atlantic UTC-4) — Feed reshuffle fix: preserve shuffle order in cached rows
 
 **Environment:** `https://snackhack.app` (production), Flutter web SPA.
