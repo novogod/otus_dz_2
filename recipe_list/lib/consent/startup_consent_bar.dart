@@ -146,27 +146,29 @@ class _StartupConsentBottomBarState extends State<StartupConsentBottomBar> {
                       inline: wide,
                     ),
                 ];
+                final titleWidget = Text(
+                  s.consentTitle,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: theme.colorScheme.onInverseSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                );
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      s.consentTitle,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.onInverseSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
                     if (wide)
                       Wrap(
                         spacing: AppSpacing.lg,
                         runSpacing: 4,
                         crossAxisAlignment: WrapCrossAlignment.center,
-                        children: rows,
+                        children: [titleWidget, ...rows],
                       )
-                    else
+                    else ...[
+                      titleWidget,
+                      const SizedBox(height: AppSpacing.xs),
                       for (final r in rows) r,
+                    ],
                     const SizedBox(height: AppSpacing.xs),
                     Align(
                       alignment: Alignment.centerLeft,
