@@ -559,8 +559,7 @@ class _UserCardPageState extends State<UserCardPage> {
           headers: kIsWeb
               ? const <String, String>{}
               : const <String, String>{
-                  'User-Agent':
-                      'mahallem-recipes/1.0 (https://mahallem.com)',
+                  'User-Agent': 'mahallem-recipes/1.0 (https://mahallem.com)',
                 },
           connectTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 5),
@@ -876,6 +875,12 @@ class _UserCardPageState extends State<UserCardPage> {
 
   Widget _buildPasskeyButton() {
     if (!userLoggedInNotifier.value) return const SizedBox.shrink();
+    // On web, WebAuthn passkeys are bound to RP-ID `mahallem.ist`
+    // and cannot be registered from another origin (e.g. snackhack.app).
+    // Hide the button rather than show a "not supported" snackbar.
+    if (kIsWeb && !passkey_api.isPasskeySupported) {
+      return const SizedBox.shrink();
+    }
     final s = S.of(context);
     final label = kIsWeb
         ? s.profileAddPasskeyButton
